@@ -7,7 +7,8 @@
   ],
   "scripts": {
     "build": "lerna run --parallel build",
-    "watch": "lerna run --parallel watch"
+    "watch": "lerna run --parallel watch",
+    "api-gen": "lerna run api-gen"
   },
   "devDependencies": {
     "lerna": "^3.16.4"

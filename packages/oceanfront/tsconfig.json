@@ -11,6 +11,9 @@
     // "allowSyntheticDefaultImports": true,
     // "skipLibCheck": true,
     "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+    "skipLibCheck": true,
     "baseUrl": ".",
     "types": [
       "webpack-env",

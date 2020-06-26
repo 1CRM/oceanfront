@@ -11,7 +11,9 @@
   ],
   "scripts": {
     "build": "NODE_ENV=production webpack",
-    "watch": "TARGET=development webpack --watch"
+    "watch": "TARGET=development webpack --watch",
+    "api-gen": "api-extractor run --local --verbose",
+    "tsc": "tsc"
   },
   "peerDependencies": {
     "vue": "3.0.0-beta.14"
