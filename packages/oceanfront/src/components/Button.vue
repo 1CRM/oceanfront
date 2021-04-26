@@ -11,7 +11,7 @@
   >
     <button :disabled="disabled">
       <of-icon v-if="icon" :name="icon" class="of-button-icon" />
-      <slot>Submit</slot>
+      <slot>&nbsp;</slot>
     </button>
     <button 
       v-if="split"
@@ -46,7 +46,6 @@ export default defineComponent({
   components: { OfOptionList },
   props: {
     variant: String,
-    label: String,
     icon: String,
     rounded: Boolean,
     disabled: Boolean,
@@ -58,8 +57,8 @@ export default defineComponent({
     const menuShown = ref(false)
     const menuOuter = ref()
     const menuTimerId = ref()
-    const onClick = (val: any) => {
-      console.log(val)
+    const onClick = (menuItemSelect: Function) => {
+      menuItemSelect()
       closeMenu()
     }
     const toggleMenu = (_evt?: MouseEvent) => {
