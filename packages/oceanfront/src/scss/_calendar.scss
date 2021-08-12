@@ -185,11 +185,13 @@ div.of-date-picker-cur-year {
 
 .of-calendar-more {
   text-align: right;
+  width: 100%;
   font-size: 75%;
   font-weight: bold;
   padding-right: 4px;
   cursor: pointer;
   height: var(--of-event-height, auto);
+  position: absolute;
 }
 
 .of-calendar-event {

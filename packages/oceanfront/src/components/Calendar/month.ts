@@ -61,12 +61,15 @@ export default defineComponent({
                 }
             }, content)
         },
-        renderMoreLink(count: number, day: Date) {
+        renderMoreLink(count: number, day: Date, top: number) {
             if (count < 1) return null
             const slot = this.$slots['more']
             return h('div', {
                 class: 'of-calendar-more', onClick: (event: any) => {
                     this.$emit('click:more', event, day)
+                },
+                style: {
+                    top: "" + top + "px",
                 }
             }, slot ? slot(count) : `${count} more`)
         },
@@ -103,14 +106,19 @@ export default defineComponent({
                 more = dayEvents.length - limit
             }
             const events = dayEvents.slice(0, limit)
-            return h('div', { class: 'of-calendar-month-day' },
+            const dayHeight = events.length + (more ? 1 : 0)
+            const style = this.$props.fixedRowHeight ? {} : { '--of-month-day-heigth': '' + (dayHeight * this.eventHeightNumber) + 'px' }
+            if (!this.$props.fixedRowHeight) {
+                //--of-month-day-heigth
+            }
+            return h('div', { class: 'of-calendar-month-day', style },
                 day.otherMonth && this.hideOtherMonths ? [] :
                     [
                         this.renderDayNumberOrSlot(day.date),
                         h('div', { class: 'events' },
                             [
                                 events.map(this.renderRowDayEvent),
-                                this.renderMoreLink(more, day.date),
+                                this.renderMoreLink(more, day.date, events.length * this.eventHeightNumber),
                             ]
                         )
                     ]

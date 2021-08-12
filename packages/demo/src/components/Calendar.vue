@@ -48,7 +48,8 @@
       >
     </p>
     <of-calendar
-      :selectable="true"
+      fixed-row-height
+      selectable
       @click:event="eventClicked"
       @click:day="dayClicked"
       @click:more="dayClicked"
@@ -57,6 +58,7 @@
       :type="values.type"
       :day="values.day"
       num-days="3"
+      events-limit="3"
       :events="events"
       :layout="values.layout"
       :categories="categories"
