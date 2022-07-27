@@ -264,6 +264,15 @@ export const OfFieldBase = defineComponent({
             overlay
           )
         }
+
+        const noLabelAsterisk: VNode | null =
+          required.value && labelPosition.value == 'none'
+            ? h(OfIcon, {
+                name: 'required',
+                class: 'of--icon-required no--label',
+              })
+            : null
+
         const children = [
           label &&
           labelPosition.value !== 'frame' &&
@@ -290,7 +299,7 @@ export const OfFieldBase = defineComponent({
                   ? h('div', { class: 'of-field-header-label' }, label)
                   : undefined
               ),
-              h('div', { class: 'of-field-body' }, inner),
+              h('div', { class: 'of-field-body' }, [inner, noLabelAsterisk]),
             ]
           ),
           h('div', { class: 'of-field-caption' }), // FIXME support custom slot

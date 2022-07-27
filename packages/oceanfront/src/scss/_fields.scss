@@ -696,6 +696,16 @@
       width: 0.8em;
     }
   }
+
+  .of--icon-required.no--label {
+    line-height: 1.5;
+    display: inline;
+    vertical-align: inherit;
+
+    svg {
+      height: auto;
+    }
+  }
 }
 
 .of-field-label {
