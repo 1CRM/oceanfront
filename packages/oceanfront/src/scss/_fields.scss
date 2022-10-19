@@ -817,3 +817,14 @@
   width: 2.5em;
   height: 1.2em;
 }
+
+.of-field.of-toggle-field.of--mode-fixed {
+  .of-switch {
+    .of-switch-track {
+      opacity: .2;
+    }
+    .of-switch-thumb {
+      opacity: .3;
+    }
+  }
+}
