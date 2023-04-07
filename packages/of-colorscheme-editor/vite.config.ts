@@ -19,11 +19,6 @@ export default defineConfig(({ command, mode }) => {
         // the proper extensions will be added
         fileName: 'oceanfront-colorscheme-editor',
       },
-      define: {
-        __DEV__: JSON.stringify(dev),
-        __VUE_OPTIONS_API__: 'true',
-        __VUE_PROD_DEVTOOLS__: 'false',
-      },
       emptyOutDir: !dev,
       rollupOptions: {
         // make sure to externalize deps that shouldn't be bundled
@@ -40,7 +35,13 @@ export default defineConfig(({ command, mode }) => {
         },
       },
       reportCompressedSize: !dev,
-      sourcemap: !dev,
+      sourcemap: true,
+    },
+    define: {
+      __DEV__: JSON.stringify(dev),
+      __VUE_OPTIONS_API__: 'true',
+      __VUE_PROD_DEVTOOLS__: 'false',
+      'process.env.NODE_ENV': JSON.stringify(mode),
     },
     plugins,
   }
