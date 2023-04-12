@@ -183,7 +183,10 @@ export default defineComponent({
       }
       return h(
         'div',
-        { class: 'of-calendar-month-day', style },
+        {
+          class: ['of-calendar-month-day', 'week-day-' + day.date.getDay()],
+          style,
+        },
         day.otherMonth && this.hideOtherMonths
           ? []
           : [
@@ -236,13 +239,19 @@ export default defineComponent({
         h('div', { class: 'of-calendar-day-titles' }, [
           h('div', { class: 'of-calendar-gutter' }),
           Array.from({ length: 7 }, (_, i) => {
+            const weekDay = addDays(fm, i)
             return h(
               'div',
-              { class: 'of-calendar-category-title' },
+              {
+                class: [
+                  'of-calendar-category-title',
+                  'week-day-' + weekDay.getDay(),
+                ],
+              },
               h(
                 'div',
                 { class: 'of-calendar-day-title' },
-                this.renderWeekDay(addDays(fm, i))
+                this.renderWeekDay(weekDay)
               )
             )
           }),
