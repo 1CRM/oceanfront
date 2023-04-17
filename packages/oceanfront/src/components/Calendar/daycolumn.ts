@@ -248,10 +248,11 @@ export default defineComponent({
       const theDay = cat.date
       const slotArgs = isDate ? theDay : cat.category
       const eventName = isDate ? 'click:day' : 'click:category'
+      const weekDayCls = isDate ? 'week-day-' + cat.date.getDay() : false
       return h(
         'div',
         {
-          class: 'of-calendar-category-title',
+          class: ['of-calendar-category-title', weekDayCls],
           tabindex: '0',
           onClick: (event: any) => this.$emit(eventName, event, slotArgs),
           onKeypress: (event: KeyboardEvent) => {
@@ -335,14 +336,16 @@ export default defineComponent({
       }
     },
     allDayRowCell(acc: { height: number; columns: any[] }, cat: categoryItem) {
+      const isDate = this.$props.type != 'category'
       const eventHeight =
         parseInt(this.$props.eventHeight as unknown as string) || 20
       const events =
         (this.allDayEvents[cat.category] as CalendarAlldayEventPlacement[]) ||
         []
+      const weekDayCls = isDate ? 'week-day-' + cat.date.getDay() : false
       const vnode = h(
         'div',
-        { class: 'of-calendar-day' },
+        { class: ['of-calendar-day', weekDayCls] },
         events.map(this.allDayRowEvent(acc, eventHeight))
       )
       acc.columns.push(vnode)
@@ -648,6 +651,7 @@ export default defineComponent({
       }
     },
     dayRowCell(cat: categoryItem) {
+      const isDate = this.$props.type != 'category'
       const numSubIntervals = this.numHourIntervals
       const intervals = this.intervals().map((_, intervalNumber) => {
         const subIntevals = Array.from(
@@ -665,10 +669,11 @@ export default defineComponent({
       const es =
         (this.dayEvents[cat.category] as CalendarEventPlacement[]) || []
       const events = es.map(this.dayRowEvent(cat))
+      const weekDayCls = isDate ? 'week-day-' + cat.date.getDay() : false
       return h(
         'div',
         {
-          class: 'of-calendar-day',
+          class: ['of-calendar-day', weekDayCls],
           ...this.intervalSelectionHandlers(cat),
         },
         [...intervals, ...events]
