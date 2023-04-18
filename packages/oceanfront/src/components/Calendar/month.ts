@@ -68,6 +68,9 @@ export default defineComponent({
         'ignore'
       ).map((e) => uniqEvent(e, { category: '', date: day }))
     },
+    hideDate(date: Date) {
+      return this.$props.hideWeekends && [6, 0].includes(date.getDay())
+    },
     header() {
       const slot = this.$slots['header']
       return slot?.()
@@ -181,6 +184,7 @@ export default defineComponent({
       if (!this.$props.fixedRowHeight) {
         //--of-month-day-heigth
       }
+      if (this.hideDate(day.date)) return
       return h(
         'div',
         {
@@ -240,6 +244,7 @@ export default defineComponent({
           h('div', { class: 'of-calendar-gutter' }),
           Array.from({ length: 7 }, (_, i) => {
             const weekDay = addDays(fm, i)
+            if (this.hideDate(weekDay)) return
             return h(
               'div',
               {
