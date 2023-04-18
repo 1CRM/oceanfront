@@ -87,15 +87,6 @@ export default defineComponent({
         {
           class: 'day-title',
           tabindex: slot ? '0' : undefined,
-          onClick: (event: any) => {
-            this.$emit('click:day', event, day)
-          },
-          onKeypress: (event: KeyboardEvent) => {
-            if (['Enter', 'Space'].includes(event.code)) {
-              event.preventDefault()
-              this.$emit('click:day', event, day)
-            }
-          },
         },
         content
       )
@@ -140,6 +131,7 @@ export default defineComponent({
           tabindex: '0',
           onClick: (event: any) => {
             this.$emit('click:event', event, { ...e, color: finalColor })
+            event.stopPropagation()
           },
           onMouseenter: (event: any) => {
             this.$emit('enter:event', event, e)
@@ -151,6 +143,7 @@ export default defineComponent({
             if (['Enter', 'Space'].includes(event.code)) {
               event.preventDefault()
               this.$emit('click:event', event, { ...e, color: finalColor })
+              event.stopPropagation()
             }
           },
           onFocus: () => {
@@ -190,6 +183,15 @@ export default defineComponent({
         {
           class: ['of-calendar-month-day', 'week-day-' + day.date.getDay()],
           style,
+          onClick: (event: any) => {
+            this.$emit('click:day', event, day.date)
+          },
+          onKeypress: (event: KeyboardEvent) => {
+            if (['Enter', 'Space'].includes(event.code)) {
+              event.preventDefault()
+              this.$emit('click:day', event, day.date)
+            }
+          },
         },
         day.otherMonth && this.hideOtherMonths
           ? []
