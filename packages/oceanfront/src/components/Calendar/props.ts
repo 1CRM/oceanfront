@@ -20,6 +20,7 @@ export default {
   },
   week: {
     weekStart: { type: [Number, String], default: 0 },
+    hideWeekends: Boolean,
   },
   category: {
     categories: {
@@ -40,6 +41,7 @@ export default {
       default: '5',
     },
     hideOtherMonths: Boolean,
+    hideWeekends: Boolean,
   },
   common: {
     selectable: Boolean,
