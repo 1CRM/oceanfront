@@ -32,6 +32,7 @@
           :density="params.density"
           :draggable="params.draggable === 'On'"
           @rows-selected="onRowsSelected"
+          @rows-moved="OnRowsMoved"
           @rows-sorted="onRowsSorted"
           :headers="headers2"
           :items="items2"
@@ -189,6 +190,9 @@ export default defineComponent({
     const onRowsSelected = function (values: any) {
       console.log(values)
     }
+    const OnRowsMoved = function (values: any) {
+      console.log('OnRowsMoved', values)
+    }
 
     const onRowsSorted = function (sort: { column: string; order: string }) {
       if (sort.order == '') {
@@ -216,6 +220,7 @@ export default defineComponent({
       items2,
       footerItems,
       onRowsSelected,
+      OnRowsMoved,
       onRowsSorted,
       params,
       densityOptions,

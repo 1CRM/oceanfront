@@ -72,7 +72,7 @@
         class="of-data-table-row"
         @mousemove="dragMouseMove($event, rowidx)"
         :class="{
-          selected: rowsRecord.value[row.id],
+          selected: rowsRecord.value[row.id] || highlited.includes(row.id),
           odd: rowidx % 2 != 0,
           nested: row.nested,
           dragging:
@@ -112,7 +112,7 @@
         @mousemove="dragMouseMoveNested($event, subidx, rowidx)"
         :key="subidx"
         :class="{
-          selected: rowsRecord.value[subrow.id],
+          selected: rowsRecord.value[subrow.id] || highlited.includes(subrow.id),
           odd: subidx % 2 != 0,
           nested: true,
           dragging: highlight(rowidx, subidx),
@@ -126,7 +126,7 @@
           <of-icon name="menu"></of-icon>
         </div>
         <div v-if="rowsSelector">
-          <slot name="rows-selector" :record="rowsRecord" :item="row">
+          <slot name="rows-selector" :record="rowsRecord" :item="subrow">
             <of-field
               type="toggle"
               variant="basic"
@@ -292,6 +292,7 @@ export default defineComponent({
     'rows-select-page': null,
     'rows-deselect-all': null,
     'rows-sorted': null,
+    'rows-moved': null,
   },
   setup(props, ctx) {
     const themeOptions = useThemeOptions()
@@ -303,18 +304,39 @@ export default defineComponent({
     const currentNested = ref(false)
     const draggingItem = reactive({ itemIdx: -1, subitemIdx: -1, type: 'item' })
     const currentDragPosition = reactive({ itemIdx: -1, subitemIdx: -1 })
+    const highlited: Ref<number[]> = ref([])
     const arrowTop = ref(0)
+    const orderAndCheck = (
+      item: any,
+      idx: number,
+      selectedValues: Record<string, any>
+    ) => {
+      item.order = item.hasOwnProperty('order') ? item.order : idx
+      item.selected =
+        item.selected || (selectedValues && selectedValues[item.id])
+          ? selectedValues[item.id]
+          : false
+      return item
+    }
     const rows = computed(() => {
       const result = []
       let count = perPage.value
       let propItems = items.value
+      let selectedRecords = rowsRecord.value?.value
       for (
         let idx = iterStart.value;
         count > 0 && idx < propItems.length;
         idx++
       ) {
         let item: any = propItems[idx]
-        item.order = item.hasOwnProperty('order') ? item.order : idx
+        item = orderAndCheck(item, idx, selectedRecords)
+        if (item.subitems) {
+          for (let subIdx = 0; subIdx < item.subitems.length; subIdx++) {
+            let subitem: any = item.subitems[subIdx]
+            subitem = orderAndCheck(subitem, subIdx, selectedRecords)
+            item.subitems[subIdx] = subitem
+          }
+        }
         result.push(item)
       }
       return result
@@ -447,6 +469,12 @@ export default defineComponent({
         items.value[i] = newItem
       }
     }
+    const highlightItems = (item: any) => {
+      let result: number[] = []
+      result.push(item.id)
+      item.subitems?.forEach((val: any) => result.push(val.id))
+      highlited.value = result
+    }
     const addItem = (idx: number, item: any) => {
       item.order = idx
       if (items.value.length > idx) {
@@ -530,6 +558,7 @@ export default defineComponent({
       subitemIdx = -1
     ) => {
       drag.value = true
+      highlited.value = []
       fixArrow(event.target as HTMLDivElement)
       draggingItem.itemIdx = itemIdx
       draggingItem.subitemIdx = subitemIdx
@@ -547,6 +576,7 @@ export default defineComponent({
             currentDragPosition.itemIdx--
           }
           let item = items.value[draggingItem.itemIdx]
+          highlightItems(item)
           removeItem(draggingItem.itemIdx)
           if (currentDragPosition.subitemIdx === -1) {
             addItem(currentDragPosition.itemIdx, item)
@@ -560,6 +590,7 @@ export default defineComponent({
         } else {
           let item =
             items.value[draggingItem.itemIdx]?.subitems[draggingItem.subitemIdx]
+          highlightItems(item)
           removeSubitem(draggingItem.itemIdx, draggingItem.subitemIdx)
           if (currentDragPosition.subitemIdx > -1) {
             if (
@@ -582,6 +613,7 @@ export default defineComponent({
         draggingItem.itemIdx = -1
         draggingItem.subitemIdx = -1
         draggingItem.type = 'item'
+        ctx.emit('rows-moved', items.value)
       }
     })
 
@@ -750,6 +782,11 @@ export default defineComponent({
         if (rowsSelector.value) {
           for (const row of rows.value) {
             ids[row.id] = row.selected || false
+            if (row.subitems) {
+              for (const subrow of row.subitems) {
+                ids[subrow.id] = subrow.selected || false
+              }
+            }
           }
         }
       }
@@ -761,8 +798,9 @@ export default defineComponent({
         ctx.emit('rows-selected', val)
         headerRowsSelectorChecked.value = true
         for (const [id, checked] of Object.entries(val)) {
-          if (id !== RowsSelectorValues.All && !checked)
+          if (id !== RowsSelectorValues.All && !checked) {
             headerRowsSelectorChecked.value = false
+          }
         }
       },
       { deep: true }
@@ -793,6 +831,11 @@ export default defineComponent({
         }
         for (const row of rows.value) {
           rowsRecord.value.value[row.id] = checked
+          if (row.subitems) {
+            for (const subrow of row.subitems) {
+              rowsRecord.value.value[subrow.id] = checked
+            }
+          }
         }
       }
     }
@@ -879,6 +922,7 @@ export default defineComponent({
       footerRows,
       rows,
       rowsSelector,
+      highlited,
       draggingItem,
       rowsRecord,
       highlight,
@@ -926,7 +970,7 @@ export default defineComponent({
     left: 0;
     right: 0;
     height: 0;
-    border-top: 4px solid #000;
+    border-top: 3px solid #4c4c4c;
     .drag-pointers-handler {
       position: relative;
       .drag-position-pointer {
