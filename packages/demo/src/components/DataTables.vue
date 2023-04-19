@@ -7,12 +7,19 @@
       type="select"
       :items="densityOptions"
     />
+    <of-field
+      v-model="params.draggable"
+      label="Draggable"
+      type="select"
+      :items="draggableOptions"
+    />
 
     <div class="row">
       <div class="column">
         <of-data-table
           :density="params.density"
           :headers="headers"
+          :draggable="params.draggable === 'On'"
           :items="items"
           :footer-items="footerItems"
         />
@@ -23,7 +30,9 @@
         <of-data-table
           rows-selector
           :density="params.density"
+          :draggable="params.draggable === 'On'"
           @rows-selected="onRowsSelected"
+          @rows-moved="OnRowsMoved"
           @rows-sorted="onRowsSorted"
           :headers="headers2"
           :items="items2"
@@ -38,9 +47,11 @@
 import { defineComponent, ref, reactive } from 'vue'
 
 const densityOptions = ['default', '0', '1', '2', '3']
+const draggableOptions = ['Off', 'On']
 
 const params = reactive({
   density: 'default',
+  draggable: 'Off'
 })
 
 export default defineComponent({
@@ -120,7 +131,7 @@ export default defineComponent({
         id: '1',
         name: 'First item',
         category: 'Category 1',
-        address: 'Lisbon, CA, USA',
+        address: 'Aram Khachatryan 12/2 , Yerevan, Armenia',
         phone: '+1 (961) 209-1256',
         size: 15.56,
       },
@@ -143,17 +154,44 @@ export default defineComponent({
       {
         id: '4',
         name: 'Fourth item',
-        category: 'Category 3',
+        category: 'Category 4',
         address: 'New York, NY, USA',
         phone: '+1 (041) 102-0224',
         size: 45.56,
       },
+      {
+        id: '5',
+        name: 'Fifth item',
+        category: 'Category 5',
+        address: 'Lisbon, CA, USA ',
+        phone: '+1 (041) 102-0224',
+        size: 45.56,
+      },
+      {
+        id: '6',
+        name: 'Sixth item',
+        category: 'Category 6',
+        address: 'Glendale, LA, USA',
+        phone: '+1 (041) 102-0224',
+        size: 45.56,
+      },
+      {
+        id: '7',
+        name: 'Seventh item',
+        category: 'Category 7',
+        address: 'New York, NY, USA',
+        phone: '+1 (041) 102-0224',
+        size: 45.56,
+      }
     ])
 
     const initialItems2 = [...items2.value]
     const footerItems = [{ size: 100.5 }]
     const onRowsSelected = function (values: any) {
       console.log(values)
+    }
+    const OnRowsMoved = function (values: any) {
+      console.log('OnRowsMoved', values)
     }
 
     const onRowsSorted = function (sort: { column: string; order: string }) {
@@ -182,9 +220,11 @@ export default defineComponent({
       items2,
       footerItems,
       onRowsSelected,
+      OnRowsMoved,
       onRowsSorted,
       params,
       densityOptions,
+      draggableOptions,
     }
   },
 })
