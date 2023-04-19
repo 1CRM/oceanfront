@@ -776,6 +776,11 @@ export default defineComponent({
       (p) => (page.value = parseInt(p as string, 10) || 1), // FIXME check in range
       { immediate: true }
     )
+    watch(
+      () => props.items,
+      (p) => (items.value = p as Record<string, any>),
+      { immediate: true }
+    )
     const iterStart = computed(() => {
       if (props.itemsCount != null) return 0 // external navigation
       return Math.max(0, perPage.value * (page.value - 1))
