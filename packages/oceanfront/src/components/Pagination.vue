@@ -138,7 +138,7 @@ export default defineComponent({
       }
       return id
     })
-    const variantVal = computed(() => props.variant || 'filled')
+    const variantVal = computed(() => props.variant || 'default')
     const densityVal = computed(() => props.density || 'default')
 
     const getStartPageNum = function (): number {

@@ -36,7 +36,6 @@ export const OfButton = defineComponent({
   },
   setup(props, ctx) {
     const themeOptions = useThemeOptions()
-    const variant = computed(() => props.variant || 'filled')
     const tint = computed(() => props.tint)
     const menuShown = ref(false)
     const focused = ref(false)
@@ -65,7 +64,13 @@ export const OfButton = defineComponent({
       }
       return Math.max(0, Math.min(3, d || 0))
     })
-
+    const variant = computed(() => {
+      let v = props.variant
+      if (!v || v == 'default') {
+        v = themeOptions.defaultButtonVariant
+      }
+      return v || 'filled'
+    })
     const onClick = (evt?: MouseEvent) => {
       if (props.items && !props.split) {
         toggleMenu(evt)
