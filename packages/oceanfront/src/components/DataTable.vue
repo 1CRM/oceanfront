@@ -72,7 +72,9 @@
         class="of-data-table-row"
         @mousemove="dragMouseMove($event, rowidx)"
         :class="{
-          selected: rowsRecord.value[row.id] || highlited.includes(row.id),
+          selected:
+            rowsRecord.value[row.id] ||
+            (highlited.type === 'item' && highlited.itemIdx === rowidx),
           odd: rowidx % 2 != 0,
           nested: row.nested,
           dragging:
@@ -112,7 +114,10 @@
         @mousemove="dragMouseMoveNested($event, subidx, rowidx)"
         :key="subidx"
         :class="{
-          selected: rowsRecord.value[subrow.id] || highlited.includes(subrow.id),
+          selected:
+            rowsRecord.value[subrow.id] ||
+            (highlited.itemIdx === rowidx &&
+              highlited.subitems.includes(subidx)),
           odd: subidx % 2 != 0,
           nested: true,
           dragging: highlight(rowidx, subidx),
@@ -199,7 +204,7 @@
     </of-overlay>
 
     <div
-      v-if="drag"
+      v-if="draggable && drag"
       class="drag-position-handler"
       :style="{ top: arrowTop + 'px' }"
     >
@@ -304,7 +309,7 @@ export default defineComponent({
     const currentNested = ref(false)
     const draggingItem = reactive({ itemIdx: -1, subitemIdx: -1, type: 'item' })
     const currentDragPosition = reactive({ itemIdx: -1, subitemIdx: -1 })
-    const highlited: Ref<number[]> = ref([])
+    const highlited = ref({ type: 'item', itemIdx: -1, subitems: [] })
     const arrowTop = ref(0)
     const orderAndCheck = (
       item: any,
@@ -315,7 +320,7 @@ export default defineComponent({
       item.selected =
         item.selected || (selectedValues && selectedValues[item.id])
           ? selectedValues[item.id]
-          : false
+          : !!(selectedValues && selectedValues[RowsSelectorValues.All])
       return item
     }
     const rows = computed(() => {
@@ -469,11 +474,25 @@ export default defineComponent({
         items.value[i] = newItem
       }
     }
-    const highlightItems = (item: any) => {
-      let result: number[] = []
-      result.push(item.id)
-      item.subitems?.forEach((val: any) => result.push(val.id))
-      highlited.value = result
+    const highlightItems = (
+      type: string,
+      itemIdx: number,
+      subitemIdx = -1,
+      length = -1
+    ) => {
+      let res = { type: type, itemIdx: itemIdx, subitems: [] }
+      if (type === 'item') {
+        if (length) {
+          for (let i = 0; i < length; i++) {
+            res.subitems.push(i as never)
+          }
+        }
+      } else {
+        for (let i = 0; i < length; i++) {
+          res.subitems.push((i + subitemIdx) as never)
+        }
+      }
+      highlited.value = res
     }
     const addItem = (idx: number, item: any) => {
       item.order = idx
@@ -558,7 +577,7 @@ export default defineComponent({
       subitemIdx = -1
     ) => {
       drag.value = true
-      highlited.value = []
+      highlited.value = { type: 'item', itemIdx: -1, subitems: []}
       fixArrow(event.target as HTMLDivElement)
       draggingItem.itemIdx = itemIdx
       draggingItem.subitemIdx = subitemIdx
@@ -576,21 +595,32 @@ export default defineComponent({
             currentDragPosition.itemIdx--
           }
           let item = items.value[draggingItem.itemIdx]
-          highlightItems(item)
+          let highlightLength = item.subitems ? item.subitems.length : 0
           removeItem(draggingItem.itemIdx)
           if (currentDragPosition.subitemIdx === -1) {
             addItem(currentDragPosition.itemIdx, item)
+            highlightItems(
+              'item',
+              currentDragPosition.itemIdx,
+              0,
+              highlightLength
+            )
           } else {
             addSubitem(
               currentDragPosition.itemIdx,
               currentDragPosition.subitemIdx,
               item
             )
+            highlightItems(
+              'subitem',
+              currentDragPosition.itemIdx,
+              currentDragPosition.subitemIdx,
+              highlightLength + 1
+            )
           }
         } else {
           let item =
             items.value[draggingItem.itemIdx]?.subitems[draggingItem.subitemIdx]
-          highlightItems(item)
           removeSubitem(draggingItem.itemIdx, draggingItem.subitemIdx)
           if (currentDragPosition.subitemIdx > -1) {
             if (
@@ -604,8 +634,15 @@ export default defineComponent({
               currentDragPosition.subitemIdx,
               item
             )
+            highlightItems(
+              'subitem',
+              currentDragPosition.itemIdx,
+              currentDragPosition.subitemIdx,
+              1
+            )
           } else {
             addItem(currentDragPosition.itemIdx, item)
+            highlightItems('item', currentDragPosition.itemIdx)
           }
         }
         currentDragPosition.subitemIdx = -1
@@ -817,8 +854,14 @@ export default defineComponent({
       headerRowsSelectorChecked.value = checked
 
       if (val === RowsSelectorValues.All) {
-        rowsRecord.value.value = []
-        rowsRecord.value.value[RowsSelectorValues.All] = true
+        for (const row of rows.value) {
+          rowsRecord.value.value[row.id] = true
+          if (row.subitems) {
+            for (const subrow of row.subitems) {
+              rowsRecord.value.value[subrow.id] = true
+            }
+          }
+        }
         selectLocked.value = true
         ctx.emit('rows-select-all')
       } else {
@@ -970,12 +1013,14 @@ export default defineComponent({
     left: 0;
     right: 0;
     height: 0;
-    border-top: 3px solid #4c4c4c;
+    border-top: 3px solid #4c4c4c8f;
     .drag-pointers-handler {
       position: relative;
       .drag-position-pointer {
+        left: 30px;
         position: absolute;
-        transform: translateY(calc(-50% + 2px));
+        line-height: 1;
+        transform: translateY(-50%);
         &.nested {
           left: 60px;
         }
