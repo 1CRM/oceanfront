@@ -3,6 +3,7 @@ import { DeepReadonly, readonly, reactive } from 'vue'
 export interface ThemeOptions {
   defaultDensity?: number
   defaultInputVariant?: string
+  defaultButtonVariant?: string
   defaultLabelPosition?: string
   defaultRoundedButton?: boolean
 }
@@ -16,6 +17,9 @@ export function setThemeOptions(opts: ThemeOptions): void {
   }
   if (opts.defaultInputVariant !== undefined) {
     options.defaultInputVariant = opts.defaultInputVariant
+  }
+  if (opts.defaultButtonVariant !== undefined) {
+    options.defaultButtonVariant = opts.defaultButtonVariant
   }
   if (opts.defaultLabelPosition !== undefined) {
     options.defaultLabelPosition = opts.defaultLabelPosition
