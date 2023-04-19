@@ -71,6 +71,7 @@ export default defineComponent({
   props: {
     ...calendarProps.internal,
     ...calendarProps.common,
+    ...calendarProps.week,
   },
   emits: [
     'click:event',
@@ -208,6 +209,14 @@ export default defineComponent({
       const [start, end] = this.hoursInterval
       return Array.from({ length: end - start }, (_, i) => i + start)
     },
+    hideDate(date: Date) {
+      return (
+        this.$props.type != 'category' &&
+        this.$props.type === 'week' &&
+        this.$props.hideWeekends &&
+        [6, 0].includes(date.getDay())
+      )
+    },
     getEventIntervalRange(ts: Timestamp): number[] {
       const startTsId = getTimestampIdintifier(ts)
       const endTsId = getTimestampIdintifier(
@@ -249,6 +258,7 @@ export default defineComponent({
       const slotArgs = isDate ? theDay : cat.category
       const eventName = isDate ? 'click:day' : 'click:category'
       const weekDayCls = isDate ? 'week-day-' + cat.date.getDay() : false
+      if (this.hideDate(cat.date)) return
       return h(
         'div',
         {
@@ -348,7 +358,7 @@ export default defineComponent({
         { class: ['of-calendar-day', weekDayCls] },
         events.map(this.allDayRowEvent(acc, eventHeight))
       )
-      acc.columns.push(vnode)
+      if (!this.hideDate(cat.date)) acc.columns.push(vnode)
       return acc
     },
     allDayCount() {
@@ -670,6 +680,7 @@ export default defineComponent({
         (this.dayEvents[cat.category] as CalendarEventPlacement[]) || []
       const events = es.map(this.dayRowEvent(cat))
       const weekDayCls = isDate ? 'week-day-' + cat.date.getDay() : false
+      if (this.hideDate(cat.date)) return
       return h(
         'div',
         {

@@ -228,6 +228,10 @@ div.of-date-picker-cur-year {
       outline-offset: -2px;
     }
   }
+  &:hover {
+    outline: solid 1px var(--calendar-grid-color);
+    outline-offset: -1px;
+  }
   border-right: solid 1px var(--calendar-grid-color);
   &:first-child {
     border-left: solid 1px var(--calendar-grid-color);
