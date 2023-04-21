@@ -14,12 +14,22 @@
       :items="draggableOptions"
     />
 
+    <of-field
+      v-model="params.nested"
+      label="Nested"
+      :disabled="params.draggable === 'Off'"
+      type="select"
+      :items="nestedOptions"
+    />
+
     <div class="row">
       <div class="column">
         <of-data-table
           :density="params.density"
           :headers="headers"
+          nested-indicator="category"
           :draggable="params.draggable === 'On'"
+          :nested="params.nested === 'Nested'"
           :items="items"
           :footer-items="footerItems"
         />
@@ -29,6 +39,8 @@
       <div class="column">
         <of-data-table
           rows-selector
+          :nested="params.nested === 'Nested'"
+          nested-indicator="name"
           :density="params.density"
           :draggable="params.draggable === 'On'"
           @rows-selected="onRowsSelected"
@@ -48,10 +60,12 @@ import { defineComponent, ref, reactive } from 'vue'
 
 const densityOptions = ['default', '0', '1', '2', '3']
 const draggableOptions = ['Off', 'On']
+const nestedOptions = ['Default', 'Nested']
 
 const params = reactive({
   density: 'default',
-  draggable: 'Off'
+  draggable: 'Off',
+  nested: 'Default',
 })
 
 export default defineComponent({
@@ -70,6 +84,7 @@ export default defineComponent({
     const items = [
       {
         name: 'First item',
+        draggable: true,
         category: {
           value: 'Category 1',
           format: 'link',
@@ -130,6 +145,7 @@ export default defineComponent({
       {
         id: '1',
         name: 'First item',
+        draggable: true,
         category: 'Category 1',
         address: 'Aram Khachatryan 12/2 , Yerevan, Armenia',
         phone: '+1 (961) 209-1256',
@@ -137,6 +153,7 @@ export default defineComponent({
       },
       {
         id: '2',
+        draggable: true,
         name: 'Second item',
         category: 'Category 2',
         address: 'San Francisco, CA, USA',
@@ -147,6 +164,7 @@ export default defineComponent({
         id: '3',
         name: 'Third item',
         category: 'Category 3',
+        draggable: true,
         address: 'Orléans, CA, USA',
         phone: '+1 (125) 853-7161',
         size: 15125.56,
@@ -154,6 +172,7 @@ export default defineComponent({
       {
         id: '4',
         name: 'Fourth item',
+        draggable: true,
         category: 'Category 4',
         address: 'New York, NY, USA',
         phone: '+1 (041) 102-0224',
@@ -163,6 +182,7 @@ export default defineComponent({
         id: '5',
         name: 'Fifth item',
         category: 'Category 5',
+        draggable: true,
         address: 'Lisbon, CA, USA ',
         phone: '+1 (041) 102-0224',
         size: 45.56,
@@ -170,6 +190,7 @@ export default defineComponent({
       {
         id: '6',
         name: 'Sixth item',
+        draggable: true,
         category: 'Category 6',
         address: 'Glendale, LA, USA',
         phone: '+1 (041) 102-0224',
@@ -179,10 +200,11 @@ export default defineComponent({
         id: '7',
         name: 'Seventh item',
         category: 'Category 7',
+        draggable: true,
         address: 'New York, NY, USA',
         phone: '+1 (041) 102-0224',
         size: 45.56,
-      }
+      },
     ])
 
     const initialItems2 = [...items2.value]
@@ -225,6 +247,7 @@ export default defineComponent({
       params,
       densityOptions,
       draggableOptions,
+      nestedOptions,
     }
   },
 })

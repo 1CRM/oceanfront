@@ -70,7 +70,7 @@
     <template :key="rowidx" v-for="(row, rowidx) of rows">
       <div
         class="of-data-table-row"
-        @mousemove="dragMouseMove($event, rowidx)"
+        @mousemove="draggable && dragMouseMove($event, rowidx)"
         :class="{
           selected:
             rowsRecord.value[row.id] ||
@@ -83,10 +83,11 @@
       >
         <div
           v-if="draggable"
-          @mousedown="dragMouseDown($event, rowidx)"
+          @mousedown="row.draggable && dragMouseDown($event, rowidx)"
           class="grab-button"
+          :class="{ draggable: row.draggable }"
         >
-          <of-icon name="menu"></of-icon>
+          <of-icon v-if="row.draggable" name="menu"></of-icon>
         </div>
         <div v-if="rowsSelector">
           <slot name="rows-selector" :record="rowsRecord" :item="row">
@@ -124,11 +125,12 @@
         }"
       >
         <div
-          @mousedown="dragMouseDown($event, rowidx, subidx)"
+          @mousedown="subrow.draggable && dragMouseDown($event, rowidx, subidx)"
           v-if="draggable"
           class="grab-button"
+          :class="{ draggable: subrow.draggable }"
         >
-          <of-icon name="menu"></of-icon>
+          <of-icon v-if="subrow.draggable" name="menu"></of-icon>
         </div>
         <div v-if="rowsSelector">
           <slot name="rows-selector" :record="rowsRecord" :item="subrow">
@@ -147,7 +149,7 @@
         </div>
         <div v-for="(col, colidx) of columns" :class="col.class" :key="colidx">
           <svg
-            v-if="col.value === 'name'"
+            v-if="col.value === nestedIndicator"
             width="20px"
             height="20px"
             viewBox="0 0 24 24"
@@ -289,6 +291,11 @@ export default defineComponent({
     resetSelection: Boolean,
     selectAll: Boolean,
     draggable: Boolean,
+    nested: Boolean,
+    nestedIndicator: {
+      type: String,
+      default: 'name',
+    },
     density: [String, Number],
   },
   emits: {
@@ -425,7 +432,7 @@ export default defineComponent({
           .closest('.of-data-table-row')
           .querySelector('.of--align-start')
           .getBoundingClientRect().height
-        let checkNested = pagex - dragStartX > 30
+        let checkNested = props.nested && pagex - dragStartX > 30
         let checkDestination = { itemIdx: -1, subitemIdx: -1 }
         if (ofy < height / 2) {
           if (checkNested && idx > 0) {
@@ -524,7 +531,7 @@ export default defineComponent({
             ?.getBoundingClientRect().height || 0
         let subitemCount = items.value[parentIdx].subitems?.length || 0
         let checkDestination = { itemIdx: -1, subitemIdx: -1 }
-        let checkNested = pagex - dragStartX > 30
+        let checkNested = props.nested && pagex - dragStartX > 30
         if (
           parentIdx === draggingItem.itemIdx &&
           draggingItem.type === 'item'
@@ -576,8 +583,9 @@ export default defineComponent({
       itemIdx: number,
       subitemIdx = -1
     ) => {
+      console.log('draaaaaaaaaaaag')
       drag.value = true
-      highlited.value = { type: 'item', itemIdx: -1, subitems: []}
+      highlited.value = { type: 'item', itemIdx: -1, subitems: [] }
       fixArrow(event.target as HTMLDivElement)
       draggingItem.itemIdx = itemIdx
       draggingItem.subitemIdx = subitemIdx
@@ -1009,7 +1017,7 @@ export default defineComponent({
   .of-data-table-row.dragging > div {
     background-color: var(--of-inverse-tint) !important;
   }
-  .grab-button {
+  .grab-button.draggable {
     cursor: grab;
   }
   position: relative;
