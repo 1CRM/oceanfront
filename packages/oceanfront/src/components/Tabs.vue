@@ -341,7 +341,7 @@ export default defineComponent({
           item = { text: item, key: parseInt(index), visible: true }
         } else if (typeof item === 'object') {
           item.key = parseInt(index)
-          item.visible = true
+          item.visible = item.hasOwnProperty('visible') ? item.visible : true
 
           if (item.subMenuItems) {
             for (const subIndex in item.subMenuItems) {
