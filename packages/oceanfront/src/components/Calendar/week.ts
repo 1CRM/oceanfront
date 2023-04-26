@@ -1,6 +1,6 @@
 import { toTimestamp } from '../../lib/calendar'
 import { Timestamp } from '../../lib/calendar/common'
-import { addDays } from '../../lib/datetime'
+import { addDays, parseDay } from '../../lib/datetime'
 import { defineComponent } from 'vue'
 import DayCalendar from './day'
 import calendarProps from './props'
@@ -21,8 +21,9 @@ export default defineComponent({
       return [firstTS, lastTS]
     },
     getCategoriesList() {
-      const weekDay = this.$props.day.getDay() || 7
-      const offset = 1 - weekDay
+      const weekDay = this.$props.day.getDay() ?? 7
+      const weekStart = parseDay(this.$props.weekStart)
+      const offset = weekStart - (weekDay >= weekStart ? weekDay : weekDay + 7)
       return Array.from({ length: 7 }, (_, i) => ({
         category: '' + i,
         date: addDays(this.$props.day, i + offset),

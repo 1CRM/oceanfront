@@ -13,6 +13,7 @@ import {
   addDays,
   firstMonday,
   isoWeekNumber,
+  parseDay,
   monthGrid,
   MonthGridCell,
   MonthGridData,
@@ -50,7 +51,7 @@ export default defineComponent({
     },
 
     monthGrid(): MonthGridData {
-      return monthGrid(this.day)
+      return monthGrid(this.day, this.weekStart)
     },
     parsedEvents(): InternalEvent[] {
       const events: CalendarEvent[] = this.$props.events || []
@@ -235,6 +236,7 @@ export default defineComponent({
     },
     renderGrid() {
       const fm = firstMonday(this.day)
+      const firstDayMonth = addDays(fm, parseDay(this.$props.weekStart) - 1)
       const style = this.fixedRowHeight
         ? {
             '--of-month-day-heigth':
@@ -245,7 +247,7 @@ export default defineComponent({
         h('div', { class: 'of-calendar-day-titles' }, [
           h('div', { class: 'of-calendar-gutter' }),
           Array.from({ length: 7 }, (_, i) => {
-            const weekDay = addDays(fm, i)
+            const weekDay = addDays(firstDayMonth, i)
             if (this.hideDate(weekDay)) return
             return h(
               'div',
