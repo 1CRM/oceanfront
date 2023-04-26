@@ -695,7 +695,7 @@ export default defineComponent({
         h(
           'div',
           { class: 'of-calendar-interval' },
-          h('div', { class: 'of-calendar-interval-label' }, interval)
+          h('div', { class: 'of-calendar-interval-label' }, interval + ':00')
         )
       )
       const days = (this.$props.categoriesList || []).map(this.dayRowCell)
