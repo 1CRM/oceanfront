@@ -312,20 +312,17 @@ div.of-date-picker-cur-year {
   height: var(--of-calendar-iterval-height, 48px);
   box-sizing: border-box;
   border-bottom: solid 1px var(--calendar-grid-color);
-  &:first-child .of-calendar-interval-label {
-    display: none;
-  }
   position: relative;
 }
 
 .of-calendar-interval-label {
   position: absolute;
-  background-color: var(--calendar-day-color);
   text-align: right;
-  top: 0;
-  right: 12px;
+  top: 10px;
+  right: 2px;
   transform: translateY(-50%);
   left: 0;
+  font-size: 0.8rem;
 }
 
 .of-calendar-day-supertitle {
