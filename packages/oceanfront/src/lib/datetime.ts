@@ -43,6 +43,11 @@ export const lastMonthDay = (d: Date): Date => {
   return new Date(d.getFullYear(), d.getMonth() + 1, 0)
 }
 
+export const parseDay = (day: number | string, defaultDay = 1): number => {
+  const dayInt = parseInt(day as string)
+  return isNaN(dayInt) ? defaultDay : Math.max(0, Math.min(6, dayInt))
+}
+
 const monthDaysRolling = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334]
 const monthDaysRollingLeap = [
   0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335,
@@ -93,13 +98,16 @@ export function prevMonth(date: Date): Date {
   return addMonths(date, -1)
 }
 
-export const monthGrid = (forDate?: Date): MonthGridData => {
+export const monthGrid = (
+  forDate?: Date,
+  weekStart?: number | string
+): MonthGridData => {
   const weekDays = [1, 2, 3, 4, 5, 6, 7]
   const monthStart = new Date(forDate?.valueOf() ?? new Date().valueOf())
   monthStart.setDate(1)
   const month = monthStart.getMonth()
   const wd = monthStart.getDay() || 7
-  let date = addDays(monthStart, 1 - wd)
+  let date = addDays(monthStart, parseDay(weekStart ?? 1) - wd)
   let rowIdx = 0
   const grid = []
   const today = new Date()
