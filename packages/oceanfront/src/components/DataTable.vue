@@ -583,7 +583,6 @@ export default defineComponent({
       itemIdx: number,
       subitemIdx = -1
     ) => {
-      console.log('draaaaaaaaaaaag')
       drag.value = true
       highlited.value = { type: 'item', itemIdx: -1, subitems: [] }
       fixArrow(event.target as HTMLDivElement)

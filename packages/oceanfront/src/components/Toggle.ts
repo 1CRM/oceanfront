@@ -33,7 +33,6 @@ export const OfToggle = defineComponent({
     const record = computed(() => {
       return props.record || recordMgr.getCurrentRecord() || undefined
     })
-    console.log(props.size, 'toggle')
     const inputId = computed(() => props.id || defaultId)
     const value = computed(() => {
       const val =
