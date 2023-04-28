@@ -45,18 +45,21 @@
                 @keydown="navigate($event)"
                 :ref="(el) => (tabsRefs[idx] = el)"
                 tabindex="0"
-                :class="{
-                  'is-active': selectedTabKey === tab.key,
-                  'is-disabled': tab.disabled,
-                  'of--focused':
-                    focusedTabKey === tab.key ||
-                    openedMenuTabKey === tab.key ||
-                    (tab.key == -1 && outsideTabsOpened),
-                  'of-tab-header-item': true,
-                  'overflow-button': tab.overflowButton,
-                  'of--rounded': rounded,
-                  'of--with-border': withBorder,
-                }"
+                :class="[
+                  {
+                    'is-active': selectedTabKey === tab.key,
+                    'is-disabled': tab.disabled,
+                    'of--focused':
+                      focusedTabKey === tab.key ||
+                      openedMenuTabKey === tab.key ||
+                      (tab.key == -1 && outsideTabsOpened),
+                    'of-tab-header-item': true,
+                    'overflow-button': tab.overflowButton,
+                    'of--rounded': rounded,
+                    'of--with-border': withBorder,
+                  },
+                  tab.params?.className,
+                ]"
                 role="tab"
                 :aria-label="tab.ariaLabel"
                 :aria-haspopup="showSubMenu"
