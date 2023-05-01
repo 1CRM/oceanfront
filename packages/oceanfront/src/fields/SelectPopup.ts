@@ -37,10 +37,6 @@ export const OfSelectPopup = defineComponent({
       return !!~values.indexOf(item)
     }
 
-    const toggleMode = () => {
-      removing.value = !removing.value
-    }
-
     const toggleValue = (val: any): any => {
       if (!props.multi) return val
       if (!Array.isArray(props.value)) {
@@ -74,7 +70,7 @@ export const OfSelectPopup = defineComponent({
             {
               variant: 'outlined',
               active: !removing.value,
-              onClick: toggleMode,
+              onClick: () => (removing.value = false),
             },
             () => lang.value.selectFieldAddItems
           ),
@@ -83,7 +79,7 @@ export const OfSelectPopup = defineComponent({
             {
               variant: 'outlined',
               active: removing.value,
-              onClick: toggleMode,
+              onClick: () => (removing.value = true),
             },
             () => lang.value.selectFieldRemoveItems
           ),
