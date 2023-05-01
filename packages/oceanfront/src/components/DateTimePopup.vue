@@ -149,6 +149,7 @@ import {
   addMonths,
   sameDate,
   lastMonthDay,
+  parseDay,
 } from '../lib/datetime'
 import { useFormats } from '../lib/formats'
 import {
@@ -173,6 +174,7 @@ export default defineComponent({
     isSelected: Function,
     accept: Function,
     withoutTitle: Boolean,
+    weekStart: Number,
   },
   setup(props) {
     let theNode: VNode | null
@@ -191,6 +193,13 @@ export default defineComponent({
     const timeZone = computed(() =>
       props.withTime ? locale.localeParams?.dateTimeFormat?.timeZone : undefined
     )
+    const weekStartDayLocale = computed(() => {
+      const day =
+        props.weekStart === undefined
+          ? locale.localeParams?.weekStart ?? 1
+          : props.weekStart
+      return parseDay(day)
+    })
     const datetimeFormatter = computed(() =>
       formatMgr.getTextFormatter('datetime', {
         locale: 'en-US',
@@ -489,7 +498,10 @@ export default defineComponent({
       editingYear,
 
       cells: computed(() => {
-        const gridData = monthGrid(selMonthStart.value)
+        const gridData = monthGrid(
+          selMonthStart.value,
+          weekStartDayLocale.value
+        )
         return gridData.grid.reduce((items, value) => {
           items.push(...value)
           return items

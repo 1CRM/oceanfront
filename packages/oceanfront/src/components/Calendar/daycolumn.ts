@@ -85,6 +85,7 @@ export default defineComponent({
     'selection:change',
     'selection:end',
     'selection:cancel',
+    'selection:allday',
     'focus:day',
     'blur:day',
   ],
@@ -328,11 +329,15 @@ export default defineComponent({
                 })
               }
             },
+            onMousedown: (event: any) => {
+              event.stopPropagation()
+            },
             onMouseenter: (event: any) => {
               this.$emit('enter:event', event, e.event)
             },
             onMouseleave: (event: any) => {
               this.$emit('leave:event', event, e.event)
+              event.stopPropagation()
             },
             onFocus: () => {
               this.$emit('focus:day')
@@ -352,10 +357,21 @@ export default defineComponent({
       const events =
         (this.allDayEvents[cat.category] as CalendarAlldayEventPlacement[]) ||
         []
-      const weekDayCls = isDate ? 'week-day-' + cat.date.getDay() : false
+      const weekDay = cat.date.getDay()
       const vnode = h(
         'div',
-        { class: ['of-calendar-day', weekDayCls] },
+        {
+          class: [
+            'of-calendar-day',
+            {
+              selected:
+                this.selecting &&
+                this.$data.selectionCategory === 'allday-' + weekDay,
+              ['week-day-' + weekDay]: isDate,
+            },
+          ],
+          ...this.allDaySelectingHandlers(cat.date),
+        },
         events.map(this.allDayRowEvent(acc, eventHeight))
       )
       if (!this.hideDate(cat.date)) acc.columns.push(vnode)
@@ -412,16 +428,15 @@ export default defineComponent({
         this.$data.allDayPopups['active'][id] = true
         this.$data.allDayPopups['width'][id] = el.clientWidth
       }
-      const allDay = (eventsNodes: VNode[], index: number | string) => {
+      const allDay = (eventsNodes: VNode, index: number | string) => {
         const id = 'all-day-' + index
         const { titles, count } = this.groupAllDay
           ? this.allDayCount()
           : { titles: '', count: 0 }
-        // if (this.allDayCount() && !count[index]) return []
         return h(
           'div',
           {
-            class: 'of-calendar-day',
+            ...eventsNodes.props,
             style: {
               'z-index': 1,
             },
@@ -466,7 +481,7 @@ export default defineComponent({
                       width: this.$data.allDayPopups['width'][id] + 'px',
                       height: count[index] * eventHeight + 'px',
                     },
-                    class: 'of--elevated-1',
+                    class: 'of--elevated-1 of-calendar-grouped-popup',
                     onMouseenter: () => clearCloseTimer(id),
                     onMouseleave: () => closeAllDay(id),
                   },
@@ -480,7 +495,7 @@ export default defineComponent({
       const grouped =
         this.$props.type == 'week'
           ? columns.map((dayColumns, index) => allDay(dayColumns, index))
-          : [allDay(columns, 'Today')]
+          : allDay(columns[0], 'Today')
 
       return h(
         'div',
@@ -503,6 +518,29 @@ export default defineComponent({
           this.groupAllDay ? grouped : columns,
         ]
       )
+    },
+    allDaySelectingHandlers(date: Date) {
+      return {
+        onMousedown: (e: MouseEvent) => {
+          const leftPressed = (e as MouseEvent).buttons === 1
+          if (this.selectable && leftPressed) {
+            this.selecting = 'start'
+            this.$data.selectionCategory = 'allday-' + date.getDay()
+          }
+        },
+        onMouseup: (e: MouseEvent) => {
+          const leftReleased = ((e as MouseEvent).buttons & 1) === 0
+          if (this.selecting && leftReleased) {
+            this.$emit('selection:allday', date)
+            this.selecting = false
+            this.$data.selectionCategory = ''
+          }
+        },
+        onMouseleave: () => {
+          this.selecting = false
+          this.$data.selectionCategory = ''
+        },
+      }
     },
     intervalSelectionHandlers(cat: categoryItem) {
       return {

@@ -19,7 +19,7 @@ export default {
     visibleRange: Array as PropType<Timestamp[]>,
   },
   week: {
-    weekStart: { type: [Number, String], default: 1 },
+    weekStart: Number,
     hideWeekends: Boolean,
   },
   category: {
@@ -42,7 +42,7 @@ export default {
     },
     hideOtherMonths: Boolean,
     hideWeekends: Boolean,
-    weekStart: { type: [Number, String], default: 1 },
+    weekStart: Number,
   },
   common: {
     selectable: Boolean,

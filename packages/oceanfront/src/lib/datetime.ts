@@ -107,7 +107,8 @@ export const monthGrid = (
   monthStart.setDate(1)
   const month = monthStart.getMonth()
   const wd = monthStart.getDay() || 7
-  let date = addDays(monthStart, parseDay(weekStart ?? 1) - wd)
+  const ws = parseDay(weekStart ?? 1)
+  let date = addDays(monthStart, ws - (wd >= ws ? wd : wd + 7))
   let rowIdx = 0
   const grid = []
   const today = new Date()

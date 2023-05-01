@@ -16,6 +16,7 @@ export type LocaleDateTimeFormat = {
 export type LocaleParams = {
   numberFormat?: LocaleNumberFormat
   dateTimeFormat?: LocaleDateTimeFormat
+  weekStart?: number
   [key: string]: any
 }
 

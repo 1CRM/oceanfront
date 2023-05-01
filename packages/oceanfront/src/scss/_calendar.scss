@@ -216,7 +216,9 @@ div.of-date-picker-cur-year {
   margin: 3px 2px 4px;
   overflow: hidden;
 }
-
+.of-calendar-grouped-popup {
+  background-color: var(--of-color-on-primary);
+}
 .of-calendar-month-day {
   & .day-title {
     display: flex;
@@ -410,9 +412,12 @@ div.of-date-picker-cur-year {
 
 .of-calendar-subinterval {
   height: var(--of-calendar-subinterval-height, 25%);
+}
+
+.of-calendar-allday-row .of-calendar-day.selected,
+.of-calendar-subinterval {
   &.selected {
-    background: cornflowerblue;
-    opacity: 0.3;
+    background: rgba(100, 149, 237, 0.3);
   }
 }
 
