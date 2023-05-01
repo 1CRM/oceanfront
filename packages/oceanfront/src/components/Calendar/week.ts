@@ -1,6 +1,7 @@
 import { toTimestamp } from '../../lib/calendar'
 import { Timestamp } from '../../lib/calendar/common'
 import { addDays, parseDay } from '../../lib/datetime'
+import { useLocale } from '../../lib/locale'
 import { defineComponent } from 'vue'
 import DayCalendar from './day'
 import calendarProps from './props'
@@ -10,6 +11,16 @@ export default defineComponent({
   props: {
     ...calendarProps.common,
     ...calendarProps.week,
+  },
+  computed: {
+    weekStartLocale(): number {
+      const locale = useLocale()
+      const day =
+        this.weekStart === undefined
+          ? locale.localeParams?.weekStart ?? 1
+          : this.weekStart
+      return parseDay(day)
+    },
   },
   methods: {
     getVisibleRange(): Timestamp[] {
@@ -22,8 +33,9 @@ export default defineComponent({
     },
     getCategoriesList() {
       const weekDay = this.$props.day.getDay() ?? 7
-      const weekStart = parseDay(this.$props.weekStart)
-      const offset = weekStart - (weekDay >= weekStart ? weekDay : weekDay + 7)
+      const offset =
+        this.weekStartLocale -
+        (weekDay >= this.weekStartLocale ? weekDay : weekDay + 7)
       return Array.from({ length: 7 }, (_, i) => ({
         category: '' + i,
         date: addDays(this.$props.day, i + offset),
