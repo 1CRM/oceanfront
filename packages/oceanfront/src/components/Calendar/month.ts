@@ -19,6 +19,7 @@ import {
   MonthGridData,
 } from '../../lib/datetime'
 import { useFormats } from '../../lib/formats'
+import { useLocale } from '../../lib/locale'
 import { defineComponent, h } from 'vue'
 import Base from './base'
 import calendarProps from './props'
@@ -51,7 +52,7 @@ export default defineComponent({
     },
 
     monthGrid(): MonthGridData {
-      return monthGrid(this.day, this.weekStart)
+      return monthGrid(this.day, this.weekStartLocale)
     },
     parsedEvents(): InternalEvent[] {
       const events: CalendarEvent[] = this.$props.events || []
@@ -59,6 +60,14 @@ export default defineComponent({
       return events
         .map((e) => parseEvent(e, mgr))
         .filter((e) => e !== undefined) as InternalEvent[]
+    },
+    weekStartLocale(): number {
+      const locale = useLocale()
+      const day =
+        this.weekStart === undefined
+          ? locale.localeParams?.weekStart ?? 1
+          : this.weekStart
+      return parseDay(day)
     },
   },
   methods: {
@@ -236,7 +245,11 @@ export default defineComponent({
     },
     renderGrid() {
       const fm = firstMonday(this.day)
-      const firstDayMonth = addDays(fm, parseDay(this.$props.weekStart) - 1)
+      const wd = fm.getDay() || 7
+      const firstDayMonth = addDays(
+        fm,
+        this.weekStartLocale - (wd >= this.weekStartLocale ? wd : wd + 7)
+      )
       const style = this.fixedRowHeight
         ? {
             '--of-month-day-heigth':
