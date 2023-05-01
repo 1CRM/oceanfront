@@ -25,12 +25,14 @@ type RenderOpts = {
   monthStart: Ref<Date>
   withTime: boolean
   withDate: boolean
+  weekStart?: number
 }
 
 export const renderDateTimePopup = (opts: RenderOpts): any => {
   return h(OfDateTimePopup, {
     date: opts.selectedDate.value,
     monthStart: opts.monthStart.value,
+    weekStart: opts.weekStart,
     withTime: opts.withTime,
     withDate: opts.withDate,
     accept: opts.close,
@@ -41,7 +43,10 @@ const defineField = (type: InputType, name: string, cls: string) =>
   defineComponent({
     name,
     class: cls,
-    props: BaseFieldProps,
+    props: {
+      ...BaseFieldProps,
+      weekStart: { type: Number, default: undefined },
+    },
     setup(props, ctx) {
       const fieldCtx = makeFieldContext(props, ctx)
       const withTime = type == 'datetime' || type == 'time'
@@ -160,6 +165,7 @@ const defineField = (type: InputType, name: string, cls: string) =>
           monthStart,
           withTime,
           withDate,
+          weekStart: props.weekStart,
         })
       }
 
