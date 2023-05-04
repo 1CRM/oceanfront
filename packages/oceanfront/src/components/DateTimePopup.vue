@@ -132,9 +132,20 @@
         <div />
       </div>
     </div>
-    <div class="of-date-picker-buttons" v-if="useButtons">
-      <OfButton label="Accept" :onclick="onAccept" />
-      <OfButton label="Cancel" :onclick="onCancel" />
+    <div
+      class="of-date-picker-buttons"
+      :style="'grid-template-columns: ' + buttonsGrid"
+      v-if="useButtons || (showTodayButton && withDate)"
+    >
+      <OfButton
+        label="Today"
+        :onclick="selectToday"
+        v-if="showTodayButton && withDate"
+      />
+      <template v-if="useButtons">
+        <OfButton label="Accept" :onclick="onAccept" />
+        <OfButton label="Cancel" :onclick="onCancel" />
+      </template>
     </div>
   </div>
 </template>
@@ -175,6 +186,7 @@ export default defineComponent({
     accept: Function,
     withoutTitle: Boolean,
     weekStart: Number,
+    showTodayButton: Boolean,
   },
   setup(props) {
     let theNode: VNode | null
@@ -471,6 +483,7 @@ export default defineComponent({
       useButtons: props.withTime,
 
       selectDate,
+      selectToday: () => selectDate(new Date()),
       checkSelected: computed(() => props.isSelected || isSelected),
       checkFocused: computed(() => isFocused),
       nextMonth,
@@ -508,6 +521,13 @@ export default defineComponent({
         }, [])
       }),
 
+      buttonsGrid: computed(() => {
+        return props.withTime && props.showTodayButton && props.withDate
+          ? '1fr 1fr 1fr;'
+          : props.withTime
+          ? '1fr 1fr;'
+          : '1fr'
+      }),
       mounted: (vnode: VNode) => {
         theNode = vnode
       },

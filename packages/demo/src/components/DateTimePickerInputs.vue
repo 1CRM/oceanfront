@@ -42,7 +42,19 @@
 
       <of-demo-field>
         <template #default="props">
-          <of-date-field label="Date only" v-model="dateValue" v-bind="props" />
+          <of-date-field
+            label="Date only"
+            v-model="dateValue"
+            v-bind="{ ...props, ...customProps }"
+          />
+        </template>
+        <template #options>
+          <of-field
+            type="toggle"
+            label="Show Today Button"
+            label-position="input"
+            v-model="customProps.showTodayButton"
+          />
         </template>
       </of-demo-field>
 
@@ -51,7 +63,15 @@
           <of-datetime-field
             label="Date and Time"
             v-model="dateTimeValue"
-            v-bind="props"
+            v-bind="{ ...props, ...customProps }"
+          />
+        </template>
+        <template #options>
+          <of-field
+            type="toggle"
+            label="Show Today button"
+            label-position="input"
+            v-model="customProps.showTodayButton"
           />
         </template>
       </of-demo-field>
@@ -66,7 +86,7 @@
 </template>
 
 <script lang="ts">
-import { ref, defineComponent, Ref } from 'vue'
+import { ref, defineComponent, Ref, reactive } from 'vue'
 
 const dateTimeValue = ref('2021-03-05 12:00')
 const dateValue = ref('2021-03-05')
@@ -508,6 +528,7 @@ export default defineComponent({
       }
       tzOpts.items.push({ text, value })
     }
+    const customProps = reactive({ showTodayButton: false })
     return {
       sampleCode,
       dateValue,
@@ -521,6 +542,7 @@ export default defineComponent({
       locale,
       tzOpts,
       timeZone,
+      customProps,
     }
   },
 })

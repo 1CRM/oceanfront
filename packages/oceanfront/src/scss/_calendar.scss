@@ -155,7 +155,7 @@ div.of-date-picker-cur-year {
 .of-date-picker-buttons {
   display: grid;
   justify-items: center;
-  grid-template-columns: 1fr 1fr;
+  gap: 0.5em;
   padding: 0;
   margin: 8px 0;
 }

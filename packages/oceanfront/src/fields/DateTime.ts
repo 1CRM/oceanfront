@@ -25,6 +25,7 @@ type RenderOpts = {
   monthStart: Ref<Date>
   withTime: boolean
   withDate: boolean
+  showTodayButton: boolean
   weekStart?: number
 }
 
@@ -35,6 +36,7 @@ export const renderDateTimePopup = (opts: RenderOpts): any => {
     weekStart: opts.weekStart,
     withTime: opts.withTime,
     withDate: opts.withDate,
+    showTodayButton: opts.showTodayButton,
     accept: opts.close,
   })
 }
@@ -46,6 +48,7 @@ const defineField = (type: InputType, name: string, cls: string) =>
     props: {
       ...BaseFieldProps,
       weekStart: { type: Number, default: undefined },
+      showTodayButton: { type: Boolean, default: false },
     },
     setup(props, ctx) {
       const fieldCtx = makeFieldContext(props, ctx)
@@ -166,6 +169,7 @@ const defineField = (type: InputType, name: string, cls: string) =>
           withTime,
           withDate,
           weekStart: props.weekStart,
+          showTodayButton: props.showTodayButton,
         })
       }
 
