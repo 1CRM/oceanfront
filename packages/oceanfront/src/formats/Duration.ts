@@ -1,10 +1,6 @@
 import { TextFormatter, TextFormatResult } from '../lib/formats'
 
 export class DurationFormatter implements TextFormatter {
-  get align(): 'start' | 'center' | 'end' {
-    return 'end'
-  }
-
   get inputClass(): string {
     return 'of--text-numeric'
   }
