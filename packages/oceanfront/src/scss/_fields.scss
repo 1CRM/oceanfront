@@ -695,7 +695,8 @@
           line-height: 1;
           padding: calc(var(--field-v-pad) / 2)
             calc(var(--field-size-append) + var(--field-h-pad))
-            calc(var(--field-v-pad) / 2) var(--field-h-pad);
+            calc(var(--field-v-pad) / 2)
+            calc(var(--field-size-prepend) + var(--field-h-pad));
 
           .of-field-label {
             font-size: 0.75em;
@@ -704,8 +705,7 @@
       }
 
       > .of-field-body {
-        > .of-field-inner,
-        > .of-field-prepend {
+        > .of-field-inner {
           margin-top: 1em;
         }
       }
