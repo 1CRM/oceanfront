@@ -134,17 +134,14 @@
     </div>
     <div
       class="of-date-picker-buttons"
-      :style="'grid-template-columns: ' + buttonsGrid"
       v-if="useButtons || (showTodayButton && withDate)"
     >
-      <OfButton
-        label="Today"
-        :onclick="selectToday"
-        v-if="showTodayButton && withDate"
-      />
+      <div class="of-calendar-today" v-if="showTodayButton && withDate">
+        <OfButton label="Today" variant="text" :onclick="selectToday" />
+      </div>
       <template v-if="useButtons">
-        <OfButton label="Accept" :onclick="onAccept" />
-        <OfButton label="Cancel" :onclick="onCancel" />
+        <OfButton icon="cancel" :onclick="onCancel" variant="text" />
+        <OfButton icon="accept" :onclick="onAccept" variant="text" />
       </template>
     </div>
   </div>
@@ -298,6 +295,7 @@ export default defineComponent({
       if (props.withTime) {
         if (focusTime) timeSelector?.value?.focus()
       } else props.accept?.(date)
+      selMonthStart.value = selected
       updateSelected(date)
     }
 
@@ -521,13 +519,6 @@ export default defineComponent({
         }, [])
       }),
 
-      buttonsGrid: computed(() => {
-        return props.withTime && props.showTodayButton && props.withDate
-          ? '1fr 1fr 1fr;'
-          : props.withTime
-          ? '1fr 1fr;'
-          : '1fr'
-      }),
       mounted: (vnode: VNode) => {
         theNode = vnode
       },
