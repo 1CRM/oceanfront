@@ -48,7 +48,7 @@ const defineField = (type: InputType, name: string, cls: string) =>
     props: {
       ...BaseFieldProps,
       weekStart: { type: Number, default: undefined },
-      showTodayButton: { type: Boolean, default: false },
+      showTodayButton: { type: Boolean, default: true },
     },
     setup(props, ctx) {
       const fieldCtx = makeFieldContext(props, ctx)

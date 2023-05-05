@@ -528,7 +528,7 @@ export default defineComponent({
       }
       tzOpts.items.push({ text, value })
     }
-    const customProps = reactive({ showTodayButton: false })
+    const customProps = reactive({ showTodayButton: true })
     return {
       sampleCode,
       dateValue,
