@@ -298,6 +298,7 @@ export default defineComponent({
       if (props.withTime) {
         if (focusTime) timeSelector?.value?.focus()
       } else props.accept?.(date)
+      selMonthStart.value = selected
       updateSelected(date)
     }
 
