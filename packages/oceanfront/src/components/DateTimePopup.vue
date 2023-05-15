@@ -132,9 +132,17 @@
         <div />
       </div>
     </div>
-    <div class="of-date-picker-buttons" v-if="useButtons">
-      <OfButton label="Accept" :onclick="onAccept" />
-      <OfButton label="Cancel" :onclick="onCancel" />
+    <div
+      class="of-date-picker-buttons"
+      v-if="useButtons || (showTodayButton && withDate)"
+    >
+      <div class="of-calendar-today" v-if="showTodayButton && withDate">
+        <OfButton label="Today" variant="text" :onclick="selectToday" />
+      </div>
+      <template v-if="useButtons">
+        <OfButton icon="cancel" :onclick="onCancel" variant="text" />
+        <OfButton icon="accept" :onclick="onAccept" variant="text" />
+      </template>
     </div>
   </div>
 </template>
@@ -175,6 +183,7 @@ export default defineComponent({
     accept: Function,
     withoutTitle: Boolean,
     weekStart: Number,
+    showTodayButton: Boolean,
   },
   setup(props) {
     let theNode: VNode | null
@@ -286,6 +295,7 @@ export default defineComponent({
       if (props.withTime) {
         if (focusTime) timeSelector?.value?.focus()
       } else props.accept?.(date)
+      selMonthStart.value = selected
       updateSelected(date)
     }
 
@@ -471,6 +481,7 @@ export default defineComponent({
       useButtons: props.withTime,
 
       selectDate,
+      selectToday: () => selectDate(new Date()),
       checkSelected: computed(() => props.isSelected || isSelected),
       checkFocused: computed(() => isFocused),
       nextMonth,

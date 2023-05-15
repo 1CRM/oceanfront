@@ -55,10 +55,6 @@ export class NumberFormatter implements TextFormatter {
     })
   }
 
-  get align(): 'start' | 'center' | 'end' {
-    return 'end'
-  }
-
   get inputClass(): string {
     return 'of--text-numeric'
   }

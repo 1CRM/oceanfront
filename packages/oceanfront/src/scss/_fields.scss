@@ -797,7 +797,7 @@
   .of--focused & {
     .of-switch-thumb {
       box-shadow: 0 0 0 9px rgba(100, 100, 100, 0.2);
-    }  
+    }
   }
 }
 
@@ -875,7 +875,7 @@
     min-width: 20px;
     padding: 4px 5px;
     position: absolute;
-    right: -.5em;
+    right: -0.5em;
     text-align: center;
     top: -2.2em;
     white-space: nowrap;
@@ -892,7 +892,7 @@
       border-style: solid;
       border-width: 5px;
       border-top-color: inherit;
-      content: "";
+      content: '';
       position: absolute;
     }
   }
@@ -922,7 +922,7 @@
 .of-field.of-toggle-field.of--mode-fixed {
   .of-switch {
     .of-switch-track {
-      opacity: .2;
+      opacity: 0.2;
     }
     .of-switch-thumb {
       background-color: #989c92;
