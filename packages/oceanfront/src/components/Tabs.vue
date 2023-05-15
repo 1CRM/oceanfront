@@ -70,7 +70,8 @@
                 <div class="of--layer of--layer-outl" />
                 <div class="of-tab-text">
                   <of-icon v-if="tab.icon" :name="tab.icon" size="1.1em" />
-                  {{ tab.text }}
+                  <span>{{ tab.text }}</span>
+
                 </div>
                 <div class="of--layer of--layer-state" />
               </div>
