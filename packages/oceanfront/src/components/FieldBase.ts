@@ -264,10 +264,15 @@ export const OfFieldBase = defineComponent({
                 )
             : ctx.slots.interactiveContent)
 
+        const fieldInner: VNode[] = []
+
+        renderSlot(fieldInner, ctx.slots.inputPrepend, 'of-field-inner-prepend')
+        renderSlot(fieldInner, contentSlot)
+
         const inner: VNode | VNode[] = []
 
         renderSlot(inner, ctx.slots.prepend, 'of-field-prepend')
-        renderSlot(inner, contentSlot, 'of-field-inner')
+        renderSlot(inner, () => fieldInner, 'of-field-inner')
         renderSlot(inner, ctx.slots.append, 'of-field-append')
         if (overlay) {
           overlay = h(

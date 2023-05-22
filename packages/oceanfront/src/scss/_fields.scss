@@ -395,8 +395,12 @@
 
   > *:not(.of--unpadded):not([class*='of--density-']) {
     padding: var(--field-v-pad) var(--field-h-pad);
+    &.of-field-inner-prepend {
+      padding-right: 0;
+    }
   }
 }
+
 .of-field-inner,
 .of-field-content-text {
   cursor: inherit;
