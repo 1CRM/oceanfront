@@ -6,6 +6,7 @@
       :class="{
         'of--with-border': withBorder,
         [`of--density-${normalizedDensity}`]: true,
+        'top-tabs': topTabs,
       }"
       :style="offsetStyle"
     >
@@ -71,7 +72,6 @@
                 <div class="of-tab-text">
                   <of-icon v-if="tab.icon" :name="tab.icon" size="1.1em" />
                   <span>{{ tab.text }}</span>
-
                 </div>
                 <div class="of--layer of--layer-state" />
               </div>
@@ -99,7 +99,9 @@
               @mouseleave="subMenuLeave()"
               @click="selectSubMenuTab"
               @blur="onBlurList"
+              :class="{ 'top-tabs-menu': topTabs }"
               class="of--elevated-1"
+              :style="{ minWidth: submenuMinWidth + 'px' }"
               :items="subMenuTabsList"
               :focus="optionListFocused"
             >
@@ -232,6 +234,7 @@ export default defineComponent({
     rounded: Boolean,
     withBorder: Boolean,
     activeOffset: String,
+    topTabs: { type: Boolean, default: false },
     tabsList: Array,
     submenu: Boolean,
   },
@@ -640,6 +643,7 @@ export default defineComponent({
     const subMenuOuter = ref()
     const subMenuTabsList: Ref<Tab[]> = ref([])
     const subMenuTimerId = ref()
+    const submenuMinWidth = ref(0)
 
     const openSubMenu = (
       key: number,
@@ -685,6 +689,7 @@ export default defineComponent({
       key: number,
       elt: HTMLElement | EventTarget | null
     ) => {
+      submenuMinWidth.value = tabsRefs[key].offsetWidth
       if (optionListFocused.value) {
         subMenuHidden.value = true
         focusTab()
@@ -866,7 +871,7 @@ export default defineComponent({
       tabs,
       cls,
       offsetStyle,
-
+      submenuMinWidth,
       invisibleTabsList,
       outsideTabsOpened,
       closeOverflowPopup,

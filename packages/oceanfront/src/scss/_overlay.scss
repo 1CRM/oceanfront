@@ -250,6 +250,9 @@
   max-height: 100%;
   max-width: 400px;
   min-width: 200px;
+  &.top-tabs-menu{
+    min-width: auto;
+  }
   overflow: hidden auto;
 
   &.options {

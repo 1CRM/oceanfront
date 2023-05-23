@@ -182,6 +182,7 @@ export default defineComponent({
       borderWidth: '1px',
       density: 'default',
     })
+
     const testItems = [
       'Tab 1',
       'Tab 2',
