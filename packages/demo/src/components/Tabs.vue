@@ -53,6 +53,7 @@
           />
         </div>
       </div>
+
       <h2>Regular tabs</h2>
       <of-tabs
         :items="testItems"
@@ -265,6 +266,7 @@ export default defineComponent({
     const selected5 = ref(0)
     const selected6 = ref(1)
 
+
     const selectTab = function (tab: Tab) {
       console.log(tab)
     }
@@ -295,6 +297,7 @@ export default defineComponent({
 
       testItems6,
       selected6,
+
     }
   },
 })

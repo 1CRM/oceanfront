@@ -236,6 +236,7 @@ export default defineComponent({
     activeOffset: String,
     topTabs: { type: Boolean, default: false },
     tabsList: Array,
+    params: { type: Object, required: false },
     submenu: Boolean,
   },
   emits: {
@@ -597,13 +598,14 @@ export default defineComponent({
       } else if (selectedTab) {
         context.emit('update:modelValue', key)
         if (emitSelectEvent) context.emit('select-tab', selectedTab)
-
-        nextTick(() => {
-          closeSubMenu()
-          closeOverflowPopup()
-          repositionLine()
-          repositionTabs()
-        })
+        if (!props.params?.showSubmenuOnClick) {
+          nextTick(() => {
+            closeSubMenu()
+            closeOverflowPopup()
+            repositionLine()
+            repositionTabs()
+          })
+        }
       }
     }
 
@@ -689,12 +691,15 @@ export default defineComponent({
       key: number,
       elt: HTMLElement | EventTarget | null
     ) => {
-      submenuMinWidth.value = tabsRefs[key].offsetWidth
-      if (optionListFocused.value) {
-        subMenuHidden.value = true
-        focusTab()
+      if(!props.params?.hideSubmenuOnHover){
+        submenuMinWidth.value = tabsRefs[key].offsetWidth
+        if (optionListFocused.value) {
+          subMenuHidden.value = true
+          focusTab()
+        }
+        openSubMenu(key, elt, props.params?.submenuDelay)
       }
-      openSubMenu(key, elt)
+
     }
 
     const subMenuLeave = (key: number | undefined = undefined) => {
