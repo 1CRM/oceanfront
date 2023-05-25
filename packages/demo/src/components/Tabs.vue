@@ -266,7 +266,6 @@ export default defineComponent({
     const selected5 = ref(0)
     const selected6 = ref(1)
 
-
     const selectTab = function (tab: Tab) {
       console.log(tab)
     }

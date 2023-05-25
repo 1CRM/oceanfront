@@ -299,6 +299,10 @@ export default defineComponent({
 
     const variant = computed(() => props.variant || 'material')
     const cls = computed(() => 'of--variant-' + variant.value)
+    let closeDelay = computed(() => {
+      if(props.params?.submenuCloseDelay === undefined) return 500;
+      return props.params?.submenuCloseDelay
+    })
 
     const overflowButtonEnabled = computed(() => props.overflowButton || false)
     let showOverflowButton = ref(false)
@@ -591,20 +595,23 @@ export default defineComponent({
       }
     )
     const selectTab = function (key: number, emitSelectEvent = true) {
-      const selectedTab: Tab | undefined = getTab(key)
-
-      if (selectedTab && selectedTab.overflowButton) {
-        switchOverflowPopupVisibility()
-      } else if (selectedTab) {
-        context.emit('update:modelValue', key)
-        if (emitSelectEvent) context.emit('select-tab', selectedTab)
-        if (!props.params?.showSubmenuOnClick) {
-          nextTick(() => {
-            closeSubMenu()
-            closeOverflowPopup()
-            repositionLine()
-            repositionTabs()
-          })
+      if (props.params?.disableTabSelect) {
+        onMouseoverTab(key, tabsRefs[key], true)
+      } else {
+        const selectedTab: Tab | undefined = getTab(key)
+        if (selectedTab && selectedTab.overflowButton) {
+          switchOverflowPopupVisibility()
+        } else if (selectedTab) {
+          context.emit('update:modelValue', key)
+          if (emitSelectEvent) context.emit('select-tab', selectedTab)
+          if (!props.params?.showSubmenuOnClick) {
+            nextTick(() => {
+              closeSubMenu()
+              closeOverflowPopup()
+              repositionLine()
+              repositionTabs()
+            })
+          }
         }
       }
     }
@@ -689,9 +696,14 @@ export default defineComponent({
 
     const onMouseoverTab = (
       key: number,
-      elt: HTMLElement | EventTarget | null
+      elt: HTMLElement | EventTarget | null,
+      forceFocus: Boolean = false
     ) => {
-      if(!props.params?.hideSubmenuOnHover){
+      if (
+        !props.params?.hideSubmenuOnHover ||
+        (focusedTabKey.value && focusedTabKey.value === key) ||
+        forceFocus
+      ) {
         submenuMinWidth.value = tabsRefs[key].offsetWidth
         if (optionListFocused.value) {
           subMenuHidden.value = true
@@ -699,7 +711,6 @@ export default defineComponent({
         }
         openSubMenu(key, elt, props.params?.submenuDelay)
       }
-
     }
 
     const subMenuLeave = (key: number | undefined = undefined) => {
@@ -708,7 +719,7 @@ export default defineComponent({
       subMenuClearTimeout()
       subMenuTimerId.value = window.setTimeout(() => {
         closeSubMenu()
-      }, 500)
+      }, closeDelay.value)
     }
 
     const subMenuClearTimeout = () => {
@@ -752,11 +763,13 @@ export default defineComponent({
     }
 
     const onFocusTab = (key: number) => {
-      focusedTabKey.value = key
-      focusTab()
-      nextTick(() => {
-        if (!subMenuHidden.value) openFocusedSubMenu()
-      })
+      if (!props.params?.disableTabSelect) {
+        focusedTabKey.value = key
+        focusTab()
+        nextTick(() => {
+          if (!subMenuHidden.value) openFocusedSubMenu()
+        })
+      }
     }
 
     const onBlurTab = (key: number | undefined = undefined) => {
