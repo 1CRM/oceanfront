@@ -53,6 +53,7 @@
           />
         </div>
       </div>
+
       <h2>Regular tabs</h2>
       <of-tabs
         :items="testItems"
@@ -295,6 +296,7 @@ export default defineComponent({
 
       testItems6,
       selected6,
+
     }
   },
 })
