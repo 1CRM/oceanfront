@@ -300,7 +300,7 @@ export default defineComponent({
     const variant = computed(() => props.variant || 'material')
     const cls = computed(() => 'of--variant-' + variant.value)
     let closeDelay = computed(() => {
-      if(props.params?.submenuCloseDelay === undefined) return 500;
+      if (props.params?.submenuCloseDelay === undefined) return 500
       return props.params?.submenuCloseDelay
     })
 
@@ -594,7 +594,10 @@ export default defineComponent({
         tabs.value?.addEventListener('transitionend', reposition)
       }
     )
-    const selectTab = function (key: number, emitSelectEvent = true) {
+    const selectTab = function (
+      key: number,
+      emitSelectEvent = true
+    ) {
       if (props.params?.disableTabSelect) {
         onMouseoverTab(key, tabsRefs[key], true)
       } else {
@@ -729,6 +732,7 @@ export default defineComponent({
     const selectSubMenuTab = function (_index: number, tab: Tab) {
       if (typeof tab.parentKey !== 'undefined') {
         selectTab(tab.parentKey, false)
+        closeSubMenu()
         context.emit('select-tab', tab)
       }
     }
