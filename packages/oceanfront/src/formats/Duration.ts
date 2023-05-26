@@ -69,6 +69,10 @@ export class DurationFormatter implements TextFormatter {
     }
   }
 
+  formatFixed(modelValue: string): string {
+    return this.format(modelValue).textValue ?? modelValue
+  }
+
   minToDurationConvert(value: string): string {
     const valueNum = parseFloat(value)
     let min = Math.round(valueNum)
