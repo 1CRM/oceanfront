@@ -99,7 +99,7 @@
               @mouseleave="subMenuLeave()"
               @click="selectSubMenuTab"
               @blur="onBlurList"
-              :class="{ 'top-tabs-menu': topTabs }"
+              :class="[{ 'top-tabs-menu': topTabs }, overlayClassname]"
               class="of--elevated-1"
               :style="{ minWidth: submenuMinWidth + 'px' }"
               :items="subMenuTabsList"
@@ -258,7 +258,9 @@ export default defineComponent({
           }
         : {}
     )
-
+    const overlayClassname = computed(() => {
+      return props.params?.overlayClassname
+    })
     const normalizedDensity = computed(() => {
       let d = props.density
       if (d === 'default') {
@@ -300,7 +302,7 @@ export default defineComponent({
     const variant = computed(() => props.variant || 'material')
     const cls = computed(() => 'of--variant-' + variant.value)
     let closeDelay = computed(() => {
-      if(props.params?.submenuCloseDelay === undefined) return 500;
+      if (props.params?.submenuCloseDelay === undefined) return 500
       return props.params?.submenuCloseDelay
     })
 
@@ -898,7 +900,7 @@ export default defineComponent({
       ofTabsHeader,
       ofTabsNavigationHeaderShowNextNavigation,
       ofTabsNavigationHeaderShowPreviousNavigation,
-
+      overlayClassname,
       showSubMenu,
       subMenuTabsList,
       subMenuActive,
