@@ -101,7 +101,7 @@
               @blur="onBlurList"
               :class="[{ 'top-tabs-menu': topTabs }, overlayClassname]"
               class="of--elevated-1"
-              :style="{ minWidth: submenuMinWidth + 'px' }"
+              :style="overlayStyle"
               :items="subMenuTabsList"
               :focus="optionListFocused"
             >
@@ -258,6 +258,12 @@ export default defineComponent({
           }
         : {}
     )
+    const overlayStyle = computed(() => {
+      if (props.topTabs) {
+        return { minWidth: submenuMinWidth.value + 'px' }
+      }
+      return {}
+    })
     const overlayClassname = computed(() => {
       return props.params?.overlayClassname
     })
@@ -596,10 +602,7 @@ export default defineComponent({
         tabs.value?.addEventListener('transitionend', reposition)
       }
     )
-    const selectTab = function (
-      key: number,
-      emitSelectEvent = true
-    ) {
+    const selectTab = function (key: number, emitSelectEvent = true) {
       if (props.params?.disableTabSelect) {
         onMouseoverTab(key, tabsRefs[key], true)
       } else {
@@ -900,7 +903,7 @@ export default defineComponent({
       outsideTabsOpened,
       closeOverflowPopup,
       selectInvisibleTab,
-
+      overlayStyle,
       ofTabsHeader,
       ofTabsNavigationHeaderShowNextNavigation,
       ofTabsNavigationHeaderShowPreviousNavigation,
