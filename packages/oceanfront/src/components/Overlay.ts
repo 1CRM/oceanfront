@@ -135,35 +135,44 @@ export const OfOverlay = defineComponent({
         : undefined
     }
     const reposition = () => {
-      const targetElt = target.value
-      const outer = elt.value
-      if (!outer) return // or not in document
-      if (!targetElt) return // or make fixed/absolute
+      nextTick(() => {
+        const targetElt = target.value
+        const outer = elt.value
+        if (!outer) return // or not in document
+        if (!targetElt) return // or make fixed/absolute
 
-      const parentRect = relativeParentRect(outer)
-      const outerRect = outer.getBoundingClientRect()
-      const targetRect = targetElt.getBoundingClientRect()
-      if (!targetRect || !parentRect) return // or hide?
+        const parentRect = relativeParentRect(outer)
+        const outerRect = outer.getBoundingClientRect()
+        const targetRect = targetElt.getBoundingClientRect()
+        if (!targetRect || !parentRect) return // or hide?
 
-      const neededWidth = outerRect.width + targetRect.left
-      const offsetWidth = Math.max(neededWidth - parentRect.width, 0)
-      if (neededWidth > window.innerWidth) {
-        const rightOffset = parseInt(getComputedStyle(outer).paddingRight)
-        outer.style.setProperty('--overlay-dyn-margin-left', 'auto')
+        const neededWidth = outerRect.width + targetRect.left
+        const offsetWidth = Math.max(neededWidth - parentRect.width, 0)
+        if (neededWidth > window.innerWidth) {
+          const rightOffset = parseInt(getComputedStyle(outer).paddingRight)
+          outer.style.setProperty(
+            '--overlay-dyn-margin-left',
+            Math.max(
+              targetRect.right +
+                parentRect.left -
+                outerRect.width -
+                rightOffset,
+              0
+            ) + 'px'
+          )
+          outer.style.setProperty('padding-right', '0')
+        } else {
+          outer.style.setProperty(
+            '--overlay-dyn-margin-left',
+            Math.max(targetRect.left + parentRect.left - offsetWidth, 0) + 'px'
+          )
+          outer.style.removeProperty('padding-right')
+        }
         outer.style.setProperty(
-          '--overlay-dyn-margin-right',
-          Math.max(window.innerWidth - targetRect.right - rightOffset) + 'px'
+          '--overlay-dyn-pad-top',
+          Math.max(targetRect.bottom, 0) + 'px'
         )
-      } else {
-        outer.style.setProperty(
-          '--overlay-dyn-margin-left',
-          Math.max(targetRect.left + parentRect.left - offsetWidth, 0) + 'px'
-        )
-      }
-      outer.style.setProperty(
-        '--overlay-dyn-pad-top',
-        Math.max(targetRect.bottom, 0) + 'px'
-      )
+      })
     }
     const updateState = () => {
       const activeOverlay = props.active && state.value === 'overlay'
