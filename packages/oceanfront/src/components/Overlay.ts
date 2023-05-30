@@ -147,11 +147,19 @@ export const OfOverlay = defineComponent({
 
       const neededWidth = outerRect.width + targetRect.left
       const offsetWidth = Math.max(neededWidth - parentRect.width, 0)
-
-      outer.style.setProperty(
-        '--overlay-dyn-margin-left',
-        Math.max(targetRect.left + parentRect.left - offsetWidth, 0) + 'px'
-      )
+      if (neededWidth > window.innerWidth) {
+        const rightOffset = parseInt(getComputedStyle(outer).paddingRight)
+        outer.style.setProperty('--overlay-dyn-margin-left', 'auto')
+        outer.style.setProperty(
+          '--overlay-dyn-margin-right',
+          Math.max(window.innerWidth - targetRect.right - rightOffset) + 'px'
+        )
+      } else {
+        outer.style.setProperty(
+          '--overlay-dyn-margin-left',
+          Math.max(targetRect.left + parentRect.left - offsetWidth, 0) + 'px'
+        )
+      }
       outer.style.setProperty(
         '--overlay-dyn-pad-top',
         Math.max(targetRect.bottom, 0) + 'px'
