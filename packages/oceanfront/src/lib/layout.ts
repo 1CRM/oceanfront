@@ -16,7 +16,7 @@ const windowRect = ref<WindowRect>({
   width: 0,
   height: 0,
 })
-const isHighDpi = window.matchMedia(
+const isHighDpi = window.matchMedia?.(
   '(-webkit-min-device-pixel-ratio: 2), (min-device-pixel-ratio: 2), (min-resolution: 192dpi))'
 ).matches
 
