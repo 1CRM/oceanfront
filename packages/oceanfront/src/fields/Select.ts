@@ -166,7 +166,7 @@ export const OfSelectField = defineComponent({
       return values.map((val) =>
         h(
           OfBadge,
-          { status: 'primary', style: 'margin-bottom:0', compact: true },
+          { status: 'primary', style: 'margin-bottom:0', density: 3 },
           () => [
             itemText(val),
             fieldCtx.editable
