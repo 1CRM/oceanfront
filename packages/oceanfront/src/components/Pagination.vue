@@ -215,7 +215,7 @@ export default defineComponent({
 
     const focusActiveButton = () => {
       nextTick(() => {
-        const elt = activeButton.value?.$el.querySelector(
+        const elt = activeButton.value?.$el?.querySelector(
           'button'
         ) as HTMLElement | null
         if (elt) elt.focus()
@@ -266,8 +266,6 @@ export default defineComponent({
     }
 
     const closeOffsetPopup = () => {
-      console.log('BLUR')
-
       offsetPopupOpened.value = false
     }
 
