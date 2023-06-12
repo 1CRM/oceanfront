@@ -21,12 +21,19 @@
       type="select"
       :items="nestedOptions"
     />
+    <of-field
+      v-model="params.editable"
+      label="Editable"
+      type="select"
+      :items="editableOptions"
+    />
 
     <div class="row">
       <div class="column">
         <of-data-table
           :density="params.density"
           :headers="headers"
+          :editable="params.editable === 'On'"
           nested-indicator="category"
           :draggable="params.draggable === 'On'"
           :nested="params.nested === 'Nested'"
@@ -41,11 +48,13 @@
           rows-selector
           :nested="params.nested === 'Nested'"
           nested-indicator="name"
+          :editable="params.editable === 'On'"
           :density="params.density"
           :draggable="params.draggable === 'On'"
           @rows-selected="onRowsSelected"
           @rows-moved="OnRowsMoved"
           @rows-sorted="onRowsSorted"
+          @rows-edited="onRowsEdited"
           :headers="headers2"
           :items="items2"
           :footer-items="footerItems"
@@ -61,11 +70,13 @@ import { defineComponent, ref, reactive } from 'vue'
 const densityOptions = ['default', '0', '1', '2', '3']
 const draggableOptions = ['Off', 'On']
 const nestedOptions = ['Default', 'Nested']
+const editableOptions = ['Off', 'On']
 
 const params = reactive({
   density: 'default',
   draggable: 'Off',
   nested: 'Default',
+  editable: 'Off',
 })
 
 export default defineComponent({
@@ -83,7 +94,10 @@ export default defineComponent({
     ]
     const items = [
       {
-        name: 'First item',
+        name: {
+          value: 'First item',
+          editable: true,
+        },
         draggable: true,
         category: {
           value: 'Category 1',
@@ -144,25 +158,44 @@ export default defineComponent({
     const items2 = ref([
       {
         id: '1',
-        name: 'First item',
+        name: {
+          value: 'First item',
+          editable: true,
+        },
         draggable: true,
         category: 'Category 1',
-        address: 'Aram Khachatryan 12/2 , Yerevan, Armenia',
+        address: {
+          editable: true,
+          value: 'New York, NY, USA',
+        },
         phone: '+1 (961) 209-1256',
         size: 15.56,
       },
       {
         id: '2',
         draggable: true,
-        name: 'Second item',
-        category: 'Category 2',
-        address: 'San Francisco, CA, USA',
+        name: {
+          value: 'Second item',
+          editable: true,
+        },
+        category: {
+          editable: true,
+          value: 'Category 2',
+          type: 'number',
+        },
+        address: {
+          editable: true,
+          value: 'San Francisco, CA, USA',
+        },
         phone: '+1 (416) 269-0823',
         size: -15.56,
       },
       {
         id: '3',
-        name: 'Third item',
+        name: {
+          value: 'Third item',
+          editable: true,
+        },
         category: 'Category 3',
         draggable: true,
         address: 'Orléans, CA, USA',
@@ -196,15 +229,6 @@ export default defineComponent({
         phone: '+1 (041) 102-0224',
         size: 45.56,
       },
-      {
-        id: '7',
-        name: 'Seventh item',
-        category: 'Category 7',
-        draggable: true,
-        address: 'New York, NY, USA',
-        phone: '+1 (041) 102-0224',
-        size: 45.56,
-      },
     ])
 
     const initialItems2 = [...items2.value]
@@ -234,6 +258,9 @@ export default defineComponent({
         }
       }
     }
+    const onRowsEdited = (rows: []) => {
+      console.log('rows edited ', rows)
+    }
 
     return {
       headers,
@@ -242,12 +269,14 @@ export default defineComponent({
       items2,
       footerItems,
       onRowsSelected,
+      onRowsEdited,
       OnRowsMoved,
       onRowsSorted,
       params,
       densityOptions,
       draggableOptions,
       nestedOptions,
+      editableOptions,
     }
   },
 })

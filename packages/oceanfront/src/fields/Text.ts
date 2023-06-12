@@ -233,6 +233,16 @@ export const OfTextField = defineComponent({
       onFocus(_evt: FocusEvent) {
         focused.value = true
       },
+      onKeyup(_evt: KeyboardEvent) {
+        const target = _evt.target as
+          | (HTMLInputElement | HTMLTextAreaElement)
+          | null
+        if (!target) return
+        const val = target.value
+        if (_evt.key === 'Enter' && fieldCtx.onKeyup) {
+          fieldCtx.onKeyup(val)
+        }
+      },
       onChange(evt: Event) {
         const target = evt.target as
           | (HTMLInputElement | HTMLTextAreaElement)

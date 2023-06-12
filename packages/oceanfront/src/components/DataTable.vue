@@ -105,14 +105,55 @@
           <slot name="first-cell" :record="rowsRecord" :item="row" />
         </div>
         <div v-for="(col, colidx) of columns" :class="col.class" :key="colidx">
-          <of-data-type :value="row[col.value]"></of-data-type>
+          <template v-if="row[col.value].editable && editable">
+            <div>
+              <div
+                @click="
+                  onEditableItemClick($event, rowidx, -1, colidx, col.value)
+                "
+                class="editable-field-value field-value"
+                :class="{
+                  active:
+                    editOverlayActive &&
+                    editItem.index === rowidx &&
+                    editItem.subIdx === -1 &&
+                    editItem.name === col.value,
+                }"
+                :ref="(el) => (inputRefs[rowidx + '_' + colidx] = el)"
+              >
+                <of-data-type
+                  v-if="row[col.value].hasOwnProperty('renamedValue')"
+                  :value="row[col.value].renamedValue"
+                ></of-data-type>
+                <of-data-type
+                  v-else
+                  :value="row[col.value].value"
+                ></of-data-type>
+              </div>
+              <div class="rename-divider"></div>
+              <span
+                v-if="
+                  row[col.value].hasOwnProperty('renamedValue') &&
+                  row[col.value].renamedValue !== row[col.value].value
+                "
+                class="old-value"
+              >
+                <of-data-type :value="row[col.value]"></of-data-type>
+              </span>
+            </div>
+          </template>
+          <template v-else>
+            <div class="field-value">
+              <of-data-type :value="row[col.value]"></of-data-type>
+            </div>
+          </template>
         </div>
       </div>
 
       <div
         v-for="(subrow, subidx) of row.subitems"
         class="of-data-table-row"
-        @mousemove="dragMouseMoveNested($event, subidx, rowidx)"
+        @mousemove="dragMouseMoveNested($event, subidx as number, rowidx)"
         :key="subidx"
         :class="{
           selected:
@@ -121,11 +162,13 @@
               highlited.subitems.includes(subidx)),
           odd: subidx % 2 != 0,
           nested: true,
-          dragging: highlight(rowidx, subidx),
+          dragging: highlight(rowidx, subidx as number),
         }"
       >
         <div
-          @mousedown="subrow.draggable && dragMouseDown($event, rowidx, subidx)"
+          @mousedown="
+            subrow.draggable && dragMouseDown($event, rowidx, subidx as number)
+          "
           v-if="draggable"
           class="grab-button"
           :class="{ draggable: subrow.draggable }"
@@ -162,13 +205,55 @@
             stroke-linejoin="round"
             color="#000000"
           >
-            <title id="previousAltIconTitle">Previous</title>
             <path d="M8 4L4 8L8 12" />
             <path
               d="M4 8H14.5C17.5376 8 20 10.4624 20 13.5V13.5C20 16.5376 17.5376 19 14.5 19H5"
             />
           </svg>
-          <of-data-type :value="subrow[col.value]"></of-data-type>
+          <template v-if="subrow[col.value].editable && editable">
+            <div>
+              <div
+                @click="
+                  onEditableItemClick($event, rowidx, subidx, colidx, col.value)
+                "
+                class="editable-field-value field-value"
+                :class="{
+                  active:
+                    editOverlayActive &&
+                    editItem.index === rowidx &&
+                    editItem.subIdx === subidx &&
+                    editItem.name === col.value,
+                }"
+                :ref="
+                  (el) => (inputRefs[rowidx + '_' + subidx + '_' + colidx] = el)
+                "
+              >
+                <of-data-type
+                  v-if="subrow[col.value].hasOwnProperty('renamedValue')"
+                  :value="subrow[col.value].renamedValue"
+                ></of-data-type>
+                <of-data-type
+                  v-else
+                  :value="subrow[col.value].value"
+                ></of-data-type>
+              </div>
+              <div class="rename-divider"></div>
+              <span
+                v-if="
+                  subrow[col.value].hasOwnProperty('renamedValue') &&
+                  subrow[col.value].renamedValue !== subrow[col.value].value
+                "
+                class="old-value"
+              >
+                <of-data-type :value="subrow[col.value]"></of-data-type>
+              </span>
+            </div>
+          </template>
+          <template v-else>
+            <div class="field-value">
+              <of-data-type :value="subrow[col.value]"></of-data-type>
+            </div>
+          </template>
         </div>
       </div>
     </template>
@@ -226,6 +311,29 @@
         </div>
       </div>
     </div>
+    <of-overlay
+      :active="editOverlayActive"
+      :shade="false"
+      :capture="true"
+      :target="overlayOuter"
+      :focus="true"
+      @blur="blurOverlay"
+    >
+      <div ref="editOverlayRef" tabindex="0" class="edit-overlay-desk">
+        <of-text-field
+          type="text"
+          @keyup:enter="keyupEnter"
+          v-model="editItem.value"
+        ></of-text-field>
+        <of-button
+          v-if="editItem.value !== editItem.oldValue"
+          @click="resetValue"
+          class="reset-edit-button"
+          label="Reset"
+          icon="cancel"
+        ></of-button>
+      </div>
+    </of-overlay>
   </div>
 </template>
 
@@ -241,10 +349,15 @@ import {
   Ref,
   shallowRef,
   reactive,
+  nextTick,
 } from 'vue'
 import { DataTableHeader } from '../lib/datatable'
 import { useThemeOptions } from '../lib/theme'
 import { OfIcon } from './Icon'
+import { OfOverlay } from './Overlay'
+import OfOptionList from './OptionList.vue'
+import { OfField } from './Field'
+import { OfButton } from './Button'
 
 enum RowsSelectorValues {
   Page = 'page',
@@ -276,7 +389,7 @@ let sysDataTableIndex = 0
 
 export default defineComponent({
   name: 'OfDataTable',
-  components: { OfIcon },
+  components: { OfButton, OfField, OfOptionList, OfOverlay, OfIcon },
   // components: { OfFormat },
   props: {
     footerItems: { type: Array as PropType<any[]>, default: () => [] },
@@ -292,6 +405,10 @@ export default defineComponent({
     selectAll: Boolean,
     draggable: Boolean,
     nested: Boolean,
+    editable: {
+      type: Boolean,
+      default: false,
+    },
     nestedIndicator: {
       type: String,
       default: 'name',
@@ -305,6 +422,7 @@ export default defineComponent({
     'rows-deselect-all': null,
     'rows-sorted': null,
     'rows-moved': null,
+    'rows-edited': null,
   },
   setup(props, ctx) {
     const themeOptions = useThemeOptions()
@@ -318,6 +436,18 @@ export default defineComponent({
     const currentDragPosition = reactive({ itemIdx: -1, subitemIdx: -1 })
     const highlited = ref({ type: 'item', itemIdx: -1, subitems: [] })
     const arrowTop = ref(0)
+
+    const inputRefs: any = {}
+    const editOverlayRef = shallowRef<HTMLDivElement | undefined>()
+    const overlayOuter = ref()
+    const editItem = reactive({
+      value: '',
+      oldValue: '',
+      index: -1,
+      subIdx: -1,
+      name: '',
+    })
+    const editOverlayActive = ref(false)
     const orderAndCheck = (
       item: any,
       idx: number,
@@ -329,6 +459,70 @@ export default defineComponent({
           ? selectedValues[item.id]
           : !!(selectedValues && selectedValues[RowsSelectorValues.All])
       return item
+    }
+    const keyupEnter = (value: string) => {
+      editOverlayActive.value = false
+      editValue(value)
+    }
+    const editValue = (value: string) => {
+      const item = getCurrentItem()
+      if (!item) return
+      if (item.type === 'number') {
+        item.renamedValue = value.replace(/\D/g, '')
+      } else {
+        item.renamedValue = value
+      }
+
+      ctx.emit('rows-edited', items.value)
+    }
+    const getCurrentItem = () => {
+      if (editItem.subIdx > -1) {
+        return items.value[editItem.index]?.subitems[editItem.subIdx][
+          editItem.name
+        ]
+      }
+      return items.value[editItem.index][editItem.name]
+    }
+    const getCurrentRefName = (
+      rowidx: number | string,
+      subrowidx: number | string,
+      colidx: number | string
+    ) => {
+      if (subrowidx > -1) {
+        return rowidx + '_' + subrowidx + '_' + colidx
+      }
+      return rowidx + '_' + colidx
+    }
+    const onEditableItemClick = (
+      event: MouseEvent,
+      rowidx: number | string,
+      subrowidx: number | string,
+      colidx: number | string,
+      name: string
+    ) => {
+      const refName = getCurrentRefName(rowidx, subrowidx, colidx)
+      editItem.index = rowidx as number
+      editItem.subIdx = subrowidx as number
+      editItem.name = name
+      const item = getCurrentItem()
+      if (!item) return
+      editOverlayActive.value = true
+      editItem.value = item.hasOwnProperty('renamedValue')
+        ? item.renamedValue
+        : item.value
+      editItem.oldValue = item.value
+      overlayOuter.value = inputRefs[refName]
+    }
+    const resetValue = () => {
+      const item = getCurrentItem()
+      if (!item) return
+      delete item.renamedValue
+      editOverlayActive.value = false
+      ctx.emit('rows-edited', items.value)
+    }
+
+    const blurOverlay = () => {
+      editOverlayActive.value = false
     }
     const rows = computed(() => {
       const result = []
@@ -945,7 +1139,6 @@ export default defineComponent({
           : sort.value.order == RowSortOrders.asc
           ? RowSortOrders.desc
           : RowSortOrders.asc
-
       setSort(column, field?.order || autoOrder)
       selectRows(RowsSelectorValues.DeselectAll)
       ctx.emit('rows-sorted', sort.value)
@@ -977,7 +1170,10 @@ export default defineComponent({
       footerRows,
       rows,
       rowsSelector,
+      editOverlayActive,
+      overlayOuter,
       highlited,
+      inputRefs,
       draggingItem,
       rowsRecord,
       highlight,
@@ -1000,9 +1196,15 @@ export default defineComponent({
       sortPopupTarget,
       sortPopupOpened,
       selectedColFields,
+      onEditableItemClick,
+      blurOverlay,
       selectLocked,
+      editOverlayRef,
+      keyupEnter,
       createColId,
+      resetValue,
       drag,
+      editItem,
       sortColEnter,
       sortColLeave,
       sortPopupEnter,
@@ -1012,7 +1214,43 @@ export default defineComponent({
 })
 </script>
 <style lang="scss">
+.edit-overlay-desk {
+  .reset-edit-button {
+    margin-top: 5px;
+  }
+  outline: none;
+  min-width: 250px;
+  background: var(--of-color-menu-bg, var(--of-color-surface-variant));
+  padding: 7px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25), 0 1px 2px rgba(0, 0, 0, 0.5);
+  border-radius: 5px;
+}
 .of-data-table {
+  .old-value {
+    opacity: 70%;
+    font-size: 0.85em;
+    padding-left: 4px;
+  }
+  .field-value {
+    padding: 0 4px;
+  }
+  .editable-field-value {
+    min-height: 25px;
+    &:hover {
+      color: var(--of-primary-tint);
+      border-radius: 4px;
+      outline: 1px solid var(--of-primary-tint);
+      cursor: pointer;
+    }
+    &.active {
+      color: var(--of-color-on-primary);
+      background: var(--of-primary-tint);
+      border-radius: 4px 4px 0 0;
+    }
+  }
+  .rename-divider {
+    border-bottom: 1px dashed grey;
+  }
   .of-data-table-row.dragging > div {
     background-color: var(--of-inverse-tint) !important;
   }
