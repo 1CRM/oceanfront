@@ -1,5 +1,13 @@
 import { useConfig } from '../lib/config'
-import { computed, defineComponent, h, ref, VNode, watch } from 'vue'
+import {
+  computed,
+  defineComponent,
+  h,
+  ref,
+  SetupContext,
+  VNode,
+  watch,
+} from 'vue'
 import { OfFieldBase } from '../components/FieldBase'
 import {
   BaseFieldProps,
@@ -41,8 +49,16 @@ export const OfTextField = defineComponent({
     rows: [Number, String],
     inputType: String,
   },
+  emits: [
+    'focus',
+    'input',
+    'keydown:enter',
+    'keyup:enter',
+    'update:modelValue',
+    'blur',
+  ],
   setup(props, ctx) {
-    const fieldCtx = makeFieldContext(props, ctx)
+    const fieldCtx = makeFieldContext(props, ctx as SetupContext)
     const config = useConfig()
     const itemMgr = useItems(config)
     const formatMgr = useFormats(config)
@@ -216,6 +232,7 @@ export const OfTextField = defineComponent({
     })
 
     const focus = (select?: boolean) => {
+      ctx.emit('focus')
       if (elt.value) {
         elt.value.focus()
         if (select) elt.value.select()
@@ -224,6 +241,12 @@ export const OfTextField = defineComponent({
     }
     const hooks = {
       onBlur(evt: FocusEvent) {
+        const target = evt.target as
+          | (HTMLInputElement | HTMLTextAreaElement)
+          | null
+        if (target) {
+          ctx.emit('blur', target.value)
+        }
         focused.value = false
         const fmt = formatter.value
         if (fmt?.handleBlur) {
@@ -287,7 +310,25 @@ export const OfTextField = defineComponent({
         }
         if (fieldCtx.onInput) fieldCtx.onInput(evt.data, inputElt.value)
       },
+      onKeyup(_evt: KeyboardEvent) {
+        if (_evt.key === 'Enter' && fieldCtx.onKeyup) {
+          const target = _evt.target as
+            | (HTMLInputElement | HTMLTextAreaElement)
+            | null
+          if (!target) return
+          const val = target.value
+          fieldCtx.onKeyup(val)
+        }
+      },
       onKeydown(evt: KeyboardEvent) {
+        if (evt.key === 'Enter') {
+          const target = evt.target as
+            | (HTMLInputElement | HTMLTextAreaElement)
+            | null
+          if (target) {
+            ctx.emit('keydown:enter', target.value)
+          }
+        }
         if (
           hasItems.value &&
           (evt.key == 'ArrowUp' || evt.key == 'ArrowDown')
