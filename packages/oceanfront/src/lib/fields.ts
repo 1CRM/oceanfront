@@ -92,6 +92,7 @@ export interface FieldContext {
   onInput?: (input: any, value: any) => void
   onUpdate?: (value: any) => void
   onKeyup?: (value: any) => void
+  onKeydown?: (value: any) => void
   required?: boolean
   value?: any
   size?: string
@@ -327,6 +328,9 @@ export function makeFieldContext<C>(
     value,
     onInput: (input: any, value: any) => {
       ;(ctx.emit as any)('input', input, value)
+    },
+    onKeydown: (value: any) => {
+      ;(ctx.emit as any)('keydown:enter', value)
     },
     onKeyup: (value: any) => {
       ;(ctx.emit as any)('keyup:enter', value)

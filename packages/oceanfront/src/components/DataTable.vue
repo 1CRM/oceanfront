@@ -106,35 +106,62 @@
         </div>
         <div v-for="(col, colidx) of columns" :class="col.class" :key="colidx">
           <template v-if="row[col.value].editable && editable">
-            <div>
+            <div class="editable-field-value-handler">
               <div
-                @click="
-                  onEditableItemClick($event, rowidx, -1, colidx, col.value)
-                "
                 class="editable-field-value field-value"
                 :class="{
-                  active:
-                    editOverlayActive &&
-                    editItem.index === rowidx &&
-                    editItem.subIdx === -1 &&
-                    editItem.name === col.value,
+                  active: isActiveEditing(rowidx, -1, col.value),
+                  inline: editType === 'inline',
                 }"
                 :ref="(el) => (inputRefs[rowidx + '_' + colidx] = el)"
               >
-                <of-data-type
-                  v-if="row[col.value].hasOwnProperty('renamedValue')"
-                  :value="row[col.value].renamedValue"
-                ></of-data-type>
-                <of-data-type
-                  v-else
-                  :value="row[col.value].value"
-                ></of-data-type>
+                <span
+                  v-if="
+                    isActiveEditing(rowidx, -1, col.value) &&
+                    editType === 'inline' &&
+                    row[col.value].hasOwnProperty('renamedValue') &&
+                    row[col.value].renamedValue !== row[col.value].value
+                  "
+                  @click="resetValue"
+                  class="reset-value-button"
+                  ><of-icon name="cancel"></of-icon
+                ></span>
+                <of-text-field
+                  :mode="
+                    isActiveEditing(rowidx, -1, col.value) &&
+                    editType === 'inline'
+                      ? 'editable'
+                      : 'fixed'
+                  "
+                  multiline
+                  type="textarea"
+                  @focus="
+                    onEditableItemClick(
+                      null as MouseEvent,
+                      rowidx,
+                      -1,
+                      colidx,
+                      col.value
+                    )
+                  "
+                  @input="inputEvent"
+                  @blur="
+                    (value) => changeRowValue(value, rowidx, -1, col.value)
+                  "
+                  @keydown:enter="blurOverlay"
+                  :model-value="
+                    row[col.value].hasOwnProperty('renamedValue')
+                      ? row[col.value].renamedValue
+                      : row[col.value].value
+                  "
+                ></of-text-field>
               </div>
               <div class="rename-divider"></div>
               <span
                 v-if="
                   row[col.value].hasOwnProperty('renamedValue') &&
-                  row[col.value].renamedValue !== row[col.value].value
+                  row[col.value].renamedValue !== row[col.value].value &&
+                  showOldValues
                 "
                 class="old-value"
               >
@@ -211,37 +238,65 @@
             />
           </svg>
           <template v-if="subrow[col.value].editable && editable">
-            <div>
+            <div class="editable-field-value-handler">
               <div
-                @click="
-                  onEditableItemClick($event, rowidx, subidx, colidx, col.value)
-                "
                 class="editable-field-value field-value"
                 :class="{
                   active:
-                    editOverlayActive &&
-                    editItem.index === rowidx &&
-                    editItem.subIdx === subidx &&
-                    editItem.name === col.value,
+                    editType === 'popup' &&
+                    isActiveEditing(rowidx, subidx as number, col.value),
                 }"
                 :ref="
                   (el) => (inputRefs[rowidx + '_' + subidx + '_' + colidx] = el)
                 "
               >
-                <of-data-type
-                  v-if="subrow[col.value].hasOwnProperty('renamedValue')"
-                  :value="subrow[col.value].renamedValue"
-                ></of-data-type>
-                <of-data-type
-                  v-else
-                  :value="subrow[col.value].value"
-                ></of-data-type>
+                <span
+                  v-if="
+                    isActiveEditing(rowidx, subidx as number, col.value) &&
+                    editType === 'inline' &&
+                    subrow[col.value].hasOwnProperty('renamedValue') &&
+                    subrow[col.value].renamedValue !== subrow[col.value].value
+                  "
+                  @click="resetValue"
+                  class="reset-value-button"
+                  ><of-icon name="cancel"></of-icon
+                ></span>
+                <of-text-field
+                  :mode="
+                    isActiveEditing(rowidx, subidx as number, col.value) &&
+                    editType === 'inline'
+                      ? 'editable'
+                      : 'fixed'
+                  "
+                  multiline
+                  type="textarea"
+                  @focus="
+                    onEditableItemClick(
+                      null as MouseEvent,
+                      rowidx,
+                      subidx,
+                      colidx,
+                      col.value
+                    )
+                  "
+                  @input="inputEvent"
+                  @blur="
+                    (value) => changeRowValue(value, rowidx, subidx, col.value)
+                  "
+                  @keydown:enter="blurOverlay"
+                  :model-value="
+                    subrow[col.value].hasOwnProperty('renamedValue')
+                      ? subrow[col.value].renamedValue
+                      : subrow[col.value].value
+                  "
+                ></of-text-field>
               </div>
               <div class="rename-divider"></div>
               <span
                 v-if="
                   subrow[col.value].hasOwnProperty('renamedValue') &&
-                  subrow[col.value].renamedValue !== subrow[col.value].value
+                  subrow[col.value].renamedValue !== subrow[col.value].value &&
+                  showOldValues
                 "
                 class="old-value"
               >
@@ -312,6 +367,7 @@
       </div>
     </div>
     <of-overlay
+      v-if="editType === 'popup'"
       :active="editOverlayActive"
       :shade="false"
       :capture="true"
@@ -322,7 +378,7 @@
       <div ref="editOverlayRef" tabindex="0" class="edit-overlay-desk">
         <of-text-field
           type="text"
-          @keyup:enter="keyupEnter"
+          @keyup:enter="changeRowValue"
           v-model="editItem.value"
         ></of-text-field>
         <of-button
@@ -409,6 +465,14 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
+    editType: {
+      type: String,
+      default: 'inline',
+    },
+    showOldValues: {
+      type: Boolean,
+      default: false,
+    },
     nestedIndicator: {
       type: String,
       default: 'name',
@@ -448,6 +512,15 @@ export default defineComponent({
       name: '',
     })
     const editOverlayActive = ref(false)
+
+    const isActiveEditing = (rowIdx: number, subIdx: number, name: string) => {
+      return (
+        editOverlayActive.value &&
+        editItem.index === rowIdx &&
+        editItem.subIdx === subIdx &&
+        editItem.name === name
+      )
+    }
     const orderAndCheck = (
       item: any,
       idx: number,
@@ -460,18 +533,41 @@ export default defineComponent({
           : !!(selectedValues && selectedValues[RowsSelectorValues.All])
       return item
     }
-    const keyupEnter = (value: string) => {
-      editOverlayActive.value = false
+    const changeRowValue = (
+      value: string,
+      rowidx = null,
+      subrowidx = null,
+      name = null
+    ) => {
+      if (props.editType === 'inline') {
+        editValue(value)
+        setTimeout(() => {
+          if (
+            editItem.index === rowidx &&
+            editItem.subIdx === subrowidx &&
+            editItem.name === name
+          ) {
+            editOverlayActive.value = false
+          }
+        }, 100)
+      } else {
+        editValue(value)
+        editOverlayActive.value = false
+      }
+    }
+    const inputEvent = (input: string, value: string) => {
       editValue(value)
+      resizeInput(true)
     }
     const editValue = (value: string) => {
       const item = getCurrentItem()
       if (!item) return
       if (item.type === 'number') {
-        item.renamedValue = value.replace(/\D/g, '')
+        item.renamedValue = value.replace(/\D/g, '').trim()
       } else {
-        item.renamedValue = value
+        item.renamedValue = value.trim()
       }
+      resizeInput()
 
       ctx.emit('rows-edited', items.value)
     }
@@ -500,6 +596,7 @@ export default defineComponent({
       colidx: number | string,
       name: string
     ) => {
+      console.log('myauuuuuuu')
       const refName = getCurrentRefName(rowidx, subrowidx, colidx)
       editItem.index = rowidx as number
       editItem.subIdx = subrowidx as number
@@ -512,6 +609,30 @@ export default defineComponent({
         : item.value
       editItem.oldValue = item.value
       overlayOuter.value = inputRefs[refName]
+      if (editOverlayRef.value) {
+        const input = editOverlayRef.value.querySelector(
+          '.of-field-input'
+        ) as HTMLInputElement
+        if (input) {
+          nextTick(() => {
+            input.focus()
+          })
+        }
+      }
+      nextTick(() => {
+        resizeInput(true)
+      })
+    }
+    const resizeInput = (focus = false) => {
+      if (props.editType === 'inline') {
+        const input = overlayOuter.value.querySelector('.of-field-input')
+        if (!input) return
+        input.style.height = '14px'
+        input.style.height = input.scrollHeight + 'px'
+        if (focus) {
+          input.focus()
+        }
+      }
     }
     const resetValue = () => {
       const item = getCurrentItem()
@@ -520,7 +641,6 @@ export default defineComponent({
       editOverlayActive.value = false
       ctx.emit('rows-edited', items.value)
     }
-
     const blurOverlay = () => {
       editOverlayActive.value = false
     }
@@ -1169,6 +1289,7 @@ export default defineComponent({
       columns,
       footerRows,
       rows,
+      resizeInput,
       rowsSelector,
       editOverlayActive,
       overlayOuter,
@@ -1198,9 +1319,11 @@ export default defineComponent({
       selectedColFields,
       onEditableItemClick,
       blurOverlay,
+      isActiveEditing,
       selectLocked,
       editOverlayRef,
-      keyupEnter,
+      changeRowValue,
+      inputEvent,
       createColId,
       resetValue,
       drag,
@@ -1229,21 +1352,50 @@ export default defineComponent({
   .old-value {
     opacity: 70%;
     font-size: 0.85em;
-    padding-left: 4px;
+    padding-left: var(--field-h-pad, 4px);
   }
-  .field-value {
-    padding: 0 4px;
+  .editable-field-value-handler {
+    width: 100%;
+  }
+  .of-field > .of-field-main > .of-field-body > .of-field-inner > textarea,
+  .of-field > .of-field-main > .of-field-body > .of-field-inner > input {
+    resize: none;
+    overflow: hidden;
+    line-height: 1.25;
+    margin: 0;
+  }
+  .field-value:not(.editable-field-value) {
+    padding-left: var(--field-h-pad, 0.5em);
   }
   .editable-field-value {
-    min-height: 25px;
-    &:hover {
-      color: var(--of-primary-tint);
-      border-radius: 4px;
-      outline: 1px solid var(--of-primary-tint);
+    position: relative;
+    .reset-value-button {
+      position: absolute;
+      bottom: calc(100% - 4px);
+      left: calc(100% - 8px);
+      --of-icon-size: 15px;
       cursor: pointer;
     }
-    &.active {
-      color: var(--of-color-on-primary);
+    min-height: 25px;
+    .of-field * {
+      min-height: auto;
+    }
+    .of-field-inner .of-field-input {
+      padding: 0;
+      line-height: 1.6;
+    }
+    &:hover {
+      color: var(--of-primary-tint);
+      cursor: pointer;
+      &:not(.active) {
+        border-radius: 4px;
+        outline: 1px solid var(--of-primary-tint);
+      }
+    }
+    &.active:not(.inline) {
+      .of-field-content-text {
+        color: var(--of-color-on-primary);
+      }
       background: var(--of-primary-tint);
       border-radius: 4px 4px 0 0;
     }

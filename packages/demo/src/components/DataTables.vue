@@ -27,13 +27,26 @@
       type="select"
       :items="editableOptions"
     />
+    <of-field
+      v-model="params.editType"
+      label="Edit Type"
+      :disabled="params.editable === 'Off'"
+      type="select"
+      :items="editOptions"
+    />
+    <of-field
+      v-model="params.showOldValues"
+      label="Show Original Value"
+      :disabled="params.editable === 'Off'"
+      type="select"
+      :items="oldValuesOptions"
+    />
 
     <div class="row">
       <div class="column">
         <of-data-table
           :density="params.density"
           :headers="headers"
-          :editable="params.editable === 'On'"
           nested-indicator="category"
           :draggable="params.draggable === 'On'"
           :nested="params.nested === 'Nested'"
@@ -49,6 +62,8 @@
           :nested="params.nested === 'Nested'"
           nested-indicator="name"
           :editable="params.editable === 'On'"
+          :edit-type="params.editType"
+          :show-old-values="params.showOldValues === 'Show'"
           :density="params.density"
           :draggable="params.draggable === 'On'"
           @rows-selected="onRowsSelected"
@@ -71,12 +86,19 @@ const densityOptions = ['default', '0', '1', '2', '3']
 const draggableOptions = ['Off', 'On']
 const nestedOptions = ['Default', 'Nested']
 const editableOptions = ['Off', 'On']
+const editOptions = [
+  { text: 'Inline', value: 'inline' },
+  { text: 'Popup', value: 'popup' },
+]
+const oldValuesOptions = ['Hide', 'Show']
 
 const params = reactive({
   density: 'default',
   draggable: 'Off',
   nested: 'Default',
   editable: 'Off',
+  editType: 'inline',
+  showOldValues: 'Hide',
 })
 
 export default defineComponent({
@@ -153,6 +175,7 @@ export default defineComponent({
       { text: 'Category', value: 'category' },
       { text: 'Address', value: 'address', sortable: false },
       { text: 'Phone', value: 'phone', sortable: false },
+      { text: 'Amount', value: 'amount', sortable: false },
       { text: 'Size', value: 'size', align: 'end', sort: 'asc' },
     ]
     const items2 = ref([
@@ -168,6 +191,11 @@ export default defineComponent({
           editable: true,
           value: 'New York, NY, USA',
         },
+        amount: {
+          value: 100,
+          editable: true,
+          type: 'number',
+        },
         phone: '+1 (961) 209-1256',
         size: 15.56,
       },
@@ -178,10 +206,14 @@ export default defineComponent({
           value: 'Second item',
           editable: true,
         },
+        amount: {
+          value: 150,
+          editable: true,
+          type: 'number',
+        },
         category: {
           editable: true,
           value: 'Category 2',
-          type: 'number',
         },
         address: {
           editable: true,
@@ -196,6 +228,11 @@ export default defineComponent({
           value: 'Third item',
           editable: true,
         },
+        amount: {
+          value: 100,
+          editable: false,
+          type: 'number',
+        },
         category: 'Category 3',
         draggable: true,
         address: 'Orléans, CA, USA',
@@ -209,6 +246,11 @@ export default defineComponent({
         category: 'Category 4',
         address: 'New York, NY, USA',
         phone: '+1 (041) 102-0224',
+        amount: {
+          value: 1500,
+          editable: false,
+          type: 'number',
+        },
         size: 45.56,
       },
       {
@@ -219,6 +261,11 @@ export default defineComponent({
         address: 'Lisbon, CA, USA ',
         phone: '+1 (041) 102-0224',
         size: 45.56,
+        amount: {
+          value: 200,
+          editable: true,
+          type: 'number',
+        },
       },
       {
         id: '6',
@@ -226,6 +273,11 @@ export default defineComponent({
         draggable: true,
         category: 'Category 6',
         address: 'Glendale, LA, USA',
+        amount: {
+          value: 400,
+          editable: true,
+          type: 'number',
+        },
         phone: '+1 (041) 102-0224',
         size: 45.56,
       },
@@ -259,7 +311,7 @@ export default defineComponent({
       }
     }
     const onRowsEdited = (rows: []) => {
-      console.log('rows edited ', rows)
+      // console.log('rows edited ', rows)
     }
 
     return {
@@ -277,6 +329,8 @@ export default defineComponent({
       draggableOptions,
       nestedOptions,
       editableOptions,
+      editOptions,
+      oldValuesOptions,
     }
   },
 })
