@@ -105,7 +105,7 @@
           <slot name="first-cell" :record="rowsRecord" :item="row" />
         </div>
         <div v-for="(col, colidx) of columns" :class="col.class" :key="colidx">
-          <template v-if="row[col.value].editable && editable">
+          <template v-if="row[col.value]?.editable && editable">
             <div class="editable-field-value-handler">
               <div
                 class="editable-field-value field-value"
@@ -237,7 +237,7 @@
               d="M4 8H14.5C17.5376 8 20 10.4624 20 13.5V13.5C20 16.5376 17.5376 19 14.5 19H5"
             />
           </svg>
-          <template v-if="subrow[col.value].editable && editable">
+          <template v-if="subrow[col.value]?.editable && editable">
             <div class="editable-field-value-handler">
               <div
                 class="editable-field-value field-value"
