@@ -105,69 +105,13 @@
           <slot name="first-cell" :record="rowsRecord" :item="row" />
         </div>
         <div v-for="(col, colidx) of columns" :class="col.class" :key="colidx">
-          <template v-if="row[col.value].editable && editable">
-            <div class="editable-field-value-handler">
-              <div
-                class="editable-field-value field-value"
-                :class="{
-                  active: isActiveEditing(rowidx, -1, col.value),
-                  inline: editType === 'inline',
-                }"
-                :ref="(el) => (inputRefs[rowidx + '_' + colidx] = el)"
-              >
-                <span
-                  v-if="
-                    isActiveEditing(rowidx, -1, col.value) &&
-                    editType === 'inline' &&
-                    row[col.value].hasOwnProperty('renamedValue') &&
-                    row[col.value].renamedValue !== row[col.value].value
-                  "
-                  @click="resetValue"
-                  class="reset-value-button"
-                  ><of-icon name="cancel"></of-icon
-                ></span>
-                <of-text-field
-                  :mode="
-                    isActiveEditing(rowidx, -1, col.value) &&
-                    editType === 'inline'
-                      ? 'editable'
-                      : 'fixed'
-                  "
-                  multiline
-                  type="textarea"
-                  @focus="
-                    onEditableItemClick(
-                      null as MouseEvent,
-                      rowidx,
-                      -1,
-                      colidx,
-                      col.value
-                    )
-                  "
-                  @input="inputEvent"
-                  @blur="
-                    (value) => changeRowValue(value, rowidx, -1, col.value)
-                  "
-                  @keydown:enter="blurOverlay"
-                  :model-value="
-                    row[col.value].hasOwnProperty('renamedValue')
-                      ? row[col.value].renamedValue
-                      : row[col.value].value
-                  "
-                ></of-text-field>
-              </div>
-              <div class="rename-divider"></div>
-              <span
-                v-if="
-                  row[col.value].hasOwnProperty('renamedValue') &&
-                  row[col.value].renamedValue !== row[col.value].value &&
-                  showOldValues
-                "
-                class="old-value"
-              >
-                <of-data-type :value="row[col.value]"></of-data-type>
-              </span>
-            </div>
+          <template v-if="row[col.value]?.editable && editable">
+            <of-editable-field
+              :mode="editType"
+              v-model="row[col.value]"
+              :show-old-values="showOldValues"
+              @update:model-value="$emit('rows-edited', rows)"
+            ></of-editable-field>
           </template>
           <template v-else>
             <div class="field-value">
@@ -237,72 +181,13 @@
               d="M4 8H14.5C17.5376 8 20 10.4624 20 13.5V13.5C20 16.5376 17.5376 19 14.5 19H5"
             />
           </svg>
-          <template v-if="subrow[col.value].editable && editable">
-            <div class="editable-field-value-handler">
-              <div
-                class="editable-field-value field-value"
-                :class="{
-                  active:
-                    editType === 'popup' &&
-                    isActiveEditing(rowidx, subidx as number, col.value),
-                }"
-                :ref="
-                  (el) => (inputRefs[rowidx + '_' + subidx + '_' + colidx] = el)
-                "
-              >
-                <span
-                  v-if="
-                    isActiveEditing(rowidx, subidx as number, col.value) &&
-                    editType === 'inline' &&
-                    subrow[col.value].hasOwnProperty('renamedValue') &&
-                    subrow[col.value].renamedValue !== subrow[col.value].value
-                  "
-                  @click="resetValue"
-                  class="reset-value-button"
-                  ><of-icon name="cancel"></of-icon
-                ></span>
-                <of-text-field
-                  :mode="
-                    isActiveEditing(rowidx, subidx as number, col.value) &&
-                    editType === 'inline'
-                      ? 'editable'
-                      : 'fixed'
-                  "
-                  multiline
-                  type="textarea"
-                  @focus="
-                    onEditableItemClick(
-                      null as MouseEvent,
-                      rowidx,
-                      subidx,
-                      colidx,
-                      col.value
-                    )
-                  "
-                  @input="inputEvent"
-                  @blur="
-                    (value) => changeRowValue(value, rowidx, subidx, col.value)
-                  "
-                  @keydown:enter="blurOverlay"
-                  :model-value="
-                    subrow[col.value].hasOwnProperty('renamedValue')
-                      ? subrow[col.value].renamedValue
-                      : subrow[col.value].value
-                  "
-                ></of-text-field>
-              </div>
-              <div class="rename-divider"></div>
-              <span
-                v-if="
-                  subrow[col.value].hasOwnProperty('renamedValue') &&
-                  subrow[col.value].renamedValue !== subrow[col.value].value &&
-                  showOldValues
-                "
-                class="old-value"
-              >
-                <of-data-type :value="subrow[col.value]"></of-data-type>
-              </span>
-            </div>
+          <template v-if="subrow[col.value]?.editable && editable">
+            <of-editable-field
+              :mode="editType"
+              v-model="subrow[col.value]"
+              :show-old-values="showOldValues"
+              @update:model-value="$emit('rows-edited', rows)"
+            ></of-editable-field>
           </template>
           <template v-else>
             <div class="field-value">
@@ -366,30 +251,6 @@
         </div>
       </div>
     </div>
-    <of-overlay
-      v-if="editType === 'popup'"
-      :active="editOverlayActive"
-      :shade="false"
-      :capture="true"
-      :target="overlayOuter"
-      :focus="true"
-      @blur="blurOverlay"
-    >
-      <div ref="editOverlayRef" tabindex="0" class="edit-overlay-desk">
-        <of-text-field
-          type="text"
-          @keyup:enter="changeRowValue"
-          v-model="editItem.value"
-        ></of-text-field>
-        <of-button
-          v-if="editItem.value !== editItem.oldValue"
-          @click="resetValue"
-          class="reset-edit-button"
-          label="Reset"
-          icon="cancel"
-        ></of-button>
-      </div>
-    </of-overlay>
   </div>
 </template>
 
@@ -414,6 +275,7 @@ import { OfOverlay } from './Overlay'
 import OfOptionList from './OptionList.vue'
 import { OfField } from './Field'
 import { OfButton } from './Button'
+import OfEditableField from './Editable.vue'
 
 enum RowsSelectorValues {
   Page = 'page',
@@ -445,7 +307,14 @@ let sysDataTableIndex = 0
 
 export default defineComponent({
   name: 'OfDataTable',
-  components: { OfButton, OfField, OfOptionList, OfOverlay, OfIcon },
+  components: {
+    OfEditableField,
+    OfButton,
+    OfField,
+    OfOptionList,
+    OfOverlay,
+    OfIcon,
+  },
   // components: { OfFormat },
   props: {
     footerItems: { type: Array as PropType<any[]>, default: () => [] },
@@ -501,26 +370,6 @@ export default defineComponent({
     const highlited = ref({ type: 'item', itemIdx: -1, subitems: [] })
     const arrowTop = ref(0)
 
-    const inputRefs: any = {}
-    const editOverlayRef = shallowRef<HTMLDivElement | undefined>()
-    const overlayOuter = ref()
-    const editItem = reactive({
-      value: '',
-      oldValue: '',
-      index: -1,
-      subIdx: -1,
-      name: '',
-    })
-    const editOverlayActive = ref(false)
-
-    const isActiveEditing = (rowIdx: number, subIdx: number, name: string) => {
-      return (
-        editOverlayActive.value &&
-        editItem.index === rowIdx &&
-        editItem.subIdx === subIdx &&
-        editItem.name === name
-      )
-    }
     const orderAndCheck = (
       item: any,
       idx: number,
@@ -533,117 +382,7 @@ export default defineComponent({
           : !!(selectedValues && selectedValues[RowsSelectorValues.All])
       return item
     }
-    const changeRowValue = (
-      value: string,
-      rowidx = null,
-      subrowidx = null,
-      name = null
-    ) => {
-      if (props.editType === 'inline') {
-        editValue(value)
-        setTimeout(() => {
-          if (
-            editItem.index === rowidx &&
-            editItem.subIdx === subrowidx &&
-            editItem.name === name
-          ) {
-            editOverlayActive.value = false
-          }
-        }, 100)
-      } else {
-        editValue(value)
-        editOverlayActive.value = false
-      }
-    }
-    const inputEvent = (input: string, value: string) => {
-      editValue(value)
-      resizeInput(true)
-    }
-    const editValue = (value: string) => {
-      const item = getCurrentItem()
-      if (!item) return
-      if (item.type === 'number') {
-        item.renamedValue = value.replace(/\D/g, '').trim()
-      } else {
-        item.renamedValue = value.trim()
-      }
-      resizeInput()
 
-      ctx.emit('rows-edited', items.value)
-    }
-    const getCurrentItem = () => {
-      if (editItem.subIdx > -1) {
-        return items.value[editItem.index]?.subitems[editItem.subIdx][
-          editItem.name
-        ]
-      }
-      return items.value[editItem.index][editItem.name]
-    }
-    const getCurrentRefName = (
-      rowidx: number | string,
-      subrowidx: number | string,
-      colidx: number | string
-    ) => {
-      if (subrowidx > -1) {
-        return rowidx + '_' + subrowidx + '_' + colidx
-      }
-      return rowidx + '_' + colidx
-    }
-    const onEditableItemClick = (
-      event: MouseEvent,
-      rowidx: number | string,
-      subrowidx: number | string,
-      colidx: number | string,
-      name: string
-    ) => {
-      console.log('myauuuuuuu')
-      const refName = getCurrentRefName(rowidx, subrowidx, colidx)
-      editItem.index = rowidx as number
-      editItem.subIdx = subrowidx as number
-      editItem.name = name
-      const item = getCurrentItem()
-      if (!item) return
-      editOverlayActive.value = true
-      editItem.value = item.hasOwnProperty('renamedValue')
-        ? item.renamedValue
-        : item.value
-      editItem.oldValue = item.value
-      overlayOuter.value = inputRefs[refName]
-      if (editOverlayRef.value) {
-        const input = editOverlayRef.value.querySelector(
-          '.of-field-input'
-        ) as HTMLInputElement
-        if (input) {
-          nextTick(() => {
-            input.focus()
-          })
-        }
-      }
-      nextTick(() => {
-        resizeInput(true)
-      })
-    }
-    const resizeInput = (focus = false) => {
-      if (props.editType === 'inline') {
-        const input = overlayOuter.value.querySelector('.of-field-input')
-        if (!input) return
-        input.style.height = '14px'
-        input.style.height = input.scrollHeight + 'px'
-        if (focus) {
-          input.focus()
-        }
-      }
-    }
-    const resetValue = () => {
-      const item = getCurrentItem()
-      if (!item) return
-      delete item.renamedValue
-      editOverlayActive.value = false
-      ctx.emit('rows-edited', items.value)
-    }
-    const blurOverlay = () => {
-      editOverlayActive.value = false
-    }
     const rows = computed(() => {
       const result = []
       let count = perPage.value
@@ -1289,12 +1028,8 @@ export default defineComponent({
       columns,
       footerRows,
       rows,
-      resizeInput,
       rowsSelector,
-      editOverlayActive,
-      overlayOuter,
       highlited,
-      inputRefs,
       draggingItem,
       rowsRecord,
       highlight,
@@ -1317,17 +1052,9 @@ export default defineComponent({
       sortPopupTarget,
       sortPopupOpened,
       selectedColFields,
-      onEditableItemClick,
-      blurOverlay,
-      isActiveEditing,
       selectLocked,
-      editOverlayRef,
-      changeRowValue,
-      inputEvent,
       createColId,
-      resetValue,
       drag,
-      editItem,
       sortColEnter,
       sortColLeave,
       sortPopupEnter,
