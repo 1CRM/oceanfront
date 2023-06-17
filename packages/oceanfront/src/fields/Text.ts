@@ -104,7 +104,7 @@ export const OfTextField = defineComponent({
         }
       } else {
         if (val === null || val === undefined) lazyInputValue = ''
-        else lazyInputValue = ('' + val).trim()
+        else lazyInputValue = '' + val
         val = lazyInputValue
       }
       if (val === undefined || val === '') val = null
