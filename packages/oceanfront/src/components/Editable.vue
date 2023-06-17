@@ -65,20 +65,8 @@
       </span>
     </div>
   </template>
-  <template v-else-if="type === 'select'">
-    <of-select-field :items="item.items" v-model="item.value"></of-select-field>
-  </template>
-  <template v-else-if="type === 'checkbox'">
-    <of-toggle-field v-model="item.value"> </of-toggle-field>
-  </template>
-  <template v-else-if="type === 'date'">
-    <of-date-field v-model="item.value"></of-date-field>
-  </template>
-  <template v-else-if="type === 'time'">
-    <of-time-field v-model="item.value"></of-time-field>
-  </template>
-  <template v-else-if="type === 'datetime'">
-    <of-datetime-field v-model="item.value"></of-datetime-field>
+  <template v-else>
+    <component v-model="item.value" :is="componentValue"></component>
   </template>
 </template>
 
@@ -86,8 +74,10 @@
 import {
   computed,
   defineComponent,
+  h,
   nextTick,
   ref,
+  resolveComponent,
   shallowRef,
   watch,
 } from 'vue'
@@ -96,6 +86,13 @@ import { OfIcon } from './Icon'
 import { DataTypeValue } from '../lib/datatype'
 import { OfButton } from './Button'
 import { OfToggleField } from '../fields/Toggle'
+const renderValues = {
+  select: 'OfSelectField',
+  checkbox: 'OfToggleField',
+  date: 'OfDateField',
+  time: 'OfTimeField',
+  datetime: 'OfDatetimeField',
+}
 const OfEditableField = defineComponent({
   name: 'OfEditableField',
   components: { OfToggleField, OfButton, OfIcon, OfSelectField },
@@ -153,6 +150,16 @@ const OfEditableField = defineComponent({
         input.focus()
       }
     }
+    const componentValue = computed(() => {
+      if (renderValues.hasOwnProperty(type.value)) {
+        const comp = resolveComponent(
+          renderValues[type.value as keyof typeof renderValues]
+        )
+        const props = { items: item.value?.items }
+        return h(comp, props)
+      }
+      return null
+    })
     watch(
       () => item.value,
       () => {
@@ -173,6 +180,7 @@ const OfEditableField = defineComponent({
       onInputFocus,
       active,
       onInputBlur,
+      componentValue,
       showItem,
     }
   },
