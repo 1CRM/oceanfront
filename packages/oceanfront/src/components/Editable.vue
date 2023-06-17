@@ -86,10 +86,8 @@
 import {
   computed,
   defineComponent,
-  h,
   nextTick,
   ref,
-  resolveComponent,
   shallowRef,
   watch,
 } from 'vue'
@@ -98,10 +96,6 @@ import { OfIcon } from './Icon'
 import { DataTypeValue } from '../lib/datatype'
 import { OfButton } from './Button'
 import { OfToggleField } from '../fields/Toggle'
-const allowedTypes = ['select', 'checkbox', 'date', 'time', 'datetime']
-const renderValues = {
-  select: 'OfSelectField',
-}
 const OfEditableField = defineComponent({
   name: 'OfEditableField',
   components: { OfToggleField, OfButton, OfIcon, OfSelectField },
