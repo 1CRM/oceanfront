@@ -1091,6 +1091,9 @@ export default defineComponent({
     line-height: 1.25;
     margin: 0;
   }
+  .field-value {
+    display: flex;
+  }
   .field-value:not(.editable-field-value) {
     padding-left: var(--field-h-pad, 0.5em);
   }

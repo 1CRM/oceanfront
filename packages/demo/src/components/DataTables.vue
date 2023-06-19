@@ -239,7 +239,7 @@ export default defineComponent({
       { text: 'Text', value: 'text', sortable: false },
       { text: 'Number', value: 'number', sortable: false },
       { text: 'Select', value: 'select', sortable: false },
-      { text: 'Checkbox', value: 'checkbox', sortable: false },
+      { text: 'Toggle', value: 'toggle', sortable: false },
       { text: 'Date', value: 'date', sortable: false },
       { text: 'Time', value: 'time', sortable: false },
       { text: 'Date & Time', value: 'datetime', sortable: false },
@@ -248,7 +248,7 @@ export default defineComponent({
       {
         text: { editable: true, type: 'text', value: 'Text 1' },
         number: { editable: true, type: 'number', value: '100' },
-        checkbox: { editable: true, type: 'checkbox', value: true },
+        toggle: { editable: true, type: 'toggle', value: true },
         date: { editable: true, type: 'date', value: '2021-01-01' },
         time: { editable: true, type: 'time', value: '15:15:15' },
         datetime: {
@@ -266,7 +266,7 @@ export default defineComponent({
       {
         text: { editable: true, type: 'text', value: 'Text 2' },
         number: { editable: true, type: 'number', value: '200' },
-        checkbox: { editable: true, type: 'checkbox', value: false },
+        toggle: { editable: true, type: 'toggle', value: false },
         date: { editable: true, type: 'date', value: '2022-02-02' },
         time: { editable: true, type: 'time', value: '16:16:16' },
         datetime: {
@@ -284,7 +284,7 @@ export default defineComponent({
       {
         text: { editable: true, type: 'text', value: 'Text 3' },
         number: { editable: true, type: 'number', value: '300' },
-        checkbox: { editable: true, type: 'checkbox', value: true },
+        toggle: { editable: true, type: 'toggle', value: true },
         date: { editable: true, type: 'date', value: '2023-03-03' },
         time: { editable: true, type: 'time', value: '17:17:17' },
         datetime: {
@@ -302,7 +302,7 @@ export default defineComponent({
       {
         text: { editable: true, type: 'text', value: 'Text 4' },
         number: { editable: true, type: 'number', value: '400' },
-        checkbox: { editable: true, type: 'checkbox', value: false },
+        toggle: { editable: true, type: 'toggle', value: false },
         date: { editable: true, type: 'date', value: '2024-04-04' },
         time: { editable: true, type: 'time', value: '18:18:18' },
         datetime: {

@@ -25,7 +25,7 @@
           multiline
           type="textarea"
           @input="resizeInput"
-          @blur="onInputBlur"
+          @blur="onInputBlur(true)"
           @focus="onInputFocus"
           @keydown:enter="() => (active = false)"
           v-model="item.value"
@@ -37,7 +37,7 @@
               class="awdawdawd"
               type="textarea"
               @input="resizeInput"
-              @blur="onInputBlur"
+              @blur="onInputBlur(true)"
               @focus="onInputFocus"
               @keydown:enter="() => (active = false)"
               v-model="item.value"
@@ -66,7 +66,15 @@
     </div>
   </template>
   <template v-else>
-    <component v-model="item.value" :is="componentValue"></component>
+    <of-field
+      @focus="onInputFocus"
+      :type="type"
+      :mode="inputMode"
+      @blur="onInputBlur"
+      @update:model-value="updateValue"
+      v-model="item.value"
+      :items="item.items"
+    ></of-field>
   </template>
 </template>
 
@@ -74,28 +82,27 @@
 import {
   computed,
   defineComponent,
-  h,
   nextTick,
   ref,
-  resolveComponent,
   shallowRef,
   watch,
 } from 'vue'
-import { OfSelectField } from '../fields/Select'
 import { OfIcon } from './Icon'
 import { DataTypeValue } from '../lib/datatype'
 import { OfButton } from './Button'
-import { OfToggleField } from '../fields/Toggle'
-const renderValues = {
-  select: 'OfSelectField',
-  checkbox: 'OfToggleField',
-  date: 'OfDateField',
-  time: 'OfTimeField',
-  datetime: 'OfDatetimeField',
-}
+import { OfField } from './Field'
+const supportedTypes = [
+  'select',
+  'toggle',
+  'date',
+  'time',
+  'datetime',
+  'text',
+  'number',
+]
 const OfEditableField = defineComponent({
   name: 'OfEditableField',
-  components: { OfToggleField, OfButton, OfIcon, OfSelectField },
+  components: { OfField, OfButton, OfIcon },
   props: {
     modelValue: Object,
     mode: String,
@@ -107,9 +114,23 @@ const OfEditableField = defineComponent({
       () => props.modelValue || ({} as DataTypeValue)
     ) as any
     const active = ref(false)
-    const type = computed(() => props.modelValue?.type || 'text')
+    const type = computed(() => {
+      if (props.modelValue?.type) {
+        if (supportedTypes.includes(props.modelValue.type)) {
+          return props.modelValue.type
+        } else {
+          throw new TypeError('Unsupported "type" property')
+        }
+      }
+      return 'text'
+    })
     if (item.value && !item.value.hasOwnProperty('originalValue')) {
       item.value.originalValue = item.value.value
+    }
+    const updateValue = () => {
+      if (['date', 'time', 'datetime'].includes(type.value)) {
+        onInputBlur()
+      }
     }
     const showItem = computed(() => {
       const res = { ...item.value }
@@ -126,10 +147,14 @@ const OfEditableField = defineComponent({
       })
     }
 
-    const onInputBlur = () => {
-      setTimeout(() => {
+    const onInputBlur = (delay = false) => {
+      if (delay) {
+        setTimeout(() => {
+          active.value = false
+        }, 150)
+      } else {
         active.value = false
-      }, 100)
+      }
     }
     const onInputFocus = () => {
       active.value = true
@@ -137,6 +162,13 @@ const OfEditableField = defineComponent({
         resizeInput(true)
       })
     }
+    const inputMode = computed(() => {
+      if (type.value === 'toggle') {
+        return 'editable'
+      } else {
+        return active.value ? 'editable' : 'fixed'
+      }
+    })
     const resizeInput = (focus = false) => {
       const placement =
         props.mode === 'inline'
@@ -150,16 +182,6 @@ const OfEditableField = defineComponent({
         input.focus()
       }
     }
-    const componentValue = computed(() => {
-      if (renderValues.hasOwnProperty(type.value)) {
-        const comp = resolveComponent(
-          renderValues[type.value as keyof typeof renderValues]
-        )
-        const props = { items: item.value?.items }
-        return h(comp, props)
-      }
-      return null
-    })
     watch(
       () => item.value,
       () => {
@@ -176,11 +198,12 @@ const OfEditableField = defineComponent({
       type,
       elem,
       resetValue,
+      updateValue,
       resizeInput,
       onInputFocus,
+      inputMode,
       active,
       onInputBlur,
-      componentValue,
       showItem,
     }
   },

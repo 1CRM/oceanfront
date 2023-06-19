@@ -1,4 +1,4 @@
-import { computed, defineComponent, h, ref, watch } from 'vue'
+import { computed, defineComponent, h, ref, SetupContext, watch } from 'vue'
 import OfBadge from '../components/Badge.vue'
 import { OfFieldBase } from '../components/FieldBase'
 import { OfIcon } from '../components/Icon'
@@ -23,10 +23,11 @@ export const OfSelectField = defineComponent({
     multi: Boolean,
     addRemove: Boolean,
   },
+  emits: ['focus', 'blur', 'update:modelValue'],
   setup(props, ctx) {
     const config = useConfig()
     const itemMgr = useItems(config)
-    const fieldCtx = makeFieldContext(props, ctx)
+    const fieldCtx = makeFieldContext(props, ctx as SetupContext)
 
     const initialValue = computed(() => {
       let initial = fieldCtx.initialValue
@@ -186,9 +187,11 @@ export const OfSelectField = defineComponent({
 
     const hooks = {
       onBlur(_evt: FocusEvent) {
+        ctx.emit('blur')
         focused.value = false
       },
       onFocus(_evt: FocusEvent) {
+        ctx.emit('focus')
         focused.value = true
         searchText.value = ''
       },
