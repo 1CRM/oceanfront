@@ -69,6 +69,7 @@
   <template v-else>
     <of-field
       :class="'in-data-table-' + type"
+      class="editable"
       in-data-table
       @focus="onInputFocus"
       :type="type"
@@ -234,6 +235,9 @@ export default OfEditableField
 
 <style lang="scss">
 .of-data-table {
+  .of-field.editable {
+    cursor: pointer;
+  }
   &.editable {
     .in-data-table-datetime,
     .in-data-table-date,
