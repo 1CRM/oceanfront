@@ -65,6 +65,27 @@
     </div>
     <div class="row">
       <div class="column">
+        <h3>Editable Data Table</h3>
+        <of-data-table
+          rows-selector
+          :nested="params.nested === 'Nested'"
+          editable
+          :edit-type="params.editType"
+          :show-old-values="params.showOldValues === 'Show'"
+          :density="params.density"
+          :draggable="params.draggable === 'On'"
+          @rows-selected="onRowsSelected"
+          @rows-moved="OnRowsMoved"
+          @rows-sorted="onRowsSorted"
+          @rows-edited="onRowsEdited"
+          :headers="editableHeaders"
+          :items="editableItems"
+          :footer-items="footerItems"
+        />
+      </div>
+    </div>
+    <div class="row">
+      <div class="column">
         <h3>Draggable Data Table</h3>
         <of-data-table
           draggable
@@ -85,27 +106,6 @@
           @rows-sorted="onRowsSorted"
           :headers="draggableHeaders"
           :items="nestedItems"
-          :footer-items="footerItems"
-        />
-      </div>
-    </div>
-    <div class="row">
-      <div class="column">
-        <h3>Editable Data Table</h3>
-        <of-data-table
-          rows-selector
-          :nested="params.nested === 'Nested'"
-          editable
-          :edit-type="params.editType"
-          :show-old-values="params.showOldValues === 'Show'"
-          :density="params.density"
-          :draggable="params.draggable === 'On'"
-          @rows-selected="onRowsSelected"
-          @rows-moved="OnRowsMoved"
-          @rows-sorted="onRowsSorted"
-          @rows-edited="onRowsEdited"
-          :headers="editableHeaders"
-          :items="editableItems"
           :footer-items="footerItems"
         />
       </div>
@@ -349,16 +349,16 @@ export default defineComponent({
       },
       {
         draggable: true,
-        name:  'Second item',
+        name: 'Second item',
         amount: 150,
-        category:  'Category 2',
+        category: 'Category 2',
         address: 'San Francisco, CA, USA',
         phone: '+1 (416) 269-0823',
         size: -15.56,
       },
       {
         id: '3',
-        name: { value: 'Third item', editable: true, },
+        name: { value: 'Third item', editable: true },
         amount: 16,
         category: 'Category 3',
         draggable: true,
@@ -399,16 +399,16 @@ export default defineComponent({
       },
       {
         draggable: true,
-        name:  'Second item',
+        name: 'Second item',
         amount: 150,
-        category:  'Category 2',
+        category: 'Category 2',
         address: 'San Francisco, CA, USA',
         phone: '+1 (416) 269-0823',
         size: -15.56,
       },
       {
         id: '3',
-        name: { value: 'Third item', editable: true, },
+        name: { value: 'Third item', editable: true },
         amount: 16,
         category: 'Category 3',
         draggable: true,

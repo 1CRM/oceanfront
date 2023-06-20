@@ -57,6 +57,10 @@ const defineField = (type: InputType, name: string, cls: string) =>
       ...BaseFieldProps,
       weekStart: { type: Number, default: undefined },
       showTodayButton: { type: Boolean, default: true },
+      inDataTable: {
+        type: Boolean,
+        default: false,
+      },
     },
     emits: ['focus', 'blur', 'update:modelValue'],
     setup(props, ctx) {
@@ -134,7 +138,9 @@ const defineField = (type: InputType, name: string, cls: string) =>
           e.stopPropagation()
           e.preventDefault()
           fieldCtx.onUpdate?.('')
-          focus()
+          if (!props.inDataTable) {
+            focus()
+          }
         }
       }
 
@@ -166,6 +172,7 @@ const defineField = (type: InputType, name: string, cls: string) =>
       }
 
       const acceptResult = (date?: Date) => {
+        ctx.emit('blur')
         if (date && fieldCtx.onUpdate)
           fieldCtx.onUpdate(formatter.value.formatPortable(date))
         opened.value = false

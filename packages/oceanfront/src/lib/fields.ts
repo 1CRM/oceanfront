@@ -151,6 +151,10 @@ export const BaseFieldProps = {
     type: [String, Boolean, Number, Array, Object],
     default: undefined,
   },
+  inDataTable: {
+    type: Boolean,
+    default: false,
+  },
   inline: Boolean,
   inputLabel: String,
   invalid: Boolean,

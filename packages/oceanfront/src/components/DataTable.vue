@@ -1,6 +1,6 @@
 <template>
   <div
-    :class="[tableClass, { drag: drag }]"
+    :class="[tableClass, { drag: drag }, { editable: editable }]"
     :style="columnsStyle"
     :id="outerId"
     ref="tableElt"
@@ -266,7 +266,6 @@ import {
   Ref,
   shallowRef,
   reactive,
-  nextTick,
 } from 'vue'
 import { DataTableHeader } from '../lib/datatable'
 import { useThemeOptions } from '../lib/theme'
@@ -1064,75 +1063,7 @@ export default defineComponent({
 })
 </script>
 <style lang="scss">
-.edit-overlay-desk {
-  .reset-edit-button {
-    margin-top: 5px;
-  }
-  outline: none;
-  min-width: 250px;
-  background: var(--of-color-menu-bg, var(--of-color-surface-variant));
-  padding: 7px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25), 0 1px 2px rgba(0, 0, 0, 0.5);
-  border-radius: 5px;
-}
 .of-data-table {
-  .old-value {
-    opacity: 70%;
-    font-size: 0.85em;
-    padding-left: var(--field-h-pad, 4px);
-  }
-  .editable-field-value-handler {
-    width: 100%;
-  }
-  .of-field > .of-field-main > .of-field-body > .of-field-inner > textarea,
-  .of-field > .of-field-main > .of-field-body > .of-field-inner > input {
-    resize: none;
-    overflow: hidden;
-    line-height: 1.25;
-    margin: 0;
-  }
-  .field-value {
-    display: flex;
-  }
-  .field-value:not(.editable-field-value) {
-    padding-left: var(--field-h-pad, 0.5em);
-  }
-  .editable-field-value {
-    position: relative;
-    .reset-value-button {
-      position: absolute;
-      bottom: calc(100% - 4px);
-      left: calc(100% - 8px);
-      --of-icon-size: 15px;
-      cursor: pointer;
-    }
-    min-height: 25px;
-    .of-field * {
-      min-height: auto;
-    }
-    .of-field-inner .of-field-input {
-      padding: 0;
-      line-height: 1.6;
-    }
-    &:hover {
-      color: var(--of-primary-tint);
-      cursor: pointer;
-      &:not(.active) {
-        border-radius: 4px;
-        outline: 1px solid var(--of-primary-tint);
-      }
-    }
-    &.active:not(.inline) {
-      .of-field-content-text {
-        color: var(--of-color-on-primary);
-      }
-      background: var(--of-primary-tint);
-      border-radius: 4px 4px 0 0;
-    }
-  }
-  .rename-divider {
-    border-bottom: 1px dashed grey;
-  }
   .of-data-table-row.dragging > div {
     background-color: var(--of-inverse-tint) !important;
   }

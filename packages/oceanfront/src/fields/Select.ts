@@ -22,6 +22,10 @@ export const OfSelectField = defineComponent({
     ...BaseFieldProps,
     multi: Boolean,
     addRemove: Boolean,
+    inDataTable: {
+      type: Boolean,
+      default: false,
+    },
   },
   emits: ['focus', 'blur', 'update:modelValue'],
   setup(props, ctx) {
@@ -108,13 +112,14 @@ export const OfSelectField = defineComponent({
       return false
     }
     const closePopup = (refocus?: boolean) => {
+      ctx.emit('blur')
       if (opened.value) {
         opened.value = false
         if (closing) clearTimeout(closing)
         closing = window.setTimeout(() => {
           closing = null
         }, 150)
-        if (refocus) focus()
+        if (refocus && !props.inDataTable) focus()
       }
     }
     const focus = () => {
@@ -187,7 +192,6 @@ export const OfSelectField = defineComponent({
 
     const hooks = {
       onBlur(_evt: FocusEvent) {
-        ctx.emit('blur')
         focused.value = false
       },
       onFocus(_evt: FocusEvent) {
