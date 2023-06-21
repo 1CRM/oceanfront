@@ -240,7 +240,7 @@ export const OfTextField = defineComponent({
       }
     }
     const hooks = {
-      onBlur(evt: FocusEvent) {
+      onblur(evt: FocusEvent) {
         const target = evt.target as
           | (HTMLInputElement | HTMLTextAreaElement)
           | null

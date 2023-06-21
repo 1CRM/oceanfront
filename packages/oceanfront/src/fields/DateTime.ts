@@ -1,5 +1,13 @@
 /* eslint-disable vue/one-component-per-file */
-import { computed, defineComponent, h, Ref, ref, watch } from 'vue'
+import {
+  computed,
+  defineComponent,
+  h,
+  Ref,
+  ref,
+  SetupContext,
+  watch,
+} from 'vue'
 import OfDateTimePopup from '../components/DateTimePopup.vue'
 import { OfFieldBase } from '../components/FieldBase'
 import { OfIcon } from '../components/Icon'
@@ -49,9 +57,14 @@ const defineField = (type: InputType, name: string, cls: string) =>
       ...BaseFieldProps,
       weekStart: { type: Number, default: undefined },
       showTodayButton: { type: Boolean, default: true },
+      inDataTable: {
+        type: Boolean,
+        default: false,
+      },
     },
+    emits: ['focus', 'blur', 'update:modelValue'],
     setup(props, ctx) {
-      const fieldCtx = makeFieldContext(props, ctx)
+      const fieldCtx = makeFieldContext(props, ctx as SetupContext)
       const withTime = type == 'datetime' || type == 'time'
       const withDate = type == 'datetime' || type == 'date'
       const withClear = !fieldCtx.required
@@ -106,6 +119,7 @@ const defineField = (type: InputType, name: string, cls: string) =>
       }
 
       const closePopup = (refocus?: boolean) => {
+        ctx.emit('blur')
         opened.value = false
         if (refocus) focus()
       }
@@ -124,7 +138,9 @@ const defineField = (type: InputType, name: string, cls: string) =>
           e.stopPropagation()
           e.preventDefault()
           fieldCtx.onUpdate?.('')
-          focus()
+          if (!props.inDataTable) {
+            focus()
+          }
         }
       }
 
@@ -156,6 +172,7 @@ const defineField = (type: InputType, name: string, cls: string) =>
       }
 
       const acceptResult = (date?: Date) => {
+        ctx.emit('blur')
         if (date && fieldCtx.onUpdate)
           fieldCtx.onUpdate(formatter.value.formatPortable(date))
         opened.value = false
@@ -178,6 +195,7 @@ const defineField = (type: InputType, name: string, cls: string) =>
           focused.value = false
         },
         onFocus(_evt: FocusEvent) {
+          ctx.emit('focus')
           focused.value = true
         },
         onKeydown(evt: KeyboardEvent) {

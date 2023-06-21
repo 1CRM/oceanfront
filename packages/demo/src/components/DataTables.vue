@@ -44,24 +44,32 @@
 
     <div class="row">
       <div class="column">
+        <h3>Data Table</h3>
+
         <of-data-table
-          :density="params.density"
-          :headers="headers"
-          nested-indicator="category"
+          rows-selector
+          :editable="params.editable === 'On'"
           :draggable="params.draggable === 'On'"
           :nested="params.nested === 'Nested'"
-          :items="items"
+          :edit-type="params.editType"
+          :show-old-values="params.showOldValues === 'Show'"
+          @rows-selected="onRowsSelected"
+          @rows-moved="OnRowsMoved"
+          @rows-sorted="onRowsSorted"
+          @rows-edited="onRowsEdited"
+          :headers="universalHeaders"
+          :items="universalItems"
           :footer-items="footerItems"
         />
       </div>
     </div>
     <div class="row">
       <div class="column">
+        <h3>Editable Data Table</h3>
         <of-data-table
           rows-selector
           :nested="params.nested === 'Nested'"
-          nested-indicator="name"
-          :editable="params.editable === 'On'"
+          editable
           :edit-type="params.editType"
           :show-old-values="params.showOldValues === 'Show'"
           :density="params.density"
@@ -70,8 +78,34 @@
           @rows-moved="OnRowsMoved"
           @rows-sorted="onRowsSorted"
           @rows-edited="onRowsEdited"
-          :headers="headers2"
-          :items="items2"
+          :headers="editableHeaders"
+          :items="editableItems"
+          :footer-items="footerItems"
+        />
+      </div>
+    </div>
+    <div class="row">
+      <div class="column">
+        <h3>Draggable Data Table</h3>
+        <of-data-table
+          draggable
+          @rows-sorted="onRowsSorted"
+          :headers="draggableHeaders"
+          :items="draggableItems"
+          :footer-items="footerItems"
+        />
+      </div>
+    </div>
+    <div class="row">
+      <div class="column">
+        <h3>Nested Data Table</h3>
+        <of-data-table
+          nested
+          nested-indicator="name"
+          draggable
+          @rows-sorted="onRowsSorted"
+          :headers="draggableHeaders"
+          :items="nestedItems"
           :footer-items="footerItems"
         />
       </div>
@@ -103,7 +137,13 @@ const params = reactive({
 
 export default defineComponent({
   setup() {
-    const headers = [
+    const categoryOptions = [
+      'Category 1',
+      'Category 2',
+      'Category 3',
+      'Category 4',
+    ]
+    const universalHeaders = [
       {
         text: 'Name',
         value: 'name',
@@ -112,55 +152,174 @@ export default defineComponent({
         sortable: false,
       },
       { text: 'Category', value: 'category', sortable: false },
+      { text: 'Date & Time', value: 'datetime', sortable: false },
+      { text: 'Amount', value: 'amount', sortable: false },
       { text: 'Size', value: 'size', align: 'end', sortable: false },
     ]
-    const items = [
+
+    const universalItems = ref([
       {
-        name: {
-          value: 'First item',
+        name: { value: 'First item', editable: true },
+        id: '1',
+        amount: { value: 10, editable: true, type: 'number' },
+        datetime: {
           editable: true,
+          value: '2022-06-17 12:44:44',
+          type: 'datetime',
         },
         draggable: true,
         category: {
           value: 'Category 1',
-          format: 'link',
-          params: {
-            href: 'https://1crm.com',
-          },
+          type: 'select',
+          items: categoryOptions,
+          editable: true,
         },
-        size: {
-          value: 15.56,
-          format: 'currency',
-          params: {
-            symbol: '&#36;',
-          },
-        },
+        size: { value: 15.56, format: 'currency', params: { symbol: '&#36;' } },
       },
       {
-        name: 'Second item',
+        draggable: true,
+        id: '2',
+        amount: { value: 40, editable: true, type: 'number' },
+        name: { value: 'Second item', editable: true },
         category: {
           value: 'Category 2',
-          format: 'link',
-          params: {
-            to: 'tabs',
-          },
+          type: 'select',
+          items: categoryOptions,
+          editable: true,
+        },
+        datetime: {
+          editable: true,
+          value: '2021-06-17 12:20:00',
+          type: 'datetime',
         },
         size: {
           value: -15.56,
           format: 'currency',
-          params: {
-            symbol: '&#36;',
-          },
+          params: { symbol: '&#36;' },
         },
       },
       {
-        name: 'Third item',
-        category: 'Category 3',
+        id: '3',
+        draggable: true,
+        amount: { value: 100, editable: true, type: 'number' },
+        name: { value: 'Third item', editable: true },
+        category: {
+          value: 'Category 3',
+          type: 'select',
+          items: categoryOptions,
+          editable: true,
+        },
+        datetime: {
+          editable: true,
+          value: '2023-08-13 22:14:00',
+          type: 'datetime',
+        },
         size: 15125.56,
+      },
+      {
+        id: '4',
+        draggable: true,
+        amount: { value: 45, editable: true, type: 'number' },
+        name: { value: 'Fourth item', editable: true },
+        category: {
+          value: 'Category 4',
+          type: 'select',
+          items: categoryOptions,
+          editable: true,
+        },
+        datetime: {
+          editable: true,
+          value: '2020-13-20 11:11:11',
+          type: 'datetime',
+        },
+        size: 15125.56,
+      },
+    ])
+    const editableHeaders = [
+      { text: 'Text', value: 'text', sortable: false },
+      { text: 'Number', value: 'number', sortable: false },
+      { text: 'Select', value: 'select', sortable: false },
+      { text: 'Toggle', value: 'toggle', sortable: false },
+      { text: 'Date', value: 'date', sortable: false },
+      { text: 'Time', value: 'time', sortable: false },
+      { text: 'Date & Time', value: 'datetime', sortable: false },
+    ]
+    const editableItems = [
+      {
+        text: { editable: true, type: 'text', value: 'Text 1' },
+        number: { editable: true, type: 'number', value: '100' },
+        toggle: { editable: true, type: 'toggle', value: true },
+        date: { editable: true, type: 'date', value: '2021-01-01' },
+        time: { editable: true, type: 'time', value: '15:15:15' },
+        datetime: {
+          editable: true,
+          type: 'datetime',
+          value: '2021-01-01 15:15:15',
+        },
+        select: {
+          editable: true,
+          type: 'select',
+          value: 'Select 1',
+          items: ['Select 1', 'Select 2', 'Select 3', 'Select 4'],
+        },
+      },
+      {
+        text: { editable: true, type: 'text', value: 'Text 2' },
+        number: { editable: true, type: 'number', value: '200' },
+        toggle: { editable: true, type: 'toggle', value: false },
+        date: { editable: true, type: 'date', value: '2022-02-02' },
+        time: { editable: true, type: 'time', value: '16:16:16' },
+        datetime: {
+          editable: true,
+          type: 'datetime',
+          value: '2022-02-02 16:16:16',
+        },
+        select: {
+          editable: true,
+          type: 'select',
+          value: 'Select 2',
+          items: ['Select 1', 'Select 2', 'Select 3', 'Select 4'],
+        },
+      },
+      {
+        text: { editable: true, type: 'text', value: 'Text 3' },
+        number: { editable: true, type: 'number', value: '300' },
+        toggle: { editable: true, type: 'toggle', value: true },
+        date: { editable: true, type: 'date', value: '2023-03-03' },
+        time: { editable: true, type: 'time', value: '17:17:17' },
+        datetime: {
+          editable: true,
+          type: 'datetime',
+          value: '2023-03-03 17:17:17',
+        },
+        select: {
+          editable: true,
+          type: 'select',
+          value: 'Select 3',
+          items: ['Select 1', 'Select 2', 'Select 3', 'Select 4'],
+        },
+      },
+      {
+        text: { editable: true, type: 'text', value: 'Text 4' },
+        number: { editable: true, type: 'number', value: '400' },
+        toggle: { editable: true, type: 'toggle', value: false },
+        date: { editable: true, type: 'date', value: '2024-04-04' },
+        time: { editable: true, type: 'time', value: '18:18:18' },
+        datetime: {
+          editable: true,
+          type: 'datetime',
+          value: '2024-04-04 18:18:18',
+        },
+        select: {
+          editable: true,
+          type: 'select',
+          value: 'Select 4',
+          items: ['Select 1', 'Select 2', 'Select 3', 'Select 4'],
+        },
       },
     ]
 
-    const headers2 = [
+    const draggableHeaders = [
       {
         text: 'Name',
         value: 'name',
@@ -178,61 +337,29 @@ export default defineComponent({
       { text: 'Amount', value: 'amount', sortable: false },
       { text: 'Size', value: 'size', align: 'end', sort: 'asc' },
     ]
-    const items2 = ref([
+    const draggableItems = [
       {
-        id: '1',
-        name: {
-          value: 'First item',
-          editable: true,
-        },
+        name: 'First item',
         draggable: true,
         category: 'Category 1',
-        address: {
-          editable: true,
-          value: 'New York, NY, USA',
-        },
-        amount: {
-          value: 100,
-          editable: true,
-          type: 'number',
-        },
+        address: 'New York, NY, USA',
+        amount: 100,
         phone: '+1 (961) 209-1256',
         size: 15.56,
       },
       {
-        id: '2',
         draggable: true,
-        name: {
-          value: 'Second item',
-          editable: true,
-        },
-        amount: {
-          value: 150,
-          editable: true,
-          type: 'number',
-        },
-        category: {
-          editable: true,
-          value: 'Category 2',
-        },
-        address: {
-          editable: true,
-          value: 'San Francisco, CA, USA',
-        },
+        name: 'Second item',
+        amount: 150,
+        category: 'Category 2',
+        address: 'San Francisco, CA, USA',
         phone: '+1 (416) 269-0823',
         size: -15.56,
       },
       {
         id: '3',
-        name: {
-          value: 'Third item',
-          editable: true,
-        },
-        amount: {
-          value: 100,
-          editable: false,
-          type: 'number',
-        },
+        name: { value: 'Third item', editable: true },
+        amount: 16,
         category: 'Category 3',
         draggable: true,
         address: 'Orléans, CA, USA',
@@ -246,11 +373,7 @@ export default defineComponent({
         category: 'Category 4',
         address: 'New York, NY, USA',
         phone: '+1 (041) 102-0224',
-        amount: {
-          value: 1500,
-          editable: false,
-          type: 'number',
-        },
+        amount: 1500,
         size: 45.56,
       },
       {
@@ -260,30 +383,62 @@ export default defineComponent({
         draggable: true,
         address: 'Lisbon, CA, USA ',
         phone: '+1 (041) 102-0224',
-        size: 45.56,
-        amount: {
-          value: 200,
-          editable: true,
-          type: 'number',
-        },
+        size: 12.55,
+        amount: 200,
+      },
+    ]
+    const nestedItems = [
+      {
+        name: 'First item',
+        draggable: true,
+        category: 'Category 1',
+        address: 'New York, NY, USA',
+        amount: 100,
+        phone: '+1 (961) 209-1256',
+        size: 15.56,
       },
       {
-        id: '6',
-        name: 'Sixth item',
         draggable: true,
-        category: 'Category 6',
-        address: 'Glendale, LA, USA',
-        amount: {
-          value: 400,
-          editable: true,
-          type: 'number',
-        },
+        name: 'Second item',
+        amount: 150,
+        category: 'Category 2',
+        address: 'San Francisco, CA, USA',
+        phone: '+1 (416) 269-0823',
+        size: -15.56,
+      },
+      {
+        id: '3',
+        name: { value: 'Third item', editable: true },
+        amount: 16,
+        category: 'Category 3',
+        draggable: true,
+        address: 'Orléans, CA, USA',
+        phone: '+1 (125) 853-7161',
+        size: 15125.56,
+      },
+      {
+        id: '4',
+        name: 'Fourth item',
+        draggable: true,
+        category: 'Category 4',
+        address: 'New York, NY, USA',
         phone: '+1 (041) 102-0224',
+        amount: 1500,
         size: 45.56,
       },
-    ])
+      {
+        id: '5',
+        name: 'Fifth item',
+        category: 'Category 5',
+        draggable: true,
+        address: 'Lisbon, CA, USA ',
+        phone: '+1 (041) 102-0224',
+        size: 12.55,
+        amount: 200,
+      },
+    ]
 
-    const initialItems2 = [...items2.value]
+    const initialItems2 = [...universalItems.value]
     const footerItems = [{ size: 100.5 }]
     const onRowsSelected = function (values: any) {
       console.log(values)
@@ -294,31 +449,34 @@ export default defineComponent({
 
     const onRowsSorted = function (sort: { column: string; order: string }) {
       if (sort.order == '') {
-        items2.value = [...initialItems2]
+        universalItems.value = [...initialItems2]
       } else {
         if (sort.column == 'size') {
-          items2.value.sort((a, b) => (a.size > b.size ? 1 : -1))
+          universalItems.value.sort((a, b) => (a.size > b.size ? 1 : -1))
         } else {
-          items2.value.sort(function (x, y) {
+          universalItems.value.sort(function (x, y) {
             let a = x[sort.column as keyof typeof y].toString().toUpperCase(),
               b = y[sort.column as keyof typeof y].toString().toUpperCase()
             return a == b ? 0 : a > b ? 1 : -1
           })
         }
         if (sort.order == 'desc') {
-          items2.value.reverse()
+          universalItems.value.reverse()
         }
       }
     }
     const onRowsEdited = (rows: []) => {
-      // console.log('rows edited ', rows)
+      console.log('rows edited ', rows)
     }
 
     return {
-      headers,
-      headers2,
-      items,
-      items2,
+      universalHeaders,
+      draggableHeaders,
+      editableHeaders,
+      editableItems,
+      universalItems,
+      draggableItems,
+      nestedItems,
       footerItems,
       onRowsSelected,
       onRowsEdited,

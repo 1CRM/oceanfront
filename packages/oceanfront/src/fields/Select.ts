@@ -1,4 +1,4 @@
-import { computed, defineComponent, h, ref, watch } from 'vue'
+import { computed, defineComponent, h, ref, SetupContext, watch } from 'vue'
 import OfBadge from '../components/Badge.vue'
 import { OfFieldBase } from '../components/FieldBase'
 import { OfIcon } from '../components/Icon'
@@ -22,11 +22,16 @@ export const OfSelectField = defineComponent({
     ...BaseFieldProps,
     multi: Boolean,
     addRemove: Boolean,
+    inDataTable: {
+      type: Boolean,
+      default: false,
+    },
   },
+  emits: ['focus', 'blur', 'update:modelValue'],
   setup(props, ctx) {
     const config = useConfig()
     const itemMgr = useItems(config)
-    const fieldCtx = makeFieldContext(props, ctx)
+    const fieldCtx = makeFieldContext(props, ctx as SetupContext)
 
     const initialValue = computed(() => {
       let initial = fieldCtx.initialValue
@@ -107,13 +112,14 @@ export const OfSelectField = defineComponent({
       return false
     }
     const closePopup = (refocus?: boolean) => {
+      ctx.emit('blur')
       if (opened.value) {
         opened.value = false
         if (closing) clearTimeout(closing)
         closing = window.setTimeout(() => {
           closing = null
         }, 150)
-        if (refocus) focus()
+        if (refocus && !props.inDataTable) focus()
       }
     }
     const focus = () => {
@@ -189,6 +195,7 @@ export const OfSelectField = defineComponent({
         focused.value = false
       },
       onFocus(_evt: FocusEvent) {
+        ctx.emit('focus')
         focused.value = true
         searchText.value = ''
       },
