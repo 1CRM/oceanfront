@@ -7,6 +7,7 @@ export const ToggleInner = defineComponent({
     checked: [Boolean, Number],
     focused: Boolean,
     label: String,
+    ariaLabel: String,
     inputId: String,
     align: String,
     name: String,
@@ -60,6 +61,7 @@ export const ToggleInner = defineComponent({
               name: props.name,
               type: 'checkbox',
               value: '1',
+              'aria-label': props.label ?? props.ariaLabel,
               ...hooks,
             }),
             props.switch

@@ -25,6 +25,7 @@
             :ref="page === item ? 'activeButton' : null"
             :variant="variantVal"
             :density="densityVal"
+            :aria-label="(ariaLabels?.page ?? 'Page') + ' ' + item"
             @click="onSelectPage(item)"
           >
             {{ item }}
