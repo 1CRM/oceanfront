@@ -24,13 +24,18 @@
         <of-text-field
           :mode="active && mode === 'inline' ? 'editable' : 'fixed'"
           multiline
+          prepend="adwawdawd"
           type="textarea"
           @input="resizeInput"
           @blur="onInputBlur(true)"
           @focus="onInputFocus"
           @keydown:enter="onKeyDown"
           v-model="item.value"
-        ></of-text-field>
+        >
+          <template v-if="item.icon" #prepend>
+            <of-icon :name="item.icon" />
+          </template>
+        </of-text-field>
         <div class="field-editor" v-if="active && mode === 'popup'">
           <div class="edit-overlay-desk">
             <of-text-field
@@ -243,10 +248,12 @@ export default OfEditableField
     .in-data-table-date,
     .in-data-table-time {
       position: relative;
-      .of-field-main {
-        position: absolute;
-        transform: translateY(-50%);
-        width: 100%;
+      &.of--focused {
+        .of-field-main {
+          position: absolute;
+          transform: translateY(-50%);
+          width: 100%;
+        }
       }
     }
     .in-data-table-datetime {
