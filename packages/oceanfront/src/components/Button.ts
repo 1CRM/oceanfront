@@ -18,6 +18,8 @@ export const OfButton = defineComponent({
     id: String,
     items: [String, Array, Object] as PropType<ItemsProp>,
     label: String,
+    ariaLabel: String,
+    tabindex: String,
     name: String,
     rounded: {
       type: Boolean,
@@ -123,7 +125,7 @@ export const OfButton = defineComponent({
     let autoId: string
 
     return () => {
-      const { disabled, id, items, split } = props
+      const { disabled, id, items, split, tabindex } = props
       let { rounded } = props
       if (rounded === undefined) {
         rounded = themeOptions.defaultRoundedButton
@@ -196,11 +198,13 @@ export const OfButton = defineComponent({
             {
               class: ['of-button-main', sizeClass(props.size)],
               disabled,
+              tabindex,
               id: buttonId,
               ref: split && items ? undefined : menuButton,
               onClick,
               name: props.name,
               type: props.type ?? 'button',
+              'aria-label': props.ariaLabel ?? props.label,
               ...menuMouseEvts,
               ...focusEvts,
             },
@@ -217,6 +221,8 @@ export const OfButton = defineComponent({
                   onClick: toggleMenu,
                   ...menuMouseEvts,
                   ...focusEvts,
+                  'aria-label': props.ariaLabel ?? props.label,
+                  'aria-haspopup': true,
                 },
                 expand
               )

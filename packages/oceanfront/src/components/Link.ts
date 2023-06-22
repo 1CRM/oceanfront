@@ -37,12 +37,14 @@ function defaultLink(href: string | null) {
 function renderLink(
   link: Link,
   comp: ComponentInternalInstance,
-  beforeNavigate: Function[]
+  beforeNavigate: Function[],
+  ariaLabel: String | null
 ) {
   return h(
     'a',
     {
       'aria-current': link.isExactActive ? comp.props.ariaCurrentValue : null,
+      'aria-label': ariaLabel ?? null,
       class: {
         'of-link': true,
         'of--active': link.isExactActive,
@@ -86,6 +88,7 @@ export const OfLink = defineComponent({
       >,
       default: 'page',
     },
+    ariaLabel: { type: String, default: null },
     href: { type: String, default: null },
     to: [String, Object] as PropType<LinkTo>,
     beforeNavigate: { type: Array as PropType<Function[]>, default: null },
@@ -111,13 +114,18 @@ export const OfLink = defineComponent({
             },
             (customSlot ||
               ((link: Link) =>
-                renderLink(link, inst, props.beforeNavigate))) as any
+                renderLink(
+                  link,
+                  inst,
+                  props.beforeNavigate,
+                  props.ariaLabel
+                ))) as any
           )
         } else {
           const link = defaultLink(props.href)
           return customSlot
             ? customSlot(link)
-            : renderLink(link, inst, props.beforeNavigate)
+            : renderLink(link, inst, props.beforeNavigate, props.ariaLabel)
         }
       },
     }

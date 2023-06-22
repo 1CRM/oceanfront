@@ -82,6 +82,7 @@ export interface FieldContext {
   interactive?: boolean
   items?: string | any[] | ItemList
   label?: string
+  ariaLabel?: string
   labelPosition?: string
   mode?: FieldMode
   muted?: boolean // if editable, reduce indicators
@@ -160,6 +161,7 @@ export const BaseFieldProps = {
   invalid: Boolean,
   items: [String, Array, Object] as PropType<string | any[] | ItemList>,
   label: String,
+  ariaLabel: String,
   labelPosition: String as PropType<FieldLabelPositionProp>,
   loading: Boolean,
   locked: Boolean,
@@ -348,6 +350,7 @@ export function makeFieldContext<C>(
       'inline',
       'items',
       'label',
+      'ariaLabel',
       'loading',
       'muted',
       'name',
