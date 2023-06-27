@@ -772,13 +772,12 @@ export default defineComponent({
     }
 
     const onFocusTab = (key: number) => {
-      if (!props.params?.disableTabSelect) {
-        focusedTabKey.value = key
-        focusTab()
-        nextTick(() => {
-          if (!subMenuHidden.value) openFocusedSubMenu()
-        })
-      }
+      focusedTabKey.value = key
+      focusTab()
+      nextTick(() => {
+        if (!subMenuHidden.value && !props.params?.disableTabSelect)
+          openFocusedSubMenu()
+      })
     }
 
     const onBlurTab = (key: number | undefined = undefined) => {

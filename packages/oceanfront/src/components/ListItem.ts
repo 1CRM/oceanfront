@@ -62,6 +62,17 @@ export const OfListItem = defineComponent({
         isCurrent.value = !!active
       }
     )
+
+    watch(
+      () => props.attrs?.isFocused,
+      (focused) => {
+        if (focused === true) {
+          isFocused.value = true
+          elt.value?.focus()
+        }
+      }
+    )
+
     const content = () => {
       const result = [
         h('div', { class: 'of-list-item-content' }, ctx.slots.default?.()),

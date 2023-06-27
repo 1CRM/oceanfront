@@ -14,6 +14,7 @@
             class="header-rows-selector"
             keep-text-color
             split
+            tabindex="-1"
             :items="selectRowsItems"
           >
             <of-field
@@ -23,6 +24,7 @@
               v-model="headerRowsSelectorChecked"
               :mode="selectLocked ? 'disabled' : 'editable'"
               :locked="selectLocked"
+              :aria-label="selectRowsItems.find((r) => r.key === 'page')?.text"
               @update:model-value="onUpdateHeaderRowsSelector"
             />
           </of-button>
