@@ -256,6 +256,15 @@ export default OfEditableField
         }
       }
     }
+    .of--align-end {
+      .in-data-table-toggle {
+        display: contents;
+        .of-field-inner {
+          display: contents;
+        }
+      }
+    }
+
     .in-data-table-datetime {
       .of-field-main {
         max-width: 235px;
@@ -275,6 +284,7 @@ export default OfEditableField
 
   .field-value {
     display: flex;
+    width: 100%;
   }
   .field-value:not(.editable-field-value) {
     padding-left: var(--field-h-pad, 0.5em);
