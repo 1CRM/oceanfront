@@ -712,7 +712,7 @@ export default defineComponent({
         (focusedTabKey.value && focusedTabKey.value === key) ||
         forceFocus
       ) {
-        submenuMinWidth.value = tabsRefs[key].offsetWidth
+        submenuMinWidth.value = tabsRefs[key]?.offsetWidth || 0
         if (optionListFocused.value) {
           subMenuHidden.value = true
           focusTab()
