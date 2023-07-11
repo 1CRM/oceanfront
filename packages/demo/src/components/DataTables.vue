@@ -98,6 +98,19 @@
     </div>
     <div class="row">
       <div class="column">
+        <h3>Draggable Data Table Unlimit Nested</h3>
+        <of-data-table-new
+          draggable
+          nested-limit="20"
+          @rows-sorted="onRowsSorted"
+          :headers="newDraggableHeaders"
+          :items="newDraggableItems"
+          :footer-items="footerItems"
+        />
+      </div>
+    </div>
+    <div class="row">
+      <div class="column">
         <h3>Nested Data Table</h3>
         <of-data-table
           nested
@@ -324,7 +337,6 @@ export default defineComponent({
         text: 'Name',
         value: 'name',
         divider: true,
-        width: '150px',
         sort: 'desc',
         extra_sort_fields: [
           { label: 'Address', value: 'address' },
@@ -336,6 +348,20 @@ export default defineComponent({
       { text: 'Phone', value: 'phone', sortable: false },
       { text: 'Amount', value: 'amount', sortable: false },
       { text: 'Size', value: 'size', align: 'end', sort: 'asc' },
+    ]
+    const newDraggableHeaders = [
+      {
+        text: 'Name',
+        value: 'name',
+        divider: true,
+        sort: 'desc',
+        extra_sort_fields: [
+          { label: 'Address', value: 'address' },
+          { label: 'Phone', value: 'phone' },
+        ],
+      },
+      { text: 'Category', value: 'category' },
+      { text: 'Address', value: 'address', sortable: false },
     ]
     const draggableItems = [
       {
@@ -380,6 +406,116 @@ export default defineComponent({
         id: '5',
         name: 'Fifth item',
         category: 'Category 5',
+        draggable: true,
+        address: 'Lisbon, CA, USA ',
+        phone: '+1 (041) 102-0224',
+        size: 12.55,
+        amount: 200,
+      },
+    ]
+
+    const newDraggableItems = [
+      {
+        name: 'First item',
+        draggable: true,
+        category: 'Category 1',
+        address: 'New York, NY, USA',
+        amount: 100,
+        phone: '+1 (961) 209-1256',
+        size: 15.56,
+        subitems: [
+          {
+            draggable: true,
+            name: 'First nested 1',
+            amount: 150,
+            category: 'Category 2',
+            address: 'San Francisco, CA, USA',
+            phone: '+1 (416) 269-0823',
+            size: -15.56,
+          },
+          {
+            draggable: true,
+            name: 'First nested 2',
+            amount: 150,
+            category: 'Category 2',
+            address: 'San Francisco, CA, USA',
+            phone: '+1 (416) 269-0823',
+            size: -15.56,
+          },
+          {
+            draggable: true,
+            name: 'First nested 3',
+            amount: 150,
+            category: 'Category 2',
+            address: 'San Francisco, CA, USA',
+            phone: '+1 (416) 269-0823',
+            size: -15.56,
+            subitems: [
+              {
+                draggable: true,
+                name: 'First nested 3 1',
+                amount: 150,
+                category: 'Category 2',
+                address: 'San Francisco, CA, USA',
+                phone: '+1 (416) 269-0823',
+                size: -15.56,
+              },
+              {
+                draggable: true,
+                name: 'First nested 3 2',
+                amount: 150,
+                category: 'Category 2',
+                address: 'San Francisco, CA, USA',
+                phone: '+1 (416) 269-0823',
+                size: -15.56,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        draggable: true,
+        name: 'Second item',
+        amount: 150,
+        category: 'Category 2',
+        address: 'San Francisco, CA, USA',
+        phone: '+1 (416) 269-0823',
+        size: -15.56,
+      },
+      {
+        id: '3',
+        name: 'Third item',
+        amount: 16,
+        category: 'Category 3',
+        draggable: true,
+        address: 'Orléans, CA, USA',
+        phone: '+1 (125) 853-7161',
+        size: 15125.56,
+      },
+      {
+        id: '4',
+        name: 'Fourth item',
+        draggable: true,
+        category: 'Category 4',
+        address: 'New York, NY, USA',
+        phone: '+1 (041) 102-0224',
+        amount: 1500,
+        size: 45.56,
+      },
+      {
+        id: '5',
+        name: 'Fifth item',
+        category: 'Category 5',
+        draggable: true,
+        address: 'Lisbon, CA, USA ',
+        phone: '+1 (041) 102-0224',
+        size: 12.55,
+        amount: 200,
+      },
+      {
+        id: '6',
+        name: 'Sixth item',
+        category: 'Category 6',
         draggable: true,
         address: 'Lisbon, CA, USA ',
         phone: '+1 (041) 102-0224',
@@ -472,10 +608,12 @@ export default defineComponent({
     return {
       universalHeaders,
       draggableHeaders,
+      newDraggableHeaders,
       editableHeaders,
       editableItems,
       universalItems,
       draggableItems,
+      newDraggableItems,
       nestedItems,
       footerItems,
       onRowsSelected,

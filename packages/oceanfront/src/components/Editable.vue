@@ -114,7 +114,7 @@ const OfEditableField = defineComponent({
   components: { OfField, OfButton, OfIcon },
   props: {
     modelValue: Object,
-    mode: String,
+    mode: String as any,
     showOldValues: Boolean,
   },
   emits: ['update:modelValue'],
