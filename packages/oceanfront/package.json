@@ -19,6 +19,7 @@
   "scripts": {
     "build": "vite build",
     "build-dev": "vite build -m development",
+    "package": "yarn pack",
     "clean": "rm -rf .turbo .vite node_modules dist",
     "coverage": "vitest run --coverage",
     "demo": "vite build -m development --watch",

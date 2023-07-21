@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "build": "vite build",
+    "package": "yarn pack",
     "clean": "rm -rf .turbo .vite node_modules dist",
     "demo": "vite"
   },
