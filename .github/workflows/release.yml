@@ -41,29 +41,32 @@ jobs:
       - name: Run unit tests
         run: yarn run test
 
-      - uses: djnicholson/release-action@v2.11
+      - name: Upload oceanfront package
+        uses: svenstaro/upload-release-action@v2
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          release-name: ${{ env.RELEASE_NAME }}
-          tag-name: ${{ env.RELEASE_TAG }}
-          asset-name: "oceanfront-${{ env.RELEASE_TAG }}.tgz"
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: "./packages/oceanfront/oceanfront-v0.1.0.tgz"
+          asset_name: oceanfront
+          tag: ${{ env.RELEASE_NAME }}
+          overwrite: true
 
-      - uses: djnicholson/release-action@v2.11
+      - name: Upload of-colorscheme-editor package
+        uses: svenstaro/upload-release-action@v2
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          release-name: ${{ env.RELEASE_NAME }}
-          tag-name: ${{ env.RELEASE_TAG }}
-          asset-name: "of-colorscheme-editor-${{ env.RELEASE_TAG }}.tgz"
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: "./packages/of-colorscheme-editor/of-colorscheme-editor-v0.1.0.tgz"
+          asset_name: of-colorscheme-editor
+          tag: ${{ env.RELEASE_NAME }}
+          overwrite: true
 
-      - uses: djnicholson/release-action@v2.11
+      - name: Upload oceanfront-html-editor package
+        uses: svenstaro/upload-release-action@v2
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          release-name: ${{ env.RELEASE_NAME }}
-          tag-name: ${{ env.RELEASE_TAG }}
-          asset-name: "oceanfront-html-editor-${{ env.RELEASE_TAG }}.tgz"
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: "./packages/oceanfront-html-editor/oceanfront-html-editor-v0.1.0.tgz"
+          asset_name: oceanfront-html-editor
+          tag: ${{ env.RELEASE_NAME }}
+          overwrite: true
 
       - name: Ping app-js
         run: |
