@@ -7,14 +7,13 @@ on:
   workflow_dispatch:
 
 env:
-  RELEASE_NAME: Dev
   RELEASE_TAG: dev
 
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       packages: write
 
     steps:
@@ -47,7 +46,7 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: "./packages/oceanfront/oceanfront-v0.1.0.tgz"
           asset_name: oceanfront
-          tag: ${{ env.RELEASE_NAME }}
+          tag: ${{ env.RELEASE_TAG }}
           overwrite: true
 
       - name: Upload of-colorscheme-editor package
@@ -56,7 +55,7 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: "./packages/of-colorscheme-editor/of-colorscheme-editor-v0.1.0.tgz"
           asset_name: of-colorscheme-editor
-          tag: ${{ env.RELEASE_NAME }}
+          tag: ${{ env.RELEASE_TAG }}
           overwrite: true
 
       - name: Upload oceanfront-html-editor package
@@ -65,7 +64,7 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: "./packages/oceanfront-html-editor/oceanfront-html-editor-v0.1.0.tgz"
           asset_name: oceanfront-html-editor
-          tag: ${{ env.RELEASE_NAME }}
+          tag: ${{ env.RELEASE_TAG }}
           overwrite: true
 
       - name: Ping app-js
