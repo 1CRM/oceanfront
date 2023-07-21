@@ -1,10 +1,14 @@
-name: Ping app-js
+name: Publish dev release
 
 on:
   push:
     branches:
       - main
   workflow_dispatch:
+
+env:
+  RELEASE_NAME: Dev
+  RELEASE_TAG: dev
 
 jobs:
   build:
@@ -29,13 +33,37 @@ jobs:
       - name: Run ESLint
         run: yarn run lint
 
-      - name: Build
+      - name: Create packages
         env:
           OF_DEMO_ROOT_PATH: "/oceanfront/"
-        run: yarn run build
+        run: yarn run package
 
       - name: Run unit tests
         run: yarn run test
+
+      - uses: djnicholson/release-action@v2.11
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          release-name: ${{ env.RELEASE_NAME }}
+          tag-name: ${{ env.RELEASE_TAG }}
+          asset-name: "oceanfront-${{ env.RELEASE_TAG }}.tgz"
+          file: "./packages/oceanfront/oceanfront-v0.1.0.tgz"
+
+      - uses: djnicholson/release-action@v2.11
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          release-name: ${{ env.RELEASE_NAME }}
+          tag-name: ${{ env.RELEASE_TAG }}
+          asset-name: "of-colorscheme-editor-${{ env.RELEASE_TAG }}.tgz"
+          file: "./packages/of-colorscheme-editor/of-colorscheme-editor-v0.1.0.tgz"
+
+      - uses: djnicholson/release-action@v2.11
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          release-name: ${{ env.RELEASE_NAME }}
+          tag-name: ${{ env.RELEASE_TAG }}
+          asset-name: "oceanfront-html-editor-${{ env.RELEASE_TAG }}.tgz"
+          file: "./packages/oceanfront-html-editor/oceanfront-html-editor-v0.1.0.tgz"
 
       - name: Ping app-js
         run: |

@@ -7,6 +7,10 @@
     "build-dev": {
       "dependsOn": ["^build-dev"]
     },
+    "package": {
+      "cache": false,
+      "dependsOn": ["build"]
+    },
     "clean": {
       "cache": false,
       "outputs": []
