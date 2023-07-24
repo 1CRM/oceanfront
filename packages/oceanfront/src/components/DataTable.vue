@@ -1,6 +1,6 @@
 <template>
   <div
-    :class="[tableClass, { drag: drag }, { editable: editable }]"
+    :class="[tableClass, { drag: dragInProgress }, { editable: editable }]"
     :style="columnsStyle"
     :id="outerId"
     ref="tableElt"
@@ -70,137 +70,41 @@
       </div>
     </div>
     <template :key="rowidx" v-for="(row, rowidx) of rows">
-      <div
-        class="of-data-table-row"
-        @mousemove="draggable && dragMouseMove($event, rowidx)"
-        :class="{
-          selected:
-            rowsRecord.value[row.id] ||
-            (highlited.type === 'item' && highlited.itemIdx === rowidx),
-          odd: rowidx % 2 != 0,
-          nested: row.nested,
-          dragging:
-            draggingItem.type === 'item' && draggingItem.itemIdx === rowidx,
+      <of-table-row
+        :row="row"
+        :drag-info="{
+          draggable: draggable,
+          dragInProgress: dragInProgress,
+          nestedIndicator: nestedIndicator,
+          currentCoords,
+          nested: draggingOptions.nested,
+          currentCanBeNested:
+            draggingOptions.nested &&
+            (draggingOptions.allNested || currentCanBeNested),
+          draggingItem,
+          nestedLimit: draggingOptions.nestedLimit,
+          allParent: draggingOptions.allParent,
+          listedRows,
+          tableLeft,
+          highlightLastMoved,
+          currentInnerDepth,
         }"
-      >
-        <div
-          v-if="draggable"
-          @mousedown="row.draggable && dragMouseDown($event, rowidx)"
-          class="grab-button"
-          :class="{ draggable: row.draggable }"
-        >
-          <of-icon v-if="row.draggable" name="menu"></of-icon>
-        </div>
-        <div v-if="rowsSelector">
-          <slot name="rows-selector" :record="rowsRecord" :item="row">
-            <of-field
-              type="toggle"
-              variant="basic"
-              class="row-selector"
-              :locked="selectLocked"
-              :mode="selectLocked ? 'disabled' : 'editable'"
-              :record="selectLocked ? undefined : rowsRecord"
-              :model-value="selectLocked ? true : rowsRecord.value[row.id]"
-              :name="row.id"
-            />
-          </slot>
-          <slot name="first-cell" :record="rowsRecord" :item="row" />
-        </div>
-        <div v-for="(col, colidx) of columns" :class="col.class" :key="colidx">
-          <template v-if="row[col.value]?.editable && editable">
-            <of-editable-field
-              :mode="editType"
-              v-model="row[col.value]"
-              :show-old-values="showOldValues"
-              @update:model-value="$emit('rows-edited', rows)"
-            ></of-editable-field>
-          </template>
-          <template v-else>
-            <div class="field-value">
-              <of-data-type :value="row[col.value]"></of-data-type>
-            </div>
-          </template>
-        </div>
-      </div>
-
-      <div
-        v-for="(subrow, subidx) of row.subitems"
-        class="of-data-table-row"
-        @mousemove="dragMouseMoveNested($event, subidx as number, rowidx)"
-        :key="subidx"
-        :class="{
-          selected:
-            rowsRecord.value[subrow.id] ||
-            (highlited.itemIdx === rowidx &&
-              highlited.subitems.includes(subidx)),
-          odd: subidx % 2 != 0,
-          nested: true,
-          dragging: highlight(rowidx, subidx as number),
-        }"
-      >
-        <div
-          @mousedown="
-            subrow.draggable && dragMouseDown($event, rowidx, subidx as number)
-          "
-          v-if="draggable"
-          class="grab-button"
-          :class="{ draggable: subrow.draggable }"
-        >
-          <of-icon v-if="subrow.draggable" name="menu"></of-icon>
-        </div>
-        <div v-if="rowsSelector">
-          <slot name="rows-selector" :record="rowsRecord" :item="subrow">
-            <of-field
-              type="toggle"
-              variant="basic"
-              class="row-selector"
-              :locked="selectLocked"
-              :mode="selectLocked ? 'disabled' : 'editable'"
-              :record="selectLocked ? undefined : rowsRecord"
-              :model-value="selectLocked ? true : rowsRecord.value[subrow.id]"
-              :name="subrow.id"
-            />
-          </slot>
-          <slot name="first-cell" :record="rowsRecord" :item="subrow" />
-        </div>
-        <div v-for="(col, colidx) of columns" :class="col.class" :key="colidx">
-          <svg
-            v-if="col.value === nestedIndicator"
-            width="20px"
-            height="20px"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-labelledby="previousAltIconTitle"
-            stroke="#000000"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            color="#000000"
-          >
-            <path d="M8 4L4 8L8 12" />
-            <path
-              d="M4 8H14.5C17.5376 8 20 10.4624 20 13.5V13.5C20 16.5376 17.5376 19 14.5 19H5"
-            />
-          </svg>
-          <template v-if="subrow[col.value]?.editable && editable">
-            <of-editable-field
-              :mode="editType"
-              v-model="subrow[col.value]"
-              :show-old-values="showOldValues"
-              @update:model-value="$emit('rows-edited', rows)"
-            ></of-editable-field>
-          </template>
-          <template v-else>
-            <div class="field-value">
-              <of-data-type :value="subrow[col.value]"></of-data-type>
-            </div>
-          </template>
-        </div>
-      </div>
+        :coords="[rowidx]"
+        :point-next="[rowidx + 1]"
+        v-on="dragEvents"
+        :rows-selector="rowsSelector"
+        :select-locked="selectLocked"
+        :edit-type="editType"
+        :editable="editable"
+        :show-old-values="showOldValues"
+        :columns="columns"
+        :rows-record="rowsRecord"
+        :idx="rowidx"
+        @update:row="updateRow"
+      ></of-table-row>
     </template>
 
-    <template v-if="footerRows.length">
+    <template v-if="footerRows?.length">
       <div
         class="of-data-table-footer"
         v-for="(row, rowidx) of footerRows"
@@ -233,22 +137,23 @@
     </of-overlay>
 
     <div
-      v-if="draggable && drag"
+      v-if="draggable && dragInProgress"
       class="drag-position-handler"
       :style="{ top: arrowTop + 'px' }"
     >
       <div class="drag-pointers-handler">
-        <div class="drag-position-pointer" :class="{ nested: currentNested }">
+        <div class="drag-position-pointer" :style="{ left: dragLeft }">
           <svg
-            fill="#000000"
-            width="30px"
-            height="30px"
-            viewBox="0 0 32 32"
-            version="1.1"
+            width="15"
+            height="18"
+            viewBox="0 0 15 18"
+            fill="none"
             xmlns="http://www.w3.org/2000/svg"
           >
-            <title>next</title>
-            <path d="M0 24.781v-17.594l15.281 8.813z"></path>
+            <path
+              d="M0 17.2327V0.738281L14.3259 9.00047L0 17.2327Z"
+              fill="black"
+            />
           </svg>
         </div>
       </div>
@@ -276,7 +181,7 @@ import { OfOverlay } from './Overlay'
 import OfOptionList from './OptionList.vue'
 import { OfField } from './Field'
 import { OfButton } from './Button'
-import OfEditableField from './Editable.vue'
+import OfTableRow from './TableRow.vue'
 
 enum RowsSelectorValues {
   Page = 'page',
@@ -309,7 +214,7 @@ let sysDataTableIndex = 0
 export default defineComponent({
   name: 'OfDataTable',
   components: {
-    OfEditableField,
+    OfTableRow,
     OfButton,
     OfField,
     OfOptionList,
@@ -330,7 +235,10 @@ export default defineComponent({
     resetSelection: Boolean,
     selectAll: Boolean,
     draggable: Boolean,
-    nested: Boolean,
+    dragOptions: {
+      type: Object as any,
+      required: false,
+    },
     editable: {
       type: Boolean,
       default: false,
@@ -364,13 +272,179 @@ export default defineComponent({
     const items = ref(props.items || [])
     const tableElt = shallowRef<HTMLDivElement | undefined>()
     const drag = ref(false)
-    let dragStartX = 0
     const currentNested = ref(false)
-    const draggingItem = reactive({ itemIdx: -1, subitemIdx: -1, type: 'item' })
-    const currentDragPosition = reactive({ itemIdx: -1, subitemIdx: -1 })
-    const highlited = ref({ type: 'item', itemIdx: -1, subitems: [] })
+    const dragInProgress = ref(false)
+    const draggingItem = ref([])
+    const currentCanBeNested = ref(false)
+    const currentCoords = ref([] as number[])
     const arrowTop = ref(0)
-
+    const highlightLastMoved = ref(false)
+    const nestDepth = ref(0)
+    const currentInnerDepth = ref(0)
+    const draggingOptions: any = reactive({
+      nested: false,
+      allNested: true,
+      nestedLimit: 5,
+      allParent: true,
+    })
+    const dragLeft = computed(() => {
+      return 55 + 20 * nestDepth.value + 'px'
+    })
+    watch(
+      () => props.dragOptions,
+      (options) => {
+        if (options) {
+          for (const [key, value] of Object.entries(options)) {
+            draggingOptions[key] = value
+          }
+        }
+      },
+      { immediate: true }
+    )
+    const samePosition = (itemIndexes: number[], targetIndexes: number[]) => {
+      let itemDepth = itemIndexes.length
+      let targetDepth = targetIndexes.length
+      if (itemDepth === targetDepth) {
+        let samePosition = true
+        for (let i = 0; i < itemDepth; i++) {
+          if (i === itemDepth - 1) {
+            if (
+              !(
+                itemIndexes[i] === targetIndexes[i] ||
+                targetIndexes[i] - itemIndexes[i] === 1
+              )
+            ) {
+              samePosition = false
+            }
+          } else {
+            if (itemIndexes[i] !== targetIndexes[i]) {
+              samePosition = false
+            }
+          }
+        }
+        return samePosition
+      }
+      return false
+    }
+    watch(
+      () => highlightLastMoved.value,
+      (value) => {
+        if (!value) {
+          items.value.forEach((v: any) => {
+            clearHighlight(v)
+          })
+        }
+      }
+    )
+    const dragEvents = {
+      dragstart: (data: any) => {
+        draggingItem.value = data.coords
+        currentCoords.value = data.coords
+        dragInProgress.value = true
+        currentCanBeNested.value = data.canBeNested
+        nestDepth.value = data.depth
+        currentInnerDepth.value = data.innerDepth
+        fixArrow(data.element)
+      },
+      setCoords: (data: any) => {
+        currentCoords.value = data.coords
+        nestDepth.value = data.depth
+        fixArrow(data.element, data.fixArrowNext)
+      },
+    }
+    document.addEventListener('mouseup', () => {
+      if (dragInProgress.value) {
+        dragInProgress.value = false
+        switchItems(draggingItem.value, currentCoords.value)
+      }
+    })
+    document.addEventListener('mousedown', () => {
+      if (highlightLastMoved.value) {
+        highlightLastMoved.value = false
+      }
+    })
+    const switchItems = (itemIndexes: number[], targetIndexes: number[]) => {
+      if (itemIndexes.length && targetIndexes.length) {
+        if (!samePosition(itemIndexes, targetIndexes)) {
+          let itemDepth = itemIndexes.length
+          let targetDepth = targetIndexes.length
+          let itemParent = items.value
+          let targetItemParent = items.value
+          if (itemDepth > 1) {
+            itemParent = itemParent[itemIndexes[0]].subitems
+            for (let i = 1; i < itemDepth - 1; i++) {
+              itemParent = itemParent[itemIndexes[i]].subitems
+            }
+          }
+          if (targetDepth > 1) {
+            if (!targetItemParent[targetIndexes[0]].subitems) {
+              targetItemParent[targetIndexes[0]].subitems = []
+            }
+            targetItemParent = targetItemParent[targetIndexes[0]].subitems
+            for (let i = 1; i < targetDepth - 1; i++) {
+              if (!targetItemParent[targetIndexes[i]].subitems) {
+                targetItemParent[targetIndexes[i]].subitems = []
+              }
+              targetItemParent = targetItemParent[targetIndexes[i]].subitems
+            }
+          }
+          const item = itemParent[itemIndexes[itemDepth - 1]]
+          let order = targetIndexes[targetDepth - 1] - 0.5
+          targetItemParent.push({
+            ...{ ...item, highlighted: true },
+            order,
+          })
+          item.toRemove = true
+        }
+        highlightLastMoved.value = true
+      }
+      currentCoords.value = []
+      draggingItem.value = []
+      sortItems()
+      ctx.emit('rows-moved', items.value)
+    }
+    const sortSubitems = (item: any) => {
+      if (!item.subitems) return
+      item.subitems = item.subitems.filter((v: any) => !v.toRemove)
+      item.subitems
+        .sort((a: any, b: any) => a.order - b.order)
+        .forEach((value: any, index: number) => {
+          value.order = index
+          sortSubitems(value)
+        })
+    }
+    const clearHighlight = (item: any) => {
+      if (item.highlighted) {
+        delete item.highlighted
+        return
+      }
+      if (item.subitems) {
+        item.subitems
+          .sort((a: any, b: any) => a.order - b.order)
+          .forEach((value: any, index: number) => {
+            clearHighlight(value)
+          })
+      }
+    }
+    const sortItems = () => {
+      items.value = items.value.filter((v: any) => !v.toRemove)
+      items.value
+        .sort((a: any, b: any) => a.order - b.order)
+        .forEach((value: any, index: number) => {
+          value.order = index
+          sortSubitems(value)
+        })
+    }
+    const updateRow = () => {
+      ctx.emit('rows-edited', items.value)
+    }
+    const tableLeft = computed(() => {
+      if (tableElt.value) {
+        const tab = tableElt.value as HTMLDivElement
+        return tab.getBoundingClientRect().left
+      }
+      return 0
+    })
     const orderAndCheck = (
       item: any,
       idx: number,
@@ -381,9 +455,39 @@ export default defineComponent({
         item.selected || (selectedValues && selectedValues[item.id])
           ? selectedValues[item.id]
           : !!(selectedValues && selectedValues[RowsSelectorValues.All])
+      if (item.subitems?.length) {
+        item.subitems.forEach((v: any, i: number) => {
+          v = orderAndCheck(v, i, selectedValues)
+        })
+      }
       return item
     }
 
+    const fillListedRows = (
+      item: any,
+      arr: any[],
+      coords: string,
+      depth: number
+    ) => {
+      let clone = { ...item }
+      delete clone.subitems
+      clone.coordIndex = coords
+      clone.coords = coords.split('-').map((v: any) => parseInt(v))
+      clone.depth = depth
+      arr.push(clone)
+      if (item.subitems?.length) {
+        item.subitems.map((v: any, i: number) => {
+          fillListedRows(v, arr, coords + '-' + i, depth + 1)
+        })
+      }
+    }
+    const listedRows = computed(() => {
+      let arr: any = []
+      rows.value.map((v: any, i: number) => {
+        fillListedRows(v, arr, i + '', 0)
+      })
+      return arr
+    })
     const rows = computed(() => {
       const result = []
       let count = perPage.value
@@ -396,323 +500,12 @@ export default defineComponent({
       ) {
         let item: any = propItems[idx]
         item = orderAndCheck(item, idx, selectedRecords)
-        if (item.subitems) {
-          for (let subIdx = 0; subIdx < item.subitems.length; subIdx++) {
-            let subitem: any = item.subitems[subIdx]
-            subitem = orderAndCheck(subitem, subIdx, selectedRecords)
-            item.subitems[subIdx] = subitem
-          }
-        }
         result.push(item)
       }
       return result
     })
-    const changeNeeded = (destination: {
-      itemIdx: number
-      subitemIdx: number
-    }) => {
-      return (
-        destination.itemIdx !== currentDragPosition.itemIdx ||
-        destination.subitemIdx !== currentDragPosition.subitemIdx
-      )
-    }
-
-    const checkDragAvailability = (destination: {
-      itemIdx: number
-      subitemIdx: number
-    }) => {
-      return (
-        destination.itemIdx >= 0 &&
-        (draggingItem.type === 'subitem' ||
-          destination.itemIdx !== draggingItem.itemIdx ||
-          destination.subitemIdx === -1)
-      )
-    }
-
-    const setDraggingPosition = (data: {
-      itemIdx: number
-      subitemIdx: number
-    }) => {
-      currentDragPosition.itemIdx = data.itemIdx
-      currentDragPosition.subitemIdx = data.subitemIdx
-    }
-
-    const setNestedValue = () => {
-      currentNested.value = currentDragPosition.subitemIdx > -1
-    }
-    const removeSubitem = (itemIdx: number, subitemIdx: number) => {
-      let subitems =
-        items.value[itemIdx].subitems?.filter((value: any, index: number) => {
-          return index !== subitemIdx
-        }) || []
-      for (let i = 0; i < subitems?.length; i++) {
-        let newItem: any = subitems[i]
-        newItem.order = i
-        subitems[i] = newItem
-      }
-      items.value[itemIdx].subitems = subitems
-    }
-    const addSubitem = (itemIdx: number, subitemIdx: number, item: any) => {
-      item.order = subitemIdx
-      let subitems = items.value[itemIdx].subitems || []
-      let orderUp = item.subitems?.length ? item.subitems.length + 1 : 1
-      if (subitems.length > subitemIdx) {
-        for (let i = subitemIdx; i < subitems.length; i++) {
-          let newItem: any = subitems[i]
-          newItem.order += orderUp
-          subitems[i] = newItem
-        }
-      }
-      if (item.subitems?.length) {
-        for (let i = 0; i < item.subitems.length; i++) {
-          let newItem = item.subitems[i]
-          newItem.order = subitemIdx + i + 1
-          subitems.push(newItem)
-        }
-        item.subitems = []
-      }
-      subitems.push(item)
-      subitems.sort((a: any, b: any) => a.order - b.order)
-      items.value[itemIdx].subitems = subitems
-    }
-    const dragMouseMove = (event: any, idx: number) => {
-      if (drag.value) {
-        let table_div = tableElt.value as HTMLDivElement | null
-        if (!table_div) return
-        let ofx = event.offsetX
-        let ofy = event.offsetY
-        let pagex = event.pageX
-        let height = event.target
-          .closest('.of-data-table-row')
-          .querySelector('.of--align-start')
-          .getBoundingClientRect().height
-        let checkNested = props.nested && pagex - dragStartX > 30
-        let checkDestination = { itemIdx: -1, subitemIdx: -1 }
-        if (ofy < height / 2) {
-          if (checkNested && idx > 0) {
-            checkDestination.itemIdx = idx - 1
-            checkDestination.subitemIdx =
-              items.value[idx - 1].subitems?.length || 0
-          } else {
-            checkDestination.itemIdx = idx
-          }
-        } else {
-          if (
-            draggingItem.itemIdx !== idx ||
-            !items.value[idx].subitems?.length
-          ) {
-            if (checkNested) {
-              checkDestination.itemIdx = idx
-              checkDestination.subitemIdx = 0
-            } else {
-              checkDestination.itemIdx = idx + 1
-            }
-          }
-        }
-        if (
-          changeNeeded(checkDestination) &&
-          checkDragAvailability(checkDestination)
-        ) {
-          setDraggingPosition(checkDestination)
-          fixArrow(
-            event.target,
-            checkDestination.itemIdx > idx ||
-              (checkDestination.itemIdx === idx &&
-                checkDestination.subitemIdx > -1)
-          )
-          setNestedValue()
-        }
-      }
-      return true
-    }
-    const removeItem = (idx: number) => {
-      items.value = items.value.filter((v: any, i: number) => {
-        return i !== idx
-      })
-      for (let i = 0; i < items.value.length; i++) {
-        let newItem: any = items.value[i]
-        newItem.order = i
-        items.value[i] = newItem
-      }
-    }
-    const highlightItems = (
-      type: string,
-      itemIdx: number,
-      subitemIdx = -1,
-      length = -1
-    ) => {
-      let res = { type: type, itemIdx: itemIdx, subitems: [] }
-      if (type === 'item') {
-        if (length) {
-          for (let i = 0; i < length; i++) {
-            res.subitems.push(i as never)
-          }
-        }
-      } else {
-        for (let i = 0; i < length; i++) {
-          res.subitems.push((i + subitemIdx) as never)
-        }
-      }
-      highlited.value = res
-    }
-    const addItem = (idx: number, item: any) => {
-      item.order = idx
-      if (items.value.length > idx) {
-        for (let i = idx; i < items.value.length; i++) {
-          let newItem: any = items.value[i]
-          newItem.order += 1
-          items.value[i] = newItem
-        }
-      }
-      items.value.push(item)
-      items.value.sort((a: any, b: any) => a.order - b.order)
-    }
-    const dragMouseMoveNested = (
-      event: MouseEvent,
-      idx: number,
-      parentIdx: number
-    ) => {
-      if (drag.value) {
-        let table_div = tableElt.value as HTMLDivElement | null
-        if (!table_div) return
-        let ofy = event.offsetY
-        let pagex = event.pageX
-        let target = event.target as HTMLDivElement
-        let height =
-          target
-            ?.closest('.of-data-table-row')
-            ?.querySelector('.of--align-start')
-            ?.getBoundingClientRect().height || 0
-        let subitemCount = items.value[parentIdx].subitems?.length || 0
-        let checkDestination = { itemIdx: -1, subitemIdx: -1 }
-        let checkNested = props.nested && pagex - dragStartX > 30
-        if (
-          parentIdx === draggingItem.itemIdx &&
-          draggingItem.type === 'item'
-        ) {
-          if (idx === subitemCount - 1 && ofy >= height / 2) {
-            checkDestination.itemIdx = parentIdx + 1
-            checkDestination.subitemIdx = -1
-          }
-        } else {
-          if (ofy < height / 2) {
-            if (idx === subitemCount - 1 && !checkNested) {
-              checkDestination.itemIdx = parentIdx + 1
-              checkDestination.subitemIdx = -1
-            } else {
-              checkDestination.itemIdx = parentIdx
-              checkDestination.subitemIdx = idx
-            }
-          } else {
-            if (idx < subitemCount - 1 || checkNested) {
-              checkDestination.itemIdx = parentIdx
-              checkDestination.subitemIdx = idx + 1
-            } else {
-              checkDestination.itemIdx = parentIdx + 1
-              checkDestination.subitemIdx = -1
-            }
-          }
-        }
-        if (
-          changeNeeded(checkDestination) &&
-          checkDragAvailability(checkDestination)
-        ) {
-          setDraggingPosition(checkDestination)
-          fixArrow(
-            event.target as HTMLDivElement,
-            checkDestination.itemIdx > parentIdx ||
-              checkDestination.subitemIdx > idx
-          )
-          setNestedValue()
-        }
-      }
-      return true
-    }
     const outerId = computed(() => {
       return 'of-data-table-' + ++sysDataTableIndex
-    })
-
-    const dragMouseDown = (
-      event: MouseEvent,
-      itemIdx: number,
-      subitemIdx = -1
-    ) => {
-      drag.value = true
-      highlited.value = { type: 'item', itemIdx: -1, subitems: [] }
-      fixArrow(event.target as HTMLDivElement)
-      draggingItem.itemIdx = itemIdx
-      draggingItem.subitemIdx = subitemIdx
-      draggingItem.type = subitemIdx > -1 ? 'subitem' : 'item'
-      currentNested.value = subitemIdx > -1
-      currentDragPosition.itemIdx = itemIdx
-      currentDragPosition.subitemIdx = subitemIdx
-      dragStartX = event.pageX
-    }
-    document.addEventListener('mouseup', () => {
-      if (drag.value) {
-        drag.value = false
-        if (draggingItem.type === 'item') {
-          if (draggingItem.itemIdx < currentDragPosition.itemIdx) {
-            currentDragPosition.itemIdx--
-          }
-          let item = items.value[draggingItem.itemIdx]
-          let highlightLength = item.subitems ? item.subitems.length : 0
-          removeItem(draggingItem.itemIdx)
-          if (currentDragPosition.subitemIdx === -1) {
-            addItem(currentDragPosition.itemIdx, item)
-            highlightItems(
-              'item',
-              currentDragPosition.itemIdx,
-              0,
-              highlightLength
-            )
-          } else {
-            addSubitem(
-              currentDragPosition.itemIdx,
-              currentDragPosition.subitemIdx,
-              item
-            )
-            highlightItems(
-              'subitem',
-              currentDragPosition.itemIdx,
-              currentDragPosition.subitemIdx,
-              highlightLength + 1
-            )
-          }
-        } else {
-          let item =
-            items.value[draggingItem.itemIdx]?.subitems[draggingItem.subitemIdx]
-          removeSubitem(draggingItem.itemIdx, draggingItem.subitemIdx)
-          if (currentDragPosition.subitemIdx > -1) {
-            if (
-              currentDragPosition.itemIdx === draggingItem.itemIdx &&
-              draggingItem.subitemIdx < currentDragPosition.subitemIdx
-            ) {
-              currentDragPosition.subitemIdx--
-            }
-            addSubitem(
-              currentDragPosition.itemIdx,
-              currentDragPosition.subitemIdx,
-              item
-            )
-            highlightItems(
-              'subitem',
-              currentDragPosition.itemIdx,
-              currentDragPosition.subitemIdx,
-              1
-            )
-          } else {
-            addItem(currentDragPosition.itemIdx, item)
-            highlightItems('item', currentDragPosition.itemIdx)
-          }
-        }
-        currentDragPosition.subitemIdx = -1
-        currentDragPosition.itemIdx = -1
-        draggingItem.itemIdx = -1
-        draggingItem.subitemIdx = -1
-        draggingItem.type = 'item'
-        ctx.emit('rows-moved', items.value)
-      }
     })
 
     const fixArrow = (el: HTMLDivElement, point_next = false) => {
@@ -723,11 +516,12 @@ export default defineComponent({
       if (!elem) return
       let elem_top = elem.top
       let table_top = tableElt?.value?.getBoundingClientRect().top
-      if (!table_top) return
+      let table_scroll_top = tableElt?.value?.scrollTop
+      if (table_top === undefined || table_scroll_top === undefined) return
       if (point_next) {
-        arrowTop.value = elem_top - table_top + elem.height
+        arrowTop.value = elem_top + table_scroll_top - table_top + elem.height
       } else {
-        arrowTop.value = elem_top - table_top
+        arrowTop.value = elem_top + table_scroll_top - table_top
       }
     }
 
@@ -955,15 +749,6 @@ export default defineComponent({
         : RowsSelectorValues.DeselectAll
       selectRows(select)
     }
-    const highlight = (parentIdx: number, idx: number) => {
-      if (draggingItem.type === 'item') {
-        return draggingItem.itemIdx === parentIdx
-      } else {
-        return (
-          draggingItem.itemIdx === parentIdx && draggingItem.subitemIdx === idx
-        )
-      }
-    }
     const selectRowsItems = [
       {
         key: 'page',
@@ -1030,10 +815,8 @@ export default defineComponent({
       footerRows,
       rows,
       rowsSelector,
-      highlited,
       draggingItem,
       rowsRecord,
-      highlight,
       selectRowsItems,
       selectRows,
       onUpdateHeaderRowsSelector,
@@ -1044,9 +827,6 @@ export default defineComponent({
       tableElt,
       arrowTop,
       currentNested,
-      dragMouseDown,
-      dragMouseMove,
-      dragMouseMoveNested,
       tableClass,
       outerId,
       RowSortOrders,
@@ -1060,6 +840,17 @@ export default defineComponent({
       sortColLeave,
       sortPopupEnter,
       sortPopupLeave,
+      draggingOptions,
+      dragInProgress,
+      listedRows,
+      tableLeft,
+      currentCanBeNested,
+      currentInnerDepth,
+      updateRow,
+      currentCoords,
+      highlightLastMoved,
+      dragEvents,
+      dragLeft,
     }
   },
 })
@@ -1082,6 +873,7 @@ export default defineComponent({
     .drag-pointers-handler {
       position: relative;
       .drag-position-pointer {
+        pointer-events: none;
         left: 30px;
         position: absolute;
         line-height: 1;

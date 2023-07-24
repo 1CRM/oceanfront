@@ -5,7 +5,6 @@ import OfCalendar from './components/Calendar/Calendar'
 import { OfColorField } from './fields/Color'
 import { OfConfig } from './components/Config'
 import OfDataTable from './components/DataTable.vue'
-import OfDataTableNew from './components/DataTableNew.vue'
 import OfDataType from './components/DataType/DataType'
 import { OfDateField } from './fields/DateTime'
 import { OfDatetimeField } from './fields/DateTime'
@@ -58,7 +57,6 @@ import { OfFileField } from './fields/File'
 export const components: Record<string, Component> = {
   OfConfig,
   OfDataTable,
-  OfDataTableNew,
   OfDatetimeField,
   OfDateField,
   OfTimeField,
