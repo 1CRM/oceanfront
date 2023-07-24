@@ -1,4 +1,4 @@
-name: Ping app-js
+name: Publish dev release
 
 on:
   push:
@@ -6,19 +6,22 @@ on:
       - main
   workflow_dispatch:
 
+env:
+  RELEASE_TAG: dev
+
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       packages: write
 
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup Node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v2
         with:
           node-version: "16.x"
           registry-url: "https://npm.pkg.github.com"
@@ -29,13 +32,40 @@ jobs:
       - name: Run ESLint
         run: yarn run lint
 
-      - name: Build
+      - name: Create packages
         env:
           OF_DEMO_ROOT_PATH: "/oceanfront/"
-        run: yarn run build
+        run: yarn run package
 
       - name: Run unit tests
         run: yarn run test
+
+      - name: Upload oceanfront package
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: "./packages/oceanfront/oceanfront-v0.1.0.tgz"
+          asset_name: oceanfront.tgz
+          tag: ${{ env.RELEASE_TAG }}
+          overwrite: true
+
+      - name: Upload of-colorscheme-editor package
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: "./packages/of-colorscheme-editor/of-colorscheme-editor-v0.1.0.tgz"
+          asset_name: of-colorscheme-editor.tgz
+          tag: ${{ env.RELEASE_TAG }}
+          overwrite: true
+
+      - name: Upload oceanfront-html-editor package
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: "./packages/oceanfront-html-editor/oceanfront-html-editor-v0.1.0.tgz"
+          asset_name: oceanfront-html-editor.tgz
+          tag: ${{ env.RELEASE_TAG }}
+          overwrite: true
 
       - name: Ping app-js
         run: |

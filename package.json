@@ -1,7 +1,7 @@
 {
   "private": true,
   "version": "0.0.1",
-  "name": "oceanfront",
+  "name": "oceanfront-repo",
   "packageManager": "yarn@1.22.17",
   "workspaces": [
     "packages/*"
@@ -9,6 +9,7 @@
   "scripts": {
     "build": "turbo run build --no-daemon",
     "build-dev": "turbo run build-dev --no-daemon",
+    "package": "turbo run package",
     "clean": "turbo run clean && rm -rf node_modules",
     "coverage": "turbo run coverage --no-daemon",
     "demo": "turbo run demo --no-daemon",

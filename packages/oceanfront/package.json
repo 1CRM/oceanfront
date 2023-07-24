@@ -19,6 +19,7 @@
   "scripts": {
     "build": "vite build",
     "build-dev": "vite build -m development",
+    "package": "yarn pack",
     "clean": "rm -rf .turbo .vite node_modules dist",
     "coverage": "vitest run --coverage",
     "demo": "vite build -m development --watch",
@@ -44,7 +45,7 @@
     "jsdom": "~21.1",
     "prettier": "~2.8",
     "tslib": "~2.4",
-    "typescript": "~4.4",
+    "typescript": "~4.6",
     "vite": "~4.3.9",
     "vitest": "^0.31.4",
     "unplugin-auto-import": "~0.15",
