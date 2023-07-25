@@ -74,6 +74,7 @@ export const OfButton = defineComponent({
       return v || 'filled'
     })
     const onClick = (evt?: MouseEvent) => {
+      console.log('click')
       if (props.items && !props.split) {
         toggleMenu(evt)
       } else {
