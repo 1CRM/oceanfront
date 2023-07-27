@@ -354,7 +354,8 @@ export default defineComponent({
               (isOnSelfItem.value || !isOnSelfArea.value) &&
               ((props.dragInfo.isLastChild && isOnSelfItem.value) ||
                 props.depth === 0) &&
-              (isOnTop || singleItem) && prevItem.value
+              (isOnTop || singleItem) &&
+              prevItem.value
             ) {
               nestedDepth = Math.min(nestedDepth, prevItem.value.depth)
               for (let i = nestedDepth; i >= 0; i--) {
