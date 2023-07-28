@@ -72,11 +72,13 @@
     </div>
   </template>
   <template v-else>
+    <span v-if="item.prepend" class="editable-prepend">{{ item.prepend }}</span>
     <of-field
       :class="'in-data-table-' + type"
       class="editable"
       in-data-table
       @focus="onInputFocus"
+      label=""
       :type="type"
       :mode="inputMode"
       @blur="onInputBlur"
@@ -114,7 +116,7 @@ const OfEditableField = defineComponent({
   components: { OfField, OfButton, OfIcon },
   props: {
     modelValue: Object,
-    mode: String,
+    mode: String as any,
     showOldValues: Boolean,
   },
   emits: ['update:modelValue'],
@@ -214,10 +216,17 @@ const OfEditableField = defineComponent({
           let val = item.value.value + ''
           item.value.value = parseInt(val.replace(/\D/g, '').trim())
         }
-        ctx.emit('update:modelValue', item.value)
       },
       { deep: true }
     )
+    watch(
+      () => item.value,
+      () => {
+        ctx.emit('update:modelValue', item.value)
+      },
+      { deep: true, immediate: false }
+    )
+
     return {
       item,
       type,
@@ -240,6 +249,9 @@ export default OfEditableField
 
 <style lang="scss">
 .of-data-table {
+  .editable-prepend {
+    padding-right: 5px;
+  }
   .of-field.editable {
     cursor: pointer;
   }
@@ -281,7 +293,6 @@ export default OfEditableField
       }
     }
   }
-
   .field-value {
     display: flex;
     width: 100%;
