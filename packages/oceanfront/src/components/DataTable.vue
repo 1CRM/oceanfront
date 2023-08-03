@@ -101,7 +101,11 @@
         :rows-record="rowsRecord"
         :idx="rowidx"
         @update:row="updateRow"
-      ></of-table-row>
+      >
+        <template #first-cell>
+          <slot name="first-cell" :record="rowsRecord" :item="row" />
+        </template>
+      </of-table-row>
     </template>
 
     <template v-if="footerRows?.length">

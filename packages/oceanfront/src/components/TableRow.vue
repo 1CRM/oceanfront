@@ -98,7 +98,11 @@
         :columns="columns"
         :rows-record="rowsRecord"
         :idx="subidx"
-      ></of-table-row>
+      >
+        <template #first-cell>
+          <slot name="first-cell" :record="rowsRecord" :item="subrow" />
+        </template>
+      </of-table-row>
     </template>
   </template>
 </template>
