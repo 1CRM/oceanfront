@@ -105,6 +105,7 @@ export class NumberFormatter implements TextFormatter {
     }
 
     let parsed = ''
+    let negative = false
     let parsedSelStart: number | null = null
     const parsedAfterDigit = !!(
       selStart && isDigit(input.substring(selStart - 1, selStart))
@@ -118,7 +119,9 @@ export class NumberFormatter implements TextFormatter {
         parsed += '.'
       } else {
         const c = input.charAt(idx)
-        if (isDigit(c)) {
+        if (idx === 0 && c === '-') {
+          negative = true
+        } else if (isDigit(c)) {
           parsed += c
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           if (minDecs !== null && selStart > idx && idx > decPos!) {
@@ -128,7 +131,11 @@ export class NumberFormatter implements TextFormatter {
       }
     }
     if (parsedSelStart === null) parsedSelStart = parsed.length
-    const value = parsed.length ? parseFloat(parsed) : null
+    let value = parsed.length ? parseFloat(parsed) : null
+    if (negative) {
+      value = value ? -Math.abs(value) : null
+      parsed = '-' + parsed
+    }
 
     // if input is integer-only (maxFractionDigits: 0):
     // - if user just typed a decimal, wipe it out
@@ -256,7 +263,7 @@ export class NumberFormatter implements TextFormatter {
       textValue += seps.decimal + '0'.repeat(minDecs)
     }
 
-    return textValue
+    return textValue === '' && unformat.input == '-' ? '-' : textValue
   }
 
   handleInput(evt: InputEvent): TextInputResult {
@@ -303,7 +310,7 @@ export class NumberFormatter implements TextFormatter {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const range = input.value.substring(selStart!, selEnd)
       if (
-        !range.match(/[0-9]/) &&
+        !range.match(/-[0-9]/) &&
         range.indexOf(this.getSeparators().decimal) === -1
       ) {
         const selPos = (evt.key === 'Backspace' ? selStart : selEnd) as number
