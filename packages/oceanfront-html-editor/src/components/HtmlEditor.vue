@@ -196,14 +196,20 @@ export default defineComponent({
     })
 
     const htmlFieldName: ComputedRef<string | undefined> = computed(() => {
-      return props.name ? `${props.name}_html` : undefined
+      const htmlFieldExists = record.value?.value.hasOwnProperty(
+        `${props.name}_html`
+      )
+      const name = props.name ? `${props.name}_html` : undefined
+      return htmlFieldExists ? name : undefined
     })
 
     const fieldValue: ComputedRef<string> = computed(() => {
       let value = props.modelValue ?? ''
 
-      if (record.value && props.name && htmlFieldName.value) {
-        const htmlValue = record.value.value[htmlFieldName.value] ?? null
+      if (record.value && props.name) {
+        const htmlValue = htmlFieldName.value
+          ? record.value.value[htmlFieldName.value] ?? null
+          : null
         const textValue = record.value.value[props.name] ?? null
         if (htmlValue) {
           value = htmlValue
@@ -413,7 +419,10 @@ export default defineComponent({
     )
 
     watch(
-      () => record.value?.value[htmlFieldName.value as string],
+      () =>
+        record.value?.value[
+          (htmlFieldName.value ?? props.name ?? '') as string
+        ],
       (value: string) => {
         updateContent(value)
       }
@@ -519,9 +528,13 @@ export default defineComponent({
     }
 
     const updateData = (): void => {
-      if (props.name && htmlFieldName.value && record.value) {
-        record.value.value[htmlFieldName.value] = editor.value.getHTML()
-        record.value.value[props.name] = editor.value.getText()
+      if (props.name && record.value) {
+        if (htmlFieldName.value) {
+          record.value.value[htmlFieldName.value] = editor.value.getHTML()
+          record.value.value[props.name] = editor.value.getText()
+        } else {
+          record.value.value[props.name] = editor.value.getHTML()
+        }
       } else {
         ctx.emit('update:modelValue', editor.value.getHTML())
       }
@@ -803,7 +816,7 @@ export default defineComponent({
               type: 'color',
               disabled: menuDisabled.value,
               modelValue: colorValue.value,
-              'onUpdate:modelValue': (value: string) => {
+              'onUpdate:modelValue': (value: string): void => {
                 colorValue.value = value
               },
             },
@@ -816,7 +829,7 @@ export default defineComponent({
               items: fonts,
               disabled: menuDisabled.value,
               modelValue: font.value,
-              'onUpdate:modelValue': (value: string) => {
+              'onUpdate:modelValue': (value: string): void => {
                 font.value = value
               },
             },
@@ -829,7 +842,7 @@ export default defineComponent({
               items: fontSizeItems.value,
               disabled: menuDisabled.value,
               modelValue: fontSizeValue.value,
-              'onUpdate:modelValue': (value: string) => {
+              'onUpdate:modelValue': (value: string): void => {
                 fontSizeValue.value = value
               },
             },
