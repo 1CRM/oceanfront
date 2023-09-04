@@ -529,9 +529,12 @@ export default defineComponent({
 
     const updateData = (): void => {
       if (props.name && record.value) {
-        if (htmlFieldName.value)
+        if (htmlFieldName.value) {
           record.value.value[htmlFieldName.value] = editor.value.getHTML()
-        record.value.value[props.name] = editor.value.getText()
+          record.value.value[props.name] = editor.value.getText()
+        } else {
+          record.value.value[props.name] = editor.value.getHTML()
+        }
       } else {
         ctx.emit('update:modelValue', editor.value.getHTML())
       }
