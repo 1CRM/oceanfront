@@ -102,6 +102,9 @@
         :idx="rowidx"
         @update:row="updateRow"
       >
+        <template #rows-selector>
+          <slot name="rows-selector" :record="rowsRecord" :item="row" />
+        </template>
         <template #first-cell>
           <slot name="first-cell" :record="rowsRecord" :item="row" />
         </template>
