@@ -10,7 +10,7 @@
           label="Select timezone"
           v-model="tzValue"
           v-bind="{ ...props, ...customProps }"
-        ></of-select-field>
+        />
       </template>
       <template #options>
         <of-field

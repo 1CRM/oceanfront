@@ -162,7 +162,12 @@ export const OfSelectField = defineComponent({
 
     const itemText = (value: any) => {
       const item = itemForValue(value)
-      return item.item?.selectedText || item.item?.text || ''
+      const result = item.item?.selectedText || item.item?.text || ''
+
+      if (item.item?.class) {
+        return h('span', { class: item.item.class }, result)
+      }
+      return result
     }
 
     const selectedItemText = () => itemText(inputValue.value)

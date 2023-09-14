@@ -13,6 +13,8 @@ export interface ItemList {
   textKey?: string
   valueKey?: string
   selectedTextKey?: string
+  classKey?: string
+  class?: string
   count?: number
   // details?: (key: any) => VNode
   error?: string // maybe multiple messages, maybe hint as well
@@ -40,6 +42,7 @@ export const transformItemsList = (
     selectedTextKey: 'selectedText',
     valueKey: 'value',
     iconKey: 'icon',
+    classKey: 'class',
   }
   let items
   if (name && record) {

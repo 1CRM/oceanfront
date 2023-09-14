@@ -16,6 +16,7 @@ export const OfListItem = defineComponent({
   props: {
     active: { type: [Boolean, String], default: null },
     disabled: { type: [Boolean, String], default: null },
+    class: { type: String, default: null },
     expand: { type: [Boolean, String], default: null },
     href: { type: String, default: null },
     to: [String, Object] as PropType<LinkTo>,
@@ -119,6 +120,7 @@ export const OfListItem = defineComponent({
                   'of--expanded': expand.value,
                   'of--focused': isFocused.value,
                   'of--link': !!href,
+                  [props.class]: true,
                 },
                 href: link.href,
                 ref: elt,
