@@ -52,6 +52,7 @@
               v-if="!item.special"
               :active="item.selected"
               :disabled="item.disabled"
+              :class="item.class"
               @mousedown="(event) => click(item, event)"
               @keydown="(event) => click(item, event)"
               @blur="onItemBlur"
