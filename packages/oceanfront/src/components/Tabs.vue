@@ -48,10 +48,10 @@
                 tabindex="0"
                 :class="[
                   {
-                    'is-active': selectedTabKey === tab.key,
+                    'is-active': selectedTabKey === tab.key && showActiveTab,
                     'is-disabled': tab.disabled,
                     'of--focused':
-                      focusedTabKey === tab.key ||
+                      (showActiveTab && focusedTabKey === tab.key) ||
                       openedMenuTabKey === tab.key ||
                       (tab.key == -1 && outsideTabsOpened),
                     'of-tab-header-item': true,
@@ -229,6 +229,7 @@ export default defineComponent({
     modelValue: Number,
     scrolling: { type: Boolean, default: false },
     overflowButton: { type: Boolean, default: false },
+    showActiveTab: { type: Boolean, default: true },
     variant: String,
     density: [String, Number],
     rounded: Boolean,
