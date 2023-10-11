@@ -8,6 +8,7 @@
       nested: item.nested,
       selected: highlighted || isCurrentTarget,
     }"
+    :key="item.id ?? index"
   >
     <div
       v-if="dragInfo?.draggable"
@@ -164,10 +165,8 @@ export default defineComponent({
       },
     }) as any
     watch(
-      () => props,
-      () => {
-        Object.assign(rowItem, { item: props.row, columns: props.columns })
-      },
+      () => [props.row, props.columns],
+      ([item, columns]) => Object.assign(rowItem, { item, columns }),
       { deep: true }
     )
     const checkSubitemDepth = (elem: any) => {
