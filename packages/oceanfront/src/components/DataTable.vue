@@ -7,7 +7,7 @@
   >
     <div class="of-data-table-header">
       <div v-if="draggable"></div>
-      <div v-if="rowsSelector" class="of-data-table-rows-selector">
+      <div v-if="addRowsSelector" class="of-data-table-rows-selector">
         <slot name="header-rows-selector">
           <of-button
             variant="text"
@@ -92,7 +92,7 @@
         :coords="[rowidx]"
         :point-next="[rowidx + 1]"
         v-on="dragEvents"
-        :rows-selector="rowsSelector"
+        :rows-selector="addRowsSelector"
         :select-locked="selectLocked"
         :edit-type="editType"
         :editable="editable"
@@ -118,7 +118,7 @@
         :key="rowidx"
       >
         <div v-if="draggable"></div>
-        <div :class="{ first: rowidx == 0 }" v-if="rowsSelector">&nbsp;</div>
+        <div :class="{ first: rowidx == 0 }" v-if="addRowsSelector">&nbsp;</div>
         <div
           v-for="(col, colidx) of columns"
           :class="[col.class, rowidx == 0 ? 'first' : undefined]"
@@ -375,8 +375,8 @@ export default defineComponent({
         if (!samePosition(itemIndexes, targetIndexes)) {
           let itemDepth = itemIndexes.length
           let targetDepth = targetIndexes.length
-          let itemParent = items.value
-          let targetItemParent = items.value
+          let itemParent: any = items.value
+          let targetItemParent: any = items.value
           if (itemDepth > 1) {
             itemParent = itemParent[itemIndexes[0]].subitems
             for (let i = 1; i < itemDepth - 1; i++) {
@@ -428,7 +428,7 @@ export default defineComponent({
       if (item.subitems) {
         item.subitems
           .sort((a: any, b: any) => a.order - b.order)
-          .forEach((value: any, index: number) => {
+          .forEach((value: any, _index: number) => {
             clearHighlight(value)
           })
       }
@@ -498,7 +498,7 @@ export default defineComponent({
     const rows = computed(() => {
       const result = []
       let count = perPage.value
-      let propItems = items.value
+      let propItems: any = items.value
       let selectedRecords = rowsRecord.value?.value
       for (
         let idx = iterStart.value;
@@ -626,13 +626,6 @@ export default defineComponent({
       () => parseInt(props.itemsPerPage as any, 10) || 10
     )
     const page = ref(0)
-    // What was this?
-    /*
-    const pageCount = computed(() => {
-      let count = parseInt(props.itemsCount ?? props.items?.length, 10) || 0
-      return Math.ceil(count / perPage.value)
-    })
-    */
     watch(
       () => props.page,
       (p) => (page.value = parseInt(p as string, 10) || 1), // FIXME check in range
@@ -673,7 +666,7 @@ export default defineComponent({
       return props.footerItems
     })
 
-    const rowsSelector = computed(() =>
+    const addRowsSelector = computed(() =>
       showSelector(props.rowsSelector, rows.value)
     )
     const selectAll = computed(() => props.selectAll)
@@ -683,7 +676,7 @@ export default defineComponent({
       if (selectAll.value) {
         ids = { all: true }
       } else {
-        if (rowsSelector.value) {
+        if (addRowsSelector.value) {
           for (const row of rows.value) {
             ids[row.id] = row.selected || false
             if (row.subitems) {
@@ -821,7 +814,7 @@ export default defineComponent({
       columns,
       footerRows,
       rows,
-      rowsSelector,
+      addRowsSelector,
       draggingItem,
       rowsRecord,
       selectRowsItems,

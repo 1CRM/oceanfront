@@ -8,6 +8,7 @@
       nested: item.nested,
       selected: highlighted || isCurrentTarget,
     }"
+    :key="item.id ?? index"
   >
     <div
       v-if="dragInfo?.draggable"
@@ -33,7 +34,7 @@
       <slot name="first-cell" :record="rowsRecord" :item="row" />
     </div>
     <div
-      v-for="(col, colidx) of columns"
+      v-for="(col, colidx) of rowItem.columns"
       :style="[col.value === dragInfo?.nestedIndicator ? nestedStyle : {}]"
       :class="col.class"
       :key="colidx"
@@ -95,7 +96,7 @@
         :coords="setChildCoords(subidx as number)"
         :point-next="setNextPointer(subidx as number)"
         :show-old-values="showOldValues"
-        :columns="columns"
+        :columns="rowItem.columns"
         :rows-record="rowsRecord"
         :idx="subidx"
       >
@@ -108,7 +109,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, ref, watch } from 'vue'
+import { computed, defineComponent, reactive, ref, watch } from 'vue'
 import { OfField } from './Field'
 import { OfIcon } from './Icon'
 import OfEditableField from './Editable.vue'
@@ -144,14 +145,30 @@ export default defineComponent({
   emits: ['dragstart', 'update:row', 'setCoords', 'setDepth'],
   setup(props, ctx) {
     const index = computed(() => props.idx)
+
+    type RowItem = {
+      item: any
+      columns: any
+    }
+
+    const rowItem = reactive<RowItem>({
+      item: props.row,
+      columns: props.columns,
+    })
+
     const item = computed({
       get() {
-        return props.row
+        return rowItem.item
       },
       set(val) {
         ctx.emit('update:row', val)
       },
     }) as any
+    watch(
+      () => [props.row, props.columns],
+      ([item, columns]) => Object.assign(rowItem, { item, columns }),
+      { deep: true }
+    )
     const checkSubitemDepth = (elem: any) => {
       if (!elem.subitems) {
         return 1
@@ -214,7 +231,7 @@ export default defineComponent({
         coordsIdx === draggingCoords.join('-')
       )
     })
-    const increaseCoord = (arr: any[], idxx = 0) => {
+    const increaseCoord = (arr: any[], _idxx = 0) => {
       return arr.map((v: any, i: number, arr: any[]) => {
         if (i === arr.length - 1) {
           return parseInt(v) + 1
@@ -230,12 +247,6 @@ export default defineComponent({
       }
       return null
     }
-    const findNextLowerLevel = (depth: number) => {
-      const arr = props.dragInfo?.listedRows.slice()
-      return arr.find(
-        (v: any, i: number) => v.depth <= depth && i > globalIdx.value
-      )
-    }
 
     const itemRef = ref()
     const childDepths: { [_: string]: any } = {}
@@ -250,25 +261,7 @@ export default defineComponent({
     }
     watch(
       () => item.value,
-      () => {
-        if (item.value.subitems && false) {
-          item.value.subitems = item.value.subitems.filter(
-            (v: any) => !v.toRemove
-          )
-          item.value.subitems
-            .sort((a: any, b: any) => a.order - b.order)
-            .forEach((value: any, index: number) => {
-              value.order = index
-            })
-        }
-      },
-      { deep: true }
-    )
-    watch(
-      () => item.value,
-      () => {
-        ctx.emit('update:row')
-      },
+      () => ctx.emit('update:row'),
       { immediate: false, deep: true }
     )
     const setChildCoords = (idx: number) => {
@@ -509,6 +502,7 @@ export default defineComponent({
       rowUpdated,
       setChildCoords,
       setNextPointer,
+      rowItem,
     }
   },
 })
