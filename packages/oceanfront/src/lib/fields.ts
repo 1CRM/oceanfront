@@ -183,6 +183,8 @@ export const BaseFieldProps = {
   required: Boolean,
   rounded: Boolean,
   size: { type: [Number, String], default: undefined },
+  block: Boolean,
+  width: { type: [Number, String], default: undefined },
   // style
   type: String,
   variant: String,

@@ -43,6 +43,23 @@
           type="select"
           :items="sizeOptions"
         />
+        <of-field
+          v-model="params.width"
+          label="Width"
+          type="select"
+          :items="widthOptions"
+        />
+        <of-field
+          type="toggle"
+          label="Full Width (block)"
+          v-model="params.block"
+          v-bind="{
+            ...props,
+            inputType: customProps.switch ? 'switch' : null,
+            inputLabel: checkedValue ? 'Off' : 'On',
+            labelPosition: 'top',
+          }"
+        />
       </div>
       <hr />
       <div class="options-fields">
@@ -84,12 +101,17 @@ export default defineComponent({
       variant: 'compare',
       tint: 'default',
       size: 'nm',
+      width: '100%',
       containerTint: 'default',
+      required: false,
+      block: false,
     })
 
     const densityOptions = ['default', '0', '1', '2', '3']
     const tintOptions = ['default', 'primary', 'secondary', 'tertiary']
-    const sizeOptions = ['sm', 'nm', 'lg']
+    const sizeOptions = ['sm', 'nm', 'lg', '2', '1.9', '14px']
+    const widthOptions = ['100%', '50%', '300px', '20ch', '30em']
+
     const labelPosOptions = [
       'default',
       'none',
@@ -135,6 +157,7 @@ export default defineComponent({
       props,
       customProps,
       sizeOptions,
+      widthOptions,
     }
   },
 })
@@ -158,11 +181,9 @@ export default defineComponent({
     padding: 0.25em 0.5em;
     .field {
       box-sizing: border-box;
-      display: flex;
       flex: 0 1 auto;
       justify-content: center;
       padding: 0.75em;
-      width: 100%;
     }
   }
   .options {
