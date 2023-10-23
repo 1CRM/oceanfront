@@ -22,7 +22,7 @@ export const OfIcon = defineComponent({
           typeof sz === 'number' ||
           (typeof sz === 'string' && sz.match(/^[0-9]+$/))
         ) {
-          sz = '' + sz + 'px'
+          sz = '' + sz + 'ch'
         }
       }
       return sz || undefined

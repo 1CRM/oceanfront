@@ -46,6 +46,8 @@ export interface FieldRender {
   popup?: FieldPopup
   prepend?: () => Renderable | undefined
   size?: number | string
+  width?: number | string
+  block?: boolean
   updated?: boolean
   value?: any
   undecorated?: boolean
@@ -97,6 +99,8 @@ export interface FieldContext {
   required?: boolean
   value?: any
   size?: string
+  width?: string
+  block?: boolean
 }
 
 export interface FieldProps {
@@ -108,6 +112,8 @@ export interface FieldProps {
   // name?: string
   placeholder?: string
   size?: number | string //  defaultSize?
+  width?: number | string //  defaultWidth?
+  block?: boolean
   type?: string
   record?: FormRecord
   [key: string]: any
@@ -183,7 +189,7 @@ export const BaseFieldProps = {
   required: Boolean,
   rounded: Boolean,
   size: { type: [Number, String], default: undefined },
-  block: Boolean,
+  block: { type: Boolean, default: true },
   width: { type: [Number, String], default: undefined },
   // style
   type: String,
@@ -261,6 +267,12 @@ export function makeFieldContext<C>(
   const size = computed(() => {
     return props.size || undefined
   })
+  const width = computed(() => {
+    return props.width || undefined
+  })
+  const block = computed(() => {
+    return props.block
+  })
   const metadata = computed(() =>
     props.name ? record.value?.metadata?.[props.name] : null
   )
@@ -328,6 +340,8 @@ export function makeFieldContext<C>(
     fieldType,
     initialValue,
     size,
+    width,
+    block,
     inputLabel,
     interactive,
     labelPosition,

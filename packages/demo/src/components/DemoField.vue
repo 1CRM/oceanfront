@@ -109,7 +109,7 @@ export default defineComponent({
 
     const densityOptions = ['default', '0', '1', '2', '3']
     const tintOptions = ['default', 'primary', 'secondary', 'tertiary']
-    const sizeOptions = ['sm', 'nm', 'lg', '2', '1.9', '14px']
+    const sizeOptions = ['sm', 'nm', 'lg', '2', '16px']
     const widthOptions = ['100%', '50%', '300px', '20ch', '30em']
 
     const labelPosOptions = [

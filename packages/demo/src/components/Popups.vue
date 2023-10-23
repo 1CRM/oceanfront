@@ -287,7 +287,6 @@
                         model-value="99 Street Ave."
                         id="street"
                         variant="filled"
-                        size="50"
                       />
                     </div>
                     <div class="of-group-row of--pad">
@@ -374,7 +373,6 @@
                         model-value="99 Street Ave."
                         id="street2"
                         variant="filled"
-                        size="50"
                       />
                     </div>
                     <div class="of-group-row of--pad">
@@ -573,7 +571,6 @@
                         model-value="99 Street Ave."
                         id="street3"
                         variant="filled"
-                        size="50"
                       />
                     </div>
                     <div class="of-group-row of--pad">
@@ -660,7 +657,6 @@
                         model-value="99 Street Ave."
                         id="street4"
                         variant="filled"
-                        size="50"
                       />
                     </div>
                     <div class="of-group-row of--pad">

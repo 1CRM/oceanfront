@@ -183,7 +183,7 @@ export const OfSelectField = defineComponent({
             fieldCtx.editable
               ? h(OfIcon, {
                   name: 'cancel',
-                  size: 14,
+                  size: '14px',
                   onClick: (e: Event) => {
                     e.stopPropagation()
                     setValue(val)

@@ -103,6 +103,10 @@ const parseDimension = (
   if (size && !isNaN(size as number)) {
     return { length: size as number, unit: 'ch' }
   }
+  const percentage = ('' + size).match(/(\d+)(%)/)
+  if (percentage) {
+    return { length: parseInt(percentage[1], 10), unit: percentage[2] }
+  }
   const m = ('' + size).match(/^(\d*\.?\d+)(\w+)$/)
   if (!m) return null
   return { length: parseInt(m[1], 10), unit: m[2] }
@@ -191,10 +195,12 @@ export const OfFieldBase = defineComponent({
           !(showFocused || overlayActive || mode.value === 'fixed')
         const metaLabel = props.name ? metadata.value?.label : undefined
         let labelText = fieldRender.label ?? props.label ?? metaLabel
-
         const asterisk: VNode | null =
           required.value && mode.value !== 'fixed'
-            ? h(OfIcon, { name: 'required', class: 'of--icon-required' })
+            ? h(OfIcon, {
+                name: 'required',
+                class: 'of--icon-required',
+              })
             : null
 
         let asteriskLabel = false
@@ -228,7 +234,7 @@ export const OfFieldBase = defineComponent({
             'of--blank': blank,
             'of--dragover': dragOver.value,
             'of--focused': showFocused,
-            'of--inline': !props.block || props.inline,
+            'of--inline': !fieldCtx.block || props.inline,
             'of--invalid': props.invalid || fieldRender.invalid,
             'of--interactive': interactive.value,
             'of--muted': props.muted,
@@ -255,9 +261,10 @@ export const OfFieldBase = defineComponent({
         if (dim) {
           style['--field-font-size'] = '' + dim.length + (dim.unit || 'ch')
         }
-        if (!props.block) {
-          if (props.width) {
-            style['--field-size'] = `${props.width}`
+        if (!fieldCtx.block) {
+          if (fieldCtx.width) {
+            const dim = parseDimension(fieldCtx.width)
+            style['--field-size'] = '' + dim?.length + (dim?.unit || 'ch')
           }
         }
 
