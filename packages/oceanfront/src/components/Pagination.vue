@@ -274,7 +274,6 @@ export default defineComponent({
       hidden: false,
       label: 'Start At',
       readOnly: false,
-      size: 10,
       class: 'of--small',
     }
 
@@ -283,7 +282,6 @@ export default defineComponent({
       hidden: false,
       label: 'Per Page',
       readOnly: false,
-      size: 10,
       class: 'of--small',
     }
 
