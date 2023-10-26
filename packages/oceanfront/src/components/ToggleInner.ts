@@ -12,7 +12,7 @@ export const ToggleInner = defineComponent({
     align: String,
     name: String,
     mode: String as PropType<FieldMode>,
-    size: [String, Number],
+    scale: [String, Number],
   },
   emits: ['focus', 'blur', 'inputMounted'],
   setup(props, ctx) {
@@ -74,7 +74,7 @@ export const ToggleInner = defineComponent({
               : h(OfIcon, {
                   class: 'of-toggle-icon',
                   name: icon.value,
-                  size: props.size || 'input',
+                  scale: props.scale || 'input',
                 }),
           ]
         ),

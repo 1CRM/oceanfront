@@ -29,7 +29,7 @@
             <of-icon
               name="page previous"
               :title="'Previous tab'"
-              size="input"
+              scale="input"
             />
           </div>
           <div class="of-tabs-header" ref="ofTabsHeader" role="tablist">
@@ -70,7 +70,7 @@
                 <div class="of--layer of--layer-brd" />
                 <div class="of--layer of--layer-outl" />
                 <div class="of-tab-text">
-                  <of-icon v-if="tab.icon" :name="tab.icon" size="1.1em" />
+                  <of-icon v-if="tab.icon" :name="tab.icon" scale="1.1em" />
                   <span>{{ tab.text }}</span>
                 </div>
                 <div class="of--layer of--layer-state" />
@@ -83,7 +83,7 @@
             class="of-tabs-navigation of-tabs-navigation-next"
             @click="navigateHeader('next')"
           >
-            <of-icon name="page next" :title="'Next tab'" size="input" />
+            <of-icon name="page next" :title="'Next tab'" scale="input" />
           </div>
         </div>
         <of-overlay

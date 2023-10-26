@@ -33,7 +33,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, ref } from 'vue'
+import { computed, defineComponent } from 'vue'
 import { useLayout } from 'oceanfront'
 
 import OfIconPreview from './iconedit/Preview.vue'

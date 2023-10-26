@@ -38,10 +38,10 @@
           :items="tintOptions"
         />
         <of-field
-          v-model="params.size"
-          label="Size"
+          v-model="params.scale"
+          label="Scale"
           type="select"
-          :items="sizeOptions"
+          :items="scaleOptions"
         />
         <of-field
           v-model="params.width"
@@ -56,7 +56,7 @@
           v-bind="{
             ...props,
             inputType: customProps.switch ? 'switch' : null,
-            inputLabel: checkedValue ? 'Off' : 'On',
+            inputLabel: !params.block ? 'Off' : 'On',
             labelPosition: 'top',
           }"
         />
@@ -77,7 +77,7 @@
           v-bind="{
             ...props,
             inputType: customProps.switch ? 'switch' : null,
-            inputLabel: checkedValue ? 'Off' : 'On',
+            inputLabel: !params.required ? 'Off' : 'On',
             labelPosition: 'top',
           }"
         />
@@ -100,7 +100,7 @@ export default defineComponent({
       mode: 'editable',
       variant: 'compare',
       tint: 'default',
-      size: 'nm',
+      scale: 'nm',
       width: '100%',
       containerTint: 'default',
       required: false,
@@ -109,7 +109,7 @@ export default defineComponent({
 
     const densityOptions = ['default', '0', '1', '2', '3']
     const tintOptions = ['default', 'primary', 'secondary', 'tertiary']
-    const sizeOptions = ['sm', 'nm', 'lg', '2', '16px']
+    const scaleOptions = ['sm', 'nm', 'lg', '2', '16px']
     const widthOptions = ['100%', '50%', '300px', '20ch', '30em']
 
     const labelPosOptions = [
@@ -141,7 +141,6 @@ export default defineComponent({
       }
     })
 
-    const checkedValue = ref(false)
     const customProps = reactive({ switch: false })
 
     return {
@@ -153,10 +152,9 @@ export default defineComponent({
       modeOptions,
       variantOptions,
       params,
-      checkedValue,
       props,
       customProps,
-      sizeOptions,
+      scaleOptions,
       widthOptions,
     }
   },

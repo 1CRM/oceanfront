@@ -82,7 +82,7 @@
           @mouseleave="timeClickHandler()"
           @blur="timeClickHandler()"
           name="select up"
-          size="lg"
+          scale="lg"
           class="time-picker-arrow"
         />
         <div />
@@ -92,7 +92,7 @@
           @mouseleave="timeClickHandler()"
           @blur="timeClickHandler()"
           name="select up"
-          size="lg"
+          scale="lg"
           class="time-picker-arrow"
         />
         <div />
@@ -110,7 +110,7 @@
           @mouseleave="timeClickHandler()"
           @blur="timeClickHandler()"
           name="select down"
-          size="lg"
+          scale="lg"
           class="time-picker-arrow"
         />
         <div />
@@ -120,7 +120,7 @@
           @mouseleave="timeClickHandler()"
           @blur="timeClickHandler()"
           name="select down"
-          size="lg"
+          scale="lg"
           class="time-picker-arrow"
         />
         <div />

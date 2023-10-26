@@ -19,7 +19,7 @@ import {
 import { useFocusGroup } from '../lib/focus'
 import { useRecords } from '../lib/records'
 import { useThemeOptions } from '../lib/theme'
-import { PositionObserver, sizeClass, watchPosition } from '../lib/util'
+import { PositionObserver, scaleClass, watchPosition } from '../lib/util'
 import { OfOverlay } from './Overlay'
 
 const renderSlot = (
@@ -227,7 +227,7 @@ export const OfFieldBase = defineComponent({
         const cls = [
           'of-field ',
           {
-            ...sizeClass(fieldCtx.size),
+            ...scaleClass(fieldCtx.scale),
             'of--tinted': !!tint.value,
             ['of--tint-' + tint.value]: !!tint.value,
             'of--active': fieldRender.active || !blank, // overridden for toggle input to avoid hiding content
@@ -256,8 +256,8 @@ export const OfFieldBase = defineComponent({
         ]
 
         const style: Record<string, string> = {}
-        const size = fieldRender.size || props.size // FIXME fetch from config
-        const dim = parseDimension(size)
+        const scale = fieldRender.scale || props.scale // FIXME fetch from config
+        const dim = parseDimension(scale)
         if (dim) {
           style['--field-font-size'] = '' + dim.length + (dim.unit || 'ch')
         }
