@@ -38,10 +38,27 @@
           :items="tintOptions"
         />
         <of-field
-          v-model="params.size"
-          label="Size"
+          v-model="params.scale"
+          label="Scale"
           type="select"
-          :items="sizeOptions"
+          :items="scaleOptions"
+        />
+        <of-field
+          v-model="params.width"
+          label="Width"
+          type="select"
+          :items="widthOptions"
+        />
+        <of-field
+          type="toggle"
+          label="Full Width (block)"
+          v-model="params.block"
+          v-bind="{
+            ...props,
+            inputType: customProps.switch ? 'switch' : null,
+            inputLabel: !params.block ? 'Off' : 'On',
+            labelPosition: 'top',
+          }"
         />
       </div>
       <hr />
@@ -60,7 +77,7 @@
           v-bind="{
             ...props,
             inputType: customProps.switch ? 'switch' : null,
-            inputLabel: checkedValue ? 'Off' : 'On',
+            inputLabel: !params.required ? 'Off' : 'On',
             labelPosition: 'top',
           }"
         />
@@ -83,13 +100,18 @@ export default defineComponent({
       mode: 'editable',
       variant: 'compare',
       tint: 'default',
-      size: 'nm',
+      scale: 'nm',
+      width: '100%',
       containerTint: 'default',
+      required: false,
+      block: false,
     })
 
     const densityOptions = ['default', '0', '1', '2', '3']
     const tintOptions = ['default', 'primary', 'secondary', 'tertiary']
-    const sizeOptions = ['sm', 'nm', 'lg']
+    const scaleOptions = ['sm', 'nm', 'lg', '2', '16px']
+    const widthOptions = ['100%', '50%', '300px', '20ch', '30em']
+
     const labelPosOptions = [
       'default',
       'none',
@@ -119,7 +141,6 @@ export default defineComponent({
       }
     })
 
-    const checkedValue = ref(false)
     const customProps = reactive({ switch: false })
 
     return {
@@ -131,10 +152,10 @@ export default defineComponent({
       modeOptions,
       variantOptions,
       params,
-      checkedValue,
       props,
       customProps,
-      sizeOptions,
+      scaleOptions,
+      widthOptions,
     }
   },
 })
@@ -158,11 +179,9 @@ export default defineComponent({
     padding: 0.25em 0.5em;
     .field {
       box-sizing: border-box;
-      display: flex;
       flex: 0 1 auto;
       justify-content: center;
       padding: 0.75em;
-      width: 100%;
     }
   }
   .options {

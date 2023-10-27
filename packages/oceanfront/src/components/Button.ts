@@ -4,7 +4,7 @@ import { OfOverlay } from './Overlay'
 import OfOptionList from './OptionList.vue'
 import { ItemsProp } from '../lib/items'
 import { useThemeOptions } from '../lib/theme'
-import { Size, sizeClass } from '../lib/util'
+import { Scale, scaleClass } from '../lib/util'
 
 let sysMenuTargetIndex = 0
 
@@ -25,7 +25,7 @@ export const OfButton = defineComponent({
       type: Boolean,
       default: undefined,
     },
-    size: String as PropType<Size>,
+    scale: String as PropType<Scale>,
     split: Boolean,
     type: String,
     variant: String,
@@ -196,7 +196,7 @@ export const OfButton = defineComponent({
           h(
             'button',
             {
-              class: ['of-button-main', sizeClass(props.size)],
+              class: ['of-button-main', scaleClass(props.scale)],
               disabled,
               tabindex,
               id: buttonId,
@@ -214,7 +214,7 @@ export const OfButton = defineComponent({
             ? h(
                 'button',
                 {
-                  class: ['of-button-split', sizeClass(props.size)],
+                  class: ['of-button-split', scaleClass(props.scale)],
                   disabled,
                   id: splitId,
                   ref: menuButton,

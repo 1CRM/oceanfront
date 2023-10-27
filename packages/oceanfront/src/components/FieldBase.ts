@@ -19,7 +19,7 @@ import {
 import { useFocusGroup } from '../lib/focus'
 import { useRecords } from '../lib/records'
 import { useThemeOptions } from '../lib/theme'
-import { PositionObserver, sizeClass, watchPosition } from '../lib/util'
+import { PositionObserver, scaleClass, watchPosition } from '../lib/util'
 import { OfOverlay } from './Overlay'
 
 const renderSlot = (
@@ -100,6 +100,13 @@ const makeDragIn = (spec: FieldDragIn, flag: Ref<boolean>) => {
 const parseDimension = (
   size?: number | string
 ): { length: number; unit: string } | null => {
+  if (size && !isNaN(size as number)) {
+    return { length: size as number, unit: 'ch' }
+  }
+  const percentage = ('' + size).match(/(\d+)(%)/)
+  if (percentage) {
+    return { length: parseInt(percentage[1], 10), unit: percentage[2] }
+  }
   const m = ('' + size).match(/^(\d*\.?\d+)(\w+)$/)
   if (!m) return null
   return { length: parseInt(m[1], 10), unit: m[2] }
@@ -188,10 +195,12 @@ export const OfFieldBase = defineComponent({
           !(showFocused || overlayActive || mode.value === 'fixed')
         const metaLabel = props.name ? metadata.value?.label : undefined
         let labelText = fieldRender.label ?? props.label ?? metaLabel
-
         const asterisk: VNode | null =
           required.value && mode.value !== 'fixed'
-            ? h(OfIcon, { name: 'required', class: 'of--icon-required' })
+            ? h(OfIcon, {
+                name: 'required',
+                class: 'of--icon-required',
+              })
             : null
 
         let asteriskLabel = false
@@ -218,14 +227,14 @@ export const OfFieldBase = defineComponent({
         const cls = [
           'of-field ',
           {
-            ...sizeClass(fieldCtx.size),
+            ...scaleClass(fieldCtx.scale),
             'of--tinted': !!tint.value,
             ['of--tint-' + tint.value]: !!tint.value,
             'of--active': fieldRender.active || !blank, // overridden for toggle input to avoid hiding content
             'of--blank': blank,
             'of--dragover': dragOver.value,
             'of--focused': showFocused,
-            'of--inline': props.inline,
+            'of--inline': !fieldCtx.block || props.inline,
             'of--invalid': props.invalid || fieldRender.invalid,
             'of--interactive': interactive.value,
             'of--muted': props.muted,
@@ -245,12 +254,20 @@ export const OfFieldBase = defineComponent({
           fieldRender.class,
           props.class,
         ]
-        const size = fieldRender.size || props.size // FIXME fetch from config
+
         const style: Record<string, string> = {}
-        const dim = parseDimension(size)
+        const scale = fieldRender.scale || props.scale // FIXME fetch from config
+        const dim = parseDimension(scale)
         if (dim) {
-          style['--field-size'] = '' + dim.length + (dim.unit || 'ch')
+          style['--field-font-size'] = '' + dim.length + (dim.unit || 'ch')
         }
+        if (!fieldCtx.block) {
+          if (fieldCtx.width) {
+            const dim = parseDimension(fieldCtx.width)
+            style['--field-size'] = '' + dim?.length + (dim?.unit || 'ch')
+          }
+        }
+
         const contentSlot =
           ctx.slots.default ||
           (interactive.value
@@ -259,7 +276,9 @@ export const OfFieldBase = defineComponent({
             ? () =>
                 h(
                   'div',
-                  { class: 'of-field-content-text' },
+                  {
+                    class: 'of-field-content-text',
+                  },
                   ctx.slots.fixedContent?.()
                 )
             : ctx.slots.interactiveContent)
@@ -318,7 +337,6 @@ export const OfFieldBase = defineComponent({
           h('div', { class: 'of-field-caption' }), // FIXME support custom slot
           overlay,
         ]
-
         return h(
           'div',
           {

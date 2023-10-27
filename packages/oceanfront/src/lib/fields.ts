@@ -45,7 +45,9 @@ export interface FieldRender {
   pendingValue?: any
   popup?: FieldPopup
   prepend?: () => Renderable | undefined
-  size?: number | string
+  scale?: number | string
+  width?: number | string
+  block?: boolean
   updated?: boolean
   value?: any
   undecorated?: boolean
@@ -96,7 +98,9 @@ export interface FieldContext {
   onKeydown?: (value: any) => void
   required?: boolean
   value?: any
-  size?: string
+  scale?: string
+  width?: string
+  block?: boolean
 }
 
 export interface FieldProps {
@@ -107,7 +111,9 @@ export interface FieldProps {
   maxlength?: number | string // defaultMaxlength?
   // name?: string
   placeholder?: string
-  size?: number | string //  defaultSize?
+  scale?: number | string //  defaultScale?
+  width?: number | string //  defaultWidth?
+  block?: boolean
   type?: string
   record?: FormRecord
   [key: string]: any
@@ -182,7 +188,9 @@ export const BaseFieldProps = {
   },
   required: Boolean,
   rounded: Boolean,
-  size: { type: [Number, String], default: undefined },
+  scale: { type: [Number, String], default: undefined },
+  block: { type: Boolean, default: true },
+  width: { type: [Number, String], default: undefined },
   // style
   type: String,
   variant: String,
@@ -256,8 +264,14 @@ export function makeFieldContext<C>(
   const record = computed(() => {
     return props.record || recordMgr.getCurrentRecord() || undefined
   })
-  const size = computed(() => {
-    return props.size || undefined
+  const scale = computed(() => {
+    return props.scale || undefined
+  })
+  const width = computed(() => {
+    return props.width || undefined
+  })
+  const block = computed(() => {
+    return props.block
   })
   const metadata = computed(() =>
     props.name ? record.value?.metadata?.[props.name] : null
@@ -325,7 +339,9 @@ export function makeFieldContext<C>(
     editable,
     fieldType,
     initialValue,
-    size,
+    scale,
+    width,
+    block,
     inputLabel,
     interactive,
     labelPosition,

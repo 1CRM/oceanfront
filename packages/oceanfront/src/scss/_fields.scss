@@ -47,6 +47,9 @@
 .of--cursor-text {
   cursor: text;
 }
+.of--block{
+  --of-field-width: 100%;
+}
 
 .of-group {
   --group-pad: calc(0.5em - 1px);
@@ -206,6 +209,7 @@
 }
 
 .of-field {
+  --field-width: var(--of-field-width);
   --field-background: transparent;
   --field-background-opacity: 0;
   --field-border-color: transparent;

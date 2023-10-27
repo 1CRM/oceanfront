@@ -5,7 +5,7 @@
 <script lang="ts">
 import { useThemeOptions } from '../lib/theme'
 import { computed, defineComponent, PropType } from 'vue'
-import { Size, sizeClass } from '../lib/util'
+import { Scale, scaleClass } from '../lib/util'
 
 type Status =
   | 'success'
@@ -30,7 +30,7 @@ export default defineComponent({
   name: 'OfBadge',
   props: {
     status: String as PropType<Status>,
-    size: String as PropType<Size>,
+    scale: String as PropType<Scale>,
     circular: Boolean,
     icon: Boolean,
     density: [String, Number],
@@ -60,7 +60,7 @@ export default defineComponent({
           ['state-' + props.status]: !!props.status,
           'of--circular': props.circular,
           'of--icon': props.icon,
-          ...sizeClass(props.size),
+          ...scaleClass(props.scale),
         },
       ]
     })

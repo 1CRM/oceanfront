@@ -18,32 +18,32 @@
       <div>
         <of-icon
           name="preview-icon"
-          size="xs"
-          title="16px size"
+          scale="xs"
+          title="16px scale"
           :effect="iconEffect"
         />
         <of-icon
           name="preview-icon"
-          size="sm"
-          title="20px size"
+          scale="sm"
+          title="20px scale"
           :effect="iconEffect"
         />
         <of-icon
           name="preview-icon"
-          size="md"
-          title="24px size (standard)"
+          scale="md"
+          title="24px scale (standard)"
           :effect="iconEffect"
         />
         <of-icon
           name="preview-icon"
-          size="lg"
-          title="28px size"
+          scale="lg"
+          title="28px scale"
           :effect="iconEffect"
         />
         <of-icon
           name="preview-icon"
-          size="xl"
-          title="32px size"
+          scale="xl"
+          title="32px scale"
           :effect="iconEffect"
         />
       </div>

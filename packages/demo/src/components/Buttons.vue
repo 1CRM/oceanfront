@@ -31,10 +31,10 @@
       </div>
       <div class="column spaced">
         <of-field
-          v-model="params.size"
-          label="Size"
+          v-model="params.scale"
+          label="Scale"
           type="select"
-          :items="sizeOptions"
+          :items="scaleOptions"
         />
       </div>
     </div>
@@ -144,7 +144,7 @@ import { defineComponent, reactive } from 'vue'
 export default defineComponent({
   setup() {
     const sampleCode = `
-<of-button size="nm">Submit</of-button>
+<of-button scale="nm">Submit</of-button>
 <of-button variant="outlined">Submit</of-button>
 <of-button variant="text">Submit</of-button>
 <of-button disabled>Disabled</of-button>
@@ -182,19 +182,19 @@ export default defineComponent({
 
     const densityOptions = ['default', '0', '1', '2', '3']
     const tintOptions = ['default', 'primary', 'secondary', 'tertiary']
-    const sizeOptions = ['sm', 'nm', 'lg']
+    const scaleOptions = ['sm', 'nm', 'lg']
     const params = reactive({
       density: 'default',
       rounded: false,
       tint: 'default',
-      size: 'nm',
+      scale: 'nm',
     })
     return {
       sampleCode,
       testItems,
       densityOptions,
       tintOptions,
-      sizeOptions,
+      scaleOptions,
       params,
       menuClick,
       variants,

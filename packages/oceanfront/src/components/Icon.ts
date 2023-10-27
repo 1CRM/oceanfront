@@ -7,7 +7,7 @@ export const OfIcon = defineComponent({
     class: String,
     effect: String,
     name: String,
-    size: [Number, String],
+    scale: [Number, String],
     type: String,
   },
   setup(props, ctx) {
@@ -16,13 +16,13 @@ export const OfIcon = defineComponent({
       mgr.resolveIcon(props.name, { effect: props.effect, type: props.type })
     )
     const size = computed(() => {
-      let sz = props.size
+      let sz = props.scale
       if (sz) {
         if (
           typeof sz === 'number' ||
           (typeof sz === 'string' && sz.match(/^[0-9]+$/))
         ) {
-          sz = '' + sz + 'px'
+          sz = '' + sz + 'ch'
         }
       }
       return sz || undefined
@@ -41,7 +41,7 @@ export const OfIcon = defineComponent({
               'of-icon': true,
               'of-icon--svg': !!iconVal.svg,
             },
-            props.size && !numSz ? 'of--icon-size-' + props.size : undefined,
+            props.scale && !numSz ? 'of--icon-size-' + props.scale : undefined,
             props.class,
             iconVal.class,
           ],

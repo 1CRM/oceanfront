@@ -22,7 +22,7 @@ export const OfToggle = defineComponent({
     required: Boolean,
     switch: Boolean,
     value: String,
-    size: [String, Number],
+    scale: [String, Number],
   },
   emits: {
     'update:checked': null,
@@ -70,7 +70,7 @@ export const OfToggle = defineComponent({
         label: props.label,
         inputId: inputId.value,
         name: props.name,
-        size: props.size,
+        scale: props.scale,
         onInputMounted: setElt,
       })
       return h(

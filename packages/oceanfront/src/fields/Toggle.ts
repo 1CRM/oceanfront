@@ -95,7 +95,7 @@ export const OfToggleField = defineComponent({
             align: props.align,
             name: props.name,
             mode: fieldCtx.mode,
-            size: fieldCtx.size,
+            scale: fieldCtx.scale,
             ariaLabel: fieldCtx.ariaLabel,
             ...hooks,
           },
