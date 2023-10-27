@@ -1,9 +1,9 @@
-import { daysInEvent } from '..'
 import {
+  daysInEvent,
   CalendarAlldayEventPlacement,
   InternalEvent,
   Timestamp,
-} from '../common'
+} from '..'
 
 export type BusyInfo = {
   currentColumn: number

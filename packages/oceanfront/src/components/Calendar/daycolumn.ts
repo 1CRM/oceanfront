@@ -13,8 +13,6 @@ import {
   getTimestampIdintifier,
   toTimestamp,
   withZeroTime,
-} from '../../lib/calendar'
-import {
   CalendarAlldayEventPlacement,
   CalendarEvent,
   CalendarEventPlacement,
@@ -24,7 +22,7 @@ import {
   parseEvent,
   Timestamp,
   uniqEvent,
-} from '../../lib/calendar/common'
+} from '../../lib/calendar'
 import ColumnLayout from '../../lib/calendar/layout/columns'
 import StackLayout from '../../lib/calendar/layout/stack'
 import Base from './base'

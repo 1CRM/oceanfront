@@ -4,7 +4,7 @@ import {
   categoryItem,
   InternalEvent,
   Timestamp,
-} from '../../lib/calendar/common'
+} from '../../lib/calendar'
 
 const validTypes = ['day', 'month', 'week', 'category', 'ndays', 'month']
 

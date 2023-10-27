@@ -1,5 +1,4 @@
-import { hasOverlap } from '..'
-import { CalendarEventsGroup, Column } from '../common'
+import { hasOverlap, CalendarEventsGroup, Column } from '..'
 
 export default function layout(
   group: CalendarEventsGroup,
