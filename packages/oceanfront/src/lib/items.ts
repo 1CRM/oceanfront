@@ -2,32 +2,10 @@ import { markRaw } from 'vue'
 import { Config, ConfigManager } from './config'
 import { FormRecord } from './records'
 import { readonlyUnref } from './util'
+import { Item, ItemList } from './items_list'
 
 export type ItemsProp = ItemList | string | any[]
 
-export interface ItemList {
-  avatarKey?: string
-  disabledKey?: string
-  iconKey?: string
-  specialKey?: string
-  textKey?: string
-  valueKey?: string
-  selectedTextKey?: string
-  classKey?: string
-  class?: string
-  count?: number
-  // details?: (key: any) => VNode
-  error?: string // maybe multiple messages, maybe hint as well
-  // format?:  formatter for values
-  filter?: (query: string) => any[] | ItemList
-  items: any[]
-  loading?: boolean | string // string for placeholder message
-  lookup?: (key: any) => any
-}
-export interface Item {
-  value: String | Number
-  text: String | Number
-}
 export const transformItemsList = (
   mgr: ItemsState,
   source?: string | any[] | ItemList,

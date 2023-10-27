@@ -9,7 +9,7 @@ import {
   SetupContext,
   VNode,
 } from 'vue'
-import { ItemList } from './items'
+import { ItemList } from './items_list'
 import { FormRecord, useRecords } from './records'
 import { useThemeOptions } from './theme'
 import { extendReactive, extractRefs } from './util'
