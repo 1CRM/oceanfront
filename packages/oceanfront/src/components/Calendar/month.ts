@@ -2,13 +2,11 @@ import {
   getDayIdentifier,
   getEventsOfDay,
   toTimestamp,
-} from '../../lib/calendar'
-import {
   CalendarEvent,
   InternalEvent,
   parseEvent,
   uniqEvent,
-} from '../../lib/calendar/common'
+} from '../../lib/calendar'
 import {
   addDays,
   firstMonday,

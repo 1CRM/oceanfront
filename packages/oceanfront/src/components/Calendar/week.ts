@@ -1,5 +1,4 @@
-import { toTimestamp } from '../../lib/calendar'
-import { Timestamp } from '../../lib/calendar/common'
+import { toTimestamp, Timestamp } from '../../lib/calendar'
 import { addDays, parseDay } from '../../lib/datetime'
 import { useLocale } from '../../lib/locale'
 import { defineComponent } from 'vue'

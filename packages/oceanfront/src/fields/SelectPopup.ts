@@ -2,7 +2,8 @@ import { useConfig } from '../lib/config'
 import { computed, defineComponent, h, PropType, ref } from 'vue'
 import { OfButton } from '../components/Button'
 import OfOptionList from '../components/OptionList.vue'
-import { ItemList, transformItemsList, useItems } from '../lib/items'
+import { transformItemsList, useItems } from '../lib/items'
+import { ItemList } from '../lib/items_list'
 import { useLanguage } from '../lib/language'
 
 export const OfSelectPopup = defineComponent({

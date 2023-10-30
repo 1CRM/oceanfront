@@ -1,6 +1,6 @@
 import { Ref, reactive, ref, toRaw, markRaw, watchEffect } from 'vue'
 import { ConfigManager, Config } from './config'
-import { ItemList } from './items'
+import { ItemList } from './items_list'
 import { looseEqual, readonlyUnref } from './util'
 
 export interface FieldRecordState {

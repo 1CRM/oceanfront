@@ -35,13 +35,10 @@ import {
   toTimestamp,
   getTimeIdentifier,
   getTimestampIdintifier,
-} from '../lib/calendar'
-
-import {
   CalendarEventPlacement,
   InternalEvent,
   Timestamp,
-} from '../lib/calendar/common'
+} from '../lib/calendar'
 
 import stackLayout from '../lib/calendar/layout/stack'
 import columnsLayout from '../lib/calendar/layout/columns'

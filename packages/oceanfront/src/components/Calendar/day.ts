@@ -1,5 +1,4 @@
-import { toTimestamp, withZeroTime } from '../../lib/calendar'
-import { Timestamp } from '../../lib/calendar/common'
+import { toTimestamp, withZeroTime, Timestamp } from '../../lib/calendar'
 import { addDays } from '../../lib/datetime'
 import { useFormats } from '../../lib/formats'
 import { defineComponent, h } from 'vue'
