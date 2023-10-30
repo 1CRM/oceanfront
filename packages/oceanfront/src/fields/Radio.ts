@@ -102,7 +102,7 @@ export const OfRadioField = defineComponent({
                 align: props.align,
                 name: props.name,
                 mode: fieldCtx.mode,
-                size: props.scale,
+                scale: props.scale,
                 ...hooks,
               },
               { icon: ctx.slots.icon }
