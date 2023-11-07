@@ -3,6 +3,7 @@
     class="of-data-table-row"
     ref="itemRef"
     @mousemove="dragInfo?.draggable && mouseMove($event)"
+    @touchmove="dragInfo?.draggable && mouseMove($event)"
     :class="{
       odd: index % 2 != 0,
       nested: item.nested,
@@ -14,6 +15,7 @@
       v-if="dragInfo?.draggable"
       class="grab-button"
       @mousedown="item.draggable && dragStart($event)"
+      @touchstart="item.draggable && dragStart($event)"
       :class="{ draggable: item.draggable }"
     >
       <of-icon v-if="item.draggable" name="menu"></of-icon>
@@ -38,6 +40,7 @@
       :style="[col.value === dragInfo?.nestedIndicator ? nestedStyle : {}]"
       :class="col.class"
       :key="colidx"
+      :data-index="coords"
     >
       <svg
         v-if="col.value === dragInfo?.nestedIndicator && depth"
@@ -323,7 +326,11 @@ export default defineComponent({
         ? tar
         : false
     }
-    const getTargetInfo = (isOnTop: boolean, nestedDepth: number) => {
+    const getTargetInfo = (
+      isOnTop: boolean,
+      nestedDepth: number,
+      index: number
+    ) => {
       let coords: any = []
       let depth = 0
       let fixArrowNext = !isOnTop
@@ -420,7 +427,7 @@ export default defineComponent({
           fixArrowNext = false
           if (prevItem.value) {
             if (props.depth === 0) {
-              coords = props.coords
+              coords = index < 0 ? props.coords : [index]
             }
           } else {
             coords = [0]
@@ -429,7 +436,7 @@ export default defineComponent({
           fixArrowNext = true
           if (nextItem.value) {
             if (props.depth === 0 && !item.value.subitems?.length) {
-              coords = props.coords.slice()
+              coords = index < 0 ? props.coords.slice() : [index]
               coords = increaseCoord(coords, 4)
             } else if (nextItem.value.depth === 0) {
               coords = nextItem.value.coords
@@ -444,29 +451,47 @@ export default defineComponent({
       return { coords, depth, fixArrowNext }
     }
     const mouseMove = (event: MouseEvent) => {
+      if (event.cancelable) event.preventDefault()
+      let index = -1
       if (props.dragInfo?.dragInProgress) {
         let divElem: any = itemRef.value
         if (!divElem) return
-        const height = divElem
-          .querySelector('.of--align-start')
-          .getBoundingClientRect()?.height
-        let ofy = event.offsetY
-        let pagex = event.pageX
+        let element = divElem.querySelector('.of--align-start')
+        if (event.type === 'touchmove') {
+          element = document.elementFromPoint(
+            props.dragInfo?.tableLeft + 55,
+            event.changedTouches[0].clientY
+          )
+          if (!element?.classList?.contains('of--align-start')) {
+            return
+          }
+          index = element.getAttribute('data-index')
+        }
+        const height = element?.getBoundingClientRect().height
+        const top = element?.getBoundingClientRect().top
+        let pagex = event.pageX ?? event.changedTouches[0].pageX
+        let ofy =
+          event.offsetY ??
+          Math.floor((event.changedTouches[0].clientY - top) % height)
 
+        ofy = ofy < 0 ? height + ofy : ofy
         let nestedDepth = Math.min(
           Math.floor((pagex - props.dragInfo?.tableLeft - 55) / 20),
           props.dragInfo?.nestedLimit - 1
         )
         nestedDepth = Math.max(0, nestedDepth)
         const isOnTop = ofy < height / 2
+
         let { coords, fixArrowNext, depth } = getTargetInfo(
           isOnTop,
-          nestedDepth
+          nestedDepth,
+          index
         )
+
         if (coords.length) {
           ctx.emit('setCoords', {
             coords: coords,
-            element: event.target,
+            element: element,
             fixArrowNext: fixArrowNext,
             depth: depth,
           })
@@ -477,7 +502,7 @@ export default defineComponent({
     const dragStart = (event: MouseEvent) => {
       ctx.emit('dragstart', {
         coords: props.coords,
-        start: event.pageX,
+        start: event.pageX ?? event.changedTouches[0].pageX,
         depth: props.depth,
         element: event.target,
         canBeNested: item.value.nested,
