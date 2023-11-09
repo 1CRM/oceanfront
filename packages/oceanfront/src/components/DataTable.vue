@@ -136,9 +136,7 @@
     >
       <of-option-list
         @mouseenter="sortPopupEnter()"
-        @touchstart="sortPopupEnter()"
         @mouseleave="sortPopupLeave()"
-        @touchend="sortPopupLeave()"
         @click="onSort"
         class="of-extra-sort-popup of--elevated-1"
         :items="selectedColFields"
@@ -372,17 +370,29 @@ export default defineComponent({
         highlightLastMoved.value = false
       }
     })
-    document.addEventListener('touchstart', () => {
-      if (highlightLastMoved.value) {
-        highlightLastMoved.value = false
+    document.addEventListener(
+      'touchstart',
+      () => {
+        if (highlightLastMoved.value) {
+          highlightLastMoved.value = false
+        }
+      },
+      {
+        passive: true,
       }
-    })
-    document.addEventListener('touchend', () => {
-      if (dragInProgress.value) {
-        dragInProgress.value = false
-        switchItems(draggingItem.value, currentCoords.value)
+    )
+    document.addEventListener(
+      'touchend',
+      () => {
+        if (dragInProgress.value) {
+          dragInProgress.value = false
+          switchItems(draggingItem.value, currentCoords.value)
+        }
+      },
+      {
+        passive: true,
       }
-    })
+    )
     const switchItems = (itemIndexes: number[], targetIndexes: number[]) => {
       if (itemIndexes.length && targetIndexes.length) {
         if (!samePosition(itemIndexes, targetIndexes)) {
