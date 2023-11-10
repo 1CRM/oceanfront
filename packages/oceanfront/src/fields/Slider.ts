@@ -133,6 +133,15 @@ export const OfSliderField = defineComponent({
         // snap to current step in case value was manually assigned
         handleMove(evt)
       },
+      onTouchstart(evt: TouchEvent) {
+        evt.stopPropagation()
+        if (evt.cancelable) evt.preventDefault()
+        startX = evt.targetTouches[0].pageX
+        startVal = pendingValue.value
+        document.addEventListener('touchmove', handleMove)
+        document.addEventListener('touchend', stopMove)
+        handleMove(evt)
+      },
     }
     const trackHooks = {
       onMousedown(evt: MouseEvent) {
@@ -157,19 +166,26 @@ export const OfSliderField = defineComponent({
     const cancelMove = () => {
       document.removeEventListener('mousemove', handleMove)
       document.removeEventListener('mouseup', stopMove)
+      document.removeEventListener('touchmove', handleMove)
+      document.removeEventListener('touchend', stopMove)
       thumbClass.value = 'of-slider-thumb'
     }
     const stopMove = () => {
       cancelMove()
       setValue(pendingValue.value)
     }
-    const handleMove = (evt: MouseEvent) => {
+    const handleMove = (evt: MouseEvent | TouchEvent) => {
       const tw = trackWidth.value
       thumbClass.value = 'of-slider-thumb of--moved'
 
       if (tw) {
         pendingValue.value = fixValue(
-          startVal + ((evt.pageX - startX) * opts.value.delta) / tw
+          startVal +
+            ((((evt as TouchEvent)?.targetTouches?.[0].pageX ??
+              (evt as MouseEvent).pageX) -
+              startX) *
+              opts.value.delta) /
+              tw
         )
         setActiveTrack(thumbElt.value, trackProcessElt.value)
       }
