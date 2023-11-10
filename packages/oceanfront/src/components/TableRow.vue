@@ -3,10 +3,11 @@
     class="of-data-table-row"
     ref="itemRef"
     @mousemove="dragInfo?.draggable && mouseMove($event)"
+    @touchmove="dragInfo?.draggable && mouseMove($event)"
     :class="{
       odd: index % 2 != 0,
       nested: item.nested,
-      selected: highlighted || isCurrentTarget,
+      selected: isTouchable ? selectedItem : highlighted || isCurrentTarget,
     }"
     :key="item.id ?? index"
   >
@@ -14,6 +15,7 @@
       v-if="dragInfo?.draggable"
       class="grab-button"
       @mousedown="item.draggable && dragStart($event)"
+      @touchstart="item.draggable && dragStart($event)"
       :class="{ draggable: item.draggable }"
     >
       <of-icon v-if="item.draggable" name="menu"></of-icon>
@@ -38,6 +40,8 @@
       :style="[col.value === dragInfo?.nestedIndicator ? nestedStyle : {}]"
       :class="col.class"
       :key="colidx"
+      :data-index="coords"
+      :data-depth="depth"
     >
       <svg
         v-if="col.value === dragInfo?.nestedIndicator && depth"
@@ -99,6 +103,7 @@
         :columns="rowItem.columns"
         :rows-record="rowsRecord"
         :idx="subidx"
+        :is-touchable="isTouchable"
       >
         <template #first-cell>
           <slot name="first-cell" :record="rowsRecord" :item="subrow" />
@@ -141,11 +146,12 @@ export default defineComponent({
       type: Number,
       default: 0,
     },
+    isTouchable: Boolean,
   },
   emits: ['dragstart', 'update:row', 'setCoords', 'setDepth'],
   setup(props, ctx) {
     const index = computed(() => props.idx)
-
+    const currentCords = ref(props.coords)
     type RowItem = {
       item: any
       columns: any
@@ -166,7 +172,10 @@ export default defineComponent({
     }) as any
     watch(
       () => [props.row, props.columns],
-      ([item, columns]) => Object.assign(rowItem, { item, columns }),
+      ([item, columns]) => {
+        selectedItem.value = false
+        Object.assign(rowItem, { item, columns })
+      },
       { deep: true }
     )
     const checkSubitemDepth = (elem: any) => {
@@ -198,7 +207,7 @@ export default defineComponent({
     const globalIdx = computed(() => {
       if (!props.dragInfo?.listedRows) return null
       return props.dragInfo?.listedRows.findIndex(
-        (v: any) => v.coordIndex === props.coords?.join('-')
+        (v: any) => v.coordIndex === currentCords.value?.join('-')
       )
     })
     const prevItem = computed(() => {
@@ -215,7 +224,7 @@ export default defineComponent({
     })
     const allParent = computed(() => props.dragInfo.allParent)
     const isCurrentTarget = computed(() => {
-      const coordsIdx = props.coords.join('-')
+      const coordsIdx = currentCords.value.join('-')
       const targetCoords = props.dragInfo?.currentCoords
       return (
         targetCoords.length > 1 &&
@@ -223,7 +232,7 @@ export default defineComponent({
       )
     })
     const highlighted = computed(() => {
-      const coordsIdx = props.coords.join('-')
+      const coordsIdx = currentCords.value.join('-')
       const draggingCoords = props.dragInfo?.draggingItem
       return (
         props.dragInfo?.highlighted ||
@@ -231,6 +240,7 @@ export default defineComponent({
         coordsIdx === draggingCoords.join('-')
       )
     })
+    const selectedItem = ref<boolean>(false)
     const increaseCoord = (arr: any[], _idxx = 0) => {
       return arr.map((v: any, i: number, arr: any[]) => {
         if (i === arr.length - 1) {
@@ -273,25 +283,28 @@ export default defineComponent({
       return arr
     }
     const isOnSelfItem = computed(() => {
-      return props.coords?.join('-') === props.dragInfo?.draggingItem?.join('-')
+      return (
+        currentCords.value?.join('-') ===
+        props.dragInfo?.draggingItem?.join('-')
+      )
     })
     const isOnSelfArea = computed(() => {
       const currentDraggingItem = props.dragInfo?.draggingItem
-      const indexes = props.coords
+      const indexes = currentCords.value
       if (currentDraggingItem.length > indexes.length) return false
       const selfIndexesToCheck =
         indexes?.slice(0, currentDraggingItem.length) || []
       return selfIndexesToCheck?.every(function (element: any, index: number) {
-        return element === currentDraggingItem[index]
+        return element == currentDraggingItem[index]
       })
     })
     const checkDragAvailability = (indexes: any[]) => {
       const currentDraggingItem = props.dragInfo?.draggingItem
-      if (currentDraggingItem.length > indexes.length) return true
+      if (currentDraggingItem.length > indexes?.length) return true
       const selfIndexesToCheck =
         indexes?.slice(0, currentDraggingItem.length) || []
       return selfIndexesToCheck?.some(function (element: any, index: number) {
-        return element !== currentDraggingItem[index]
+        return element != currentDraggingItem[index]
       })
     }
     const setNextPointer = (idx: number) => {
@@ -323,43 +336,52 @@ export default defineComponent({
         ? tar
         : false
     }
-    const getTargetInfo = (isOnTop: boolean, nestedDepth: number) => {
+    const getTargetInfo = (
+      isOnTop: boolean,
+      nestedDepth: number,
+      index: null | [],
+      currentDepth: null | number
+    ) => {
       let coords: any = []
-      let depth = 0
       let fixArrowNext = !isOnTop
       let target: any = {}
       let nestedAttempt = false
+      let depth = 0
+      const prevItemCoords = index ?? prevItem.value?.coords?.slice()
+      const prevItemDepth = currentDepth ?? prevItem.value?.depth
+      const itemCoords = currentCords.value.slice()
+      const itemDepth = currentDepth ?? props.depth
       let singleItem = isOnSelfItem.value && !item.value.subitems?.length
       if (props.dragInfo.currentCanBeNested && (!!prevItem.value || !isOnTop)) {
         if (isOnTop || singleItem) {
           nestedAttempt =
             !!prevItem.value &&
-            ((isOnTop && checkDragAvailability(prevItem.value.coords)) ||
+            ((isOnTop && checkDragAvailability(prevItemCoords)) ||
               singleItem) &&
-            nestedDepth > prevItem.value.depth
+            nestedDepth > prevItemDepth
           if (
             nestedAttempt &&
             (prevItem.value.parent || allParent.value) &&
-            prevItem.value.depth + props.dragInfo.currentInnerDepth <
+            prevItemDepth + props.dragInfo.currentInnerDepth <
               props.dragInfo.nestedLimit
           ) {
-            coords = prevItem.value.coords.slice()
+            coords = prevItemCoords
             coords.push(0)
-            depth = prevItem.value.depth + 1
+            depth = prevItemDepth + 1
           } else {
             if (
               (isOnSelfItem.value || !isOnSelfArea.value) &&
               ((props.dragInfo.isLastChild && isOnSelfItem.value) ||
-                props.depth === 0) &&
+                itemDepth === 0) &&
               (isOnTop || singleItem) &&
               prevItem.value
             ) {
-              nestedDepth = Math.min(nestedDepth, prevItem.value.depth)
+              nestedDepth = Math.min(nestedDepth, prevItemDepth)
               for (let i = nestedDepth; i >= 0; i--) {
                 target = findPossibleTarget(i)
                 if (target && checkDragAvailability(target.coords)) {
                   coords = target.coords.slice()
-                  coords = increaseCoord(coords, 1)
+                  coords = index ?? increaseCoord(coords, 1)
                   depth = target.depth
                   break
                 }
@@ -367,46 +389,46 @@ export default defineComponent({
             } else {
               if (
                 isOnSelfItem.value ||
-                (checkDragAvailability(props.coords) &&
-                  props.depth + props.dragInfo.currentInnerDepth <
+                (checkDragAvailability(itemCoords) &&
+                  itemDepth + props.dragInfo.currentInnerDepth <
                     props.dragInfo.nestedLimit)
               ) {
-                coords = props.coords.slice()
-                depth = props.depth
+                coords = itemCoords
+                depth = itemDepth
               }
             }
           }
         }
-
         if (!coords.length && !isOnTop) {
           fixArrowNext = true
-          nestedAttempt = nestedDepth > props.depth
+          nestedAttempt = nestedDepth > itemDepth
           if (
             nestedAttempt &&
             (item.value.parent || allParent.value) &&
             !isOnSelfArea.value &&
-            props.depth + props.dragInfo.currentInnerDepth <
+            itemDepth + props.dragInfo.currentInnerDepth <
               props.dragInfo.nestedLimit
           ) {
-            coords = props.coords.slice()
+            coords = itemCoords
             coords.push(0)
-            depth = props.depth + 1
+            depth = itemDepth + 1
           } else {
-            let checkPossibleSibling = findPossibleTarget(props.depth, true)
+            let checkPossibleSibling = findPossibleTarget(itemDepth, true)
             if (checkPossibleSibling) {
               if (!isOnSelfArea.value) {
                 coords = checkPossibleSibling.coords
                 coords = increaseCoord(coords, 2)
-                depth = props.depth
+                depth = itemDepth
               }
             }
-            nestedDepth = Math.min(nestedDepth, props.depth)
+
+            nestedDepth = Math.min(nestedDepth, itemDepth)
             if (props.dragInfo.isLastChild) {
               for (let i = nestedDepth; i >= 0; i--) {
                 target = findPossibleTarget(i, true)
                 if (target && checkDragAvailability(target.coords)) {
                   coords = target.coords.slice()
-                  coords = increaseCoord(coords, 3)
+                  coords = index ?? increaseCoord(coords, 3)
                   depth = target.depth
                   break
                 }
@@ -419,17 +441,17 @@ export default defineComponent({
         if (isOnTop) {
           fixArrowNext = false
           if (prevItem.value) {
-            if (props.depth === 0) {
-              coords = props.coords
+            if (itemDepth === 0) {
+              coords = itemCoords
             }
           } else {
-            coords = [0]
+            coords = index ?? [0]
           }
         } else {
           fixArrowNext = true
           if (nextItem.value) {
-            if (props.depth === 0 && !item.value.subitems?.length) {
-              coords = props.coords.slice()
+            if (itemDepth === 0 && !item.value.subitems?.length) {
+              coords = itemCoords
               coords = increaseCoord(coords, 4)
             } else if (nextItem.value.depth === 0) {
               coords = nextItem.value.coords
@@ -437,22 +459,47 @@ export default defineComponent({
           } else {
             let rows = props.dragInfo?.listedRows.slice()
             rows = rows.filter((v: any) => !v.depth)
-            coords = [rows.length]
+            coords = !index ? [rows.length] : [(+index?.[0] || 0) + 1]
           }
         }
       }
       return { coords, depth, fixArrowNext }
     }
-    const mouseMove = (event: MouseEvent) => {
+    const mouseMove = (event: MouseEvent | TouchEvent) => {
+      if (event.cancelable) event.preventDefault()
+      let index = null
+      let currentDepth = null
       if (props.dragInfo?.dragInProgress) {
         let divElem: any = itemRef.value
         if (!divElem) return
-        const height = divElem
-          .querySelector('.of--align-start')
-          .getBoundingClientRect()?.height
-        let ofy = event.offsetY
-        let pagex = event.pageX
+        let element = divElem.querySelector('.of--align-start')
+        if (event.type === 'touchmove') {
+          element = document.elementFromPoint(
+            props.dragInfo?.tableLeft + 55,
+            (event as TouchEvent).changedTouches[0].clientY
+          )
+          if (!element?.classList?.contains('of--align-start')) {
+            return
+          }
+          index = element.getAttribute('data-index')
+          currentDepth = +element.getAttribute('data-depth') || 0
+          currentCords.value = index = index ? index?.split(',') : []
+          if (props.idx == index) {
+            selectedItem.value = true
+          }
+        }
+        const height = element?.getBoundingClientRect().height
+        const top = element?.getBoundingClientRect().top
+        let pagex =
+          (event as MouseEvent).pageX ??
+          (event as TouchEvent).changedTouches[0].pageX
+        let ofy =
+          (event as MouseEvent).offsetY ??
+          Math.floor(
+            ((event as TouchEvent).changedTouches[0].clientY - top) % height
+          )
 
+        ofy = ofy < 0 ? height + ofy : ofy
         let nestedDepth = Math.min(
           Math.floor((pagex - props.dragInfo?.tableLeft - 55) / 20),
           props.dragInfo?.nestedLimit - 1
@@ -461,12 +508,14 @@ export default defineComponent({
         const isOnTop = ofy < height / 2
         let { coords, fixArrowNext, depth } = getTargetInfo(
           isOnTop,
-          nestedDepth
+          nestedDepth,
+          index,
+          currentDepth
         )
         if (coords.length) {
           ctx.emit('setCoords', {
             coords: coords,
-            element: event.target,
+            element: element,
             fixArrowNext: fixArrowNext,
             depth: depth,
           })
@@ -474,10 +523,12 @@ export default defineComponent({
         return
       }
     }
-    const dragStart = (event: MouseEvent) => {
+    const dragStart = (event: MouseEvent | TouchEvent) => {
       ctx.emit('dragstart', {
         coords: props.coords,
-        start: event.pageX,
+        start:
+          (event as MouseEvent).pageX ??
+          (event as TouchEvent).changedTouches[0].pageX,
         depth: props.depth,
         element: event.target,
         canBeNested: item.value.nested,
@@ -487,7 +538,6 @@ export default defineComponent({
     const rowUpdated = () => {
       return
     }
-
     return {
       item,
       itemRef,
@@ -503,6 +553,8 @@ export default defineComponent({
       setChildCoords,
       setNextPointer,
       rowItem,
+      currentCords,
+      selectedItem,
     }
   },
 })

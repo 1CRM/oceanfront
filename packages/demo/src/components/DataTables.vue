@@ -651,9 +651,7 @@ export default defineComponent({
         }
       }
     }
-    const onRowsEdited = (rows: []) => {
-      console.log('rows edited ', rows)
-    }
+    const onRowsEdited = () => {}
 
     return {
       universalHeaders,
