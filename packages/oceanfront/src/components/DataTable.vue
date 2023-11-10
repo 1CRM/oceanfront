@@ -100,6 +100,7 @@
         :columns="columns"
         :rows-record="rowsRecord"
         :idx="rowidx"
+        :is-touchable="isTouchable"
         @update:row="updateRow"
       >
         <template #rows-selector>
@@ -286,6 +287,7 @@ export default defineComponent({
     const currentCoords = ref([] as number[])
     const arrowTop = ref(0)
     const highlightLastMoved = ref(false)
+    const isTouchable = ref(false)
     const nestDepth = ref(0)
     const currentInnerDepth = ref(0)
     const draggingOptions: any = reactive({
@@ -359,40 +361,31 @@ export default defineComponent({
         fixArrow(data.element, data.fixArrowNext)
       },
     }
-    document.addEventListener('mouseup', () => {
+    const eventStart = (event: MouseEvent | TouchEvent) => {
+      if (event.type === 'touchstart') {
+        isTouchable.value = true
+      }
+      if (highlightLastMoved.value) {
+        highlightLastMoved.value = false
+      }
+    }
+    const eventEnd = (event: MouseEvent | TouchEvent) => {
+      if (event.type === 'touchend') {
+        isTouchable.value = false
+      }
       if (dragInProgress.value) {
         dragInProgress.value = false
         switchItems(draggingItem.value, currentCoords.value)
       }
+    }
+    document.addEventListener('mouseup', eventEnd)
+    document.addEventListener('mousedown', eventStart)
+    document.addEventListener('touchstart', eventStart, {
+      passive: true,
     })
-    document.addEventListener('mousedown', () => {
-      if (highlightLastMoved.value) {
-        highlightLastMoved.value = false
-      }
+    document.addEventListener('touchend', eventEnd, {
+      passive: true,
     })
-    document.addEventListener(
-      'touchstart',
-      () => {
-        if (highlightLastMoved.value) {
-          highlightLastMoved.value = false
-        }
-      },
-      {
-        passive: true,
-      }
-    )
-    document.addEventListener(
-      'touchend',
-      () => {
-        if (dragInProgress.value) {
-          dragInProgress.value = false
-          switchItems(draggingItem.value, currentCoords.value)
-        }
-      },
-      {
-        passive: true,
-      }
-    )
     const switchItems = (itemIndexes: number[], targetIndexes: number[]) => {
       if (itemIndexes.length && targetIndexes.length) {
         if (!samePosition(itemIndexes, targetIndexes)) {
@@ -874,6 +867,7 @@ export default defineComponent({
       highlightLastMoved,
       dragEvents,
       dragLeft,
+      isTouchable,
     }
   },
 })

@@ -7,7 +7,7 @@
     :class="{
       odd: index % 2 != 0,
       nested: item.nested,
-      selected: selectedItem,
+      selected: isTouchable ? selectedItem : highlighted || isCurrentTarget,
     }"
     :key="item.id ?? index"
   >
@@ -103,6 +103,7 @@
         :columns="rowItem.columns"
         :rows-record="rowsRecord"
         :idx="subidx"
+        :is-touchable="isTouchable"
       >
         <template #first-cell>
           <slot name="first-cell" :record="rowsRecord" :item="subrow" />
@@ -145,6 +146,7 @@ export default defineComponent({
       type: Number,
       default: 0,
     },
+    isTouchable: Boolean,
   },
   emits: ['dragstart', 'update:row', 'setCoords', 'setDepth'],
   setup(props, ctx) {
@@ -170,7 +172,10 @@ export default defineComponent({
     }) as any
     watch(
       () => [props.row, props.columns],
-      ([item, columns]) => Object.assign(rowItem, { item, columns }),
+      ([item, columns]) => {
+        selectedItem.value = false
+        Object.assign(rowItem, { item, columns })
+      },
       { deep: true }
     )
     const checkSubitemDepth = (elem: any) => {
@@ -235,8 +240,7 @@ export default defineComponent({
         coordsIdx === draggingCoords.join('-')
       )
     })
-    const selected = computed(() => highlighted.value || isCurrentTarget.value)
-    const selectedItem = ref(selected)
+    const selectedItem = ref<boolean>(false)
     const increaseCoord = (arr: any[], _idxx = 0) => {
       return arr.map((v: any, i: number, arr: any[]) => {
         if (i === arr.length - 1) {
@@ -464,7 +468,6 @@ export default defineComponent({
     const mouseMove = (event: MouseEvent | TouchEvent) => {
       if (event.cancelable) event.preventDefault()
       let index = null
-      console.log(selectedItem.value)
       let currentDepth = null
       if (props.dragInfo?.dragInProgress) {
         let divElem: any = itemRef.value
@@ -480,9 +483,10 @@ export default defineComponent({
           }
           index = element.getAttribute('data-index')
           currentDepth = +element.getAttribute('data-depth') || 0
-          index = index ? index?.split(',') : []
-          currentCords.value = index
-          selectedItem.value = true
+          currentCords.value = index = index ? index?.split(',') : []
+          if (props.idx == index) {
+            selectedItem.value = true
+          }
         }
         const height = element?.getBoundingClientRect().height
         const top = element?.getBoundingClientRect().top
