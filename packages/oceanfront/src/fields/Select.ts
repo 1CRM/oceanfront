@@ -22,6 +22,10 @@ export const OfSelectField = defineComponent({
     ...BaseFieldProps,
     multi: Boolean,
     addRemove: Boolean,
+    closeAfterSelect: {
+      type: Boolean,
+      default: true,
+    },
     inDataTable: {
       type: Boolean,
       default: false,
@@ -155,7 +159,7 @@ export const OfSelectField = defineComponent({
       const newValue = toggleValue(val)
       inputValue.value = newValue
       fieldCtx.onUpdate?.(newValue)
-      if (!props.multi || !ev?.shiftKey) {
+      if (!(props.multi || !props.closeAfterSelect || ev?.shiftKey)) {
         closePopup(true)
       }
     }
@@ -269,6 +273,7 @@ export const OfSelectField = defineComponent({
                 items: items.value,
                 multi: props.multi,
                 addRemove: props.addRemove,
+                closeAfterSelect: props.closeAfterSelect,
                 closePopup,
                 value: inputValue.value,
                 onUpdateValue: (val: any) => {
