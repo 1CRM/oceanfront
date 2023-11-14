@@ -16,6 +16,10 @@ export const OfSelectPopup = defineComponent({
     },
     multi: Boolean,
     addRemove: Boolean,
+    closeAfterSelect: {
+      type: Boolean,
+      default: true,
+    },
     addSearch: {
       type: Boolean,
       default: true,
@@ -135,7 +139,7 @@ export const OfSelectPopup = defineComponent({
       ev?.preventDefault()
       const newValue = toggleValue(val)
       ctx.emit('updateValue', newValue)
-      if (!props.multi || !ev?.shiftKey) {
+      if (!(props.multi || !props.closeAfterSelect || ev?.shiftKey)) {
         removing.value = false
         props.closePopup?.(true)
       }
