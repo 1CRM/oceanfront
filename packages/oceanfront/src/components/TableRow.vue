@@ -459,7 +459,7 @@ export default defineComponent({
           } else {
             let rows = props.dragInfo?.listedRows.slice()
             rows = rows.filter((v: any) => !v.depth)
-            coords = !index ? [rows.length] : [(+index?.[0] || 0) + 1]
+            coords = !index ? [rows.length] : [+(index?.at(0) || 0) + 1]
           }
         }
       }
