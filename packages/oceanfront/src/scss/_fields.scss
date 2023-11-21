@@ -353,7 +353,7 @@
 }
 
 .of-field.of--density-0 {
-  --field-v-pad-base: 1.125em;
+  --field-v-pad-base: 1em;
   .of-field-input {
     padding: var(--field-v-pad) var(--field-h-pad) !important;
   }
@@ -365,7 +365,7 @@
   --field-v-pad-base: 0.5em;
 }
 .of-field.of--density-2 {
-  --field-v-pad-base: 0.625em;
+  --field-v-pad-base: 0.45em;
 }
 .of-field.of--density-3 {
   --field-v-pad-base: 0.375em;
