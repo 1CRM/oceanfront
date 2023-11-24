@@ -249,7 +249,7 @@ export function makeFieldContext<C>(
       d = themeOptions.defaultDensity
     }
     if (typeof d !== 'number') {
-      d = 2
+      d = 1
     }
     if (typeof rd === 'string') {
       rd = parseDensity(rd)

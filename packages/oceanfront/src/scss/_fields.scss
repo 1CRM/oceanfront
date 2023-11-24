@@ -225,9 +225,11 @@
   --field-label-width: var(--of-field-label-width, 50%);
   --field-input-height: calc(var(--field-line-height) * 1em);
   --field-line-height: #{$line-height-input};
-  --field-h-pad: 0.5em;
+  --field-h-pad-base: 0.666em;
+  --icon-h-pad: 0.5em;
   --field-v-pad-base: 1.125em;
   --field-v-pad: var(--field-v-pad-base);
+  --field-h-pad: var(--field-h-pad-base);
   --field-size: var(--of-field-size);
   --field-size-append: 0px;
   --field-size-prepend: 0px;
@@ -351,16 +353,22 @@
 }
 
 .of-field.of--density-0 {
-  --field-v-pad-base: 1.125em;
+  --field-v-pad-base: 0.7em;
+  .of-field-input {
+    padding: var(--field-v-pad) var(--field-h-pad) !important;
+  }
+  .of-file-input {
+    padding: var(--field-v-pad) var(--field-h-pad) !important;
+  }
 }
 .of-field.of--density-1 {
-  --field-v-pad-base: 0.875em;
+  --field-v-pad-base: 0.5em;
 }
 .of-field.of--density-2 {
-  --field-v-pad-base: 0.625em;
+  --field-v-pad-base: 0.375em;
 }
 .of-field.of--density-3 {
-  --field-v-pad-base: 0.375em;
+  --field-v-pad-base: 0.3em;
 }
 
 .of-field-main-label {
@@ -466,10 +474,10 @@
   flex: none;
 }
 .of-field-prepend {
-  padding-left: var(--field-h-pad);
+  padding-left: var(--icon-h-pad);
 }
 .of-field-append {
-  padding-right: var(--field-h-pad);
+  padding-right: var(--icon-h-pad);
 }
 
 .of-field.of--variant-outlined {
@@ -489,7 +497,7 @@
   }
 
   &.of--label-frame {
-    --field-h-pad: 0.75em;
+    --field-h-pad: 0.666em;
 
     > .of-field-main {
       border: none;
@@ -560,9 +568,9 @@
 
           .of-field-label {
             position: relative;
-            top: 0;
+            top: 0.25em;
             display: block;
-            font-size: 0.75em;
+            font-size: 0.666em;
             transform: translateX(var(--field-size-prepend)) scale(1.3333)
               translateY(var(--field-v-pad));
             transform-origin: left top;
@@ -682,12 +690,12 @@
   }
 
   &.of--label-frame {
-    --field-h-pad: 0.75em;
-    --field-v-pad: calc(var(--field-v-pad-base) - 0.3em);
+    --field-h-pad: 0.666em;
+    --field-v-pad: calc(var(--field-v-pad-base) - 0.166em);
 
     > .of-field-main {
       min-height: calc(
-        1em + 2 * var(--field-v-pad) + var(--field-input-height)
+        0.666em + var(--field-v-pad) + var(--field-input-height)
       );
       padding: 0;
 
@@ -701,13 +709,13 @@
         .of-field-header-label {
           box-sizing: border-box;
           line-height: 1;
-          padding: calc(var(--field-v-pad) / 2)
+          padding: calc(var(--field-v-pad))
             calc(var(--field-size-append) + var(--field-h-pad))
-            calc(var(--field-v-pad) / 2)
+            0
             calc(var(--field-size-prepend) + var(--field-h-pad));
 
           .of-field-label {
-            font-size: 0.75em;
+            font-size: 0.666em;
           }
         }
       }
@@ -715,6 +723,12 @@
       > .of-field-body {
         > .of-field-inner {
           margin-top: 1em;
+          > .of-field-input{
+            padding: calc(var(--field-v-pad)/2) var(--field-h-pad) var(--field-v-pad);
+          }
+          > .of-file-input{
+            padding: calc(var(--field-v-pad)/2) var(--field-h-pad) var(--field-v-pad);
+          }
         }
       }
     }
