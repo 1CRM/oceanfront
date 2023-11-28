@@ -36,7 +36,7 @@
             <template :key="tab.key" v-for="(tab, idx) in tabsList">
               <div class="overflow-separator" v-if="tab.overflowButton" />
               <div
-                @click="tab.disabled || selectTab(tab.key)"
+                @pointerup="(e) => tab.disabled || handleSelectTab(e, tab.key)"
                 @mouseover="
                   tab.disabled || onMouseoverTab(tab.key, $event.target)
                 "
@@ -603,6 +603,17 @@ export default defineComponent({
         tabs.value?.addEventListener('transitionend', reposition)
       }
     )
+    const handleSelectTab = (event: PointerEvent, key: number) => {
+      if (
+        event.pointerType === 'touch' &&
+        items.value.items[key]?.subMenuItems &&
+        openedMenuTabKey.value !== key
+      ) {
+        onMouseoverTab(key, event.target)
+      } else {
+        selectTab(key)
+      }
+    }
     const selectTab = function (key: number, emitSelectEvent = true) {
       if (props.params?.disableTabSelect) {
         onMouseoverTab(key, tabsRefs[key], true)
@@ -930,6 +941,7 @@ export default defineComponent({
       openedMenuTabKey,
       firstActiveTabIdx,
       lastActiveTabIdx,
+      handleSelectTab,
     }
   },
 })
