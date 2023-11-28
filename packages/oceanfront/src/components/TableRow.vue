@@ -524,6 +524,7 @@ export default defineComponent({
       }
     }
     const dragStart = (event: MouseEvent | TouchEvent) => {
+      if (event.cancelable) event.preventDefault()
       ctx.emit('dragstart', {
         coords: props.coords,
         start:
