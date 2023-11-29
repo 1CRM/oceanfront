@@ -273,6 +273,7 @@ export default defineComponent({
     'rows-sorted': null,
     'rows-moved': null,
     'rows-edited': null,
+    'row-edited': null,
   },
   setup(props, ctx) {
     const themeOptions = useThemeOptions()
@@ -458,7 +459,8 @@ export default defineComponent({
           sortSubitems(value)
         })
     }
-    const updateRow = () => {
+    const updateRow = (row: Object) => {
+      ctx.emit('row-edited', row)
       ctx.emit('rows-edited', items.value)
     }
     const tableLeft = computed(() => {
