@@ -424,7 +424,7 @@ export default defineComponent({
               }
             }
             nestedDepth = Math.min(nestedDepth, itemDepth)
-            if (props.dragInfo.isLastChild && !(index && isOnSelfArea)) {
+            if (props.dragInfo.isLastChild && !(index && isOnSelfArea.value)) {
               for (let i = nestedDepth; i >= 0; i--) {
                 target = findPossibleTarget(i, true)
                 if (target && checkDragAvailability(target.coords)) {
