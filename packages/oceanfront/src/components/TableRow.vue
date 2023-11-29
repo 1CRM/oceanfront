@@ -366,8 +366,10 @@ export default defineComponent({
               props.dragInfo.nestedLimit
           ) {
             coords = prevItemCoords
-            coords.push(0)
-            depth = prevItemDepth + 1
+            if (index && prevItemCoords[0] !== currentCords.value[0]) {
+              coords.push(0)
+              depth = prevItemDepth + 1
+            }
           } else {
             if (
               (isOnSelfItem.value || !isOnSelfArea.value) &&
@@ -421,9 +423,8 @@ export default defineComponent({
                 depth = itemDepth
               }
             }
-
             nestedDepth = Math.min(nestedDepth, itemDepth)
-            if (props.dragInfo.isLastChild) {
+            if (props.dragInfo.isLastChild && !(index && isOnSelfArea)) {
               for (let i = nestedDepth; i >= 0; i--) {
                 target = findPossibleTarget(i, true)
                 if (target && checkDragAvailability(target.coords)) {
