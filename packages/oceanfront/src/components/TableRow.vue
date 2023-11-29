@@ -271,7 +271,7 @@ export default defineComponent({
     }
     watch(
       () => item.value,
-      () => ctx.emit('update:row'),
+      () => ctx.emit('update:row', item.value),
       { immediate: false, deep: true }
     )
     const setChildCoords = (idx: number) => {
