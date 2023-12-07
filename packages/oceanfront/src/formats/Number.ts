@@ -193,7 +193,7 @@ export class NumberFormatter implements TextFormatter {
       if (value != null) {
         const selStart = 1
         const unformat = this.parseInput(value.toString(), selStart, false)
-        textValue = this.applyOptions(value, selStart, unformat)
+        textValue = this.applyOptions(value, selStart, unformat).textValue
       }
     } catch (e: any) {
       error = e.toString()
@@ -220,7 +220,11 @@ export class NumberFormatter implements TextFormatter {
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-  applyOptions(textValue: string, selStart: number, unformat: any): string {
+  applyOptions(
+    textValue: string,
+    selStart: number,
+    unformat: any
+  ): { textValue: string; selStart: number } {
     const fmtOpts = this.formatterOptions(true)
     const { seps } = unformat
     let { minDecs } = unformat
@@ -263,7 +267,10 @@ export class NumberFormatter implements TextFormatter {
       textValue += seps.decimal + '0'.repeat(minDecs)
     }
 
-    return textValue === '' && unformat.input == '-' ? '-' : textValue
+    return {
+      textValue: textValue === '' && unformat.input == '-' ? '-' : textValue,
+      selStart,
+    }
   }
 
   handleInput(evt: InputEvent): TextInputResult {
@@ -272,8 +279,9 @@ export class NumberFormatter implements TextFormatter {
     let selStart = input.selectionStart || 0
     if (textValue.length) {
       const unformat = this.parseInput(textValue, selStart)
-      textValue = this.applyOptions(textValue, selStart, unformat)
-      selStart = Math.min(selStart, textValue.length)
+      const formatted = this.applyOptions(textValue, selStart, unformat)
+      textValue = formatted.textValue
+      selStart = Math.min(formatted.selStart, textValue.length)
 
       return {
         textValue,
