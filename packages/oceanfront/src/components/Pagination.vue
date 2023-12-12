@@ -48,6 +48,9 @@
             :aria-label="ariaLabels?.expand ?? 'Expand'"
             @click="openOffsetPopup"
           >
+            <template #default v-if="$slots['custom-offset-button']">
+              <slot name="custom-offset-button"></slot>
+            </template>
           </of-button>
         </span>
       </div>
@@ -121,6 +124,7 @@ export default defineComponent({
     perPage: Number,
     rounded: Boolean,
     ariaLabels: Object,
+    showOnlyPage: { type: Boolean, default: true },
   },
   emits: ['update:modelValue', 'select-page', 'update-offset'],
   setup(props, context) {
@@ -181,7 +185,7 @@ export default defineComponent({
         result.push(i)
       }
 
-      return result
+      return result.length > 1 ? result : props.showOnlyPage ? result : []
     })
 
     const showGoToFirst = computed(() => {
