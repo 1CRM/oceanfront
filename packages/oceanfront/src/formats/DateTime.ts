@@ -342,7 +342,7 @@ export class DateFormatter extends DateTimeFormatterBase {
       if (!matches) {
         value = new Date()
       } else {
-        const dateStr = matches.slice(1, 4).join('-')
+        const dateStr = matches.slice(1, 4).join('-') + 'T00:00:00'
         value = new Date(dateStr)
       }
     } else if (typeof modelValue === 'number') {
