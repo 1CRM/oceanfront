@@ -389,6 +389,7 @@ export const OfTextField = defineComponent({
             // size: props.size,  - need to implement at field level?
             type: inputType.value,
             'aria-label': fieldCtx.ariaLabel ?? fieldCtx.label,
+            autocomplete: fieldCtx.autocomplete ?? null,
             value: lazyInputValue,
             ...hooks,
           }),

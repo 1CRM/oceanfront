@@ -85,6 +85,7 @@ export interface FieldContext {
   items?: string | any[] | ItemList
   label?: string
   ariaLabel?: string
+  autocomplete?: string
   labelPosition?: string
   mode?: FieldMode
   muted?: boolean // if editable, reduce indicators
@@ -168,6 +169,7 @@ export const BaseFieldProps = {
   items: [String, Array, Object] as PropType<string | any[] | ItemList>,
   label: String,
   ariaLabel: String,
+  autocomplete: String,
   labelPosition: String as PropType<FieldLabelPositionProp>,
   loading: Boolean,
   locked: Boolean,
@@ -367,6 +369,7 @@ export function makeFieldContext<C>(
       'items',
       'label',
       'ariaLabel',
+      'autocomplete',
       'loading',
       'muted',
       'name',
