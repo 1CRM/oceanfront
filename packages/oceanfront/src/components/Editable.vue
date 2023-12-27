@@ -293,6 +293,11 @@ export default OfEditableField
       }
     }
   }
+  .of--align-end {
+    .field-value {
+      justify-content: flex-end;
+    }
+  }
   .field-value {
     display: flex;
     width: 100%;
