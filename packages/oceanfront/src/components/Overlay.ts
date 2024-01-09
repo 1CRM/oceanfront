@@ -72,6 +72,7 @@ export const OfOverlay = defineComponent({
     shade: { type: Boolean, default: true },
     target: { type: [Element, String] } as any as PropType<Element | string>,
     transition: String,
+    sticky: { type: Boolean, default: true },
   },
   emits: ['blur'],
   setup(props, ctx) {
@@ -168,10 +169,19 @@ export const OfOverlay = defineComponent({
           )
           outer.style.removeProperty('padding-right')
         }
-        outer.style.setProperty(
-          '--overlay-dyn-pad-top',
-          Math.max(targetRect.bottom, 0) + 'px'
-        )
+        if (!props.sticky) {
+          outer.style.setProperty('position', 'absolute')
+          outer.style.setProperty(
+            'top',
+            `${targetRect.y + window.scrollY + targetRect.height - 20}px`
+          )
+          outer.style.setProperty('--overlay-dyn-pad-top', '0')
+        } else {
+          outer.style.setProperty(
+            '--overlay-dyn-pad-top',
+            Math.max(targetRect.bottom, 0) + 'px'
+          )
+        }
       })
     }
     const updateState = () => {

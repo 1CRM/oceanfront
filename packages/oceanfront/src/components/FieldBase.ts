@@ -302,6 +302,7 @@ export const OfFieldBase = defineComponent({
               shade: false,
               target: mainId ? '#' + mainId : '',
               onBlur: overlayBlur,
+              sticky: props.sticky,
             },
             overlay
           )
