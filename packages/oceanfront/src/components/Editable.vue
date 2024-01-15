@@ -85,6 +85,8 @@
       @update:model-value="updateValue"
       v-model="item.value"
       :items="item.items"
+      :input-type="item.inputType"
+      :outside="item.outside"
     ></of-field>
   </template>
 </template>
