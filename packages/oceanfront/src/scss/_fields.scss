@@ -821,6 +821,8 @@
     }
     .of-switch-track {
       background-color: var(--of-primary-tint);
+    }
+    .of-switch-track:not(.outside) {
       opacity: 72%;
     }
   }
