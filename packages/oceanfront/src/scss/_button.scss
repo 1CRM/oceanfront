@@ -395,7 +395,9 @@
     opacity: var(--button-split-opacity);
   }
 }
-
+.of-flex-reverse {
+  flex-direction: row-reverse;
+}
 .of-button-icon,
 .of-button-expand {
   align-self: center;

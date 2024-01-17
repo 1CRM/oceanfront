@@ -15,6 +15,10 @@ export const OfButton = defineComponent({
     density: [String, Number],
     disabled: Boolean,
     icon: String,
+    iconPosition: {
+      type: String,
+      default: 'start',
+    },
     id: String,
     items: [String, Array, Object] as PropType<ItemsProp>,
     label: String,
@@ -166,6 +170,12 @@ export const OfButton = defineComponent({
         extraContent,
         items && !split ? expand : undefined,
       ]
+      const iconPosition = () => {
+        if (props.iconPosition === 'end') {
+          return { 'of-flex-reverse': true }
+        }
+        return {}
+      }
       return h(
         'div',
         {
@@ -196,7 +206,11 @@ export const OfButton = defineComponent({
           h(
             'button',
             {
-              class: ['of-button-main', scaleClass(props.scale)],
+              class: [
+                'of-button-main',
+                scaleClass(props.scale),
+                iconPosition(),
+              ],
               disabled,
               tabindex,
               id: buttonId,
