@@ -396,7 +396,7 @@ export const OfTextField = defineComponent({
         })
       },
       fixedContent: () => {
-        return formatter.value?.formatFixed?.(lazyInputValue) ?? lazyInputValue
+        return formatter.value?.formatFixed?.(fieldCtx.value) ?? lazyInputValue
       },
     }
 
