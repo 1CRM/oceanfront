@@ -48,7 +48,15 @@
 </template>
 
 <script lang="ts">
-import { ref, defineComponent, computed, watch, Ref } from 'vue'
+import {
+  ref,
+  defineComponent,
+  computed,
+  watch,
+  Ref,
+  onMounted,
+  onUnmounted,
+} from 'vue'
 import { OfOverlay } from './Overlay'
 
 export default defineComponent({
@@ -69,6 +77,45 @@ export default defineComponent({
   emits: ['update:modelValue'],
   setup: function (props, ctx) {
     const dialog = ref<any>()
+    const focusableElements =
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"]'
+    const handelKeyDown = (e: KeyboardEvent) => {
+      const firstFocusableElement =
+        dialog.value.querySelectorAll(focusableElements)[0]
+      const focusableContent = dialog.value.querySelectorAll(focusableElements)
+      const lastFocusableElement = focusableContent[focusableContent.length - 1]
+      let isTabPressed = e.key === 'Tab' || e.keyCode === 9
+      if (!isTabPressed) {
+        return
+      }
+      if (e.shiftKey) {
+        if (document.activeElement === firstFocusableElement) {
+          lastFocusableElement.focus()
+          e.preventDefault()
+        }
+      } else {
+        if (
+          document.activeElement === lastFocusableElement ||
+          !dialog.value.contains(document.activeElement)
+        ) {
+          firstFocusableElement.focus()
+          e.preventDefault()
+        }
+      }
+    }
+    watch(
+      () => dialog.value,
+      (value) => {
+        if (!value) {
+          document.removeEventListener('keydown', handelKeyDown)
+          return
+        }
+        document.addEventListener('keydown', handelKeyDown)
+      }
+    )
+    onUnmounted(() => {
+      document.removeEventListener('keydown', handelKeyDown)
+    })
     const dialogHeader: Ref<HTMLDivElement | undefined> = ref()
     const active = ref(props.modelValue)
 
