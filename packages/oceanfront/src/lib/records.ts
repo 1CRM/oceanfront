@@ -1,7 +1,7 @@
-import { Ref, reactive, ref, toRaw, markRaw, watchEffect } from 'vue'
+import { Ref, reactive, ref, markRaw, watchEffect } from 'vue'
 import { ConfigManager, Config } from './config'
 import { ItemList } from './items_list'
-import { looseEqual, readonlyUnref } from './util'
+import { deepToRaw, looseEqual, readonlyUnref } from './util'
 
 export interface FieldRecordState {
   pending?: boolean
@@ -60,8 +60,8 @@ class BasicRecord<T extends object = Record<string, any>>
   }
 
   constructor(initial?: T) {
-    const init = toRaw(initial || {}) as T
-    this._initial = ref(Object.assign({}, init)) as Ref<T>
+    const init = deepToRaw(initial || {}) as T
+    this._initial = ref(structuredClone(init)) as Ref<T>
     this._rules = ref([])
     this._state = ref({ locked: false })
     this._value = reactive(init) as T
@@ -121,7 +121,7 @@ class BasicRecord<T extends object = Record<string, any>>
   }
 
   reset() {
-    this.value = this._initial.value
+    this.value = structuredClone(deepToRaw(this._initial.value))
   }
 
   get updated(): boolean {

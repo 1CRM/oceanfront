@@ -8,6 +8,8 @@ import {
   toRef,
   triggerRef,
   unref,
+  isReactive,
+  toRaw,
 } from 'vue'
 import { hasOwn } from '@vue/shared'
 
@@ -423,4 +425,26 @@ export const scaleClass = (size: string | undefined) => {
     default:
       return {}
   }
+}
+
+export const deepToRaw = (obj: any) => {
+  if (typeof obj !== 'object' || obj === null) {
+    return obj // Return the value if obj is not an object
+  }
+
+  const copy: any = Array.isArray(obj) ? [] : {}
+
+  for (const attr in obj) {
+    if (obj.hasOwnProperty(attr)) {
+      if (isReactive(obj[attr])) {
+        copy[attr] = deepToRaw(toRaw(obj[attr]))
+      } else if (typeof obj[attr] === 'object' && obj[attr] !== null) {
+        copy[attr] = deepToRaw(obj[attr])
+      } else {
+        copy[attr] = obj[attr]
+      }
+    }
+  }
+
+  return copy
 }
