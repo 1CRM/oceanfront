@@ -348,7 +348,7 @@ class PositionObserverImpl implements PositionObserver {
         this._native.observe(target, { box: 'border-box' })
       } else if (!this._polling) {
         // first timeout is short to handle initial re-layout
-        this._polling = window.setTimeout(this._poll.bind(this, 50))
+        this._polling = window.setTimeout(this._poll.bind(this), 50)
       }
       if (this._options.immediate) {
         triggerRef(this._positions)
