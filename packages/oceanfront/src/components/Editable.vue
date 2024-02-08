@@ -85,6 +85,8 @@
       @update:model-value="updateValue"
       v-model="item.value"
       :items="item.items"
+      :input-type="item.inputType"
+      :outside="item.outside"
     ></of-field>
   </template>
 </template>
@@ -193,7 +195,7 @@ const OfEditableField = defineComponent({
       if (type.value === 'toggle') {
         return 'editable'
       } else {
-        return active.value ? 'editable' : 'fixed'
+        return active.value ? 'editable' : props.modelValue?.mode || 'fixed'
       }
     })
     const resizeInput = (focus = false) => {

@@ -215,6 +215,8 @@ export const BaseFieldProps = {
   formatOptions: null,
   defaultValue: null,
   sticky: { type: Boolean, default: true },
+  switch: { type: Boolean, default: false },
+  outside: { type: Boolean, default: true },
 }
 
 export function extendFieldFormat(

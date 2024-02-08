@@ -14,7 +14,12 @@ export const supportedTypes = new Set(['checkbox', 'switch'])
 
 export const OfToggleField = defineComponent({
   name: 'OfToggleField',
-  props: { ...BaseFieldProps, inputType: String, switch: Boolean },
+  props: {
+    ...BaseFieldProps,
+    inputType: String,
+    switch: Boolean,
+    outside: { type: Boolean, default: true },
+  },
   setup(props, ctx) {
     const fieldCtx = provideFieldContext(props, ctx)
     const initialValue = computed(() => {
@@ -88,6 +93,7 @@ export const OfToggleField = defineComponent({
           ToggleInner,
           {
             switch: inputType.value === 'switch',
+            outside: props.outside,
             checked: stateValue.value,
             focused: focused.value,
             label: fieldCtx.inputLabel,

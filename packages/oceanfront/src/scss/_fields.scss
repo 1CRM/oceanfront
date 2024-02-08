@@ -792,7 +792,13 @@
     transition: left 0.15s ease-in-out, background-color 0.15s ease-in-out;
     width: 1em;
   }
-
+  &-thumb.outside {
+    left: 0.35em;
+    top: auto;
+    width: 0.8em;
+    height: 0.8em;
+    background-color: #ffffff;
+  }
   &-track {
     border: 1px solid var(--field-color);
     border-radius: 1em;
@@ -801,13 +807,22 @@
     height: 100%;
     transition: background-color 0.15s ease-in-out, border 0.15s ease-in-out;
   }
+  &-track.outside {
+    height: 1em;
+    background-color: #F0F1EE;
+    border: none;
+  }
   .of--checked & {
-    .of-switch-thumb {
-      background-color: var(--of-primary-tint);
+    .of-switch-thumb{
       left: calc(1em - 1px);
+    }
+    .of-switch-thumb:not(.outside) {
+      background-color: var(--of-primary-tint);
     }
     .of-switch-track {
       background-color: var(--of-primary-tint);
+    }
+    .of-switch-track:not(.outside) {
       opacity: 72%;
     }
   }

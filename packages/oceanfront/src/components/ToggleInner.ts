@@ -13,6 +13,7 @@ export const ToggleInner = defineComponent({
     name: String,
     mode: String as PropType<FieldMode>,
     scale: [String, Number],
+    outside: Boolean,
   },
   emits: ['focus', 'blur', 'inputMounted'],
   setup(props, ctx) {
@@ -65,10 +66,18 @@ export const ToggleInner = defineComponent({
               ...hooks,
             }),
             props.switch
-              ? h('div', { class: 'of-switch' }, [
-                  h('div', { class: 'of-switch-track' }),
-                  h('div', { class: 'of-switch-thumb' }),
-                ])
+              ? h(
+                  'div',
+                  { class: ['of-switch', { outside: !props.outside }] },
+                  [
+                    h('div', {
+                      class: ['of-switch-track', { outside: !props.outside }],
+                    }),
+                    h('div', {
+                      class: ['of-switch-thumb', { outside: !props.outside }],
+                    }),
+                  ]
+                )
               : ctx.slots.icon
               ? ctx.slots.icon(props.checked)
               : h(OfIcon, {
