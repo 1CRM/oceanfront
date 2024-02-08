@@ -1,7 +1,7 @@
 import { Ref, reactive, ref, markRaw, watchEffect } from 'vue'
 import { ConfigManager, Config } from './config'
 import { ItemList } from './items_list'
-import { deepToRaw, looseEqual, readonlyUnref } from './util'
+import { deepEqual, deepToRaw, readonlyUnref } from './util'
 
 export interface FieldRecordState {
   pending?: boolean
@@ -73,7 +73,7 @@ class BasicRecord<T extends object = Record<string, any>>
     const init = this._initial.value
     const vals = this._value
     let invalid = false
-    this._state.value.updated = !looseEqual(init, vals)
+    this._state.value.updated = !deepEqual(init, vals)
     for (const rule of this._rules.value) {
       if (!rule(vals)) {
         invalid = true
