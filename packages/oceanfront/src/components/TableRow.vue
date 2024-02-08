@@ -467,7 +467,8 @@ export default defineComponent({
       return { coords, depth, fixArrowNext }
     }
     const mouseMove = (event: MouseEvent | TouchEvent) => {
-      if (event.cancelable) event.preventDefault()
+      if (event.cancelable && props.dragInfo?.dragInProgress)
+        event.preventDefault()
       let index = null
       let currentDepth = null
       if (props.dragInfo?.dragInProgress) {
