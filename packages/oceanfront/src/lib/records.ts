@@ -31,6 +31,7 @@ export interface FormRecord {
   locked?: boolean
   pending?: boolean
   reset(): void
+  reinit(): void
   updated?: boolean
   value: Record<string, any>
   metadata: Record<string, FieldMetadata>
@@ -122,6 +123,10 @@ class BasicRecord<T extends object = Record<string, any>>
 
   reset() {
     this.value = structuredClone(deepToRaw(this._initial.value))
+  }
+
+  reinit() {
+    this._initial.value = structuredClone(deepToRaw(this.value))
   }
 
   get updated(): boolean {
