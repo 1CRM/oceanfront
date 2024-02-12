@@ -66,6 +66,7 @@ export default defineComponent({
           external: 'external',
           attach: 'attachment',
           plus: 'plus',
+          minus: 'minus',
           user: 'user',
           lock: 'lock',
           search: 'search',
