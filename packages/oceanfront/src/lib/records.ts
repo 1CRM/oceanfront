@@ -1,4 +1,4 @@
-import { Ref, reactive, ref, markRaw, watchEffect } from 'vue'
+import { Ref, reactive, ref, markRaw, watchEffect, toRaw } from 'vue'
 import { ConfigManager, Config } from './config'
 import { ItemList } from './items_list'
 import { deepEqual, deepToRaw, readonlyUnref } from './util'
@@ -65,7 +65,7 @@ class BasicRecord<T extends object = Record<string, any>>
     this._initial = ref(structuredClone(init)) as Ref<T>
     this._rules = ref([])
     this._state = ref({ locked: false })
-    this._value = reactive(init) as T
+    this._value = reactive(toRaw(initial || {})) as T
     this._metadata = {}
     watchEffect(this._checkUpdated.bind(this))
   }
@@ -122,7 +122,7 @@ class BasicRecord<T extends object = Record<string, any>>
   }
 
   reset() {
-    this.value = structuredClone(deepToRaw(this._initial.value))
+    this.value = structuredClone(this._initial.value)
   }
 
   reinit() {
