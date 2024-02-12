@@ -8,6 +8,8 @@ import {
   toRef,
   triggerRef,
   unref,
+  isReactive,
+  toRaw,
 } from 'vue'
 import { hasOwn } from '@vue/shared'
 
@@ -348,7 +350,7 @@ class PositionObserverImpl implements PositionObserver {
         this._native.observe(target, { box: 'border-box' })
       } else if (!this._polling) {
         // first timeout is short to handle initial re-layout
-        this._polling = window.setTimeout(this._poll.bind(this, 50))
+        this._polling = window.setTimeout(this._poll.bind(this), 50)
       }
       if (this._options.immediate) {
         triggerRef(this._positions)
@@ -423,4 +425,50 @@ export const scaleClass = (size: string | undefined) => {
     default:
       return {}
   }
+}
+
+export const deepToRaw = (obj: any) => {
+  if (typeof obj !== 'object' || obj === null) {
+    return obj // Return the value if obj is not an object
+  }
+
+  const copy: any = Array.isArray(obj) ? [] : {}
+
+  for (const attr in obj) {
+    if (obj.hasOwnProperty(attr)) {
+      if (isReactive(obj[attr])) {
+        copy[attr] = deepToRaw(toRaw(obj[attr]))
+      } else if (typeof obj[attr] === 'object' && obj[attr] !== null) {
+        copy[attr] = deepToRaw(obj[attr])
+      } else {
+        copy[attr] = obj[attr]
+      }
+    }
+  }
+
+  return copy
+}
+
+export const deepEqual = (a: any, b: any): boolean => {
+  if (a === b) return true
+
+  if (
+    typeof a !== 'object' ||
+    a === null ||
+    typeof b !== 'object' ||
+    b === null
+  ) {
+    return false
+  }
+
+  const keysA = Object.keys(a),
+    keysB = Object.keys(b)
+
+  if (keysA.length !== keysB.length) return false
+
+  for (const key of keysA) {
+    if (!keysB.includes(key) || !deepEqual(a[key], b[key])) return false
+  }
+
+  return true
 }

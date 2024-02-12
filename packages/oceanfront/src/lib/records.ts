@@ -1,7 +1,7 @@
-import { Ref, reactive, ref, toRaw, markRaw, watchEffect } from 'vue'
+import { Ref, reactive, ref, markRaw, watchEffect } from 'vue'
 import { ConfigManager, Config } from './config'
 import { ItemList } from './items_list'
-import { looseEqual, readonlyUnref } from './util'
+import { deepEqual, deepToRaw, readonlyUnref } from './util'
 
 export interface FieldRecordState {
   pending?: boolean
@@ -31,6 +31,7 @@ export interface FormRecord {
   locked?: boolean
   pending?: boolean
   reset(): void
+  reinit(): void
   updated?: boolean
   value: Record<string, any>
   metadata: Record<string, FieldMetadata>
@@ -60,8 +61,8 @@ class BasicRecord<T extends object = Record<string, any>>
   }
 
   constructor(initial?: T) {
-    const init = toRaw(initial || {}) as T
-    this._initial = ref(Object.assign({}, init)) as Ref<T>
+    const init = deepToRaw(initial || {}) as T
+    this._initial = ref(structuredClone(init)) as Ref<T>
     this._rules = ref([])
     this._state = ref({ locked: false })
     this._value = reactive(init) as T
@@ -73,7 +74,7 @@ class BasicRecord<T extends object = Record<string, any>>
     const init = this._initial.value
     const vals = this._value
     let invalid = false
-    this._state.value.updated = !looseEqual(init, vals)
+    this._state.value.updated = !deepEqual(init, vals)
     for (const rule of this._rules.value) {
       if (!rule(vals)) {
         invalid = true
@@ -121,7 +122,11 @@ class BasicRecord<T extends object = Record<string, any>>
   }
 
   reset() {
-    this.value = this._initial.value
+    this.value = structuredClone(deepToRaw(this._initial.value))
+  }
+
+  reinit() {
+    this._initial.value = structuredClone(deepToRaw(this.value))
   }
 
   get updated(): boolean {
