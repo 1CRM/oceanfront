@@ -8,6 +8,7 @@
       odd: index % 2 != 0,
       nested: item.nested,
       selected: isTouchable ? selectedItem : highlighted || isCurrentTarget,
+      active: active,
     }"
     :key="item.id ?? index"
   >
@@ -151,6 +152,7 @@ export default defineComponent({
   emits: ['dragstart', 'update:row', 'setCoords', 'setDepth'],
   setup(props, ctx) {
     const index = computed(() => props.idx)
+    const active = computed(() => props.row?.active || false)
     const currentCords = ref(props.coords)
     type RowItem = {
       item: any
@@ -558,6 +560,7 @@ export default defineComponent({
       rowItem,
       currentCords,
       selectedItem,
+      active,
     }
   },
 })

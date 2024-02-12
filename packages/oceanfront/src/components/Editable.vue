@@ -74,7 +74,7 @@
   <template v-else>
     <span v-if="item.prepend" class="editable-prepend">{{ item.prepend }}</span>
     <of-field
-      :class="'in-data-table-' + type"
+      :class="['in-data-table-' + type, [...classes]]"
       class="editable"
       in-data-table
       @focus="onInputFocus"
@@ -87,6 +87,7 @@
       :items="item.items"
       :input-type="item.inputType"
       :outside="item.outside"
+      :key="modelValue?.key"
     ></of-field>
   </template>
 </template>
@@ -149,6 +150,7 @@ const OfEditableField = defineComponent({
       }
       return 'text'
     })
+    const classes = computed(() => props.modelValue?.classes || [])
     if (item.value && !item.value.hasOwnProperty('originalValue')) {
       item.value.originalValue = item.value.value
     }
@@ -242,6 +244,7 @@ const OfEditableField = defineComponent({
       onInputBlur,
       onKeyDown,
       showItem,
+      classes,
     }
   },
 })
