@@ -10,6 +10,7 @@ import {
 import { useNavGroup } from '../lib/nav'
 import { Link, LinkTo, OfLink } from './Link'
 import { OfIcon } from './Icon'
+import { OfField } from './Field'
 
 export const OfListItem = defineComponent({
   name: 'OfListItem',
@@ -21,6 +22,7 @@ export const OfListItem = defineComponent({
     href: { type: String, default: null },
     to: [String, Object] as PropType<LinkTo>,
     attrs: { type: Object },
+    field: { type: Object, default: null },
   },
   emits: {
     mousedown: null,
@@ -32,6 +34,7 @@ export const OfListItem = defineComponent({
     const navGroup = useNavGroup()
     const elt = ref<HTMLElement>()
     const expand = computed(() => props.expand)
+    const field = computed(() => props.field)
     const isCurrent = ref(!!props.active)
     const isFocused = ref(false)
     if (navGroup) {
@@ -76,7 +79,10 @@ export const OfListItem = defineComponent({
 
     const content = () => {
       const result = [
-        h('div', { class: 'of-list-item-content' }, ctx.slots.default?.()),
+        h('div', { class: 'of-list-item-content' }, [
+          ctx.slots.default?.(),
+          field.value ? h(OfField, field.value) : null,
+        ]),
       ]
       if (expand.value !== null) {
         result.push(
