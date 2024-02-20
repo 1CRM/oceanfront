@@ -31,8 +31,8 @@ export const OfToggleField = defineComponent({
     watch(
       () => fieldCtx.value,
       (val) => {
-        if (val === undefined || val === '') val = null
-        stateValue.value = val
+        if ((val === undefined || val === '') && props.checked) val = null
+        stateValue.value = val ?? props.checked
       },
       {
         immediate: true,

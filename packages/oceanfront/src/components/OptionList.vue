@@ -9,9 +9,9 @@
   >
     <slot
       name="header"
-      :addSearch="addSearch"
-      :showSearch="showSearch"
-      :searchText="searchText"
+      :add-search="addSearch"
+      :show-search="showSearch"
+      :search-text="searchText"
     ></slot>
     <div class="search-row" v-if="showSearch && addSearch">
       <of-field
@@ -59,6 +59,7 @@
               @focus="onItemFocus"
               :attrs="item.attrs"
               :key="idx"
+              :field="item.field"
             >
               <slot name="option-icon" v-bind="item">
                 <of-icon v-if="item.icon" :name="item.icon" size="input" />
@@ -71,9 +72,9 @@
     </of-nav-group>
     <slot
       name="footer"
-      :addSearch="addSearch"
-      :showSearch="showSearch"
-      :searchText="searchText"
+      :add-search="addSearch"
+      :show-search="showSearch"
+      :search-text="searchText"
     ></slot>
   </div>
 </template>
