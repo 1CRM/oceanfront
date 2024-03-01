@@ -115,6 +115,9 @@
     }
 
     .dialog-close {
+      position: absolute;
+      right: 0;
+      z-index: 300;
       float: right;
       padding: 0.2em;
       cursor: pointer;
@@ -143,37 +146,38 @@
 
 .of-dialog {
   background: var(--of-color-surface);
-  min-height: 200px;
-  max-height: 500px;
-  min-width: 100%;
+  min-height: var(--of-dialog-min-height, 200px);
+  max-height: var(--of-dialog-max-height, 500px);
+  min-width: var(--of-dialog-min-width, 100%);
+  max-width: var(--of-dialog-max-width, 100%);
   overflow: hidden;
   pointer-events: auto;
   display: flex;
   flex-direction: column;
   box-shadow: 0 2px 4px 1px rgba(0, 0, 0, 0.2);
-  border-radius: 5px;
+  border-radius: var(--of-dialog-border-radius, 5px);
   z-index: 9;
   position: absolute;
 
   .of-dialog-content {
     overflow-y: scroll;
     margin: 0;
-    min-height: 200px;
-    min-width: 100%;
+    min-height: var(--of-dialog-content-min-height, 200px);
+    min-width: var(--of-dialog-content-min-width, 100%);
   }
 }
 
-@media (min-width: 800px) {
+@media (min-width: 768px) {
   .of-dialog {
-    max-width: 80%;
-    min-width: 45%;
+    --of-dialog-max-width: 80%;
+    --of-dialog-min-width: 45%;
   }
 }
 
-@media (max-width: 800px) {
+@media (max-width: 768px) {
   .of-dialog-outer {
     .of-dialog {
-      min-width: 98%;
+      --of-dialog-min-width: 98%;
     }
 
     .of-dialog-header {
