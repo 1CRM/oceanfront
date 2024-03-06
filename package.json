@@ -17,6 +17,6 @@
     "test": "turbo run test --no-daemon"
   },
   "devDependencies": {
-    "turbo": "^1.1.2"
+    "turbo": "^1.12.4"
   }
 }
