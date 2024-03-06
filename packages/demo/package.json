@@ -9,6 +9,7 @@
     "demo": "vite"
   },
   "dependencies": {
+    "@types/node": "^20.11.24",
     "highlight.js": "^11.9.0",
     "oceanfront": "*",
     "oceanfront-html-editor": "*",
