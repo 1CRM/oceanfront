@@ -26,7 +26,7 @@ export default defineComponent({
               }
             },
           },
-          this.renderDayNumber(this.$props.day, true)
+          this.renderDayNumber(this.$props.day, true),
         )
       }
     },

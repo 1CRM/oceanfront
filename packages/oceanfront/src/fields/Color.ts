@@ -118,7 +118,7 @@ export const OfColorField = defineComponent({
       },
       {
         immediate: true,
-      }
+      },
     )
 
     watch(
@@ -130,7 +130,7 @@ export const OfColorField = defineComponent({
       },
       {
         immediate: true,
-      }
+      },
     )
 
     const setHsv = (color: { h: number; s: number; v: number; a?: number }) => {
@@ -186,7 +186,7 @@ export const OfColorField = defineComponent({
               {
                 class: 'color-picker-icon',
               },
-              prepareArrows(label)
+              prepareArrows(label),
             )
 
             children.push(child)
@@ -229,12 +229,12 @@ export const OfColorField = defineComponent({
         const hslInputs = h(
           'div',
           { class: 'color-picker-input' },
-          prepareChildren(hslLabels)
+          prepareChildren(hslLabels),
         )
         const rgbInputs = h(
           'div',
           { class: 'color-picker-input' },
-          prepareChildren(rgbLabels)
+          prepareChildren(rgbLabels),
         )
 
         const choseColorInputs: any = {
@@ -280,7 +280,7 @@ export const OfColorField = defineComponent({
           }),
           switcher,
           colorsInput(),
-        ])
+        ]),
       )
     }
     const hooks = {
@@ -332,8 +332,8 @@ export const OfColorField = defineComponent({
           val
             ? (rgbNew[label] = val)
             : directional == 'up'
-            ? rgbNew[label]++
-            : rgbNew[label]--
+              ? rgbNew[label]++
+              : rgbNew[label]--
           break
       }
 
@@ -353,7 +353,7 @@ export const OfColorField = defineComponent({
             ref: elt,
             ...hooks,
           },
-          [compColor.value.hex]
+          [compColor.value.hex],
         ),
       prepend: () =>
         h(
@@ -364,7 +364,7 @@ export const OfColorField = defineComponent({
               backgroundColor: compColor.value.hex,
             },
           },
-          h('div', { class: 'of-color-swatch-border' })
+          h('div', { class: 'of-color-swatch-border' }),
         ),
     }
 

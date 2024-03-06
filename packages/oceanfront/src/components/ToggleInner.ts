@@ -28,7 +28,7 @@ export const ToggleInner = defineComponent({
       onBlur() {
         ctx.emit('blur')
       },
-      onVnodeMounted(vnode: VNode) {
+      onVueMounted(vnode: VNode) {
         ctx.emit('inputMounted', vnode)
       },
     }
@@ -45,7 +45,7 @@ export const ToggleInner = defineComponent({
               for: props.inputId,
               onClick: (evt: MouseEvent) => evt.stopPropagation(),
             },
-            [inputLabel]
+            [inputLabel],
           )
         : undefined
       const inner = [
@@ -76,16 +76,16 @@ export const ToggleInner = defineComponent({
                     h('div', {
                       class: ['of-switch-thumb', { outside: !props.outside }],
                     }),
-                  ]
+                  ],
                 )
               : ctx.slots.icon
-              ? ctx.slots.icon(props.checked)
-              : h(OfIcon, {
-                  class: 'of-toggle-icon',
-                  name: icon.value,
-                  scale: props.scale || 'input',
-                }),
-          ]
+                ? ctx.slots.icon(props.checked)
+                : h(OfIcon, {
+                    class: 'of-toggle-icon',
+                    name: icon.value,
+                    scale: props.scale || 'input',
+                  }),
+          ],
         ),
       ]
       if (label) inner.push(label)
@@ -95,7 +95,7 @@ export const ToggleInner = defineComponent({
           {
             class: 'of-toggle-wrapper',
           },
-          inner
+          inner,
         ),
       ]
     }

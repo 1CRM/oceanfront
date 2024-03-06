@@ -4,8 +4,8 @@
     role="menu"
     class="of-menu of-datepicker-popup of--elevated-1"
     :class="{ 'with-time': withTime, 'with-date': withDate }"
-    @vnodeMounted="mounted"
-    @vnodeUnmounted="unmounted"
+    @vueMounted="mounted"
+    @vueUnmounted="unmounted"
   >
     <div class="of-date-picker-title" v-if="withDate && !withoutTitle">
       {{ title }}
@@ -38,7 +38,7 @@
           size="4"
           maxlength="4"
           :onblur="() => editYear(false)"
-          :onVnodeMounted="focusYearInput"
+          :onVueMounted="focusYearInput"
           :onkeydown="yearInputHandler"
           :value="selMonthStart.getFullYear()"
         />

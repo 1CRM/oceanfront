@@ -25,6 +25,7 @@
     },
     "demo": {
       "cache": false,
+      "persistent": true,
       "dependsOn": ["build-dev"],
       "outputs": []
     }

@@ -40,7 +40,7 @@ export const OfRadioField = defineComponent({
       },
       {
         immediate: true,
-      }
+      },
     )
     const items: any = computed(() => {
       if (typeof props.items === 'string' || Array.isArray(props.items)) {
@@ -105,8 +105,8 @@ export const OfRadioField = defineComponent({
                 scale: props.scale,
                 ...hooks,
               },
-              { icon: ctx.slots.icon }
-            )
+              { icon: ctx.slots.icon },
+            ),
           ),
         ])
       },

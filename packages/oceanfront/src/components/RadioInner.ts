@@ -26,7 +26,7 @@ export const RadioInner = defineComponent({
       onBlur() {
         ctx.emit('blur')
       },
-      onVnodeMounted(vnode: VNode) {
+      onVueMounted(vnode: VNode) {
         ctx.emit('inputMounted', vnode)
       },
     }
@@ -43,7 +43,7 @@ export const RadioInner = defineComponent({
               for: props.inputId,
               onClick: (evt: MouseEvent) => evt.stopPropagation(),
             },
-            [inputLabel]
+            [inputLabel],
           )
         : undefined
       const inner = [
@@ -78,7 +78,7 @@ export const RadioInner = defineComponent({
           {
             class: 'of-toggle-wrapper',
           },
-          inner
+          inner,
         ),
       ]
     }

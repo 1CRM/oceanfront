@@ -36,7 +36,7 @@ export const OfToggleField = defineComponent({
       },
       {
         immediate: true,
-      }
+      },
     )
 
     const elt = ref<HTMLInputElement | undefined>()
@@ -55,8 +55,8 @@ export const OfToggleField = defineComponent({
       return pi && supportedTypes.has(pi)
         ? pi
         : props.switch
-        ? 'switch'
-        : 'checkbox'
+          ? 'switch'
+          : 'checkbox'
     })
 
     const focus = () => {
@@ -105,7 +105,7 @@ export const OfToggleField = defineComponent({
             ariaLabel: fieldCtx.ariaLabel,
             ...hooks,
           },
-          { icon: ctx.slots.icon }
+          { icon: ctx.slots.icon },
         )
       },
     }

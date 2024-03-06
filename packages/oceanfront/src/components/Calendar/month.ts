@@ -73,7 +73,7 @@ export default defineComponent({
       return getEventsOfDay(
         this.parsedEvents,
         getDayIdentifier(toTimestamp(day)),
-        'ignore'
+        'ignore',
       ).map((e) => uniqEvent(e, { category: '', date: day }))
     },
     hideDate(date: Date) {
@@ -96,7 +96,7 @@ export default defineComponent({
           class: 'day-title',
           tabindex: slot ? '0' : undefined,
         },
-        content
+        content,
       )
     },
     renderMoreLink(count: number, day: Date, top: number) {
@@ -120,7 +120,7 @@ export default defineComponent({
             top: '' + top + 'px',
           },
         },
-        slot ? slot(count) : `${count} more`
+        slot ? slot(count) : `${count} more`,
       )
     },
     renderRowDayEvent(e: InternalEvent, idx: number) {
@@ -162,8 +162,8 @@ export default defineComponent({
           },
         },
         this.renderSlot('allday-event-content', { event: e }, () =>
-          h('strong', e.name)
-        )
+          h('strong', e.name),
+        ),
       )
     },
     renderRowDay(day: MonthGridCell) {
@@ -210,10 +210,10 @@ export default defineComponent({
                 this.renderMoreLink(
                   more,
                   day.date,
-                  events.length * this.eventHeightNumber
+                  events.length * this.eventHeightNumber,
                 ),
               ]),
-            ]
+            ],
       )
     },
     renderRow(rowDays: MonthGridCell[], weekNumber: number) {
@@ -236,7 +236,7 @@ export default defineComponent({
               }
             },
           },
-          wnSlot ? wnSlot(wn) : wn
+          wnSlot ? wnSlot(wn) : wn,
         ),
         rowDays.map(this.renderRowDay),
       ])
@@ -246,7 +246,7 @@ export default defineComponent({
       const wd = fm.getDay() || 7
       const firstDayMonth = addDays(
         fm,
-        this.weekStartLocale - (wd >= this.weekStartLocale ? wd : wd + 7)
+        this.weekStartLocale - (wd >= this.weekStartLocale ? wd : wd + 7),
       )
       const style = this.fixedRowHeight
         ? {
@@ -271,8 +271,8 @@ export default defineComponent({
               h(
                 'div',
                 { class: 'of-calendar-day-title' },
-                this.renderWeekDay(weekDay)
-              )
+                this.renderWeekDay(weekDay),
+              ),
             )
           }),
         ]),
@@ -292,7 +292,7 @@ export default defineComponent({
           e.preventDefault()
         },
       },
-      [this.header(), this.renderGrid(), this.footer()]
+      [this.header(), this.renderGrid(), this.footer()],
     )
   },
 })

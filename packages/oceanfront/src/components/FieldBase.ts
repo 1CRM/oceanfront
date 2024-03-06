@@ -25,7 +25,7 @@ import { OfOverlay } from './Overlay'
 const renderSlot = (
   container: Renderable[],
   slot?: () => Renderable | undefined,
-  outer?: string
+  outer?: string,
 ): void => {
   if (slot) {
     let children = slot()
@@ -38,7 +38,7 @@ const renderSlot = (
 
 const calcPadding = (
   node: VNode,
-  state: { listen: PositionObserver; watch?: WatchStopHandle }
+  state: { listen: PositionObserver; watch?: WatchStopHandle },
 ) => {
   state.listen.disconnect()
   state.watch?.()
@@ -98,7 +98,7 @@ const makeDragIn = (spec: FieldDragIn, flag: Ref<boolean>) => {
 }
 
 const parseDimension = (
-  size?: number | string
+  size?: number | string,
 ): { length: number; unit: string } | null => {
   if (size && !isNaN(size as number)) {
     return { length: size as number, unit: 'ch' }
@@ -134,7 +134,7 @@ export const OfFieldBase = defineComponent({
       return props.record || recordMgr.getCurrentRecord() || undefined
     })
     const metadata = computed(() =>
-      props.name ? record.value?.metadata?.[props.name] : null
+      props.name ? record.value?.metadata?.[props.name] : null,
     )
 
     const dragOver = ref(false)
@@ -168,9 +168,9 @@ export const OfFieldBase = defineComponent({
       onMousedown(_evt: MouseEvent) {
         // ctx.emit('mousedown', evt)
       },
-      onVnodeMounted: checkPad,
-      onVnodeUpdated: checkPad,
-      onVnodeUnmounted: checkPad,
+      onVueMounted: checkPad,
+      onVueUpdated: checkPad,
+      onVueUnmounted: checkPad,
     }
 
     return () => {
@@ -213,17 +213,17 @@ export const OfFieldBase = defineComponent({
         const label = ctx.slots.label
           ? ctx.slots.label()
           : (labelPosition.value !== 'none' || required.value) &&
-            labelPosition.value !== 'input' &&
-            labelText
-          ? h(
-              'label',
-              {
-                class: 'of-field-label',
-                /*, for: render.inputId: triggering duplicate click events */
-              },
-              [labelText, asterisk]
-            )
-          : undefined
+              labelPosition.value !== 'input' &&
+              labelText
+            ? h(
+                'label',
+                {
+                  class: 'of-field-label',
+                  /*, for: render.inputId: triggering duplicate click events */
+                },
+                [labelText, asterisk],
+              )
+            : undefined
         const cls = [
           'of-field ',
           {
@@ -273,15 +273,15 @@ export const OfFieldBase = defineComponent({
           (interactive.value
             ? ctx.slots.interactiveContent
             : ctx.slots.fixedContent
-            ? () =>
-                h(
-                  'div',
-                  {
-                    class: 'of-field-content-text',
-                  },
-                  ctx.slots.fixedContent?.()
-                )
-            : ctx.slots.interactiveContent)
+              ? () =>
+                  h(
+                    'div',
+                    {
+                      class: 'of-field-content-text',
+                    },
+                    ctx.slots.fixedContent?.(),
+                  )
+              : ctx.slots.interactiveContent)
 
         const fieldInner: VNode[] = []
 
@@ -304,7 +304,7 @@ export const OfFieldBase = defineComponent({
               onBlur: overlayBlur,
               sticky: props.sticky,
             },
-            overlay
+            overlay,
           )
         }
         const children = [
@@ -330,10 +330,10 @@ export const OfFieldBase = defineComponent({
                 },
                 label && labelPosition.value === 'frame'
                   ? h('div', { class: 'of-field-header-label' }, label)
-                  : undefined
+                  : undefined,
               ),
               h('div', { class: 'of-field-body' }, inner),
-            ]
+            ],
           ),
           h('div', { class: 'of-field-caption' }), // FIXME support custom slot
           overlay,
@@ -348,7 +348,7 @@ export const OfFieldBase = defineComponent({
             ...handlers,
             ...dragIn?.handlers,
           },
-          children
+          children,
         )
       } catch (e) {
         console.error(e)

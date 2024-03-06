@@ -223,7 +223,7 @@ export class NumberFormatter implements TextFormatter {
   applyOptions(
     textValue: string,
     selStart: number,
-    unformat: any
+    unformat: any,
   ): { textValue: string; selStart: number } {
     const fmtOpts = this.formatterOptions(true)
     const { seps } = unformat

@@ -29,7 +29,9 @@ export const OfField = defineComponent({
       )
     })
     const metadata = computed(() =>
-      ctx.attrs.name ? record.value?.metadata?.[ctx.attrs.name as string] : null
+      ctx.attrs.name
+        ? record.value?.metadata?.[ctx.attrs.name as string]
+        : null,
     )
 
     watch(
@@ -50,7 +52,7 @@ export const OfField = defineComponent({
         }
         comp.value = found as DefineComponent
       },
-      { immediate: true }
+      { immediate: true },
     )
 
     return () => {
@@ -58,7 +60,7 @@ export const OfField = defineComponent({
         ? h(
             comp.value,
             extendReactive(ctx.attrs, { format, type: type_ }),
-            ctx.slots
+            ctx.slots,
           )
         : null
     }

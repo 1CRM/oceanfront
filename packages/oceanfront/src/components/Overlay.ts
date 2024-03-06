@@ -117,7 +117,7 @@ export const OfOverlay = defineComponent({
       if (checkFocused(outer)) return
       // FIXME look for [autofocus] or [data-autofocus]?
       const findFocus = outer.querySelector(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
       )
       ;((findFocus as HTMLElement) || outer).focus()
       overlayStack.push(outer)
@@ -158,14 +158,14 @@ export const OfOverlay = defineComponent({
                 parentRect.left -
                 outerRect.width -
                 rightOffset,
-              0
-            ) + 'px'
+              0,
+            ) + 'px',
           )
           outer.style.setProperty('padding-right', '0')
         } else {
           outer.style.setProperty(
             '--overlay-dyn-margin-left',
-            Math.max(targetRect.left + parentRect.left - offsetWidth, 0) + 'px'
+            Math.max(targetRect.left + parentRect.left - offsetWidth, 0) + 'px',
           )
           outer.style.removeProperty('padding-right')
         }
@@ -173,13 +173,13 @@ export const OfOverlay = defineComponent({
           outer.style.setProperty('position', 'absolute')
           outer.style.setProperty(
             'top',
-            `${targetRect.y + window.scrollY + targetRect.height - 20}px`
+            `${targetRect.y + window.scrollY + targetRect.height - 20}px`,
           )
           outer.style.setProperty('--overlay-dyn-pad-top', '0')
         } else {
           outer.style.setProperty(
             '--overlay-dyn-pad-top',
-            Math.max(targetRect.bottom, 0) + 'px'
+            Math.max(targetRect.bottom, 0) + 'px',
           )
         }
       })
@@ -207,13 +207,13 @@ export const OfOverlay = defineComponent({
           target.value = null
         }
         updateState()
-      }
+      },
     )
     watch(
       () => layout.windowRect,
       (_) => {
         nextTick(reposition)
-      }
+      },
     )
 
     const hasTint = ref(false)
@@ -236,7 +236,7 @@ export const OfOverlay = defineComponent({
             .getComputedStyle(target.value)
             .getPropertyValue('--of-tint-name')
         tintClass.value = `of--tint-${tintName}`
-      }
+      },
     )
 
     return () => {
@@ -261,8 +261,8 @@ export const OfOverlay = defineComponent({
           disabled: !portalTo.value,
           to: portalTo.value,
           ref: portal,
-          onVnodeMounted: updateState,
-          onVnodeBeforeUnmount: () => {
+          onVueMounted: updateState,
+          onVueBeforeUnmount: () => {
             bind(false)
             if (focused) removeFromStack(elt.value)
           },
@@ -318,14 +318,14 @@ export const OfOverlay = defineComponent({
                         : ctx.slots.default?.({
                             active: props.active,
                             state: state.value,
-                          })
+                          }),
                     ),
-                  ]
+                  ],
                 ),
               ],
-            }
+            },
           ),
-        ]
+        ],
       )
     }
   },

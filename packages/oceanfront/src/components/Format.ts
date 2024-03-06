@@ -16,7 +16,7 @@ export const OfFormat = defineComponent({
     const formatter = computed(() =>
       props.type
         ? formatMgr.getTextFormatter(props.type, props.options)
-        : undefined
+        : undefined,
     )
     return () => {
       const fmt = formatter.value

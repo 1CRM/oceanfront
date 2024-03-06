@@ -67,7 +67,7 @@ export const OfTextField = defineComponent({
         props.type || props.inputType,
         props.formatOptions,
         fieldCtx.name,
-        props.record
+        props.record,
       )
     })
     const initialValue = computed(() => {
@@ -119,7 +119,7 @@ export const OfTextField = defineComponent({
       ([val, fmt], _) => updateValue(val, fmt),
       {
         immediate: true,
-      }
+      },
     )
 
     const elt = ref<HTMLInputElement | undefined>()
@@ -134,7 +134,7 @@ export const OfTextField = defineComponent({
       return id
     })
     const multiline = computed(
-      () => !!(fieldCtx.fieldType === 'textarea' || formatter.value?.multiline)
+      () => !!(fieldCtx.fieldType === 'textarea' || formatter.value?.multiline),
     )
     const inputType = computed(() => {
       const fmt = formatter.value
@@ -364,7 +364,7 @@ export const OfTextField = defineComponent({
           if (!itemsOpened.value) openItemsPopup()
         }
       },
-      onVnodeMounted(vnode: VNode) {
+      onVueMounted(vnode: VNode) {
         elt.value = vnode.el as HTMLInputElement
       },
     }

@@ -2,7 +2,7 @@ import { hasOverlap, CalendarEventsGroup, Column } from '..'
 
 export default function layout(
   group: CalendarEventsGroup,
-  overlapThreshold: number
+  overlapThreshold: number,
 ): void {
   const columns: Column[] = []
   let lastEnd: number | undefined
@@ -77,19 +77,19 @@ export default function layout(
               if (p2.columnAdjust < 1) {
                 minAdjust = Math.min(
                   minAdjust,
-                  p2.columnAdjust - p2.columnAdjust + adjustDelta - 2
+                  p2.columnAdjust - p2.columnAdjust + adjustDelta - 2,
                 )
                 break columns
               } else {
                 columnMinAdjust = Math.min(
                   columnMinAdjust,
-                  p2.columnAdjust + adjustDelta - 2
+                  p2.columnAdjust + adjustDelta - 2,
                 )
               }
             } else {
               columnMinAdjust = Math.min(
                 columnMinAdjust,
-                p2.columnAdjust + adjustDelta - 1
+                p2.columnAdjust + adjustDelta - 1,
               )
             }
           }

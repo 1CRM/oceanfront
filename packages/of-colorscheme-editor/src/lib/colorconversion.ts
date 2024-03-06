@@ -30,7 +30,7 @@ export type OKLAB = { l: number; a: number; b: number }
 function rgb_to_array(
   r: number | RGB | ThreeNumbers,
   g?: number,
-  b?: number
+  b?: number,
 ): ThreeNumbers {
   if (Array.isArray(r)) {
     return r
@@ -44,7 +44,7 @@ function rgb_to_array(
 function hsl_to_array(
   h: number | HSL | ThreeNumbers,
   s?: number,
-  l?: number
+  l?: number,
 ): ThreeNumbers {
   if (Array.isArray(h)) {
     return h
@@ -58,7 +58,7 @@ function hsl_to_array(
 function hsv_to_array(
   h: number | HSV | ThreeNumbers,
   s?: number,
-  v?: number
+  v?: number,
 ): ThreeNumbers {
   if (Array.isArray(h)) {
     return h
@@ -72,7 +72,7 @@ function hsv_to_array(
 function lab_to_array(
   l: number | OKLAB | ThreeNumbers,
   a?: number,
-  b?: number
+  b?: number,
 ): ThreeNumbers {
   if (Array.isArray(l)) {
     return l
@@ -89,7 +89,7 @@ export function rgb_to_hsl_a(r: number, g: number, b: number): ThreeNumbers
 export function rgb_to_hsl_a(
   r: number | RGB | ThreeNumbers,
   g?: number,
-  b?: number
+  b?: number,
 ): ThreeNumbers {
   ;[r, g, b] = rgb_to_array(r, g, b)
   r /= 255
@@ -129,7 +129,7 @@ export function rgb_to_hsl(r: number, g: number, b: number): HSL
 export function rgb_to_hsl(
   r: number | RGB | ThreeNumbers,
   g?: number,
-  b?: number
+  b?: number,
 ): HSL {
   const arr = rgb_to_hsl_a(rgb_to_array(r, g, b))
   return { h: arr[0], s: arr[1], l: arr[2] }
@@ -141,7 +141,7 @@ export function hsl_to_rgb_a(h: number, s: number, l: number): ThreeNumbers
 export function hsl_to_rgb_a(
   h: number | HSL | ThreeNumbers,
   s?: number,
-  l?: number
+  l?: number,
 ): ThreeNumbers {
   ;[h, s, l] = hsl_to_array(h, s, l)
   let r, g, b
@@ -174,7 +174,7 @@ export function hsl_to_rgb(h: number, s: number, l: number): RGB
 export function hsl_to_rgb(
   h: number | HSL | ThreeNumbers,
   s?: number,
-  l?: number
+  l?: number,
 ): RGB {
   const arr = hsl_to_rgb_a(hsl_to_array(h, s, l))
   return { r: arr[0], g: arr[1], b: arr[2] }
@@ -186,7 +186,7 @@ export function rgb_to_hsv_a(r: number, g: number, b: number): ThreeNumbers
 export function rgb_to_hsv_a(
   r: number | ThreeNumbers | RGB,
   g?: number,
-  b?: number
+  b?: number,
 ): ThreeNumbers {
   ;[r, g, b] = rgb_to_array(r, g, b)
   ;(r = r / 255), (g = g / 255), (b = b / 255)
@@ -225,7 +225,7 @@ export function hsv_to_rgb_a(h: number, s: number, v: number): ThreeNumbers
 export function hsv_to_rgb_a(
   h: number | HSV | ThreeNumbers,
   s?: number,
-  v?: number
+  v?: number,
 ): ThreeNumbers {
   let r: number, g: number, b: number
   ;[h, s, v] = hsv_to_array(h, s, v)
@@ -277,7 +277,7 @@ export function hsv_to_rgb(h: number, s: number, v: number): RGB
 export function hsv_to_rgb(
   h: number | HSV | ThreeNumbers,
   s?: number,
-  v?: number
+  v?: number,
 ): RGB {
   const rgb = hsv_to_rgb_a(hsv_to_array(h, s, v))
   return { r: rgb[0], g: rgb[1], b: rgb[2] }
@@ -298,12 +298,12 @@ export function linear_srgb_to_oklab_a(rgb: ThreeNumbers): ThreeNumbers
 export function linear_srgb_to_oklab_a(
   r: number,
   g: number,
-  b: number
+  b: number,
 ): ThreeNumbers
 export function linear_srgb_to_oklab_a(
   r: number | ThreeNumbers | RGB,
   g?: number,
-  b?: number
+  b?: number,
 ): ThreeNumbers {
   ;[r, g, b] = rgb_to_array(r, g, b)
   const l = 0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b
@@ -327,7 +327,7 @@ export function linear_srgb_to_oklab(r: number, g: number, b: number): OKLAB
 export function linear_srgb_to_oklab(
   r: number | ThreeNumbers | RGB,
   g?: number,
-  b?: number
+  b?: number,
 ): OKLAB {
   const [l, a_, b_] = linear_srgb_to_oklab_a(rgb_to_array(r, g, b))
   return { l, a: a_, b: b_ }
@@ -338,12 +338,12 @@ export function oklab_to_linear_srgb_a(lab: OKLAB): ThreeNumbers
 export function oklab_to_linear_srgb_a(
   l: number,
   a: number,
-  b: number
+  b: number,
 ): ThreeNumbers
 export function oklab_to_linear_srgb_a(
   L: number | OKLAB | ThreeNumbers,
   a?: number,
-  b?: number
+  b?: number,
 ): ThreeNumbers {
   ;[L, a, b] = lab_to_array(L, a, b)
   const l_ = L + 0.3963377774 * a + 0.2158037573 * b
@@ -367,7 +367,7 @@ export function oklab_to_linear_srgb(L: number, a: number, b: number): RGB
 export function oklab_to_linear_srgb(
   L: number | OKLAB | ThreeNumbers,
   a?: number,
-  b?: number
+  b?: number,
 ): RGB {
   const [r, g, b_] = oklab_to_linear_srgb_a(lab_to_array(L, a, b))
   return { r, g, b: b_ }
@@ -479,7 +479,7 @@ export function find_cusp(a: number, b: number): [number, number] {
   // Convert to linear sRGB to find the first point where at least one of r,g or b >= 1:
   const rgb_at_max = oklab_to_linear_srgb_a(1, S_cusp * a, S_cusp * b)
   const L_cusp = Math.cbrt(
-    1 / Math.max(Math.max(rgb_at_max[0], rgb_at_max[1]), rgb_at_max[2])
+    1 / Math.max(Math.max(rgb_at_max[0], rgb_at_max[1]), rgb_at_max[2]),
   )
   const C_cusp = L_cusp * S_cusp
 
@@ -496,7 +496,7 @@ export function find_gamut_intersection(
   L1: number,
   C1: number,
   L0: number,
-  cusp?: [number, number]
+  cusp?: [number, number],
 ): number {
   if (!cusp) {
     // Find the cusp of the gamut triangle
@@ -588,7 +588,7 @@ export function find_gamut_intersection(
 export function get_ST_max(
   a: number,
   b: number,
-  cusp?: [number, number]
+  cusp?: [number, number],
 ): [number, number] {
   if (!cusp) {
     cusp = find_cusp(a, b)
@@ -673,8 +673,8 @@ export function get_Cs(L: number, a: number, b: number): ThreeNumbers {
       k *
       Math.sqrt(
         Math.sqrt(
-          1 / (1 / (C_a * C_a * C_a * C_a) + 1 / (C_b * C_b * C_b * C_b))
-        )
+          1 / (1 / (C_a * C_a * C_a * C_a) + 1 / (C_b * C_b * C_b * C_b)),
+        ),
       )
   }
 
@@ -695,7 +695,7 @@ export function okhsl_to_srgb_a(hsl: ThreeNumbers): ThreeNumbers
 export function okhsl_to_srgb_a(
   h: number | ThreeNumbers | HSL,
   s?: number,
-  l?: number
+  l?: number,
 ): ThreeNumbers {
   ;[h, s, l] = hsl_to_array(h, s, l)
   if (l == 1) {
@@ -747,7 +747,7 @@ export function okhsl_to_srgb(hsl: ThreeNumbers): RGB
 export function okhsl_to_srgb(
   h: number | ThreeNumbers | HSL,
   s?: number,
-  l?: number
+  l?: number,
 ): RGB {
   const rgb = okhsl_to_srgb_a(hsl_to_array(h, s, l))
   return { r: rgb[0], g: rgb[1], b: rgb[2] }
@@ -759,13 +759,13 @@ export function srgb_to_okhsl_a(rgb: ThreeNumbers): ThreeNumbers
 export function srgb_to_okhsl_a(
   r: number | ThreeNumbers | RGB,
   g?: number,
-  b?: number
+  b?: number,
 ): ThreeNumbers {
   ;[r, g, b] = rgb_to_array(r, g, b)
   const lab = linear_srgb_to_oklab_a(
     srgb_transfer_function_inv(r / 255),
     srgb_transfer_function_inv(g / 255),
-    srgb_transfer_function_inv(b / 255)
+    srgb_transfer_function_inv(b / 255),
   )
 
   const C = Math.sqrt(lab[1] * lab[1] + lab[2] * lab[2])
@@ -807,7 +807,7 @@ export function srgb_to_okhsl(rgb: ThreeNumbers): HSL
 export function srgb_to_okhsl(
   r: number | ThreeNumbers | RGB,
   g?: number,
-  b?: number
+  b?: number,
 ): HSL {
   const [h, s, l] = srgb_to_okhsl_a(rgb_to_array(r, g, b))
   return { h, s, l }
@@ -819,7 +819,7 @@ export function okhsv_to_srgb_a(hsv: HSV): ThreeNumbers
 export function okhsv_to_srgb_a(
   h: number | ThreeNumbers | HSV,
   s?: number,
-  v?: number
+  v?: number,
 ): ThreeNumbers {
   ;[h, s, v] = hsv_to_array(h, s, v)
   const a_ = Math.cos(2 * Math.PI * h)
@@ -852,7 +852,7 @@ export function okhsv_to_srgb_a(
 
   const rgb_scale = oklab_to_linear_srgb_a(L_vt, a_ * C_vt, b_ * C_vt)
   const scale_L = Math.cbrt(
-    1 / Math.max(rgb_scale[0], rgb_scale[1], rgb_scale[2], 0)
+    1 / Math.max(rgb_scale[0], rgb_scale[1], rgb_scale[2], 0),
   )
 
   // remove to see effect without rescaling
@@ -873,7 +873,7 @@ export function okhsv_to_srgb(hsv: HSV): RGB
 export function okhsv_to_srgb(
   h: number | ThreeNumbers | HSV,
   s?: number,
-  v?: number
+  v?: number,
 ): RGB {
   const [r, g, b] = okhsv_to_srgb_a(hsv_to_array(h, s, v))
   return { r, g, b }
@@ -885,13 +885,13 @@ export function srgb_to_okhsv_a(rgb: ThreeNumbers): ThreeNumbers
 export function srgb_to_okhsv_a(
   r: number | ThreeNumbers | RGB,
   g?: number,
-  b?: number
+  b?: number,
 ): ThreeNumbers {
   ;[r, g, b] = rgb_to_array(r, g, b)
   const lab = linear_srgb_to_oklab_a(
     srgb_transfer_function_inv(r / 255),
     srgb_transfer_function_inv(g / 255),
-    srgb_transfer_function_inv(b / 255)
+    srgb_transfer_function_inv(b / 255),
   )
 
   let C = Math.sqrt(lab[1] * lab[1] + lab[2] * lab[2])
@@ -916,7 +916,7 @@ export function srgb_to_okhsv_a(
 
   const rgb_scale = oklab_to_linear_srgb_a(L_vt, a_ * C_vt, b_ * C_vt)
   const scale_L = Math.cbrt(
-    1 / Math.max(rgb_scale[0], rgb_scale[1], rgb_scale[2], 0)
+    1 / Math.max(rgb_scale[0], rgb_scale[1], rgb_scale[2], 0),
   )
 
   L = L / scale_L
@@ -937,7 +937,7 @@ export function srgb_to_okhsv(rgb: ThreeNumbers): HSV
 export function srgb_to_okhsv(
   r: number | ThreeNumbers | RGB,
   g?: number,
-  b?: number
+  b?: number,
 ): HSV {
   const [h, s, v] = srgb_to_okhsv_a(rgb_to_array(r, g, b))
   return { h, s, v }
@@ -981,7 +981,7 @@ export function rgb_to_hex(rgb: ThreeNumbers): string
 export function rgb_to_hex(
   r: number | ThreeNumbers | RGB,
   g?: number,
-  b?: number
+  b?: number,
 ): string {
   ;[r, g, b] = rgb_to_array(r, g, b)
   function componentToHex(x: number): string {

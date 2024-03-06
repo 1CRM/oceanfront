@@ -10,7 +10,7 @@ export const calcOffset = (page: number, perPage: number): number => {
 
 export const calcTotalPages = function (
   recordsNum: number,
-  perPage: number
+  perPage: number,
 ): number {
   return Math.ceil(recordsNum / perPage)
 }

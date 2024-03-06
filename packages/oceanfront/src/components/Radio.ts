@@ -82,7 +82,7 @@ export const OfRadio = defineComponent({
           tabIndex: -1,
           ...handlers,
         },
-        content
+        content,
       )
     }
   },

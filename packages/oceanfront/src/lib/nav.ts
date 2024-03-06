@@ -100,7 +100,7 @@ export function reactiveNavGroup(): NavGroup {
       if (cmp == 4 || cmp == 16) return -1
       if (cmp == 2 || cmp == 8) return 1
       return 0
-    })
+    }),
   )
   const scan = computed(() => {
     let first
@@ -126,7 +126,7 @@ export function reactiveNavGroup(): NavGroup {
         const current = idx === scan.current
         if (item.isCurrent !== current) item.isCurrent = current
       }
-    }
+    },
   )
 
   return {

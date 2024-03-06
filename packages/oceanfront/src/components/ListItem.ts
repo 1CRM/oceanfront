@@ -47,7 +47,7 @@ export const OfListItem = defineComponent({
           focus: () => {
             elt.value?.focus?.()
           },
-        })
+        }),
       )
     }
     const handlers = {
@@ -64,7 +64,7 @@ export const OfListItem = defineComponent({
       () => props.active,
       (active) => {
         isCurrent.value = !!active
-      }
+      },
     )
 
     watch(
@@ -74,7 +74,7 @@ export const OfListItem = defineComponent({
           isFocused.value = true
           elt.value?.focus()
         }
-      }
+      },
     )
 
     const content = () => {
@@ -88,7 +88,7 @@ export const OfListItem = defineComponent({
         result.push(
           h(OfIcon, {
             name: expand.value ? 'expand up' : 'expand down',
-          })
+          }),
         )
       }
       return result
@@ -152,10 +152,10 @@ export const OfListItem = defineComponent({
                 h('div', { class: 'of--layer of--layer-bg' }),
                 h('div', { class: 'of--layer of--layer-brd' }),
                 content(),
-              ])
+              ]),
             )
           },
-        }
+        },
       )
     }
   },

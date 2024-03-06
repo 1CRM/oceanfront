@@ -197,7 +197,7 @@ export default defineComponent({
 
     const htmlFieldName: ComputedRef<string | undefined> = computed(() => {
       const htmlFieldExists = record.value?.value.hasOwnProperty(
-        `${props.name}_html`
+        `${props.name}_html`,
       )
       const name = props.name ? `${props.name}_html` : undefined
       return htmlFieldExists ? name : undefined
@@ -415,7 +415,7 @@ export default defineComponent({
       () => props.modelValue,
       (value: string) => {
         if (!record.value) updateContent(value)
-      }
+      },
     )
 
     watch(
@@ -425,7 +425,7 @@ export default defineComponent({
         ],
       (value: string) => {
         updateContent(value)
-      }
+      },
     )
 
     watch(
@@ -436,14 +436,14 @@ export default defineComponent({
           updateData()
         }
         dataUpdated.value = false
-      }
+      },
     )
 
     watch(
       () => isEditable.value,
       (value: boolean) => {
         editor.value.setEditable(value)
-      }
+      },
     )
 
     watch(
@@ -454,7 +454,7 @@ export default defineComponent({
         } else {
           editor.value.chain().focus().setFontFamily(value).run()
         }
-      }
+      },
     )
 
     watch(
@@ -465,14 +465,14 @@ export default defineComponent({
         } else {
           editor.value.chain().focus().setFontSize(`${value}px`).run()
         }
-      }
+      },
     )
 
     watch(
       () => colorValue.value,
       (value: string) => {
         editor.value.chain().setColor(value).run()
-      }
+      },
     )
 
     const coreExtensions = [
@@ -907,7 +907,7 @@ export default defineComponent({
         const sectionItems = items.filter(
           (item: ToolbarMenuItem) =>
             props.toolbarItems.length === 0 ||
-            props.toolbarItems.includes(item.name)
+            props.toolbarItems.includes(item.name),
         )
         if (result.length > 0 && sectionItems.length > 0) {
           result.push({
@@ -925,7 +925,7 @@ export default defineComponent({
     }
 
     const setFocus = (
-      position: FocusPosition | undefined = undefined
+      position: FocusPosition | undefined = undefined,
     ): void => {
       if (sourceMode.value) {
         focused.value = true

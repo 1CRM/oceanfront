@@ -38,26 +38,29 @@ const getLimit = (limits: any, name: string, type: string, mode: string) => {
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export const defaultPalletes = (colors: any, limits: any): any => {
-  return Object.keys(unref(colors ?? {})).reduce((acc, name) => {
-    const color = colors?.[name] ?? ''
-    acc[name] = {}
-    ;['light', 'dark'].forEach((mode) => {
-      const lLimit = getLimit(limits, name, 'lightness', mode)
-      const sLimit = getLimit(limits, name, 'saturation', mode)
-      acc[name][mode] = shades.reduce((acc, l) => {
-        const base = srgb_to_okhsl(hex_to_rgb(color) || { r: 0, g: 0, b: 0 })
-        base.l *= lLimit
-        base.s *= sLimit
-        base.l = l / 100
-        const cl = rgb_to_hex(okhsl_to_srgb(base))
-        return {
-          ...acc,
-          [l]: cl,
-        }
-      }, {} as any)
-    })
-    return acc
-  }, {} as { [k: string]: { [k: string]: string } })
+  return Object.keys(unref(colors ?? {})).reduce(
+    (acc, name) => {
+      const color = colors?.[name] ?? ''
+      acc[name] = {}
+      ;['light', 'dark'].forEach((mode) => {
+        const lLimit = getLimit(limits, name, 'lightness', mode)
+        const sLimit = getLimit(limits, name, 'saturation', mode)
+        acc[name][mode] = shades.reduce((acc, l) => {
+          const base = srgb_to_okhsl(hex_to_rgb(color) || { r: 0, g: 0, b: 0 })
+          base.l *= lLimit
+          base.s *= sLimit
+          base.l = l / 100
+          const cl = rgb_to_hex(okhsl_to_srgb(base))
+          return {
+            ...acc,
+            [l]: cl,
+          }
+        }, {} as any)
+      })
+      return acc
+    },
+    {} as { [k: string]: { [k: string]: string } },
+  )
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types

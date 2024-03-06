@@ -13,7 +13,7 @@ export const OfIcon = defineComponent({
   setup(props, ctx) {
     const mgr = useIcons()
     const icon = computed(() =>
-      mgr.resolveIcon(props.name, { effect: props.effect, type: props.type })
+      mgr.resolveIcon(props.name, { effect: props.effect, type: props.type }),
     )
     const size = computed(() => {
       let sz = props.scale
@@ -52,8 +52,8 @@ export const OfIcon = defineComponent({
         ctx.slots.default
           ? ctx.slots.default()
           : iconVal.svg
-          ? renderSvgIcon(iconVal.svg)
-          : iconVal.text
+            ? renderSvgIcon(iconVal.svg)
+            : iconVal.text,
       )
     }
   },

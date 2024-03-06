@@ -58,7 +58,7 @@ export const OfSelectField = defineComponent({
       },
       {
         immediate: true,
-      }
+      },
     )
 
     const elt = ref<HTMLElement | undefined>()
@@ -74,7 +74,7 @@ export const OfSelectField = defineComponent({
     })
     const opened = ref(false)
     const items = computed(() =>
-      transformItemsList(itemMgr, props.items, props.name, props.record)
+      transformItemsList(itemMgr, props.items, props.name, props.record),
     )
 
     const itemForValue = (value: any) => {
@@ -152,7 +152,7 @@ export const OfSelectField = defineComponent({
     const setValue = (
       val: any,
       _item?: any,
-      ev?: MouseEvent | KeyboardEvent
+      ev?: MouseEvent | KeyboardEvent,
     ) => {
       ev?.stopPropagation()
       ev?.preventDefault()
@@ -194,8 +194,8 @@ export const OfSelectField = defineComponent({
                   },
                 })
               : undefined,
-          ]
-        )
+          ],
+        ),
       )
     }
 
@@ -243,7 +243,7 @@ export const OfSelectField = defineComponent({
               ariaLabel: fieldCtx.ariaLabel ?? props.label,
               ...hooks,
             },
-            labels
+            labels,
           ),
         ]
       },

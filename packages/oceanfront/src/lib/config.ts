@@ -111,7 +111,7 @@ export class ConfigManager<T> {
     const cfg = config || useConfig()
     if (buildingConfig && buildingConfig !== cfg) {
       throw new Error(
-        'Cannot inject config manager while building another config'
+        'Cannot inject config manager while building another config',
       )
     }
     return computed(() => this.getCached(cfg))

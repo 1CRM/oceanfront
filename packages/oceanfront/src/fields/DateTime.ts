@@ -161,7 +161,7 @@ const defineField = (type: InputType, name: string, cls: string) =>
         },
         {
           immediate: true,
-        }
+        },
       )
 
       const clickOpen = (_evt?: MouseEvent) => {
@@ -226,7 +226,7 @@ const defineField = (type: InputType, name: string, cls: string) =>
                 ref: elt,
                 ...hooks,
               },
-              value
+              value,
             ),
           ]
         },
@@ -288,7 +288,7 @@ const defineField = (type: InputType, name: string, cls: string) =>
 export const OfDatetimeField = defineField(
   'datetime',
   'OfDatetimeField',
-  'of-datetime-field'
+  'of-datetime-field',
 )
 export const OfDateField = defineField('date', 'OfDateField', 'of-date-field')
 export const OfTimeField = defineField('time', 'OfTimeField', 'of-time-field')

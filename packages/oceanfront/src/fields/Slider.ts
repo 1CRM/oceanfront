@@ -67,7 +67,7 @@ export const OfSliderField = defineComponent({
       },
       {
         immediate: true,
-      }
+      },
     )
 
     const fixValue = (val: number) => {
@@ -155,7 +155,7 @@ export const OfSliderField = defineComponent({
         startX = evt.pageX
         startVal = fixValue(
           ((startX - dims.left) * opts.value.delta) / dims.width +
-            opts.value.min
+            opts.value.min,
         )
         pendingValue.value = startVal
         document.addEventListener('mousemove', handleMove)
@@ -185,7 +185,7 @@ export const OfSliderField = defineComponent({
               (evt as MouseEvent).pageX) -
               startX) *
               opts.value.delta) /
-              tw
+              tw,
         )
         setActiveTrack(thumbElt.value, trackProcessElt.value)
       }
@@ -200,13 +200,13 @@ export const OfSliderField = defineComponent({
 
     const setActiveTrack = (
       thumbElt: HTMLDivElement | undefined,
-      trackProcessElt: HTMLDivElement | undefined
+      trackProcessElt: HTMLDivElement | undefined,
     ) => {
       if (!thumbElt || !trackProcessElt) {
         return
       }
       let tpeWidth = Math.round(
-        (trackWidth.value / opts.value.delta) * pendingValue.value
+        (trackWidth.value / opts.value.delta) * pendingValue.value,
       )
       tpeWidth = tpeWidth - thumbElt.offsetWidth + thumbElt.offsetWidth * 0.7
       if (tpeWidth <= 0) tpeWidth = 0
@@ -250,7 +250,7 @@ export const OfSliderField = defineComponent({
               'of-slider': true,
               'of--focused': focused.value,
             },
-            onVnodeMounted: () => {
+            onVueMounted: () => {
               // watch is not triggered on first render
               nextTick(() => triggerRef(trackElt))
             },
@@ -279,8 +279,8 @@ export const OfSliderField = defineComponent({
                   ref: labelElt,
                   class: 'of-slider-label-container',
                 },
-                pendingValue.value
-              )
+                pendingValue.value,
+              ),
             ),
             h(
               'div',
@@ -291,9 +291,9 @@ export const OfSliderField = defineComponent({
               h('div', {
                 class: 'of-slider-track-process',
                 ref: trackProcessElt,
-              })
+              }),
             ),
-          ]
+          ],
         )
       },
     }

@@ -102,7 +102,7 @@ abstract class DateTimeFormatterBase implements TextFormatter {
       if (value !== null) {
         const fmt = Intl.DateTimeFormat(
           this.options.locale,
-          this.formatterOptions()
+          this.formatterOptions(),
         )
         textValue = this.formatLocale(fmt, value)
 
@@ -179,7 +179,7 @@ abstract class DateTimeFormatterBase implements TextFormatter {
   abstract formatPortable(date: Date): string
   abstract loadValue(
     modelValue?: string | Date | number | null,
-    dateOnly?: boolean
+    dateOnly?: boolean,
   ): Date | null
 }
 
@@ -231,11 +231,11 @@ export class DateTimeFormatter extends DateTimeFormatterBase {
       const options = super.formatterOptions()
       const tFmt = Intl.DateTimeFormat(
         this.options.locale,
-        TimeFormatter.adjustOptions(options, timeFormat)
+        TimeFormatter.adjustOptions(options, timeFormat),
       )
       const dFmt = Intl.DateTimeFormat(
         this.options.locale,
-        DateFormatter.adjustOptions(options, false)
+        DateFormatter.adjustOptions(options, false),
       )
       return (
         (dateFormat === ''
@@ -288,7 +288,7 @@ export class DateTimeFormatter extends DateTimeFormatterBase {
 export class DateFormatter extends DateTimeFormatterBase {
   static adjustOptions(
     options: Intl.DateTimeFormatOptions,
-    ignoreTimezone = true
+    ignoreTimezone = true,
   ): Intl.DateTimeFormatOptions {
     return {
       ...options,
@@ -357,7 +357,7 @@ export class DateFormatter extends DateTimeFormatterBase {
 export class TimeFormatter extends DateTimeFormatterBase {
   static adjustOptions(
     options: Intl.DateTimeFormatOptions,
-    timeFormat: string
+    timeFormat: string,
   ): Intl.DateTimeFormatOptions {
     const timeOptions: Intl.DateTimeFormatOptions = {
       hour: 'numeric',

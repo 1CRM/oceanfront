@@ -90,7 +90,7 @@ export const OfToggle = defineComponent({
           tabIndex: -1,
           ...handlers,
         },
-        content
+        content,
       )
     }
   },

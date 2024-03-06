@@ -59,7 +59,7 @@ export default defineComponent({
         currentHue.value = Math.round(
           ((left - barHandle.value.offsetWidth / 2) /
             (rect.width - barHandle.value.offsetWidth)) *
-            360
+            360,
         )
 
         emitChange()
@@ -70,14 +70,14 @@ export default defineComponent({
       () => props.hue,
       (hue: number) => {
         currentHue.value = hue
-      }
+      },
     )
 
     watch(
       () => currentHue.value,
       () => {
         updatePosition()
-      }
+      },
     )
 
     onMounted(() => {
@@ -147,9 +147,9 @@ export default defineComponent({
             },
             h('div', {
               class: 'hue__inner-handle',
-            })
-          )
-        )
+            }),
+          ),
+        ),
       )
     }
   },

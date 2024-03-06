@@ -38,7 +38,7 @@ function renderLink(
   link: Link,
   comp: ComponentInternalInstance,
   beforeNavigate: Function[],
-  ariaLabel: String | null
+  ariaLabel: String | null,
 ) {
   return h(
     'a',
@@ -60,7 +60,7 @@ function renderLink(
       },
       ...comp.attrs,
     },
-    comp.slots.default?.(link)
+    comp.slots.default?.(link),
   )
 }
 
@@ -118,8 +118,8 @@ export const OfLink = defineComponent({
                   link,
                   inst,
                   props.beforeNavigate,
-                  props.ariaLabel
-                ))) as any
+                  props.ariaLabel,
+                ))) as any,
           )
         } else {
           const link = defaultLink(props.href)

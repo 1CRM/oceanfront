@@ -10,7 +10,7 @@ export const transformItemsList = (
   mgr: ItemsState,
   source?: string | any[] | ItemList,
   name?: string,
-  record?: FormRecord
+  record?: FormRecord,
 ): ItemList => {
   const result: ItemList = {
     disabledKey: 'disabled',
@@ -49,7 +49,7 @@ export function makeItemList(items?: any[] | ItemList): ItemList {
 }
 
 export function makeItems(
-  items: String | Number | Number[] | String[] | Item[]
+  items: String | Number | Number[] | String[] | Item[],
 ): Item[] {
   if (typeof items === 'string' || typeof items === 'number') {
     return [

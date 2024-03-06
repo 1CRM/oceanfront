@@ -104,8 +104,8 @@
           width="100"
           height="100"
           title="24px scaled"
-          @vnodeMounted="draw"
-          @vnodeUpdated="draw"
+          @vueMounted="draw"
+          @vueUpdated="draw"
         ></canvas>
       </div>
     </of-config>

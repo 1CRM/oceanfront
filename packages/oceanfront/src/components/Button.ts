@@ -102,7 +102,7 @@ export const OfButton = defineComponent({
     const expand = h(
       'div',
       { class: 'of-button-expand' },
-      h(OfIcon, { name: 'select down' })
+      h(OfIcon, { name: 'select down' }),
     )
     const menuMouseEvts = {
       onMouseenter: () => {
@@ -143,12 +143,12 @@ export const OfButton = defineComponent({
       const iconContent = ctx.slots.icon
         ? ctx.slots.icon()
         : props.icon
-        ? h(
-            'div',
-            { class: 'of-button-icon' },
-            h(OfIcon, { class: 'button-icon', name: props.icon })
-          )
-        : undefined
+          ? h(
+              'div',
+              { class: 'of-button-icon' },
+              h(OfIcon, { class: 'button-icon', name: props.icon }),
+            )
+          : undefined
       const mainContent =
         ctx.slots.content || ctx.slots.default || props.label
           ? h(
@@ -158,8 +158,8 @@ export const OfButton = defineComponent({
                 ? ctx.slots.content()
                 : h(
                     'label',
-                    ctx.slots.default ? ctx.slots.default() : props.label
-                  )
+                    ctx.slots.default ? ctx.slots.default() : props.label,
+                  ),
             )
           : undefined
 
@@ -222,7 +222,7 @@ export const OfButton = defineComponent({
               ...menuMouseEvts,
               ...focusEvts,
             },
-            body
+            body,
           ),
           split && items
             ? h(
@@ -238,7 +238,7 @@ export const OfButton = defineComponent({
                   'aria-label': props.ariaLabel ?? props.label,
                   'aria-haspopup': true,
                 },
-                expand
+                expand,
               )
             : undefined,
           items
@@ -261,11 +261,11 @@ export const OfButton = defineComponent({
                     onBlur: onBlurList,
                     ...menuMouseEvts,
                   })
-                }
+                },
               )
             : undefined,
           h('div', { class: 'of--layer of--layer-state' }),
-        ]
+        ],
       )
     }
   },

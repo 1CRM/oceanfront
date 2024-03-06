@@ -31,7 +31,7 @@ export const OfFileField = defineComponent({
       },
       {
         immediate: true,
-      }
+      },
     )
     const elt = ref<HTMLInputElement | undefined>()
     const focused = ref(false)
@@ -90,7 +90,7 @@ export const OfFileField = defineComponent({
       onFocus(_evt: FocusEvent) {
         focused.value = true
       },
-      onVnodeMounted(vnode: VNode) {
+      onVueMounted(vnode: VNode) {
         elt.value = vnode.el as HTMLInputElement
       },
     }
@@ -130,7 +130,7 @@ export const OfFileField = defineComponent({
               for: inputId.value,
               onClick: (evt: MouseEvent) => evt.stopPropagation(),
             },
-            stateValue.value.name
+            stateValue.value.name,
           )
         } else {
           label = h(
@@ -144,7 +144,7 @@ export const OfFileField = defineComponent({
               for: inputId.value,
               onClick: (evt: MouseEvent) => evt.stopPropagation(),
             },
-            [props.placeholder || 'Attach a file']
+            [props.placeholder || 'Attach a file'],
           )
         }
         return h('div', { class: 'of-file-input' }, [

@@ -42,9 +42,9 @@ export default defineComponent({
                 today: date && sameDate(date, new Date()),
               },
             },
-            dayFmt?.format(date).textValue
+            dayFmt?.format(date).textValue,
           ),
-        ]
+        ],
       )
     },
   },

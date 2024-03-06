@@ -222,7 +222,7 @@ export const BaseFieldProps = {
 
 export function extendFieldFormat(
   format: FieldFormatProp | undefined,
-  props: Record<string, any>
+  props: Record<string, any>,
 ): Record<string, any> {
   if (typeof format === 'string' || typeof format === 'function') {
     // text format name or constructor
@@ -235,7 +235,7 @@ export function extendFieldFormat(
 export function makeFieldContext<C>(
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   props: any,
-  ctx: SetupContext<C>
+  ctx: SetupContext<C>,
 ): FieldContext {
   const themeOptions = useThemeOptions()
   const parseDensity = (density: string) => {
@@ -280,7 +280,7 @@ export function makeFieldContext<C>(
     return props.block
   })
   const metadata = computed(() =>
-    props.name ? record.value?.metadata?.[props.name] : null
+    props.name ? record.value?.metadata?.[props.name] : null,
   )
   const mode = computed(
     () =>
@@ -289,12 +289,12 @@ export function makeFieldContext<C>(
       (props.fixed || metadata.value?.fixed
         ? 'fixed'
         : props.disabled || metadata.value?.disabled
-        ? 'disabled'
-        : props.readonly || metadata.value?.readonly
-        ? 'readonly'
-        : props.locked || record.value?.locked
-        ? 'locked'
-        : 'editable')
+          ? 'disabled'
+          : props.readonly || metadata.value?.readonly
+            ? 'readonly'
+            : props.locked || record.value?.locked
+              ? 'locked'
+              : 'editable'),
   )
   const editable = computed(() => mode.value === 'editable')
   const interactive = computed(() => mode.value !== 'fixed')
@@ -306,14 +306,14 @@ export function makeFieldContext<C>(
       (fmt && typeof fmt === 'string'
         ? fmt
         : typeof fmt === 'object'
-        ? (fmt as any).fieldType || (fmt as any).type
-        : undefined)
+          ? (fmt as any).fieldType || (fmt as any).type
+          : undefined)
     )
   })
   const initialValue = computed(() =>
     props.name && record.value
       ? (record.value.initialValue || {})[props.name]
-      : props.initialValue
+      : props.initialValue,
   )
   const labelPosition = computed(() => {
     let p = props.labelPosition
@@ -330,13 +330,13 @@ export function makeFieldContext<C>(
   const inputLabel = computed(
     () =>
       props.inputLabel ??
-      (labelPosition.value === 'input' ? props.label : undefined)
+      (labelPosition.value === 'input' ? props.label : undefined),
   )
   // may inherit default value from context in future
   const value = computed(() =>
     props.name && record.value
       ? record.value.value[props.name]
-      : props.modelValue
+      : props.modelValue,
   )
 
   const fctx: FieldContext = proxyRefs({
@@ -395,7 +395,7 @@ const fieldRenderKey = Symbol('[oceanfront-field-render')
 export function provideFieldContext<C>(
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   props: any,
-  ctx: SetupContext<C>
+  ctx: SetupContext<C>,
 ): FieldContext {
   const fCtx = makeFieldContext(props, ctx)
   provide(fieldContextKey, fCtx)

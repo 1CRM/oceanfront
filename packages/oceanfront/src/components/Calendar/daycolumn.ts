@@ -35,14 +35,14 @@ function formatRange(mgr: FormatState, e: InternalEvent, withinDate: Date) {
     startTS.month,
     startTS.day,
     startTS.hours,
-    startTS.minutes
+    startTS.minutes,
   )
   const end = new Date(
     endTS.year,
     endTS.month,
     endTS.day,
     endTS.hours,
-    endTS.minutes
+    endTS.minutes,
   )
   const spansNoon = startTS.hours < 12 != endTS.hours < 12
   const opts: DateTimeFormatterOptions = {
@@ -141,7 +141,7 @@ export default defineComponent({
           day,
           true,
           this.ignoreCategories ? undefined : cat.category,
-          true
+          true,
         )
         const evs = this.groupAllDay
           ? dayEvents
@@ -179,7 +179,7 @@ export default defineComponent({
           forCategory,
           this.layoutFunc,
           threshold,
-          this.hoursInterval
+          this.hoursInterval,
         )
         dayEvents[cat.category] = groups
           .map((g) =>
@@ -188,7 +188,7 @@ export default defineComponent({
                 ...p,
                 event: { ...p.event, uniq: uniqEvent(p.event, cat) },
               }
-            })
+            }),
           )
           .flat(1)
       }
@@ -219,7 +219,7 @@ export default defineComponent({
     getEventIntervalRange(ts: Timestamp): number[] {
       const startTsId = getTimestampIdintifier(ts)
       const endTsId = getTimestampIdintifier(
-        toTimestamp(addMinutes(ts.date, 60 / this.numHourIntervals))
+        toTimestamp(addMinutes(ts.date, 60 / this.numHourIntervals)),
       )
       return [startTsId, endTsId]
     },
@@ -234,7 +234,7 @@ export default defineComponent({
         touches && touches[0] ? touches[0].clientY : mouseEvent.clientY
       const offsetY = clientY - bounds.top
       let minutes = Math.floor(
-        (offsetY / bounds.height) * (hours[1] - hours[0]) * 60
+        (offsetY / bounds.height) * (hours[1] - hours[0]) * 60,
       )
       minutes -= minutes % precision
       minutes += hours[0] * 60
@@ -271,7 +271,7 @@ export default defineComponent({
             }
           },
         },
-        this.renderSlot(slotName, slotArgs, () => cat.category)
+        this.renderSlot(slotName, slotArgs, () => cat.category),
       )
     },
     title() {
@@ -293,7 +293,7 @@ export default defineComponent({
     },
     allDayRowEvent(
       acc: { height: number; columns: any[] },
-      eventHeight: number
+      eventHeight: number,
     ) {
       return (e: CalendarAlldayEventPlacement) => {
         acc.height = Math.max(e.top, acc.height)
@@ -344,7 +344,7 @@ export default defineComponent({
               this.$emit('blur:day')
             },
           },
-          slot ? slot({ event: e.event }) : h('strong', e.event.name)
+          slot ? slot({ event: e.event }) : h('strong', e.event.name),
         )
       }
     },
@@ -370,7 +370,7 @@ export default defineComponent({
           ],
           ...this.allDaySelectingHandlers(cat.date),
         },
-        events.map(this.allDayRowEvent(acc, eventHeight))
+        events.map(this.allDayRowEvent(acc, eventHeight)),
       )
       if (!this.hideDate(cat.date)) acc.columns.push(vnode)
       return acc
@@ -460,7 +460,7 @@ export default defineComponent({
                     ? closeAllDay(id)
                     : null,
               },
-              titles[index]
+              titles[index],
             ),
             h(
               OfOverlay,
@@ -483,11 +483,11 @@ export default defineComponent({
                     onMouseenter: () => clearCloseTimer(id),
                     onMouseleave: () => closeAllDay(id),
                   },
-                  eventsNodes
+                  eventsNodes,
                 )
-              }
+              },
             ),
-          ]
+          ],
         )
       }
       const grouped =
@@ -511,10 +511,10 @@ export default defineComponent({
               class: 'of-calendar-gutter',
               style: this.groupAllDay ? 'height: inherit;' : '',
             },
-            this.allDayLabel()
+            this.allDayLabel(),
           ),
           this.groupAllDay ? grouped : columns,
-        ]
+        ],
       )
     },
     allDaySelectingHandlers(date: Date) {
@@ -562,7 +562,7 @@ export default defineComponent({
               'selection:change',
               this.selectionStart,
               this.selectionEnd,
-              this.selectionCategory
+              this.selectionCategory,
             )
           }
         },
@@ -581,7 +581,7 @@ export default defineComponent({
               'selection:change',
               this.selectionStart,
               this.selectionEnd,
-              this.selectionCategory
+              this.selectionCategory,
             )
           }
         },
@@ -594,7 +594,7 @@ export default defineComponent({
               'selection:end',
               this.selectionStart,
               this.selectionEnd,
-              this.selectionCategory
+              this.selectionCategory,
             )
             this.selecting = false
           }
@@ -667,8 +667,8 @@ export default defineComponent({
           this.renderSlot(
             'event-content',
             { event: finalEvent, brk, formattedRange },
-            () => [h('strong', finalEvent.name), separator, formattedRange]
-          )
+            () => [h('strong', finalEvent.name), separator, formattedRange],
+          ),
         )
       }
     },
@@ -682,7 +682,7 @@ export default defineComponent({
           (60 / numSubIntervals) * subIntervalNumber +
           startHour * 60
         const intervalTime = getTimestampIdintifier(
-          toTimestamp(addMinutes(theDayTS.date, minutes))
+          toTimestamp(addMinutes(theDayTS.date, minutes)),
         )
         return h('div', {
           class: {
@@ -702,14 +702,14 @@ export default defineComponent({
       const intervals = this.intervals().map((_, intervalNumber) => {
         const subIntevals = Array.from(
           { length: numSubIntervals },
-          this.dayRowInterval(cat, intervalNumber)
+          this.dayRowInterval(cat, intervalNumber),
         )
         return h(
           'div',
           {
             class: 'of-calendar-interval',
           },
-          subIntevals
+          subIntevals,
         )
       })
       const es =
@@ -723,7 +723,7 @@ export default defineComponent({
           class: ['of-calendar-day', weekDayCls],
           ...this.intervalSelectionHandlers(cat),
         },
-        [...intervals, ...events]
+        [...intervals, ...events],
       )
     },
     dayRow() {
@@ -731,8 +731,8 @@ export default defineComponent({
         h(
           'div',
           { class: 'of-calendar-interval' },
-          h('div', { class: 'of-calendar-interval-label' }, interval + ':00')
-        )
+          h('div', { class: 'of-calendar-interval-label' }, interval + ':00'),
+        ),
       )
       const days = (this.$props.categoriesList || []).map(this.dayRowCell)
       return h(
@@ -752,10 +752,10 @@ export default defineComponent({
             {
               class: 'of-calendar-gutter',
             },
-            intervals
+            intervals,
           ),
           days,
-        ]
+        ],
       )
     },
     header() {
@@ -797,7 +797,7 @@ export default defineComponent({
           this.dayRow(),
         ]),
         this.footer(),
-      ]
+      ],
     )
   },
 })

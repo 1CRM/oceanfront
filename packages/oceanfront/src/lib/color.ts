@@ -1,5 +1,5 @@
 export const hexToRgb = function (
-  color: string
+  color: string,
 ): { r: number; g: number; b: number; a?: number } | null {
   if (!color) {
     throw new TypeError('Invalid color value')
@@ -70,7 +70,7 @@ export const rgbToHex = function (color: {
 
 let colorCtx: CanvasRenderingContext2D
 export const loadColor = function (
-  color: string
+  color: string,
 ): { r: number; g: number; b: number; a?: number } | null {
   if (!color) return null
   const found = hexToRgb(color)

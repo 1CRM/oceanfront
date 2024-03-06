@@ -58,7 +58,7 @@ class IconManager {
 
   resolveIcon(
     name?: string,
-    options?: { effect?: string; type?: string }
+    options?: { effect?: string; type?: string },
   ): Icon | null {
     if (typeof name !== 'string') return null
     let result
@@ -209,8 +209,8 @@ export const renderSvgIcon = (icon: SvgIcon): VNode => {
         }
         if (alt) attrs.opacity = '0.3'
         return h('path', attrs)
-      })
-    )
+      }),
+    ),
   )
   if (mask.length) {
     nodes.unshift(
@@ -223,7 +223,7 @@ export const renderSvgIcon = (icon: SvgIcon): VNode => {
           fill: 'white',
         }),
         ...mask,
-      ])
+      ]),
     )
   }
   return h('svg', svgAttrs, nodes)

@@ -77,7 +77,7 @@ export const OfSelectPopup = defineComponent({
               active: !removing.value,
               onClick: () => (removing.value = false),
             },
-            () => lang.value.selectFieldAddItems
+            () => lang.value.selectFieldAddItems,
           ),
           h(
             OfButton,
@@ -86,9 +86,9 @@ export const OfSelectPopup = defineComponent({
               active: removing.value,
               onClick: () => (removing.value = true),
             },
-            () => lang.value.selectFieldRemoveItems
+            () => lang.value.selectFieldRemoveItems,
           ),
-        ])
+        ]),
       )
     }
 
@@ -133,7 +133,7 @@ export const OfSelectPopup = defineComponent({
     const setValue = (
       val: any,
       _item?: any,
-      ev?: MouseEvent | KeyboardEvent
+      ev?: MouseEvent | KeyboardEvent,
     ) => {
       ev?.stopPropagation()
       ev?.preventDefault()
@@ -154,7 +154,7 @@ export const OfSelectPopup = defineComponent({
           onClick: setValue,
           addSearch: props.addSearch,
         },
-        { header: () => addRemoveButtons() }
+        { header: () => addRemoveButtons() },
       )
     }
   },

@@ -15,7 +15,7 @@ export default defineComponent({
       },
       {
         default: () => this.$props.value.value,
-      }
+      },
     )
   },
 })

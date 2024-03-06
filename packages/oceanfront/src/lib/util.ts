@@ -110,7 +110,7 @@ export function extendReactive<T extends object, U extends object>(
 
 export function extractRefs<T extends object, K extends keyof T>(
   props: T,
-  names: K[]
+  names: K[],
 ): { [k in K]: ToRef<T[k]> } {
   const ret: any = {}
   if (names) {
@@ -124,7 +124,7 @@ export function extractRefs<T extends object, K extends keyof T>(
 export function restrictProps<T extends object, K extends keyof T>(
   base: T,
   names: K[],
-  ifDefined?: boolean
+  ifDefined?: boolean,
 ): { [k in K]: T[k] } {
   const props = new Set<any>(names)
   const limitProps = props.size > 0
@@ -146,7 +146,7 @@ export function restrictProps<T extends object, K extends keyof T>(
     },
     ownKeys(target: T): (string | symbol)[] {
       let result = Reflect.ownKeys(target).filter(
-        (k) => !limitProps || props.has(k)
+        (k) => !limitProps || props.has(k),
       )
       if (ifDefined) {
         result = result.filter((k) => (target as any)[k] !== undefined)
@@ -165,7 +165,7 @@ export function restrictProps<T extends object, K extends keyof T>(
 }
 
 export function definedProps<T extends object, K extends keyof T>(
-  base: T
+  base: T,
 ): { [k2 in K]: T[K] } {
   return new Proxy(base, {
     getOwnPropertyDescriptor(target: T, key: string) {
@@ -178,7 +178,7 @@ export function definedProps<T extends object, K extends keyof T>(
     },
     ownKeys(target: T): (string | symbol)[] {
       return Reflect.ownKeys(target).filter(
-        (k) => (target as any)[k] !== undefined
+        (k) => (target as any)[k] !== undefined,
       )
     },
   })
@@ -384,7 +384,7 @@ export type WatchPositionOpts = {
 }
 
 export const watchPosition = (
-  options?: WatchPositionOpts
+  options?: WatchPositionOpts,
 ): PositionObserver => {
   return new PositionObserverImpl(options)
 }
@@ -396,7 +396,7 @@ type throttleFunc<T> = {
 
 export const throttle = <T>(
   inteval: number,
-  handler: (input: T) => void
+  handler: (input: T) => void,
 ): throttleFunc<T> => {
   let timeout: number | null = null
   const func = (input: T) => {

@@ -23,7 +23,7 @@ export const addMinutes = (d: Date, minutes: number): Date => {
     d.getMonth(),
     d.getDate(),
     d.getHours(),
-    d.getMinutes() + minutes
+    d.getMinutes() + minutes,
   )
 }
 
@@ -100,7 +100,7 @@ export function prevMonth(date: Date): Date {
 
 export const monthGrid = (
   forDate?: Date,
-  weekStart?: number | string
+  weekStart?: number | string,
 ): MonthGridData => {
   const weekDays = [1, 2, 3, 4, 5, 6, 7]
   const monthStart = new Date(forDate?.valueOf() ?? new Date().valueOf())
