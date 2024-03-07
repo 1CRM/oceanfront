@@ -668,14 +668,15 @@ export default defineComponent({
       return item
     }
 
-    const checkItems = (item: any, selectedValues: Record<string, any>) => {
+    const checkItems = (item: any) => {
+      const selectedValues = rowsRecord.value.value
       item.selected =
         item.selected || (selectedValues && selectedValues[item.id])
           ? selectedValues[item.id]
           : !!(selectedValues && selectedValues[RowsSelectorValues.All])
       if (item.subitems?.length) {
         item.subitems.forEach((v: any, _i: number) => {
-          v = checkItems(v, selectedValues)
+          checkItems(v)
         })
       }
       return item
@@ -718,10 +719,10 @@ export default defineComponent({
     })
 
     watch(
-      [rows, rowsRecord],
-      ([newRows, newRowsRecord]) => {
+      rows,
+      (newRows) => {
         for (const row of newRows) {
-          checkItems(row, newRowsRecord.value)
+          checkItems(row)
         }
       },
       { deep: true },
