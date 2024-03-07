@@ -714,7 +714,6 @@ export default defineComponent({
           }
         }
       }
-      console.log(ids)
       return makeRecord(ids)
     })
 
