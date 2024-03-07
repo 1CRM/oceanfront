@@ -470,23 +470,6 @@ export default defineComponent({
       }
       return 0
     })
-    const orderAndCheck = (
-      item: any,
-      idx: number,
-      selectedValues: Record<string, any>,
-    ) => {
-      item.order = item.hasOwnProperty('order') ? item.order : idx
-      item.selected =
-        item.selected || (selectedValues && selectedValues[item.id])
-          ? selectedValues[item.id]
-          : !!(selectedValues && selectedValues[RowsSelectorValues.All])
-      if (item.subitems?.length) {
-        item.subitems.forEach((v: any, i: number) => {
-          v = orderAndCheck(v, i, selectedValues)
-        })
-      }
-      return item
-    }
 
     const fillListedRows = (
       item: any,
@@ -506,6 +489,7 @@ export default defineComponent({
         })
       }
     }
+
     const listedRows = computed(() => {
       let arr: any = []
       rows.value.map((v: any, i: number) => {
@@ -513,22 +497,7 @@ export default defineComponent({
       })
       return arr
     })
-    const rows = computed(() => {
-      const result = []
-      let count = perPage.value
-      let propItems: any = items.value
-      let selectedRecords = rowsRecord.value?.value
-      for (
-        let idx = iterStart.value;
-        count > 0 && idx < propItems.length;
-        idx++
-      ) {
-        let item: any = propItems[idx]
-        item = orderAndCheck(item, idx, selectedRecords)
-        result.push(item)
-      }
-      return result
-    })
+
     const outerId = computed(() => {
       return 'of-data-table-' + ++sysDataTableIndex
     })
@@ -688,6 +657,46 @@ export default defineComponent({
       showSelector(props.rowsSelector, rows.value),
     )
     const selectAll = computed(() => props.selectAll)
+
+    const orderItems = (item: any, idx: number) => {
+      item.order = item.hasOwnProperty('order') ? item.order : idx
+      if (item.subitems?.length) {
+        item.subitems.forEach((v: any, i: number) => {
+          v = orderItems(v, i)
+        })
+      }
+      return item
+    }
+
+    const checkItems = (item: any, selectedValues: Record<string, any>) => {
+      item.selected =
+        item.selected || (selectedValues && selectedValues[item.id])
+          ? selectedValues[item.id]
+          : !!(selectedValues && selectedValues[RowsSelectorValues.All])
+      if (item.subitems?.length) {
+        item.subitems.forEach((v: any, _i: number) => {
+          v = checkItems(v, selectedValues)
+        })
+      }
+      return item
+    }
+
+    const rows = computed(() => {
+      const result = []
+      let count = perPage.value
+      let propItems: any = items.value
+      for (
+        let idx = iterStart.value;
+        count > 0 && idx < propItems.length;
+        idx++
+      ) {
+        let item: any = propItems[idx]
+        item = orderItems(item, idx)
+        result.push(item)
+      }
+      return result
+    })
+
     const rowsRecord: ComputedRef<FormRecord> = computed(() => {
       let ids: any = {}
 
@@ -705,8 +714,20 @@ export default defineComponent({
           }
         }
       }
+      console.log(ids)
       return makeRecord(ids)
     })
+
+    watch(
+      [rows, rowsRecord],
+      ([newRows, newRowsRecord]) => {
+        for (const row of newRows) {
+          checkItems(row, newRowsRecord.value)
+        }
+      },
+      { deep: true },
+    )
+
     watch(
       () => rowsRecord.value.value,
       (val) => {
