@@ -40,7 +40,7 @@ const ColorSchemeEditor = defineComponent({
       (pallettes) => {
         ctx.emit('palletteUpdated', pallettes)
       },
-      { immediate: true }
+      { immediate: true },
     )
 
     const formatName = (name: string): string => {

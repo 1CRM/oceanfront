@@ -38,8 +38,8 @@
         <div class="column desc">
           Read-only fields are not editable, but do participate in the tab order
           and indicate the focus and hover states. There should be a visual
-          indicator of the <tt>readonly</tt> state. This state supercedes
-          <tt>locked</tt>.
+          indicator of the <code>readonly</code> state. This state supercedes
+          <code>locked</code>.
         </div>
       </div>
       <div class="row">
@@ -56,8 +56,8 @@
           Disabled fields are not editable, and generally indicate that a
           precondition for editing the field has not been met. A message
           indicating the reason should be included for accessibility and
-          clarity. The disabled state supercedes <tt>locked</tt> and
-          <tt>readonly</tt>.
+          clarity. The disabled state supercedes <code>locked</code> and
+          <code>readonly</code>.
         </div>
       </div>
       <div class="row">
@@ -67,7 +67,7 @@
         </div>
         <div class="column desc">
           Fixed fields are not editable or interactive. This state supercedes
-          <tt>locked</tt>, <tt>readonly</tt>, and <tt>disabled</tt>.
+          <code>locked</code>, <code>readonly</code>, and <code>disabled</code>.
         </div>
       </div>
       <div class="row">
@@ -81,8 +81,8 @@
           />
         </div>
         <div class="column desc">
-          The <tt>invalid</tt> state may be combined with any other states in
-          order to indicate that the current value of the field cannot be
+          The <code>invalid</code> state may be combined with any other states
+          in order to indicate that the current value of the field cannot be
           accepted.
         </div>
       </div>

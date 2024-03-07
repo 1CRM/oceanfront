@@ -178,7 +178,7 @@ export default defineComponent({
         selectedItem.value = false
         Object.assign(rowItem, { item, columns })
       },
-      { deep: true }
+      { deep: true },
     )
     const checkSubitemDepth = (elem: any) => {
       if (!elem.subitems) {
@@ -209,7 +209,7 @@ export default defineComponent({
     const globalIdx = computed(() => {
       if (!props.dragInfo?.listedRows) return null
       return props.dragInfo?.listedRows.findIndex(
-        (v: any) => v.coordIndex === currentCords.value?.join('-')
+        (v: any) => v.coordIndex === currentCords.value?.join('-'),
       )
     })
     const prevItem = computed(() => {
@@ -274,7 +274,7 @@ export default defineComponent({
     watch(
       () => item.value,
       () => ctx.emit('update:row', item.value),
-      { immediate: false, deep: true }
+      { immediate: false, deep: true },
     )
     const setChildCoords = (idx: number) => {
       const arr =
@@ -342,7 +342,7 @@ export default defineComponent({
       isOnTop: boolean,
       nestedDepth: number,
       index: null | [],
-      currentDepth: null | number
+      currentDepth: null | number,
     ) => {
       let coords: any = []
       let fixArrowNext = !isOnTop
@@ -480,7 +480,7 @@ export default defineComponent({
         if (event.type === 'touchmove') {
           element = document.elementFromPoint(
             props.dragInfo?.tableLeft + 55,
-            (event as TouchEvent).changedTouches[0].clientY
+            (event as TouchEvent).changedTouches[0].clientY,
           )
           if (!element?.classList?.contains('of--align-start')) {
             return
@@ -500,13 +500,13 @@ export default defineComponent({
         let ofy =
           (event as MouseEvent).offsetY ??
           Math.floor(
-            ((event as TouchEvent).changedTouches[0].clientY - top) % height
+            ((event as TouchEvent).changedTouches[0].clientY - top) % height,
           )
 
         ofy = ofy < 0 ? height + ofy : ofy
         let nestedDepth = Math.min(
           Math.floor((pagex - props.dragInfo?.tableLeft - 55) / 20),
-          props.dragInfo?.nestedLimit - 1
+          props.dragInfo?.nestedLimit - 1,
         )
         nestedDepth = Math.max(0, nestedDepth)
         const isOnTop = ofy < height / 2
@@ -514,7 +514,7 @@ export default defineComponent({
           isOnTop,
           nestedDepth,
           index,
-          currentDepth
+          currentDepth,
         )
         if (coords.length) {
           ctx.emit('setCoords', {

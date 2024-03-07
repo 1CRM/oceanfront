@@ -180,7 +180,7 @@ const OfOptionList = defineComponent({
       () => props.focus,
       (val) => {
         if (val) focusFirstItem()
-      }
+      },
     )
 
     const onKeyPress = (evt: KeyboardEvent) => {
@@ -260,7 +260,7 @@ const OfOptionList = defineComponent({
       if (filterItems.value.length == 0) return
 
       const selected = filterItems.value.findIndex(
-        (item) => item.selected && item.selected === true
+        (item) => item.selected && item.selected === true,
       )
 
       if (!ignoreSelected && selected !== -1) {

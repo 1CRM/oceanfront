@@ -309,7 +309,7 @@ export default defineComponent({
           }
         }
       },
-      { immediate: true }
+      { immediate: true },
     )
     const samePosition = (itemIndexes: number[], targetIndexes: number[]) => {
       let itemDepth = itemIndexes.length
@@ -344,7 +344,7 @@ export default defineComponent({
             clearHighlight(v)
           })
         }
-      }
+      },
     )
     const dragEvents = {
       dragstart: (data: any) => {
@@ -473,7 +473,7 @@ export default defineComponent({
     const orderAndCheck = (
       item: any,
       idx: number,
-      selectedValues: Record<string, any>
+      selectedValues: Record<string, any>,
     ) => {
       item.order = item.hasOwnProperty('order') ? item.order : idx
       item.selected =
@@ -492,7 +492,7 @@ export default defineComponent({
       item: any,
       arr: any[],
       coords: string,
-      depth: number
+      depth: number,
     ) => {
       let clone = { ...item }
       delete clone.subitems
@@ -571,7 +571,7 @@ export default defineComponent({
 
     const sortColEnter = (
       target: string,
-      extraSortFields: ExtraSortField[]
+      extraSortFields: ExtraSortField[],
     ) => {
       clearTimeout(sortPopupCloseTimerId.value)
       sortPopupChangeTimerId.value = window.setTimeout(
@@ -579,7 +579,7 @@ export default defineComponent({
           setSelectedColFields(extraSortFields)
           sortPopupTarget.value = target
         },
-        sortPopupOpened.value ? 500 : 0
+        sortPopupOpened.value ? 500 : 0,
       )
       if (sortPopupOpened.value !== true) {
         clearTimeout(sortPopupOpenTimerId.value)
@@ -641,18 +641,18 @@ export default defineComponent({
       return cols
     })
     const perPage = computed(
-      () => parseInt(props.itemsPerPage as any, 10) || 10
+      () => parseInt(props.itemsPerPage as any, 10) || 10,
     )
     const page = ref(0)
     watch(
       () => props.page,
       (p) => (page.value = parseInt(p as string, 10) || 1), // FIXME check in range
-      { immediate: true }
+      { immediate: true },
     )
     watch(
       () => props.items,
       (p) => (items.value = p as Record<string, any>),
-      { immediate: true }
+      { immediate: true },
     )
     const iterStart = computed(() => {
       if (props.itemsCount != null) return 0 // external navigation
@@ -685,7 +685,7 @@ export default defineComponent({
     })
 
     const addRowsSelector = computed(() =>
-      showSelector(props.rowsSelector, rows.value)
+      showSelector(props.rowsSelector, rows.value),
     )
     const selectAll = computed(() => props.selectAll)
     const rowsRecord: ComputedRef<FormRecord> = computed(() => {
@@ -718,13 +718,13 @@ export default defineComponent({
           }
         }
       },
-      { deep: true }
+      { deep: true },
     )
     watch(
       () => props.resetSelection,
       (val) => {
         if (val) selectRows(RowsSelectorValues.DeselectAll)
-      }
+      },
     )
     const selectRows = function (val: any) {
       if (!rows.value) return false
@@ -792,7 +792,7 @@ export default defineComponent({
 
     const onSort = function (
       column: string,
-      field: ExtraSortField | undefined = undefined
+      field: ExtraSortField | undefined = undefined,
     ) {
       closeSortPopup()
       const autoOrder =
@@ -800,8 +800,8 @@ export default defineComponent({
         sort.value.column !== column
           ? RowSortOrders.asc
           : sort.value.order == RowSortOrders.asc
-          ? RowSortOrders.desc
-          : RowSortOrders.asc
+            ? RowSortOrders.desc
+            : RowSortOrders.asc
       setSort(column, field?.order || autoOrder)
       selectRows(RowsSelectorValues.DeselectAll)
       ctx.emit('rows-sorted', sort.value)

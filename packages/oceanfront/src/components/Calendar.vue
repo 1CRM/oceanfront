@@ -111,7 +111,7 @@ export default defineComponent({
         undefined,
         layout.value,
         0,
-        [8, 17]
+        [8, 17],
       )
       const placements: CalendarEventPlacement[] = []
       for (const g of groups) {

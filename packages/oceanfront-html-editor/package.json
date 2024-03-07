@@ -24,7 +24,7 @@
     "clean": "rm -rf .turbo .vite node_modules dist",
     "coverage": "vitest run --coverage",
     "demo": "vite build -m development --watch",
-    "lint": "eslint src",
+    "lint": "eslint src --ext .ts,.vue",
     "test": "vitest --watch=false"
   },
   "peerDependencies": {
