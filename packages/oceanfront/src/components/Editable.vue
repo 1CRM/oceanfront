@@ -5,7 +5,7 @@
         class="editable-field-value field-value"
         :class="{
           active: active,
-          inline: mode === 'inline',
+          inline: mode === 'inline'
         }"
         ref="elem"
       >
@@ -99,7 +99,7 @@ import {
   nextTick,
   ref,
   shallowRef,
-  watch,
+  watch
 } from 'vue'
 import { OfIcon } from './Icon'
 import { DataTypeValue } from '../lib/datatype'
@@ -112,7 +112,7 @@ const supportedTypes = [
   'time',
   'datetime',
   'text',
-  'number',
+  'number'
 ]
 const OfEditableField = defineComponent({
   name: 'OfEditableField',
@@ -120,7 +120,7 @@ const OfEditableField = defineComponent({
   props: {
     modelValue: Object,
     mode: String as any,
-    showOldValues: Boolean,
+    showOldValues: Boolean
   },
   emits: ['update:modelValue'],
   setup(props, ctx) {
@@ -129,7 +129,7 @@ const OfEditableField = defineComponent({
       () => props.modelValue,
       (value) => {
         itemValue.value = value
-      },
+      }
     )
     const item = computed({
       get() {
@@ -137,7 +137,7 @@ const OfEditableField = defineComponent({
       },
       set(val) {
         itemValue.value = val
-      },
+      }
     }) as any
     const active = ref(false)
     const type = computed(() => {
@@ -221,14 +221,14 @@ const OfEditableField = defineComponent({
           item.value.value = parseInt(val.replace(/\D/g, '').trim())
         }
       },
-      { deep: true },
+      { deep: true }
     )
     watch(
       () => item.value,
       () => {
         ctx.emit('update:modelValue', item.value)
       },
-      { deep: true, immediate: false },
+      { deep: true, immediate: false }
     )
 
     return {
@@ -244,9 +244,9 @@ const OfEditableField = defineComponent({
       onInputBlur,
       onKeyDown,
       showItem,
-      classes,
+      classes
     }
-  },
+  }
 })
 
 export default OfEditableField

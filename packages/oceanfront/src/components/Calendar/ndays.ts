@@ -8,7 +8,7 @@ export default defineComponent({
   mixins: [DayCalendar],
   props: {
     ...calendarProps.common,
-    ...calendarProps.ndays,
+    ...calendarProps.ndays
   },
   methods: {
     getVisibleRange(): Timestamp[] {
@@ -29,8 +29,8 @@ export default defineComponent({
       if (isNaN(nDays)) nDays = 2
       return Array.from({ length: nDays }, (_, i) => ({
         category: '' + i,
-        date: addDays(this.$props.day, i),
+        date: addDays(this.$props.day, i)
       }))
-    },
-  },
+    }
+  }
 })

@@ -15,7 +15,7 @@ export function toTimestamp(date: Date): Timestamp {
     month: date.getMonth(),
     day: date.getDate(),
     hours: date.getHours(),
-    minutes: date.getMinutes(),
+    minutes: date.getMinutes()
   }
 }
 
@@ -33,7 +33,7 @@ export function withZeroTime(ts: Timestamp): Timestamp {
     ...ts,
     date: d,
     hours: 0,
-    minutes: 0,
+    minutes: 0
   }
 }
 
@@ -97,7 +97,7 @@ export const getTimestampIdintifier = (date: Timestamp): DayIdentifier => {
 export const isEventInRange = (
   event: InternalEvent,
   start: TimestampIdentifier,
-  end: TimestampIdentifier,
+  end: TimestampIdentifier
 ): boolean =>
   (event.end > start && event.end <= end) ||
   (event.start >= start && event.start < end) ||
@@ -107,7 +107,7 @@ export const isEventInRange = (
 export const eventsStartingAtDay = (
   events: InternalEvent[],
   day: DayIdentifier,
-  intervalStart: DayIdentifier,
+  intervalStart: DayIdentifier
 ): InternalEvent[] => {
   return events.filter((e) => {
     return Math.max(e.startDay, intervalStart) == day
@@ -116,7 +116,7 @@ export const eventsStartingAtDay = (
 
 const categoryMatch = (
   cat: string,
-  categories: string | string[] | undefined,
+  categories: string | string[] | undefined
 ): boolean => {
   if (Array.isArray(categories)) return !!~categories.indexOf(cat)
   return cat === categories
@@ -127,13 +127,13 @@ export const getEventsOfDay = (
   day: DayIdentifier,
   allDay: boolean | 'ignore',
   category?: string,
-  sorted?: boolean,
+  sorted?: boolean
 ): InternalEvent[] => {
   const filtered = events.filter(
     (e) =>
       (allDay === 'ignore' || (e.allDay || false) === allDay) &&
       (category === undefined || categoryMatch(category, e.category)) &&
-      isEventInRange(e, day * OFFSET_TIMESTAMP, (day + 1) * OFFSET_TIMESTAMP),
+      isEventInRange(e, day * OFFSET_TIMESTAMP, (day + 1) * OFFSET_TIMESTAMP)
   )
   if (!sorted) return filtered
   return filtered.sort((a, b) => a.start - b.start)
@@ -142,7 +142,7 @@ export const getEventsOfDay = (
 export const getEventsOfMonth = (
   events: InternalEvent[],
   day: Timestamp,
-  sorted?: boolean,
+  sorted?: boolean
 ): InternalEvent[] => {
   const start = getTimestampIdintifier(toTimestamp(addMonths(day.date, 0)))
   const end = getTimestampIdintifier(toTimestamp(addMonths(day.date, 1)))
@@ -156,14 +156,14 @@ export const hasOverlap = (
   e0: number,
   s1: number,
   e1: number,
-  exclude = true,
+  exclude = true
 ): boolean => {
   return exclude ? !(s0 >= e1 || e0 <= s1) : !(s0 > e1 || e0 < s1)
 }
 
 export const getNormalizedRange = (
   event: InternalEvent,
-  day: DayIdentifier,
+  day: DayIdentifier
 ): TimestampIdentifier[] => {
   const start = day * OFFSET_TIMESTAMP
   const end = (day + 1) * OFFSET_TIMESTAMP
@@ -172,29 +172,29 @@ export const getNormalizedRange = (
 
 export function getNormalizedTSRange(
   event: InternalEvent,
-  day: Date,
+  day: Date
 ): Timestamp[]
 export function getNormalizedTSRange(
   event: InternalEvent,
   startTS: Timestamp,
-  endTS: Timestamp,
+  endTS: Timestamp
 ): Timestamp[]
 
 export function getNormalizedTSRange(
   event: InternalEvent,
   dayOrStartTS: Date | Timestamp,
-  endTS?: Timestamp,
+  endTS?: Timestamp
 ): Timestamp[] {
   if (dayOrStartTS instanceof Date) {
     endTS = {
       ...toTimestamp(addDays(dayOrStartTS, 1)),
       hours: 0,
-      minutes: 0,
+      minutes: 0
     }
     dayOrStartTS = {
       ...toTimestamp(dayOrStartTS),
       hours: 0,
-      minutes: 0,
+      minutes: 0
     }
   }
   const start =
@@ -213,7 +213,7 @@ export function getGroups(
   category: string | undefined,
   layout: layoutFunc,
   overlapThreshold: number,
-  [startHour, endHour]: number[],
+  [startHour, endHour]: number[]
 ): CalendarEventsGroup[] {
   const dayStart = day * OFFSET_TIMESTAMP + startHour * MINUTES_IN_HOUR
   const dayEnd = day * OFFSET_TIMESTAMP + endHour * MINUTES_IN_HOUR
@@ -237,7 +237,7 @@ export function getGroups(
     offset: 0,
     zIndex: 0,
     columnAdjust: 0,
-    conflict: false,
+    conflict: false
   }))
   for (const p of placements) {
     let [start, end] = [p.start, p.end]
@@ -274,7 +274,7 @@ export function getGroups(
       groups.push({
         start,
         end,
-        placements: [p],
+        placements: [p]
       })
     }
   }
@@ -408,12 +408,12 @@ export type Column = {
 
 export type layoutFunc = (
   group: CalendarEventsGroup,
-  overlapThreshold: number,
+  overlapThreshold: number
 ) => void
 
 export const parseEvent = (
   e: CalendarEvent,
-  f: FormatState,
+  f: FormatState
 ): InternalEvent | undefined => {
   const fm = f.getTextFormatter('datetime') as DateTimeFormatter
   const startDate = fm.loadValue(e.start)
@@ -449,16 +449,16 @@ export const parseEvent = (
     startTime: getTimeIdentifier(startTS),
     endTime: getTimeIdentifier(endTS),
     category: e.category,
-    orig: e,
+    orig: e
   }
 }
 
 export const uniqEvent = (
   e: InternalEvent,
-  cat: categoryItem,
+  cat: categoryItem
 ): InternalEvent => {
   return {
     ...e,
-    uniq: '' + getDayIdentifier(toTimestamp(cat.date)) + '|' + cat.category,
+    uniq: '' + getDayIdentifier(toTimestamp(cat.date)) + '|' + cat.category
   }
 }

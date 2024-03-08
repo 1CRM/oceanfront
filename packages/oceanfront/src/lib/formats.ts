@@ -40,7 +40,7 @@ export type TextFormatterConstructor = {
     config?: Config,
     options?: any,
     fieldName?: string,
-    record?: FormRecord,
+    record?: FormRecord
   ): TextFormatter
 }
 type TextFormatterFn = {
@@ -48,7 +48,7 @@ type TextFormatterFn = {
     config?: Config,
     options?: any,
     fieldName?: string,
-    record?: FormRecord,
+    record?: FormRecord
   ): TextFormatter
 }
 
@@ -61,14 +61,14 @@ export type TextFormatterProp = TextFormatterDef | string
 export interface FormatState {
   getFieldType(
     type?: string,
-    defaultType?: boolean | string,
+    defaultType?: boolean | string
   ): Component | undefined
 
   getTextFormatter(
     type?: string | TextFormatterDef,
     options?: any,
     fieldName?: string,
-    record?: FormRecord,
+    record?: FormRecord
   ): TextFormatter | undefined
 }
 
@@ -84,7 +84,7 @@ class FormatManager implements FormatState {
 
   getFieldType(
     type: string,
-    defaultType?: boolean | string,
+    defaultType?: boolean | string
   ): Component | undefined {
     let ctor = this.fieldTypes[type]
     if (!ctor && defaultType) {
@@ -101,7 +101,7 @@ class FormatManager implements FormatState {
     type?: TextFormatterProp,
     options?: any,
     fieldName?: string,
-    record?: FormRecord,
+    record?: FormRecord
   ): TextFormatter | undefined {
     let def: TextFormatterDef | undefined
     if (typeof type === 'string') def = this.textFormats[type]
@@ -113,7 +113,7 @@ class FormatManager implements FormatState {
             this.config,
             options,
             fieldName,
-            record,
+            record
           )
         }
         return (def as TextFormatterFn)(this.config, options, fieldName, record)
@@ -131,7 +131,7 @@ export function registerFieldType(name: string, fmt: Component): void {
 
 export function registerTextFormatter(
   name: string,
-  fmt: TextFormatterDef,
+  fmt: TextFormatterDef
 ): void {
   configManager.extendingManager.textFormats[name] = fmt
 }

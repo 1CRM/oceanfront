@@ -5,7 +5,7 @@ export {
   defaultBaseColors,
   defaultLimits,
   defaultStyles,
-  defaultPalletes,
+  defaultPalletes
 } from './lib/defaults'
 
 export { OfColorSchemeEditor, ColorSpaces }

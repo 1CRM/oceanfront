@@ -17,7 +17,7 @@ export class ColorFormatter implements TextFormatter {
     return {
       error,
       value,
-      textValue,
+      textValue
     }
   }
 

@@ -28,7 +28,7 @@ export interface IconSet {
 
 const ledIcon = [
   'M 2 12 a 10,10 0 1,0 20,0 a 10,10 0 1,0 -20,0',
-  'M 4 12 a 8,8 0 1,0 16,0 a 8,8 0 1,0 -16,0',
+  'M 4 12 a 8,8 0 1,0 16,0 a 8,8 0 1,0 -16,0'
 ]
 
 const ledIconSet = {
@@ -37,11 +37,11 @@ const ledIconSet = {
     if (name && type) {
       return {
         class: 'of--icon-led of--led-' + name,
-        svg: { paths: [...ledIcon] },
+        svg: { paths: [...ledIcon] }
       }
     }
     return null
-  },
+  }
 }
 
 class IconManager {
@@ -58,7 +58,7 @@ class IconManager {
 
   resolveIcon(
     name?: string,
-    options?: { effect?: string; type?: string },
+    options?: { effect?: string; type?: string }
   ): Icon | null {
     if (typeof name !== 'string') return null
     let result
@@ -137,7 +137,7 @@ const svgAttrs = {
   height: '24px',
   role: 'img',
   'aria-hidden': true,
-  viewBox: '0 0 24 24',
+  viewBox: '0 0 24 24'
 }
 
 export interface SvgIconEffect {
@@ -154,7 +154,7 @@ const maskCircle = h('circle', {
   cx: '18',
   cy: '18',
   r: '6px',
-  fill: 'rgb(50, 50, 50)',
+  fill: 'rgb(50, 50, 50)'
 })
 
 const plusEffect = {
@@ -168,18 +168,18 @@ const plusEffect = {
           y: '13',
           width: '2px',
           height: '10px',
-          rx: '1px',
+          rx: '1px'
         }),
         h('rect', {
           x: '13',
           y: '17',
           width: '10px',
           height: '2px',
-          rx: '1px',
-        }),
-      ],
+          rx: '1px'
+        })
+      ]
     }
-  },
+  }
 }
 
 export const renderSvgIcon = (icon: SvgIcon): VNode => {
@@ -205,12 +205,12 @@ export const renderSvgIcon = (icon: SvgIcon): VNode => {
         const pri = idx == icon.paths.length - 1
         const attrs: Record<string, any> = {
           class: { pri, alt },
-          d: path,
+          d: path
         }
         if (alt) attrs.opacity = '0.3'
         return h('path', attrs)
-      }),
-    ),
+      })
+    )
   )
   if (mask.length) {
     nodes.unshift(
@@ -220,10 +220,10 @@ export const renderSvgIcon = (icon: SvgIcon): VNode => {
           y: '0',
           width: '100%',
           height: '100%',
-          fill: 'white',
+          fill: 'white'
         }),
-        ...mask,
-      ]),
+        ...mask
+      ])
     )
   }
   return h('svg', svgAttrs, nodes)

@@ -6,7 +6,7 @@ export interface DragEventOptions {
 
 export const triggerDragEvent = (
   element: HTMLElement,
-  options: DragEventOptions,
+  options: DragEventOptions
 ): void => {
   let isDragging = false
 

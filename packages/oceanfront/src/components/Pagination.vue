@@ -6,7 +6,7 @@
         :aria-label="ariaLabels?.pagination ?? 'Pagination'"
         :class="{
           'of-buttonset--rounded': rounded,
-          'of--elevated': variant == 'elevated',
+          'of--elevated': variant == 'elevated'
         }"
       >
         <of-button
@@ -100,7 +100,7 @@ import {
   Ref,
   watchEffect,
   watch,
-  nextTick,
+  nextTick
 } from 'vue'
 import { OfOverlay } from './Overlay'
 import { Paginator } from '../lib/paginator'
@@ -122,7 +122,7 @@ export default defineComponent({
     perPage: Number,
     rounded: Boolean,
     ariaLabels: Object,
-    showOnlyPage: { type: Boolean, default: true },
+    showOnlyPage: { type: Boolean, default: true }
   },
   emits: ['update:modelValue', 'select-page', 'update-offset'],
   setup(props, context) {
@@ -211,7 +211,7 @@ export default defineComponent({
       const paginator: Paginator = {
         page: page,
         startRecord: startAtValue.value,
-        perPage: perPageValue.value,
+        perPage: perPageValue.value
       }
       context.emit('select-page', paginator)
     }
@@ -219,7 +219,7 @@ export default defineComponent({
     const focusActiveButton = () => {
       nextTick(() => {
         const elt = activeButton.value?.$el?.querySelector(
-          'button',
+          'button'
         ) as HTMLElement | null
         if (elt) elt.focus()
       })
@@ -242,7 +242,7 @@ export default defineComponent({
       () => props.startRecord,
       (val) => {
         startAtValue.value = val as number
-      },
+      }
     )
 
     const perPageValue: Ref<number> = ref(props.perPage || 20)
@@ -251,7 +251,7 @@ export default defineComponent({
       () => props.perPage,
       (val) => {
         perPageValue.value = val as number
-      },
+      }
     )
 
     watchEffect(() => {
@@ -260,7 +260,7 @@ export default defineComponent({
     })
 
     const showCustomOffsetPopup = computed(
-      () => props.customOffsetPopup || false,
+      () => props.customOffsetPopup || false
     )
     const offsetPopupOpened = ref(false)
 
@@ -276,7 +276,7 @@ export default defineComponent({
       hidden: false,
       label: 'Start At',
       readOnly: false,
-      class: 'of--small',
+      class: 'of--small'
     }
 
     //TODO: replace number text input with select for per page selection
@@ -284,7 +284,7 @@ export default defineComponent({
       hidden: false,
       label: 'Per Page',
       readOnly: false,
-      class: 'of--small',
+      class: 'of--small'
     }
 
     const pageItems = computed(() => {
@@ -295,7 +295,7 @@ export default defineComponent({
         items.push({
           text: page,
           value: page,
-          disabled: false,
+          disabled: false
         })
       }
 
@@ -307,7 +307,7 @@ export default defineComponent({
       const paginator: Paginator = {
         page: page.value,
         startRecord: startAtValue.value,
-        perPage: perPageValue.value,
+        perPage: perPageValue.value
       }
       context.emit('update-offset', paginator)
     }
@@ -336,8 +336,8 @@ export default defineComponent({
       perPageField,
       perPageValue,
       pageItems,
-      updateOffsetParams,
+      updateOffsetParams
     }
-  },
+  }
 })
 </script>

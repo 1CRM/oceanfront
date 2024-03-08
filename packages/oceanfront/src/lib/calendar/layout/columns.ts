@@ -2,7 +2,7 @@ import { hasOverlap, CalendarEventsGroup, Column } from '..'
 
 export default function layout(
   group: CalendarEventsGroup,
-  _overlapThreshold: number,
+  _overlapThreshold: number
 ): void {
   const columns: Column[] = []
   for (const p of group.placements) {
@@ -25,7 +25,7 @@ export default function layout(
       columns.push({
         placements: [p],
         offset: 0,
-        end: 0,
+        end: 0
       })
     }
   }

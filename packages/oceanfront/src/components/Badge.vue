@@ -33,7 +33,7 @@ export default defineComponent({
     scale: String as PropType<Scale>,
     circular: Boolean,
     icon: Boolean,
-    density: [String, Number],
+    density: [String, Number]
   },
   setup(props) {
     const themeOptions = useThemeOptions()
@@ -60,14 +60,14 @@ export default defineComponent({
           ['state-' + props.status]: !!props.status,
           'of--circular': props.circular,
           'of--icon': props.icon,
-          ...scaleClass(props.scale),
-        },
+          ...scaleClass(props.scale)
+        }
       ]
     })
 
     return {
-      badgeClass,
+      badgeClass
     }
-  },
+  }
 })
 </script>

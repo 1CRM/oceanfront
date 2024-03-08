@@ -6,7 +6,7 @@ export default defineComponent({
   mixins: [DayCalendar],
   props: {
     ...calendarProps.common,
-    ...calendarProps.category,
+    ...calendarProps.category
   },
   emits: ['click:day'],
   methods: {
@@ -24,9 +24,9 @@ export default defineComponent({
                 event.preventDefault()
                 this.$emit('click:day', event, this.$props.day)
               }
-            },
+            }
           },
-          this.renderDayNumber(this.$props.day, true),
+          this.renderDayNumber(this.$props.day, true)
         )
       }
     },
@@ -42,8 +42,8 @@ export default defineComponent({
     getCategoriesList() {
       return this.$props.categories.map((category) => ({
         category,
-        date: this.$props.day,
+        date: this.$props.day
       }))
-    },
-  },
+    }
+  }
 })

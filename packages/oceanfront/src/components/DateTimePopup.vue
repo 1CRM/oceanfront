@@ -54,7 +54,7 @@
             'selected-date': checkSelected(cell),
             'focused-date': checkFocused(cell),
             today: cell.today,
-            'other-month': cell.otherMonth,
+            'other-month': cell.otherMonth
           }"
           @click="cell.otherMonth ? null : selectDate(cell.date)"
         >
@@ -157,7 +157,7 @@ import {
   addMonths,
   sameDate,
   lastMonthDay,
-  parseDay,
+  parseDay
 } from '../lib/datetime'
 import { useFormats } from '../lib/formats'
 import {
@@ -166,7 +166,7 @@ import {
   ref,
   VNode,
   resolveComponent,
-  watch,
+  watch
 } from 'vue'
 import { useLocale } from '../lib/locale'
 
@@ -183,7 +183,7 @@ export default defineComponent({
     accept: Function,
     withoutTitle: Boolean,
     weekStart: Number,
-    showTodayButton: Boolean,
+    showTodayButton: Boolean
   },
   setup(props) {
     let theNode: VNode | null
@@ -200,9 +200,7 @@ export default defineComponent({
     const formatMgr = useFormats()
     const localeOffset = ref(0)
     const timeZone = computed(() =>
-      props.withTime
-        ? locale.localeParams?.dateTimeFormat?.timeZone
-        : undefined,
+      props.withTime ? locale.localeParams?.dateTimeFormat?.timeZone : undefined
     )
     const weekStartDayLocale = computed(() => {
       const day =
@@ -223,19 +221,19 @@ export default defineComponent({
           day: '2-digit',
           hour: '2-digit',
           minute: '2-digit',
-          hourCycle: 'h23',
-        },
-      }),
+          hourCycle: 'h23'
+        }
+      })
     )
     const dateTimeFormatted = computed(() =>
-      datetimeFormatter.value?.format(selDate.value),
+      datetimeFormatter.value?.format(selDate.value)
     )
     const dateTimeParts = computed(
-      () => datetimeFormatter.value?.format(selDate.value).parts,
+      () => datetimeFormatter.value?.format(selDate.value).parts
     )
     const getFormattedPart = (
       type: string,
-      defaultValue: string | undefined = undefined,
+      defaultValue: string | undefined = undefined
     ) =>
       dateTimeParts.value.find((p: any) => p.type === type)?.value ??
       defaultValue
@@ -244,7 +242,7 @@ export default defineComponent({
 
     watch(
       () => props.monthStart,
-      (monthStart) => (selMonthStart.value = monthStart ?? new Date()),
+      (monthStart) => (selMonthStart.value = monthStart ?? new Date())
     )
     watch(
       () => selDate.value,
@@ -253,8 +251,8 @@ export default defineComponent({
         localeOffset.value = dateTimeFormatted.value?.tzOffset * 1000
       },
       {
-        immediate: true,
-      },
+        immediate: true
+      }
     )
     const updateSelected = (selected: Date) => {
       selDate.value = new Date(selected.getTime() - localeOffset.value)
@@ -273,9 +271,9 @@ export default defineComponent({
           year: 'numeric',
           day: 'numeric',
           weekday: 'short',
-          ...timeOpts,
-        },
-      },
+          ...timeOpts
+        }
+      }
     )
     const monthYearFormater = formatMgr.getTextFormatter('date', {
       locale: 'en-US',
@@ -284,15 +282,15 @@ export default defineComponent({
       nativeOptions: {
         timeZone: timeZone.value,
         month: 'short',
-        year: 'numeric',
-      },
+        year: 'numeric'
+      }
     })
     const selectDate = (selected: Date, focusTime = false) => {
       const date = new Date(selDateLocale.value.valueOf())
       date.setUTCFullYear(
         selected.getFullYear(),
         selected.getMonth(),
-        selected.getDate(),
+        selected.getDate()
       )
       if (props.withTime) {
         if (focusTime) timeSelector?.value?.focus()
@@ -312,7 +310,7 @@ export default defineComponent({
         props.withTime
           ? selDateLocale.value.getTime() +
             selDateLocale.value.getTimezoneOffset() * 60 * 1000
-          : selDate.value.getTime(),
+          : selDate.value.getTime()
       )
       return sameDate(date, cell.date)
     }
@@ -322,7 +320,7 @@ export default defineComponent({
           ? focusedDate.value.getTime() +
             localeOffset.value +
             focusedDate.value.getTimezoneOffset() * 60 * 1000
-          : focusedDate.value.getTime(),
+          : focusedDate.value.getTime()
       )
       return sameDate(date, cell.date)
     }
@@ -366,7 +364,7 @@ export default defineComponent({
             ? focusedDate.value.getTime() +
               localeOffset.value +
               selDateLocale.value.getTimezoneOffset() * 60 * 1000
-            : focusedDate.value.getTime(),
+            : focusedDate.value.getTime()
         )
         selectDate(date, true)
       } else if (['ArrowUp', 'ArrowDown'].includes(event.code)) {
@@ -513,7 +511,7 @@ export default defineComponent({
       cells: computed(() => {
         const gridData = monthGrid(
           selMonthStart.value,
-          weekStartDayLocale.value,
+          weekStartDayLocale.value
         )
         return gridData.grid.reduce((items, value) => {
           items.push(...value)
@@ -526,8 +524,8 @@ export default defineComponent({
       },
       unmounted: () => {
         theNode = null
-      },
+      }
     }
-  },
+  }
 })
 </script>

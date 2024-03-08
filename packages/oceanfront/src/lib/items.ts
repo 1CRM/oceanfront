@@ -10,7 +10,7 @@ export const transformItemsList = (
   mgr: ItemsState,
   source?: string | any[] | ItemList,
   name?: string,
-  record?: FormRecord,
+  record?: FormRecord
 ): ItemList => {
   const result: ItemList = {
     disabledKey: 'disabled',
@@ -20,7 +20,7 @@ export const transformItemsList = (
     selectedTextKey: 'selectedText',
     valueKey: 'value',
     iconKey: 'icon',
-    classKey: 'class',
+    classKey: 'class'
   }
   let items
   if (name && record) {
@@ -37,26 +37,26 @@ export const transformItemsList = (
 export function makeItemList(items?: any[] | ItemList): ItemList {
   if (Array.isArray(items)) {
     return {
-      items,
+      items
     }
   } else if (typeof items !== 'object' || !Array.isArray(items.items)) {
     return {
       error: 'Error loading items',
-      items: [],
+      items: []
     }
   }
   return markRaw(items)
 }
 
 export function makeItems(
-  items: String | Number | Number[] | String[] | Item[],
+  items: String | Number | Number[] | String[] | Item[]
 ): Item[] {
   if (typeof items === 'string' || typeof items === 'number') {
     return [
       {
         value: items,
-        text: items,
-      },
+        text: items
+      }
     ]
   }
   if (Array.isArray(items)) {
@@ -65,7 +65,7 @@ export function makeItems(
       if (typeof item === 'string' || typeof item === 'number') {
         newItems.push({
           value: item,
-          text: item,
+          text: item
         })
       } else {
         if (!((item as Item).value && (item as Item).text)) {

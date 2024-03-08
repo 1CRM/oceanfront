@@ -17,7 +17,7 @@ export const OfButton = defineComponent({
     icon: String,
     iconPosition: {
       type: String,
-      default: 'start',
+      default: 'start'
     },
     id: String,
     items: [String, Array, Object] as PropType<ItemsProp>,
@@ -27,7 +27,7 @@ export const OfButton = defineComponent({
     name: String,
     rounded: {
       type: Boolean,
-      default: undefined,
+      default: undefined
     },
     scale: String as PropType<Scale>,
     split: Boolean,
@@ -35,10 +35,10 @@ export const OfButton = defineComponent({
     variant: String,
     tint: String,
     keepTextColor: Boolean,
-    menuTrigger: { type: String, default: 'click' },
+    menuTrigger: { type: String, default: 'click' }
   },
   emits: {
-    click: null,
+    click: null
   },
   setup(props, ctx) {
     const themeOptions = useThemeOptions()
@@ -102,7 +102,7 @@ export const OfButton = defineComponent({
     const expand = h(
       'div',
       { class: 'of-button-expand' },
-      h(OfIcon, { name: 'select down' }),
+      h(OfIcon, { name: 'select down' })
     )
     const menuMouseEvts = {
       onMouseenter: () => {
@@ -116,7 +116,7 @@ export const OfButton = defineComponent({
         menuTimerId = window.setTimeout(() => {
           closeMenu()
         }, 500)
-      },
+      }
     }
     const focusEvts = {
       onFocus: () => {
@@ -124,7 +124,7 @@ export const OfButton = defineComponent({
       },
       onBlur: () => {
         focused.value = false
-      },
+      }
     }
     let autoId: string
 
@@ -146,7 +146,7 @@ export const OfButton = defineComponent({
           ? h(
               'div',
               { class: 'of-button-icon' },
-              h(OfIcon, { class: 'button-icon', name: props.icon }),
+              h(OfIcon, { class: 'button-icon', name: props.icon })
             )
           : undefined
       const mainContent =
@@ -158,8 +158,8 @@ export const OfButton = defineComponent({
                 ? ctx.slots.content()
                 : h(
                     'label',
-                    ctx.slots.default ? ctx.slots.default() : props.label,
-                  ),
+                    ctx.slots.default ? ctx.slots.default() : props.label
+                  )
             )
           : undefined
 
@@ -168,7 +168,7 @@ export const OfButton = defineComponent({
         iconContent,
         mainContent,
         extraContent,
-        items && !split ? expand : undefined,
+        items && !split ? expand : undefined
       ]
       const iconPosition = () => {
         if (props.iconPosition === 'end') {
@@ -193,10 +193,10 @@ export const OfButton = defineComponent({
               'of-button--icon': !!(
                 iconContent && !(mainContent || items || split)
               ),
-              'of--mode-disabled': disabled,
-            },
+              'of--mode-disabled': disabled
+            }
           ],
-          id,
+          id
         },
         [
           h('div', { class: 'of--layer of--layer-lining' }),
@@ -209,7 +209,7 @@ export const OfButton = defineComponent({
               class: [
                 'of-button-main',
                 scaleClass(props.scale),
-                iconPosition(),
+                iconPosition()
               ],
               disabled,
               tabindex,
@@ -220,9 +220,9 @@ export const OfButton = defineComponent({
               type: props.type ?? 'button',
               'aria-label': props.ariaLabel ?? props.label,
               ...menuMouseEvts,
-              ...focusEvts,
+              ...focusEvts
             },
-            body,
+            body
           ),
           split && items
             ? h(
@@ -236,9 +236,9 @@ export const OfButton = defineComponent({
                   ...menuMouseEvts,
                   ...focusEvts,
                   'aria-label': props.ariaLabel ?? props.label,
-                  'aria-haspopup': true,
+                  'aria-haspopup': true
                 },
-                expand,
+                expand
               )
             : undefined,
           items
@@ -251,7 +251,7 @@ export const OfButton = defineComponent({
                   target: '#' + (split ? splitId : buttonId),
                   onBlur: () => {
                     menuShown.value = false
-                  },
+                  }
                 },
                 () => {
                   return h(OfOptionList, {
@@ -259,14 +259,14 @@ export const OfButton = defineComponent({
                     items,
                     onClick: onClickItem,
                     onBlur: onBlurList,
-                    ...menuMouseEvts,
+                    ...menuMouseEvts
                   })
-                },
+                }
               )
             : undefined,
-          h('div', { class: 'of--layer of--layer-state' }),
-        ],
+          h('div', { class: 'of--layer of--layer-state' })
+        ]
       )
     }
-  },
+  }
 })

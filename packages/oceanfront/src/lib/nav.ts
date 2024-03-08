@@ -8,7 +8,7 @@ import {
   onUnmounted,
   provide,
   reactive,
-  watch,
+  watch
 } from 'vue'
 
 const NAV_GROUP = 'ofnavgrp' as unknown as InjectionKey<NavGroup>
@@ -100,7 +100,7 @@ export function reactiveNavGroup(): NavGroup {
       if (cmp == 4 || cmp == 16) return -1
       if (cmp == 2 || cmp == 8) return 1
       return 0
-    }),
+    })
   )
   const scan = computed(() => {
     let first
@@ -126,7 +126,7 @@ export function reactiveNavGroup(): NavGroup {
         const current = idx === scan.current
         if (item.isCurrent !== current) item.isCurrent = current
       }
-    },
+    }
   )
 
   return {
@@ -134,7 +134,7 @@ export function reactiveNavGroup(): NavGroup {
     register(target: NavGroupTarget): NavGroupUnregister | null {
       items.add(target)
       return {
-        unregister: () => items.delete(target),
+        unregister: () => items.delete(target)
       }
     },
     navigate(event: KeyboardEvent): boolean {
@@ -171,6 +171,6 @@ export function reactiveNavGroup(): NavGroup {
         }
       }
       return false
-    },
+    }
   }
 }

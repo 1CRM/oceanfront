@@ -37,8 +37,8 @@
           col.class,
           {
             sortable: col.sortable !== false,
-            [sort.order]: sort.column === col.value,
-          },
+            [sort.order]: sort.column === col.value
+          }
         ]"
         :key="idx"
       >
@@ -87,7 +87,7 @@
           listedRows,
           tableLeft,
           highlightLastMoved,
-          currentInnerDepth,
+          currentInnerDepth
         }"
         :coords="[rowidx]"
         :point-next="[rowidx + 1]"
@@ -180,7 +180,7 @@ import {
   ComputedRef,
   Ref,
   shallowRef,
-  reactive,
+  reactive
 } from 'vue'
 import { DataTableHeader } from '../lib/datatable'
 import { useThemeOptions } from '../lib/theme'
@@ -194,13 +194,13 @@ import OfTableRow from './TableRow.vue'
 enum RowsSelectorValues {
   Page = 'page',
   All = 'all',
-  DeselectAll = 'deselect-all',
+  DeselectAll = 'deselect-all'
 }
 
 enum RowSortOrders {
   asc = 'asc',
   desc = 'desc',
-  noOrder = '',
+  noOrder = ''
 }
 
 interface ExtraSortField {
@@ -227,7 +227,7 @@ export default defineComponent({
     OfField,
     OfOptionList,
     OfOverlay,
-    OfIcon,
+    OfIcon
   },
   // components: { OfFormat },
   props: {
@@ -245,25 +245,25 @@ export default defineComponent({
     draggable: Boolean,
     dragOptions: {
       type: Object as any,
-      required: false,
+      required: false
     },
     editable: {
       type: Boolean,
-      default: false,
+      default: false
     },
     editType: {
       type: String,
-      default: 'inline',
+      default: 'inline'
     },
     showOldValues: {
       type: Boolean,
-      default: false,
+      default: false
     },
     nestedIndicator: {
       type: String,
-      default: 'name',
+      default: 'name'
     },
-    density: [String, Number],
+    density: [String, Number]
   },
   emits: {
     'rows-selected': null,
@@ -273,7 +273,7 @@ export default defineComponent({
     'rows-sorted': null,
     'rows-moved': null,
     'rows-edited': null,
-    'row-edited': null,
+    'row-edited': null
   },
   setup(props, ctx) {
     const themeOptions = useThemeOptions()
@@ -295,7 +295,7 @@ export default defineComponent({
       nested: false,
       allNested: true,
       nestedLimit: 5,
-      allParent: true,
+      allParent: true
     })
     const dragLeft = computed(() => {
       return 55 + 20 * nestDepth.value + 'px'
@@ -309,7 +309,7 @@ export default defineComponent({
           }
         }
       },
-      { immediate: true },
+      { immediate: true }
     )
     const samePosition = (itemIndexes: number[], targetIndexes: number[]) => {
       let itemDepth = itemIndexes.length
@@ -344,7 +344,7 @@ export default defineComponent({
             clearHighlight(v)
           })
         }
-      },
+      }
     )
     const dragEvents = {
       dragstart: (data: any) => {
@@ -360,7 +360,7 @@ export default defineComponent({
         currentCoords.value = data.coords
         nestDepth.value = data.depth
         fixArrow(data.element, data.fixArrowNext)
-      },
+      }
     }
     const eventStart = (event: MouseEvent | TouchEvent) => {
       if (event.type === 'touchstart') {
@@ -382,10 +382,10 @@ export default defineComponent({
     document.addEventListener('mouseup', eventEnd)
     document.addEventListener('mousedown', eventStart)
     document.addEventListener('touchstart', eventStart, {
-      passive: true,
+      passive: true
     })
     document.addEventListener('touchend', eventEnd, {
-      passive: true,
+      passive: true
     })
     const switchItems = (itemIndexes: number[], targetIndexes: number[]) => {
       if (itemIndexes.length && targetIndexes.length) {
@@ -416,7 +416,7 @@ export default defineComponent({
           let order = targetIndexes[targetDepth - 1] - 0.5
           targetItemParent.push({
             ...{ ...item, highlighted: true },
-            order,
+            order
           })
           item.toRemove = true
         }
@@ -475,7 +475,7 @@ export default defineComponent({
       item: any,
       arr: any[],
       coords: string,
-      depth: number,
+      depth: number
     ) => {
       let clone = { ...item }
       delete clone.subitems
@@ -540,7 +540,7 @@ export default defineComponent({
 
     const sortColEnter = (
       target: string,
-      extraSortFields: ExtraSortField[],
+      extraSortFields: ExtraSortField[]
     ) => {
       clearTimeout(sortPopupCloseTimerId.value)
       sortPopupChangeTimerId.value = window.setTimeout(
@@ -548,7 +548,7 @@ export default defineComponent({
           setSelectedColFields(extraSortFields)
           sortPopupTarget.value = target
         },
-        sortPopupOpened.value ? 500 : 0,
+        sortPopupOpened.value ? 500 : 0
       )
       if (sortPopupOpened.value !== true) {
         clearTimeout(sortPopupOpenTimerId.value)
@@ -563,21 +563,21 @@ export default defineComponent({
       for (const field of extraSortFields) {
         const item = {
           value: field.value,
-          text: field.label,
+          text: field.label
         }
         const itemAsc = {
           icon: 'select up',
           selected:
             sort.value.column === field.value &&
             sort.value.order === RowSortOrders.asc,
-          order: RowSortOrders.asc,
+          order: RowSortOrders.asc
         }
         const itemDesc = {
           icon: 'select down',
           selected:
             sort.value.column === field.value &&
             sort.value.order === RowSortOrders.desc,
-          order: RowSortOrders.desc,
+          order: RowSortOrders.desc
         }
         selectedColFields.value.push({ ...itemDesc, ...item })
         selectedColFields.value.push({ ...itemAsc, ...item })
@@ -610,18 +610,18 @@ export default defineComponent({
       return cols
     })
     const perPage = computed(
-      () => parseInt(props.itemsPerPage as any, 10) || 10,
+      () => parseInt(props.itemsPerPage as any, 10) || 10
     )
     const page = ref(0)
     watch(
       () => props.page,
       (p) => (page.value = parseInt(p as string, 10) || 1), // FIXME check in range
-      { immediate: true },
+      { immediate: true }
     )
     watch(
       () => props.items,
       (p) => (items.value = p as Record<string, any>),
-      { immediate: true },
+      { immediate: true }
     )
     const iterStart = computed(() => {
       if (props.itemsCount != null) return 0 // external navigation
@@ -645,7 +645,7 @@ export default defineComponent({
         })
         .join(' ')
       return {
-        '--of-table-columns': `${dragWidth} ${selectorWidth} ${widths}`,
+        '--of-table-columns': `${dragWidth} ${selectorWidth} ${widths}`
       }
     })
 
@@ -654,7 +654,7 @@ export default defineComponent({
     })
 
     const addRowsSelector = computed(() =>
-      showSelector(props.rowsSelector, rows.value),
+      showSelector(props.rowsSelector, rows.value)
     )
     const selectAll = computed(() => props.selectAll)
 
@@ -725,7 +725,7 @@ export default defineComponent({
           checkItems(row)
         }
       },
-      { deep: true },
+      { deep: true }
     )
 
     watch(
@@ -739,13 +739,13 @@ export default defineComponent({
           }
         }
       },
-      { deep: true },
+      { deep: true }
     )
     watch(
       () => props.resetSelection,
       (val) => {
         if (val) selectRows(RowsSelectorValues.DeselectAll)
-      },
+      }
     )
     const selectRows = function (val: any) {
       if (!rows.value) return false
@@ -792,18 +792,18 @@ export default defineComponent({
       {
         key: 'page',
         text: 'Select Page',
-        value: () => selectRows(RowsSelectorValues.Page),
+        value: () => selectRows(RowsSelectorValues.Page)
       },
       {
         key: 'all',
         text: 'Select All',
-        value: () => selectRows(RowsSelectorValues.All),
+        value: () => selectRows(RowsSelectorValues.All)
       },
       {
         key: 'clear',
         text: 'Deselect All',
-        value: () => selectRows(RowsSelectorValues.DeselectAll),
-      },
+        value: () => selectRows(RowsSelectorValues.DeselectAll)
+      }
     ]
 
     const setSort = function (column: string, order: string) {
@@ -813,7 +813,7 @@ export default defineComponent({
 
     const onSort = function (
       column: string,
-      field: ExtraSortField | undefined = undefined,
+      field: ExtraSortField | undefined = undefined
     ) {
       closeSortPopup()
       const autoOrder =
@@ -846,7 +846,7 @@ export default defineComponent({
 
     const tableClass = computed(() => [
       'of-data-table',
-      'of--density-' + density.value,
+      'of--density-' + density.value
     ])
 
     return {
@@ -890,9 +890,9 @@ export default defineComponent({
       highlightLastMoved,
       dragEvents,
       dragLeft,
-      isTouchable,
+      isTouchable
     }
-  },
+  }
 })
 </script>
 <style lang="scss">

@@ -58,7 +58,7 @@ export default defineComponent({
     dragAndDrop: { type: Boolean, default: true },
     transition: { type: String, default: 'slide-down' },
     hideOnBlur: { type: Boolean, default: true },
-    showCloseButton: { type: Boolean, default: false },
+    showCloseButton: { type: Boolean, default: false }
   },
   emits: ['update:modelValue'],
   setup: function (props, ctx) {
@@ -97,7 +97,7 @@ export default defineComponent({
           return
         }
         document.addEventListener('keydown', handelKeyDown)
-      },
+      }
     )
     onUnmounted(() => {
       document.removeEventListener('keydown', handelKeyDown)
@@ -113,7 +113,7 @@ export default defineComponent({
       1: 0,
       2: 0,
       3: 0,
-      4: 0,
+      4: 0
     })
 
     let startWidth = ref()
@@ -123,7 +123,7 @@ export default defineComponent({
       () => props.modelValue,
       (val) => {
         active.value = val
-      },
+      }
     )
 
     const resizeAction = (e: MouseEvent) => {
@@ -144,11 +144,11 @@ export default defineComponent({
       const dialogContent = dialog.value.querySelector('.of-dialog-content')
       const startWidth = parseInt(
         window.getComputedStyle(dialogContent).width,
-        10,
+        10
       )
       const startHeight = parseInt(
         window.getComputedStyle(dialogContent).height,
-        10,
+        10
       )
 
       const resizerElement = dialog.value.querySelector('.dialog-resizer')
@@ -184,11 +184,11 @@ export default defineComponent({
 
         startWidth.value = parseInt(
           window.getComputedStyle(dialogContent).width,
-          10,
+          10
         )
         startHeight.value = parseInt(
           window.getComputedStyle(dialogContent).height,
-          10,
+          10
         )
 
         // get the mouse cursor position at startup
@@ -261,8 +261,8 @@ export default defineComponent({
       dialog,
       dialogHeader,
       dragAndDropAction,
-      resizeAction,
+      resizeAction
     }
-  },
+  }
 })
 </script>

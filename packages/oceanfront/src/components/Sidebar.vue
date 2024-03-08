@@ -35,7 +35,7 @@ export default defineComponent({
     embed: Boolean,
     id: String,
     loading: Boolean,
-    modelValue: Boolean,
+    modelValue: Boolean
   },
   emits: ['update:modelValue'],
   setup(props, ctx) {
@@ -44,7 +44,7 @@ export default defineComponent({
       () => props.modelValue,
       (val) => {
         activeSlot.value = val
-      },
+      }
     )
     const embedVal = computed(() => props.embed)
     const classAttr = computed(() => props.class)
@@ -59,8 +59,8 @@ export default defineComponent({
       classAttr,
       embedVal,
       hide,
-      show,
+      show
     }
-  },
+  }
 })
 </script>

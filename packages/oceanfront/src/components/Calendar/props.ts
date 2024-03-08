@@ -3,7 +3,7 @@ import {
   CalendarEvent,
   categoryItem,
   InternalEvent,
-  Timestamp,
+  Timestamp
 } from '../../lib/calendar'
 
 const validTypes = ['day', 'month', 'week', 'category', 'ndays', 'month']
@@ -16,67 +16,67 @@ export default {
   internal: {
     categoriesList: Array as PropType<categoryItem[]>,
     ignoreCategories: Boolean,
-    visibleRange: Array as PropType<Timestamp[]>,
+    visibleRange: Array as PropType<Timestamp[]>
   },
   week: {
     weekStart: Number,
-    hideWeekends: Boolean,
+    hideWeekends: Boolean
   },
   category: {
     categories: {
       type: Array as PropType<string[]>,
-      default: (): string[] => [],
-    },
+      default: (): string[] => []
+    }
   },
   ndays: {
     numDays: {
       type: [Number, String],
-      default: '3',
-    },
+      default: '3'
+    }
   },
   month: {
     fixedRowHeight: Boolean,
     eventsLimit: {
       type: [String, Number],
-      default: '5',
+      default: '5'
     },
     hideOtherMonths: Boolean,
     hideWeekends: Boolean,
-    weekStart: Number,
+    weekStart: Number
   },
   common: {
     selectable: Boolean,
     hourIntervals: {
       type: [Number, String],
-      default: 4,
+      default: 4
     },
     conflictColor: String,
     eventColor: Function as PropType<(e: InternalEvent) => any>,
     eventClass: Function as PropType<(e: InternalEvent) => any>,
     type: {
       type: String,
-      validator: validateType,
+      validator: validateType
     },
     // exact date for day and category, any date in range for week and month
     day: {
       type: Date as PropType<Date>,
-      default: (): Date => new Date(),
+      default: (): Date => new Date()
     },
     layout: String,
     events: Array as PropType<CalendarEvent[]>,
     categoryTitles: {
       type: Boolean,
-      default: (): boolean => true,
+      default: (): boolean => true
     },
     hourHeight: { type: [Number, String], default: '48' },
     eventHeight: {
       type: [Number, String],
-      default: '20',
+      default: '20'
     },
     overlapThreshold: { type: [Number, String], default: '45' },
     dayStart: { type: [Number, String], default: 0 },
     dayEnd: { type: [Number, String], default: 24 },
     groupAllDayEvents: { type: Boolean, default: false },
-    groupPostfix: { type: String, default: '' },
-  },
+    groupPostfix: { type: String, default: '' }
+  }
 }

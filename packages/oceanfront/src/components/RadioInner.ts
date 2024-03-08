@@ -11,7 +11,7 @@ export const RadioInner = defineComponent({
     name: String,
     mode: String as PropType<FieldMode>,
     value: [String, Number],
-    scale: [String, Number],
+    scale: [String, Number]
   },
   emits: ['focus', 'blur', 'inputMounted', 'selectItem'],
   setup(props, ctx) {
@@ -28,7 +28,7 @@ export const RadioInner = defineComponent({
       },
       onVueMounted(vnode: VNode) {
         ctx.emit('inputMounted', vnode)
-      },
+      }
     }
     return () => {
       const inputLabel = props.label
@@ -38,12 +38,12 @@ export const RadioInner = defineComponent({
             {
               class: [
                 'of-field-content-text',
-                'of--align-' + (props.align || 'start'),
+                'of--align-' + (props.align || 'start')
               ],
               for: props.inputId,
-              onClick: (evt: MouseEvent) => evt.stopPropagation(),
+              onClick: (evt: MouseEvent) => evt.stopPropagation()
             },
-            [inputLabel],
+            [inputLabel]
           )
         : undefined
       const inner = [
@@ -60,27 +60,27 @@ export const RadioInner = defineComponent({
             name: props.name,
             type: 'radio',
             value: props.value,
-            ...hooks,
+            ...hooks
           }),
           ctx.slots.icon
             ? ctx.slots.icon(props.checked)
             : h(OfIcon, {
                 class: 'of-toggle-icon',
                 name: icon.value,
-                scale: props.scale || 'input',
-              }),
-        ]),
+                scale: props.scale || 'input'
+              })
+        ])
       ]
       if (label) inner.push(label)
       return [
         h(
           'div',
           {
-            class: 'of-toggle-wrapper',
+            class: 'of-toggle-wrapper'
           },
-          inner,
-        ),
+          inner
+        )
       ]
     }
-  },
+  }
 })

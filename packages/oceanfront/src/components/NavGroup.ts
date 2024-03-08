@@ -7,5 +7,5 @@ export const OfNavGroup = defineComponent({
     const items = reactiveNavGroup()
     provideNavGroup(items)
     return () => ctx.slots.default?.({ focused: items.isFocused })
-  },
+  }
 })

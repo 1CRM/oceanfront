@@ -35,7 +35,7 @@ export class UrlFormatter implements TextFormatter {
     return {
       error,
       value,
-      textValue,
+      textValue
     }
   }
 

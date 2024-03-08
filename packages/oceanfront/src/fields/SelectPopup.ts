@@ -12,21 +12,21 @@ export const OfSelectPopup = defineComponent({
     name: String,
     items: {
       type: [String, Array, Object] as PropType<string | any[] | ItemList>,
-      required: true,
+      required: true
     },
     multi: Boolean,
     addRemove: Boolean,
     closeAfterSelect: {
       type: Boolean,
-      default: true,
+      default: true
     },
     addSearch: {
       type: Boolean,
-      default: true,
+      default: true
     },
     closePopup: Function,
     value: [String, Array],
-    class: [String, Array, Object],
+    class: [String, Array, Object]
   },
   emits: ['updateValue'],
   setup(props, ctx) {
@@ -67,7 +67,7 @@ export const OfSelectPopup = defineComponent({
         'div',
         {
           style:
-            'padding: 4px; display: flex; flex-direction: column; align-items: center',
+            'padding: 4px; display: flex; flex-direction: column; align-items: center'
         },
         h('div', { class: 'of-buttonset' }, [
           h(
@@ -75,20 +75,20 @@ export const OfSelectPopup = defineComponent({
             {
               variant: 'outlined',
               active: !removing.value,
-              onClick: () => (removing.value = false),
+              onClick: () => (removing.value = false)
             },
-            () => lang.value.selectFieldAddItems,
+            () => lang.value.selectFieldAddItems
           ),
           h(
             OfButton,
             {
               variant: 'outlined',
               active: removing.value,
-              onClick: () => (removing.value = true),
+              onClick: () => (removing.value = true)
             },
-            () => lang.value.selectFieldRemoveItems,
-          ),
-        ]),
+            () => lang.value.selectFieldRemoveItems
+          )
+        ])
       )
     }
 
@@ -102,7 +102,7 @@ export const OfSelectPopup = defineComponent({
             disabled: false,
             text: item,
             selected: isSelected(item),
-            value: item,
+            value: item
           })
         } else if (typeof item === 'object') {
           rows.push({
@@ -114,7 +114,7 @@ export const OfSelectPopup = defineComponent({
             selected: resolved.valueKey && isSelected(item[resolved.valueKey]),
             special: resolved.specialKey && item[resolved.specialKey],
             icon: (resolved.iconKey && item[resolved.iconKey]) ?? '',
-            class: (resolved.classKey && item[resolved.classKey]) ?? '',
+            class: (resolved.classKey && item[resolved.classKey]) ?? ''
           })
         }
       }
@@ -133,7 +133,7 @@ export const OfSelectPopup = defineComponent({
     const setValue = (
       val: any,
       _item?: any,
-      ev?: MouseEvent | KeyboardEvent,
+      ev?: MouseEvent | KeyboardEvent
     ) => {
       ev?.stopPropagation()
       ev?.preventDefault()
@@ -152,10 +152,10 @@ export const OfSelectPopup = defineComponent({
           items: filteredItems.value,
           class: props.class,
           onClick: setValue,
-          addSearch: props.addSearch,
+          addSearch: props.addSearch
         },
-        { header: () => addRemoveButtons() },
+        { header: () => addRemoveButtons() }
       )
     }
-  },
+  }
 })

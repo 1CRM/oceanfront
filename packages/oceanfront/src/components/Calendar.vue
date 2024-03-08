@@ -18,7 +18,7 @@
           left: p.left * 100 + '%',
           width: p.width * 100 + '%',
           top: (p.top / 960) * 100 + '%',
-          height: (p.height / 960) * 100 + '%',
+          height: (p.height / 960) * 100 + '%'
         }"
       >
         {{ p.event.name }}
@@ -37,7 +37,7 @@ import {
   getTimestampIdintifier,
   CalendarEventPlacement,
   InternalEvent,
-  Timestamp,
+  Timestamp
 } from '../lib/calendar'
 
 import stackLayout from '../lib/calendar/layout/stack'
@@ -59,19 +59,19 @@ function mockData(): InternalEvent[] {
     [1, 15, 3, 30],
     [7, 0, 7, 45],
     [4, 30, 7, 45],
-    [9, 15, 10, 0],
+    [9, 15, 10, 0]
   ]
   return times.map((t, idx) => {
     const [sh, sm, eh, em] = t
     const sts: Timestamp = {
       ...nowTS,
       hours: sh,
-      minutes: sm,
+      minutes: sm
     }
     const ets: Timestamp = {
       ...nowTS,
       hours: eh,
-      minutes: em,
+      minutes: em
     }
     return {
       name: 'Event ' + idx,
@@ -85,7 +85,7 @@ function mockData(): InternalEvent[] {
       startTS: sts,
       endTS: ets,
       uniq: '',
-      orig: null,
+      orig: null
     }
   })
 }
@@ -111,7 +111,7 @@ export default defineComponent({
         undefined,
         layout.value,
         0,
-        [8, 17],
+        [8, 17]
       )
       const placements: CalendarEventPlacement[] = []
       for (const g of groups) {
@@ -121,6 +121,6 @@ export default defineComponent({
     })
 
     return { placements, changeLayout, switchTo }
-  },
+  }
 })
 </script>

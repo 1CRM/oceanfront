@@ -9,7 +9,7 @@ export default defineComponent({
   mixins: [DayCalendar],
   props: {
     ...calendarProps.common,
-    ...calendarProps.week,
+    ...calendarProps.week
   },
   computed: {
     weekStartLocale(): number {
@@ -19,7 +19,7 @@ export default defineComponent({
           ? locale.localeParams?.weekStart ?? 1
           : this.weekStart
       return parseDay(day)
-    },
+    }
   },
   methods: {
     getVisibleRange(): Timestamp[] {
@@ -37,8 +37,8 @@ export default defineComponent({
         (weekDay >= this.weekStartLocale ? weekDay : weekDay + 7)
       return Array.from({ length: 7 }, (_, i) => ({
         category: '' + i,
-        date: addDays(this.$props.day, i + offset),
+        date: addDays(this.$props.day, i + offset)
       }))
-    },
-  },
+    }
+  }
 })

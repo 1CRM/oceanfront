@@ -23,7 +23,7 @@ export const addMinutes = (d: Date, minutes: number): Date => {
     d.getMonth(),
     d.getDate(),
     d.getHours(),
-    d.getMinutes() + minutes,
+    d.getMinutes() + minutes
   )
 }
 
@@ -50,7 +50,7 @@ export const parseDay = (day: number | string, defaultDay = 1): number => {
 
 const monthDaysRolling = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334]
 const monthDaysRollingLeap = [
-  0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335,
+  0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335
 ]
 
 export const isLeapYear = (y: number): boolean =>
@@ -100,7 +100,7 @@ export function prevMonth(date: Date): Date {
 
 export const monthGrid = (
   forDate?: Date,
-  weekStart?: number | string,
+  weekStart?: number | string
 ): MonthGridData => {
   const weekDays = [1, 2, 3, 4, 5, 6, 7]
   const monthStart = new Date(forDate?.valueOf() ?? new Date().valueOf())
@@ -121,7 +121,7 @@ export const monthGrid = (
       row.push({
         date,
         today: sameDate(today, date),
-        otherMonth: date.getMonth() != month,
+        otherMonth: date.getMonth() != month
       })
       date = addDays(date, 1)
     }
@@ -129,6 +129,6 @@ export const monthGrid = (
   }
   return {
     grid,
-    weekDays,
+    weekDays
   }
 }

@@ -1,5 +1,5 @@
 export const hexToRgb = function (
-  color: string,
+  color: string
 ): { r: number; g: number; b: number; a?: number } | null {
   if (!color) {
     throw new TypeError('Invalid color value')
@@ -32,7 +32,7 @@ export const hexToRgb = function (
       r: (cval >> 24) & 255,
       g: (cval >> 16) & 255,
       b: (cval >> 8) & 255,
-      a: (cval & 255) / 255,
+      a: (cval & 255) / 255
     }
   }
   const rgbm = color.match(/^rgba?\((\d+),(\d+),(\d+)(?:,(\d+\.?\d*|\.\d+))\)$/)
@@ -41,7 +41,7 @@ export const hexToRgb = function (
       r: parseInt(rgbm[1] || '255', 10),
       g: parseInt(rgbm[2] || '255', 10),
       b: parseInt(rgbm[3] || '255', 10),
-      a: rgbm[4] !== undefined ? parseFloat(rgbm[4]) : 1,
+      a: rgbm[4] !== undefined ? parseFloat(rgbm[4]) : 1
     }
   }
   return null
@@ -70,7 +70,7 @@ export const rgbToHex = function (color: {
 
 let colorCtx: CanvasRenderingContext2D
 export const loadColor = function (
-  color: string,
+  color: string
 ): { r: number; g: number; b: number; a?: number } | null {
   if (!color) return null
   const found = hexToRgb(color)

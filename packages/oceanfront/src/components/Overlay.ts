@@ -7,7 +7,7 @@ import {
   watch,
   PropType,
   Teleport,
-  Transition,
+  Transition
 } from 'vue'
 import { useLayout } from '../lib/layout'
 import { watchPosition } from '../lib/util'
@@ -30,7 +30,7 @@ const relativeParentRect = (elt: Element) => {
       -window.scrollX,
       -window.scrollY,
       window.innerWidth,
-      window.innerHeight,
+      window.innerHeight
     ]
     return { left: l, top: t, width: w, height: h, bottom: t + h, right: l + w }
   }
@@ -72,7 +72,7 @@ export const OfOverlay = defineComponent({
     shade: { type: Boolean, default: true },
     target: { type: [Element, String] } as any as PropType<Element | string>,
     transition: String,
-    sticky: { type: Boolean, default: true },
+    sticky: { type: Boolean, default: true }
   },
   emits: ['blur'],
   setup(props, ctx) {
@@ -99,7 +99,7 @@ export const OfOverlay = defineComponent({
           ctx.emit('blur', true)
           removeFromStack(elt.value)
         }
-      },
+      }
     }
     const state = computed(() => (props.embed ? 'embed' : 'overlay'))
     const target = ref()
@@ -117,7 +117,7 @@ export const OfOverlay = defineComponent({
       if (checkFocused(outer)) return
       // FIXME look for [autofocus] or [data-autofocus]?
       const findFocus = outer.querySelector(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
       )
       ;((findFocus as HTMLElement) || outer).focus()
       overlayStack.push(outer)
@@ -158,14 +158,14 @@ export const OfOverlay = defineComponent({
                 parentRect.left -
                 outerRect.width -
                 rightOffset,
-              0,
-            ) + 'px',
+              0
+            ) + 'px'
           )
           outer.style.setProperty('padding-right', '0')
         } else {
           outer.style.setProperty(
             '--overlay-dyn-margin-left',
-            Math.max(targetRect.left + parentRect.left - offsetWidth, 0) + 'px',
+            Math.max(targetRect.left + parentRect.left - offsetWidth, 0) + 'px'
           )
           outer.style.removeProperty('padding-right')
         }
@@ -173,13 +173,13 @@ export const OfOverlay = defineComponent({
           outer.style.setProperty('position', 'absolute')
           outer.style.setProperty(
             'top',
-            `${targetRect.y + window.scrollY + targetRect.height - 20}px`,
+            `${targetRect.y + window.scrollY + targetRect.height - 20}px`
           )
           outer.style.setProperty('--overlay-dyn-pad-top', '0')
         } else {
           outer.style.setProperty(
             '--overlay-dyn-pad-top',
-            Math.max(targetRect.bottom, 0) + 'px',
+            Math.max(targetRect.bottom, 0) + 'px'
           )
         }
       })
@@ -207,13 +207,13 @@ export const OfOverlay = defineComponent({
           target.value = null
         }
         updateState()
-      },
+      }
     )
     watch(
       () => layout.windowRect,
       (_) => {
         nextTick(reposition)
-      },
+      }
     )
 
     const hasTint = ref(false)
@@ -236,7 +236,7 @@ export const OfOverlay = defineComponent({
             .getComputedStyle(target.value)
             .getPropertyValue('--of-tint-name')
         tintClass.value = `of--tint-${tintName}`
-      },
+      }
     )
 
     return () => {
@@ -250,7 +250,7 @@ export const OfOverlay = defineComponent({
         'of--overlay': state.value === 'overlay',
         'of--pad': props.pad,
         'of--shade': props.shade,
-        'of--fit-content': target.value,
+        'of--fit-content': target.value
       }
       if (state.value !== 'embed' && !target.value && props.align)
         (cls as any)['of--' + props.align] = true
@@ -265,7 +265,7 @@ export const OfOverlay = defineComponent({
           onVueBeforeUnmount: () => {
             bind(false)
             if (focused) removeFromStack(elt.value)
-          },
+          }
         },
         [
           h(
@@ -277,20 +277,20 @@ export const OfOverlay = defineComponent({
                   'div',
                   {
                     style: {
-                      display: props.active ? 'contents' : 'none',
-                    },
+                      display: props.active ? 'contents' : 'none'
+                    }
                   },
                   [
                     state.value == 'overlay'
                       ? h('div', {
                           class: {
-                            'of-overlay-capture': props.active && props.capture,
+                            'of-overlay-capture': props.active && props.capture
                           },
                           style: {
-                            'z-index': overlayZIndex,
+                            'z-index': overlayZIndex
                           },
                           onClick: handlers.onClick,
-                          ref: clickCapture,
+                          ref: clickCapture
                         })
                       : undefined,
                     h(
@@ -298,7 +298,7 @@ export const OfOverlay = defineComponent({
                       {
                         class: ['of-overlay', cls, props.class],
                         style: {
-                          'z-index': overlayZIndex,
+                          'z-index': overlayZIndex
                         },
                         id: props.id,
                         role: 'document',
@@ -308,7 +308,7 @@ export const OfOverlay = defineComponent({
                             ? '-1'
                             : null,
                         'data-id': id,
-                        ...handlers,
+                        ...handlers
                       },
                       props.loading
                         ? () =>
@@ -317,16 +317,16 @@ export const OfOverlay = defineComponent({
                               : h(OfSpinner)
                         : ctx.slots.default?.({
                             active: props.active,
-                            state: state.value,
-                          }),
-                    ),
-                  ],
-                ),
-              ],
-            },
-          ),
-        ],
+                            state: state.value
+                          })
+                    )
+                  ]
+                )
+              ]
+            }
+          )
+        ]
       )
     }
-  },
+  }
 })

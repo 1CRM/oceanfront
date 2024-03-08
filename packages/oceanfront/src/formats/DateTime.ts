@@ -33,7 +33,7 @@ abstract class DateTimeFormatterBase implements TextFormatter {
       'd/m/Y',
       'Y.m.d',
       'd.m.Y',
-      'm.d.Y',
+      'm.d.Y'
     ]
     const allowedTimeFormats = [
       'H:i',
@@ -45,7 +45,7 @@ abstract class DateTimeFormatterBase implements TextFormatter {
       'h.ia',
       'h.i a',
       'h.iA',
-      'h.i A',
+      'h.i A'
     ]
     this._locale = useLocale(config)
     this._options = computed(() => {
@@ -102,7 +102,7 @@ abstract class DateTimeFormatterBase implements TextFormatter {
       if (value !== null) {
         const fmt = Intl.DateTimeFormat(
           this.options.locale,
-          this.formatterOptions(),
+          this.formatterOptions()
         )
         textValue = this.formatLocale(fmt, value)
 
@@ -113,7 +113,7 @@ abstract class DateTimeFormatterBase implements TextFormatter {
           minute: 'numeric',
           month: '2-digit',
           year: 'numeric',
-          hourCycle: 'h23',
+          hourCycle: 'h23'
         })
         parts = partsFmt.formatToParts(value)
 
@@ -150,7 +150,7 @@ abstract class DateTimeFormatterBase implements TextFormatter {
       tzOffset,
       tzName,
       textClass: this.inputClass,
-      parts,
+      parts
     }
   }
 
@@ -179,7 +179,7 @@ abstract class DateTimeFormatterBase implements TextFormatter {
   abstract formatPortable(date: Date): string
   abstract loadValue(
     modelValue?: string | Date | number | null,
-    dateOnly?: boolean,
+    dateOnly?: boolean
   ): Date | null
 }
 
@@ -231,11 +231,11 @@ export class DateTimeFormatter extends DateTimeFormatterBase {
       const options = super.formatterOptions()
       const tFmt = Intl.DateTimeFormat(
         this.options.locale,
-        TimeFormatter.adjustOptions(options, timeFormat),
+        TimeFormatter.adjustOptions(options, timeFormat)
       )
       const dFmt = Intl.DateTimeFormat(
         this.options.locale,
-        DateFormatter.adjustOptions(options, false),
+        DateFormatter.adjustOptions(options, false)
       )
       return (
         (dateFormat === ''
@@ -288,14 +288,14 @@ export class DateTimeFormatter extends DateTimeFormatterBase {
 export class DateFormatter extends DateTimeFormatterBase {
   static adjustOptions(
     options: Intl.DateTimeFormatOptions,
-    ignoreTimezone = true,
+    ignoreTimezone = true
   ): Intl.DateTimeFormatOptions {
     return {
       ...options,
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
-      timeZone: ignoreTimezone ? undefined : options.timeZone,
+      timeZone: ignoreTimezone ? undefined : options.timeZone
     }
   }
 
@@ -357,11 +357,11 @@ export class DateFormatter extends DateTimeFormatterBase {
 export class TimeFormatter extends DateTimeFormatterBase {
   static adjustOptions(
     options: Intl.DateTimeFormatOptions,
-    timeFormat: string,
+    timeFormat: string
   ): Intl.DateTimeFormatOptions {
     const timeOptions: Intl.DateTimeFormatOptions = {
       hour: 'numeric',
-      minute: 'numeric',
+      minute: 'numeric'
     }
 
     if (timeFormat !== '') {
@@ -373,7 +373,7 @@ export class TimeFormatter extends DateTimeFormatterBase {
 
     return {
       ...options,
-      ...timeOptions,
+      ...timeOptions
     }
   }
 

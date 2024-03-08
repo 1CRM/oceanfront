@@ -2,7 +2,7 @@ import {
   daysInEvent,
   CalendarAlldayEventPlacement,
   InternalEvent,
-  Timestamp,
+  Timestamp
 } from '..'
 
 export type BusyInfo = {
@@ -13,7 +13,7 @@ export type BusyInfo = {
 export const layoutAllday = (
   events: InternalEvent[],
   interval: Timestamp[],
-  busy: BusyInfo,
+  busy: BusyInfo
 ): CalendarAlldayEventPlacement[] => {
   const currentColumn = busy.currentColumn
   busy.currentColumn++
@@ -21,7 +21,7 @@ export const layoutAllday = (
     const nDays = daysInEvent(e, interval)
     const numRows = busy.busyColumns.length
     let freeRow = busy.busyColumns.findIndex(
-      (busyCol) => currentColumn >= busyCol,
+      (busyCol) => currentColumn >= busyCol
     )
     if (!~freeRow) {
       freeRow = numRows
@@ -32,7 +32,7 @@ export const layoutAllday = (
     return {
       event: e,
       daysSpan: nDays,
-      top: freeRow,
+      top: freeRow
     }
   })
 }

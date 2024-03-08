@@ -6,7 +6,7 @@ import {
   ref,
   SetupContext,
   VNode,
-  watch,
+  watch
 } from 'vue'
 import { OfFieldBase } from '../components/FieldBase'
 import {
@@ -15,7 +15,7 @@ import {
   FieldRender,
   makeFieldContext,
   newFieldId,
-  provideFieldRender,
+  provideFieldRender
 } from '../lib/fields'
 import OfOptionList from '../components/OptionList.vue'
 import { TextFormatter, useFormats } from '../lib/formats'
@@ -34,7 +34,7 @@ const allowInputTypes = new Set([
   'tel',
   'time',
   'week',
-  'url',
+  'url'
 ])
 
 const _inputTypeFrom = (type?: string) => {
@@ -47,7 +47,7 @@ export const OfTextField = defineComponent({
   props: {
     ...BaseFieldProps,
     rows: [Number, String],
-    inputType: String,
+    inputType: String
   },
   emits: [
     'focus',
@@ -55,7 +55,7 @@ export const OfTextField = defineComponent({
     'keydown:enter',
     'keyup:enter',
     'update:modelValue',
-    'blur',
+    'blur'
   ],
   setup(props, ctx) {
     const fieldCtx = makeFieldContext(props, ctx as SetupContext)
@@ -67,7 +67,7 @@ export const OfTextField = defineComponent({
         props.type || props.inputType,
         props.formatOptions,
         fieldCtx.name,
-        props.record,
+        props.record
       )
     })
     const initialValue = computed(() => {
@@ -118,8 +118,8 @@ export const OfTextField = defineComponent({
       () => [fieldCtx.value, formatter.value],
       ([val, fmt], _) => updateValue(val, fmt),
       {
-        immediate: true,
-      },
+        immediate: true
+      }
     )
 
     const elt = ref<HTMLInputElement | undefined>()
@@ -134,7 +134,7 @@ export const OfTextField = defineComponent({
       return id
     })
     const multiline = computed(
-      () => !!(fieldCtx.fieldType === 'textarea' || formatter.value?.multiline),
+      () => !!(fieldCtx.fieldType === 'textarea' || formatter.value?.multiline)
     )
     const inputType = computed(() => {
       const fmt = formatter.value
@@ -169,7 +169,7 @@ export const OfTextField = defineComponent({
         items: [],
         textKey: 'text',
         valueKey: 'value',
-        iconKey: 'icon',
+        iconKey: 'icon'
       }
       const list = itemMgr.getItemList(items.value)
       if (list) Object.assign(data, list)
@@ -181,13 +181,13 @@ export const OfTextField = defineComponent({
         if (typeof item === 'string') {
           rows.push({
             text: item,
-            value: item,
+            value: item
           })
         } else if (typeof item === 'object') {
           rows.push({
             text: item[data.textKey],
             value: item[data.valueKey],
-            icon: item[data.iconKey] ?? '',
+            icon: item[data.iconKey] ?? ''
           })
         }
       }
@@ -366,7 +366,7 @@ export const OfTextField = defineComponent({
       },
       onVueMounted(vnode: VNode) {
         elt.value = vnode.el as HTMLInputElement
-      },
+      }
     }
 
     const slots = {
@@ -376,7 +376,7 @@ export const OfTextField = defineComponent({
           class: [
             'of-field-input',
             fmt?.inputClass,
-            'of--align-' + (props.align || fmt?.align || 'start'),
+            'of--align-' + (props.align || fmt?.align || 'start')
           ],
           ...removeEmpty({
             inputmode: fmt?.inputMode,
@@ -391,20 +391,20 @@ export const OfTextField = defineComponent({
             'aria-label': fieldCtx.ariaLabel ?? fieldCtx.label,
             autocomplete: fieldCtx.autocomplete ?? null,
             value: lazyInputValue,
-            ...hooks,
-          }),
+            ...hooks
+          })
         })
       },
       fixedContent: () => {
         return formatter.value?.formatFixed?.(fieldCtx.value) ?? lazyInputValue
-      },
+      }
     }
 
     const fRender: FieldRender = fieldRender({
       blank,
       class: computed(() => ({
         'of-text-field': true,
-        'of--multiline': multiline,
+        'of--multiline': multiline
       })),
       click: () => focus(fieldCtx.editable),
       cursor: computed(() => (fieldCtx.editable ? 'text' : 'normal')),
@@ -420,14 +420,14 @@ export const OfTextField = defineComponent({
             ? h(OfOptionList, {
                 items: formatItems.value,
                 class: 'of--elevated-1',
-                onClick: setItem,
+                onClick: setItem
               })
             : undefined,
         visible: itemsOpened,
-        onBlur: closeItemsPopup,
+        onBlur: closeItemsPopup
       },
       updated: computed(() => initialValue.value !== stateValue.value),
-      value: stateValue,
+      value: stateValue
     })
     provideFieldRender(fRender)
 
@@ -435,5 +435,5 @@ export const OfTextField = defineComponent({
       return h(OfFieldBase, props, { ...slots, ...ctx.slots })
     }
     return render
-  },
+  }
 })

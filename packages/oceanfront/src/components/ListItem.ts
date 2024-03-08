@@ -5,7 +5,7 @@ import {
   PropType,
   reactive,
   ref,
-  watch,
+  watch
 } from 'vue'
 import { useNavGroup } from '../lib/nav'
 import { Link, LinkTo, OfLink } from './Link'
@@ -22,13 +22,13 @@ export const OfListItem = defineComponent({
     href: { type: String, default: null },
     to: [String, Object] as PropType<LinkTo>,
     attrs: { type: Object },
-    field: { type: Object, default: null },
+    field: { type: Object, default: null }
   },
   emits: {
     mousedown: null,
     keydown: null,
     blur: null,
-    focus: null,
+    focus: null
   },
   setup(props, ctx) {
     const navGroup = useNavGroup()
@@ -46,8 +46,8 @@ export const OfListItem = defineComponent({
           isFocused,
           focus: () => {
             elt.value?.focus?.()
-          },
-        }),
+          }
+        })
       )
     }
     const handlers = {
@@ -58,13 +58,13 @@ export const OfListItem = defineComponent({
       onBlur() {
         isFocused.value = false
         ctx.emit('blur')
-      },
+      }
     }
     watch(
       () => props.active,
       (active) => {
         isCurrent.value = !!active
-      },
+      }
     )
 
     watch(
@@ -74,21 +74,21 @@ export const OfListItem = defineComponent({
           isFocused.value = true
           elt.value?.focus()
         }
-      },
+      }
     )
 
     const content = () => {
       const result = [
         h('div', { class: 'of-list-item-content' }, [
           ctx.slots.default?.(),
-          field.value ? h(OfField, field.value) : null,
-        ]),
+          field.value ? h(OfField, field.value) : null
+        ])
       ]
       if (expand.value !== null) {
         result.push(
           h(OfIcon, {
-            name: expand.value ? 'expand up' : 'expand down',
-          }),
+            name: expand.value ? 'expand up' : 'expand down'
+          })
         )
       }
       return result
@@ -100,7 +100,7 @@ export const OfListItem = defineComponent({
         OfLink as any,
         {
           href: disabled ? null : props.href,
-          to: disabled ? null : props.to,
+          to: disabled ? null : props.to
         },
         {
           custom: (link: Link) => {
@@ -126,7 +126,7 @@ export const OfListItem = defineComponent({
                   'of--expanded': expand.value,
                   'of--focused': isFocused.value,
                   'of--link': !!href,
-                  [props.class]: true,
+                  [props.class]: true
                 },
                 href: link.href,
                 ref: elt,
@@ -146,17 +146,17 @@ export const OfListItem = defineComponent({
                   navGroup?.navigate(evt)
                 },
                 ...handlers,
-                ...props.attrs,
+                ...props.attrs
               },
               h('div', { class: 'of-list-item-inner' }, [
                 h('div', { class: 'of--layer of--layer-bg' }),
                 h('div', { class: 'of--layer of--layer-brd' }),
-                content(),
-              ]),
+                content()
+              ])
             )
-          },
-        },
+          }
+        }
       )
     }
-  },
+  }
 })

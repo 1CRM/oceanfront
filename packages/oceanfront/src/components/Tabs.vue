@@ -5,7 +5,7 @@
     :class="{
       'of--with-border': withBorder,
       [`of--density-${normalizedDensity}`]: true,
-      'top-tabs': topTabs,
+      'top-tabs': topTabs
     }"
     :style="offsetStyle"
   >
@@ -17,7 +17,7 @@
             ofTabsNavigationHeaderShowNextNavigation,
           'of-tabs-navigation-header-show-previous-navigation':
             ofTabsNavigationHeaderShowPreviousNavigation,
-          'of-tabs-navigation-header-has-navigation': showNavigation,
+          'of-tabs-navigation-header-has-navigation': showNavigation
         }"
       >
         <div
@@ -52,9 +52,9 @@
                   'of-tab-header-item': true,
                   'overflow-button': tab.overflowButton,
                   'of--rounded': rounded,
-                  'of--with-border': withBorder,
+                  'of--with-border': withBorder
                 },
-                tab.params?.className,
+                tab.params?.className
               ]"
               role="tab"
               :aria-label="tab.ariaLabel"
@@ -140,7 +140,7 @@ import {
   computed,
   nextTick,
   watch,
-  onBeforeUnmount,
+  onBeforeUnmount
 } from 'vue'
 import { watchPosition } from '../lib/util'
 import { ItemsProp, useItems } from '../lib/items'
@@ -163,7 +163,7 @@ const formatItems = (
   list: any,
   params: any,
   visible = true,
-  addOverflowButton: Boolean = false,
+  addOverflowButton: Boolean = false
 ): Array<Tab> => {
   const rows = []
 
@@ -199,7 +199,7 @@ const formatItems = (
       params: item.params ?? undefined,
       attrs: item.attrs ?? undefined,
       subMenuItems: subMenu,
-      field: item.field,
+      field: item.field
     } as Tab)
   }
 
@@ -210,7 +210,7 @@ const formatItems = (
       overflowButton: true,
       text: '...',
       key: -1,
-      parentKey: undefined,
+      parentKey: undefined
     } as Tab)
   }
   return rows
@@ -232,11 +232,11 @@ export default defineComponent({
     activeOffset: String,
     topTabs: { type: Boolean, default: false },
     params: { type: Object, required: false },
-    submenu: Boolean,
+    submenu: Boolean
   },
   emits: {
     'update:modelValue': null,
-    'select-tab': null,
+    'select-tab': null
   },
   setup(props, context) {
     const themeOptions = useThemeOptions()
@@ -249,9 +249,9 @@ export default defineComponent({
     const offsetStyle = computed(() =>
       props.activeOffset
         ? {
-            '--tab-active-border': props.activeOffset,
+            '--tab-active-border': props.activeOffset
           }
-        : {},
+        : {}
     )
     const overlayStyle = computed(() => {
       if (props.topTabs) {
@@ -287,7 +287,7 @@ export default defineComponent({
           repositionLine()
           repositionTabs()
         })
-      },
+      }
     )
 
     watch(
@@ -295,7 +295,7 @@ export default defineComponent({
       () => {
         fillItems()
         init()
-      },
+      }
     )
     const targetPos = computed(() => watchPosition())
     watch(targetPos.value.positions, () => repositionLine())
@@ -345,7 +345,7 @@ export default defineComponent({
         disabledKey: 'disabled',
         iconKey: 'icon',
         textKey: 'text',
-        items: [],
+        items: []
       }
       Object.assign(itemList, itemMgr.getItemList(props.items))
 
@@ -382,7 +382,7 @@ export default defineComponent({
         items.value.items,
         items.value,
         true,
-        showOverflowButton.value,
+        showOverflowButton.value
       )
     })
 
@@ -417,12 +417,12 @@ export default defineComponent({
       if (value == 'next') {
         ofTabsHeader.value.scrollTo({
           left: ofTabsHeader.value.scrollLeft + scrollNum,
-          behavior: 'smooth',
+          behavior: 'smooth'
         })
       } else if (value == 'prev') {
         ofTabsHeader.value.scrollTo({
           left: ofTabsHeader.value.scrollLeft - scrollNum,
-          behavior: 'smooth',
+          behavior: 'smooth'
         })
       }
     }
@@ -430,7 +430,7 @@ export default defineComponent({
     const repositionLine = function () {
       if (variant.value !== 'osx' && tabs.value) {
         const currentTabHeaderItem = tabs.value.querySelector(
-          '.of-tab-header-item.is-active',
+          '.of-tab-header-item.is-active'
         )
 
         let tabLine: HTMLDivElement = tabs.value.querySelector('.of-tabs-line')
@@ -443,7 +443,7 @@ export default defineComponent({
     const repositionTabs = function () {
       if (showNavigation.value) {
         const currentTabHeaderItem = tabs.value.querySelector(
-          '.of-tab-header-item.is-active',
+          '.of-tab-header-item.is-active'
         )
 
         const prevNavBounds = tabs.value
@@ -546,10 +546,10 @@ export default defineComponent({
     const calcVisibleTabsWidth = function (): number {
       let width = 0
       overflowButtonEl.value = tabs.value?.querySelector(
-        '.of-tab-header-item.overflow-button',
+        '.of-tab-header-item.overflow-button'
       )
       const overflowButton = tabs.value.querySelector(
-        '.of-tab-header-item.overflow-button',
+        '.of-tab-header-item.overflow-button'
       )
       const overflowSeparator = tabs.value.querySelector('.overflow-separator')
 
@@ -595,7 +595,7 @@ export default defineComponent({
           tabs.value?.removeEventListener('transitionend', reposition)
         }
         tabs.value?.addEventListener('transitionend', reposition)
-      },
+      }
     )
     const handleSelectTab = (event: PointerEvent, key: number) => {
       if (
@@ -671,7 +671,7 @@ export default defineComponent({
     const openSubMenu = (
       key: number,
       elt: HTMLElement | EventTarget | null,
-      delay = 500,
+      delay = 500
     ) => {
       if (!showSubMenu.value || key == -1) return false
 
@@ -688,7 +688,7 @@ export default defineComponent({
               subMenuActive.value = true
               openedMenuTabKey.value = key
             },
-            subMenuActive.value ? 0 : delay,
+            subMenuActive.value ? 0 : delay
           )
           return true
         } else {
@@ -711,7 +711,7 @@ export default defineComponent({
     const onMouseoverTab = (
       key: number,
       elt: HTMLElement | EventTarget | null,
-      forceFocus: Boolean = false,
+      forceFocus: Boolean = false
     ) => {
       if (
         !props.params?.hideSubmenuOnHover ||
@@ -763,7 +763,7 @@ export default defineComponent({
         } else {
           focusedTab.value = tabsRefs[val]
         }
-      },
+      }
     )
 
     const openFocusedSubMenu = () => {
@@ -794,7 +794,7 @@ export default defineComponent({
     const navigate = (evt: KeyboardEvent) => {
       let consumed = true
       let idx = items.value.items.findIndex(
-        (item: { key: number }) => item.key === focusedTabKey.value,
+        (item: { key: number }) => item.key === focusedTabKey.value
       )
 
       switch (evt.key) {
@@ -935,8 +935,8 @@ export default defineComponent({
       openedMenuTabKey,
       firstActiveTabIdx,
       lastActiveTabIdx,
-      handleSelectTab,
+      handleSelectTab
     }
-  },
+  }
 })
 </script>

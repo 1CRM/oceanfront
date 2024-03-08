@@ -6,7 +6,7 @@ import {
   Ref,
   ref,
   SetupContext,
-  watch,
+  watch
 } from 'vue'
 import OfDateTimePopup from '../components/DateTimePopup.vue'
 import { OfFieldBase } from '../components/FieldBase'
@@ -14,14 +14,14 @@ import { OfIcon } from '../components/Icon'
 import {
   DateFormatter,
   DateTimeFormatter,
-  TimeFormatter,
+  TimeFormatter
 } from '../formats/DateTime'
 import {
   BaseFieldProps,
   fieldRender,
   makeFieldContext,
   newFieldId,
-  provideFieldRender,
+  provideFieldRender
 } from '../lib/fields'
 import { useFormats } from '../lib/formats'
 
@@ -45,7 +45,7 @@ export const renderDateTimePopup = (opts: RenderOpts): any => {
     withTime: opts.withTime,
     withDate: opts.withDate,
     showTodayButton: opts.showTodayButton,
-    accept: opts.close,
+    accept: opts.close
   })
 }
 
@@ -59,8 +59,8 @@ const defineField = (type: InputType, name: string, cls: string) =>
       showTodayButton: { type: Boolean, default: true },
       inDataTable: {
         type: Boolean,
-        default: false,
-      },
+        default: false
+      }
     },
     emits: ['focus', 'blur', 'update:modelValue'],
     setup(props, ctx) {
@@ -160,8 +160,8 @@ const defineField = (type: InputType, name: string, cls: string) =>
           }
         },
         {
-          immediate: true,
-        },
+          immediate: true
+        }
       )
 
       const clickOpen = (_evt?: MouseEvent) => {
@@ -186,7 +186,7 @@ const defineField = (type: InputType, name: string, cls: string) =>
           withTime,
           withDate,
           weekStart: props.weekStart,
-          showTodayButton: props.showTodayButton,
+          showTodayButton: props.showTodayButton
         })
       }
 
@@ -206,7 +206,7 @@ const defineField = (type: InputType, name: string, cls: string) =>
             evt.preventDefault()
             evt.stopPropagation()
           }
-        },
+        }
       }
       const slots = {
         interactiveContent: () => {
@@ -219,15 +219,15 @@ const defineField = (type: InputType, name: string, cls: string) =>
               {
                 class: [
                   'of-field-content-text',
-                  'of--align-' + (props.align || 'start'),
+                  'of--align-' + (props.align || 'start')
                 ],
                 id: inputId.value,
                 tabindex: fieldCtx.mode === 'fixed' ? -1 : 0,
                 ref: elt,
-                ...hooks,
+                ...hooks
               },
-              value,
-            ),
+              value
+            )
           ]
         },
         append() {
@@ -236,13 +236,13 @@ const defineField = (type: InputType, name: string, cls: string) =>
               withDate
                 ? h(OfIcon, {
                     name: 'date',
-                    size: props.scale || 'input',
+                    size: props.scale || 'input'
                   })
                 : null,
               withTime && !withDate
                 ? h(OfIcon, {
                     name: 'time',
-                    size: 'input',
+                    size: 'input'
                   })
                 : null,
               withClear &&
@@ -254,11 +254,11 @@ const defineField = (type: InputType, name: string, cls: string) =>
                     tabindex: '0',
                     class: 'of-icon-clear-calendar',
                     onClick: onCancel,
-                    onKeydown: onCancel,
+                    onKeydown: onCancel
                   })
-                : null,
+                : null
             ]
-        },
+        }
       }
 
       const fRender = fieldRender({
@@ -272,9 +272,9 @@ const defineField = (type: InputType, name: string, cls: string) =>
         popup: {
           content: () => (opened.value ? renderPopup() : null),
           visible: opened,
-          onBlur: closePopup,
+          onBlur: closePopup
         },
-        value: stateValue,
+        value: stateValue
       })
       provideFieldRender(fRender)
 
@@ -282,13 +282,13 @@ const defineField = (type: InputType, name: string, cls: string) =>
         return h(OfFieldBase, props, { ...slots, ...ctx.slots })
       }
       return render
-    },
+    }
   })
 
 export const OfDatetimeField = defineField(
   'datetime',
   'OfDatetimeField',
-  'of-datetime-field',
+  'of-datetime-field'
 )
 export const OfDateField = defineField('date', 'OfDateField', 'of-date-field')
 export const OfTimeField = defineField('time', 'OfTimeField', 'of-time-field')

@@ -10,8 +10,8 @@ export default defineComponent({
       default: 0,
       validator: (value: number) => {
         return value >= 0 && value <= 360
-      },
-    },
+      }
+    }
   },
   emits: ['update:hue', 'change', 'select'],
   setup(props, { emit }) {
@@ -59,7 +59,7 @@ export default defineComponent({
         currentHue.value = Math.round(
           ((left - barHandle.value.offsetWidth / 2) /
             (rect.width - barHandle.value.offsetWidth)) *
-            360,
+            360
         )
 
         emitChange()
@@ -70,14 +70,14 @@ export default defineComponent({
       () => props.hue,
       (hue: number) => {
         currentHue.value = hue
-      },
+      }
     )
 
     watch(
       () => currentHue.value,
       () => {
         updatePosition()
-      },
+      }
     )
 
     onMounted(() => {
@@ -88,7 +88,7 @@ export default defineComponent({
           },
           end: (event: Event) => {
             handleDrag(event as MouseEvent)
-          },
+          }
         }
         if (bar.value && barHandle.value) {
           triggerDragEvent(bar.value, dragConfig)
@@ -119,7 +119,7 @@ export default defineComponent({
         }
         updatePosition()
         emitChange()
-      },
+      }
     }
 
     return () => {
@@ -127,13 +127,13 @@ export default defineComponent({
         'div',
         {
           class: 'hue transparent',
-          ...hooks,
+          ...hooks
         },
         h(
           'div',
           {
             class: 'hue__inner',
-            ref: bar,
+            ref: bar
           },
           h(
             'div',
@@ -142,15 +142,15 @@ export default defineComponent({
               ref: barHandle,
               style: {
                 left: handleLeft.value + 'px',
-                top: handleTop.value + 'px',
-              },
+                top: handleTop.value + 'px'
+              }
             },
             h('div', {
-              class: 'hue__inner-handle',
-            }),
-          ),
-        ),
+              class: 'hue__inner-handle'
+            })
+          )
+        )
       )
     }
-  },
+  }
 })

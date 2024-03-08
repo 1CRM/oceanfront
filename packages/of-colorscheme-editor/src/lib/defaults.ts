@@ -3,7 +3,7 @@ import {
   hsl_to_rgb,
   okhsl_to_srgb,
   rgb_to_hex,
-  srgb_to_okhsl,
+  srgb_to_okhsl
 } from './colorconversion'
 import { unref } from 'vue'
 
@@ -13,17 +13,17 @@ export const defaultBaseColors = (): any => {
     secondary: rgb_to_hex(hsl_to_rgb(15 / 360, 0.83, 0.5)),
     tertiary: rgb_to_hex(hsl_to_rgb(227 / 360, 0.97, 0.5)),
     neutral: rgb_to_hex(hsl_to_rgb(80 / 360, 0.06, 0.44)),
-    section: rgb_to_hex(hsl_to_rgb(211 / 360, 0.87, 0.53)),
+    section: rgb_to_hex(hsl_to_rgb(211 / 360, 0.87, 0.53))
   }
 }
 
 export const defaultLimits = {
   lightness: {
-    neutral: 0.4,
+    neutral: 0.4
   },
   saturation: {
-    section: { dark: 0.4 },
-  },
+    section: { dark: 0.4 }
+  }
 }
 
 const shades = Array.from({ length: 101 }).map((_, idx) => idx)
@@ -53,13 +53,13 @@ export const defaultPalletes = (colors: any, limits: any): any => {
           const cl = rgb_to_hex(okhsl_to_srgb(base))
           return {
             ...acc,
-            [l]: cl,
+            [l]: cl
           }
         }, {} as any)
       })
       return acc
     },
-    {} as { [k: string]: { [k: string]: string } },
+    {} as { [k: string]: { [k: string]: string } }
   )
 }
 

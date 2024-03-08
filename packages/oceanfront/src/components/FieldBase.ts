@@ -7,14 +7,14 @@ import {
   resolveComponent,
   VNode,
   watch,
-  WatchStopHandle,
+  WatchStopHandle
 } from 'vue'
 import {
   BaseFieldProps,
   FieldDragIn,
   provideFieldContext,
   Renderable,
-  useFieldRender,
+  useFieldRender
 } from '../lib/fields'
 import { useFocusGroup } from '../lib/focus'
 import { useRecords } from '../lib/records'
@@ -25,7 +25,7 @@ import { OfOverlay } from './Overlay'
 const renderSlot = (
   container: Renderable[],
   slot?: () => Renderable | undefined,
-  outer?: string,
+  outer?: string
 ): void => {
   if (slot) {
     let children = slot()
@@ -38,7 +38,7 @@ const renderSlot = (
 
 const calcPadding = (
   node: VNode,
-  state: { listen: PositionObserver; watch?: WatchStopHandle },
+  state: { listen: PositionObserver; watch?: WatchStopHandle }
 ) => {
   state.listen.disconnect()
   state.watch?.()
@@ -92,13 +92,13 @@ const makeDragIn = (spec: FieldDragIn, flag: Ref<boolean>) => {
         evt.stopPropagation()
         evt.preventDefault()
         spec.onDrop(evt)
-      },
-    },
+      }
+    }
   }
 }
 
 const parseDimension = (
-  size?: number | string,
+  size?: number | string
 ): { length: number; unit: string } | null => {
   if (size && !isNaN(size as number)) {
     return { length: size as number, unit: 'ch' }
@@ -134,7 +134,7 @@ export const OfFieldBase = defineComponent({
       return props.record || recordMgr.getCurrentRecord() || undefined
     })
     const metadata = computed(() =>
-      props.name ? record.value?.metadata?.[props.name] : null,
+      props.name ? record.value?.metadata?.[props.name] : null
     )
 
     const dragOver = ref(false)
@@ -170,7 +170,7 @@ export const OfFieldBase = defineComponent({
       },
       onVueMounted: checkPad,
       onVueUpdated: checkPad,
-      onVueUnmounted: checkPad,
+      onVueUnmounted: checkPad
     }
 
     return () => {
@@ -199,7 +199,7 @@ export const OfFieldBase = defineComponent({
           required.value && mode.value !== 'fixed'
             ? h(OfIcon, {
                 name: 'required',
-                class: 'of--icon-required',
+                class: 'of--icon-required'
               })
             : null
 
@@ -218,10 +218,10 @@ export const OfFieldBase = defineComponent({
             ? h(
                 'label',
                 {
-                  class: 'of-field-label',
+                  class: 'of-field-label'
                   /*, for: render.inputId: triggering duplicate click events */
                 },
-                [labelText, asterisk],
+                [labelText, asterisk]
               )
             : undefined
         const cls = [
@@ -242,7 +242,7 @@ export const OfFieldBase = defineComponent({
             'of--loading': fieldRender.loading,
             'of--rounded': props.rounded,
             'of--undecorated': !!fieldRender.undecorated,
-            'of--updated': fieldRender.updated,
+            'of--updated': fieldRender.updated
           },
           'of--cursor-' + (fieldRender.cursor || 'default'),
           'of--density-' + density.value,
@@ -252,7 +252,7 @@ export const OfFieldBase = defineComponent({
           'of--variant-' + variant.value,
           'of--tint-' + tint.value,
           fieldRender.class,
-          props.class,
+          props.class
         ]
 
         const style: Record<string, string> = {}
@@ -277,9 +277,9 @@ export const OfFieldBase = defineComponent({
                   h(
                     'div',
                     {
-                      class: 'of-field-content-text',
+                      class: 'of-field-content-text'
                     },
-                    ctx.slots.fixedContent?.(),
+                    ctx.slots.fixedContent?.()
                   )
               : ctx.slots.interactiveContent)
 
@@ -302,9 +302,9 @@ export const OfFieldBase = defineComponent({
               shade: false,
               target: mainId ? '#' + mainId : '',
               onBlur: overlayBlur,
-              sticky: props.sticky,
+              sticky: props.sticky
             },
-            overlay,
+            overlay
           )
         }
         const children = [
@@ -317,7 +317,7 @@ export const OfFieldBase = defineComponent({
             'div',
             {
               class: 'of-field-main',
-              id: mainId,
+              id: mainId
             },
             [
               h('div', { class: 'of--layer of--layer-bg' }),
@@ -326,17 +326,17 @@ export const OfFieldBase = defineComponent({
               h(
                 'div',
                 {
-                  class: 'of-field-header',
+                  class: 'of-field-header'
                 },
                 label && labelPosition.value === 'frame'
                   ? h('div', { class: 'of-field-header-label' }, label)
-                  : undefined,
+                  : undefined
               ),
-              h('div', { class: 'of-field-body' }, inner),
-            ],
+              h('div', { class: 'of-field-body' }, inner)
+            ]
           ),
           h('div', { class: 'of-field-caption' }), // FIXME support custom slot
-          overlay,
+          overlay
         ]
         return h(
           'div',
@@ -346,14 +346,14 @@ export const OfFieldBase = defineComponent({
             style,
             tabindex: '-1',
             ...handlers,
-            ...dragIn?.handlers,
+            ...dragIn?.handlers
           },
-          children,
+          children
         )
       } catch (e) {
         console.error(e)
         return ''
       }
     }
-  },
+  }
 })

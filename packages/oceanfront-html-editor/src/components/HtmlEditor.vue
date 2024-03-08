@@ -11,7 +11,7 @@
       focused ? 'of--focused' : '',
       'of--variant-outlined',
       'of--tint-undefined',
-      isEditable ? 'of-text-field' : '',
+      isEditable ? 'of-text-field' : ''
     ]"
     :style="style"
   >
@@ -119,14 +119,14 @@ import {
   Ref,
   onMounted,
   nextTick,
-  ShallowRef,
+  ShallowRef
 } from 'vue'
 import {
   Editor,
   EditorContent,
   Extension,
   FocusPosition,
-  useEditor,
+  useEditor
 } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import TextAlign from '@tiptap/extension-text-align'
@@ -158,34 +158,34 @@ type ToolbarMenuItem = {
 export default defineComponent({
   name: 'OfHtmlEditor',
   components: {
-    EditorContent,
+    EditorContent
   },
   props: {
     name: String,
     label: String,
     modelValue: {
       type: String,
-      default: '',
+      default: ''
     },
     record: {
       type: Object as PropType<FormRecord>,
-      required: false,
+      required: false
     },
     extensions: {
-      type: Array as PropType<Extension[]>,
+      type: Array as PropType<Extension[]>
     },
     toolbarItems: {
       type: Array as PropType<String[]>,
-      default: () => [],
+      default: () => []
     },
     editable: {
       type: Boolean,
-      default: true,
-    },
+      default: true
+    }
   },
   emits: {
     'update:modelValue': null,
-    updated: null,
+    updated: null
   },
   setup(props, ctx) {
     const focused: Ref<boolean> = ref(false)
@@ -197,7 +197,7 @@ export default defineComponent({
 
     const htmlFieldName: ComputedRef<string | undefined> = computed(() => {
       const htmlFieldExists = record.value?.value.hasOwnProperty(
-        `${props.name}_html`,
+        `${props.name}_html`
       )
       const name = props.name ? `${props.name}_html` : undefined
       return htmlFieldExists ? name : undefined
@@ -229,7 +229,7 @@ export default defineComponent({
       { text: 'Comic Sans', value: 'Comic Sans MS, Comic Sans' },
       { text: 'Serif', value: 'serif' },
       { text: 'Monospace', value: 'monospace' },
-      { text: 'Cursive', value: 'cursive' },
+      { text: 'Cursive', value: 'cursive' }
     ]
 
     const getFontSizes = (): number[] => {
@@ -254,7 +254,7 @@ export default defineComponent({
         { text: 'Size', value: 'default' },
         ...getFontSizes().map((size: number) => {
           return { text: String(size), value: String(size) }
-        }),
+        })
       ]
     })
 
@@ -268,7 +268,7 @@ export default defineComponent({
     const tableRowsFieldProps = computed(() => {
       return {
         format: {
-          type: 'text',
+          type: 'text'
         },
         modelValue: tableRows.value,
         'onUpdate:modelValue': (val: number) => {
@@ -277,14 +277,14 @@ export default defineComponent({
         label: 'Rows',
         id: 'table_rows',
         name: 'table_rows',
-        type: 'text',
+        type: 'text'
       }
     })
 
     const tableColumnsFieldProps = computed(() => {
       return {
         format: {
-          type: 'text',
+          type: 'text'
         },
         modelValue: tableColumns.value,
         'onUpdate:modelValue': (val: number) => {
@@ -293,7 +293,7 @@ export default defineComponent({
         label: 'Columns',
         id: 'table_columns',
         name: 'table_columns',
-        type: 'text',
+        type: 'text'
       }
     })
 
@@ -305,12 +305,12 @@ export default defineComponent({
         id: 'add_header',
         format: {
           type: 'toggle',
-          inputType: 'switch',
+          inputType: 'switch'
         },
         modelValue: tableWithHeader.value,
         'onUpdate:modelValue': (val: boolean) => {
           tableWithHeader.value = val
-        },
+        }
       }
     })
 
@@ -326,7 +326,7 @@ export default defineComponent({
         .insertTable({
           rows: tableRows.value,
           cols: tableColumns.value,
-          withHeaderRow: tableWithHeader.value,
+          withHeaderRow: tableWithHeader.value
         })
         .run()
     }
@@ -337,7 +337,7 @@ export default defineComponent({
     const imageFieldProps = computed(() => {
       return {
         format: {
-          type: 'text',
+          type: 'text'
         },
         modelValue: imageUrl.value,
         'onUpdate:modelValue': (val: string) => {
@@ -346,7 +346,7 @@ export default defineComponent({
         label: 'URL',
         id: 'image-url',
         name: 'image-url',
-        type: 'text',
+        type: 'text'
       }
     })
 
@@ -367,7 +367,7 @@ export default defineComponent({
     const linkFieldProps = computed(() => {
       return {
         format: {
-          type: 'text',
+          type: 'text'
         },
         modelValue: link.value,
         'onUpdate:modelValue': (val: string) => {
@@ -376,7 +376,7 @@ export default defineComponent({
         label: 'URL',
         id: 'link',
         name: 'link',
-        type: 'text',
+        type: 'text'
       }
     })
 
@@ -415,7 +415,7 @@ export default defineComponent({
       () => props.modelValue,
       (value: string) => {
         if (!record.value) updateContent(value)
-      },
+      }
     )
 
     watch(
@@ -425,7 +425,7 @@ export default defineComponent({
         ],
       (value: string) => {
         updateContent(value)
-      },
+      }
     )
 
     watch(
@@ -436,14 +436,14 @@ export default defineComponent({
           updateData()
         }
         dataUpdated.value = false
-      },
+      }
     )
 
     watch(
       () => isEditable.value,
       (value: boolean) => {
         editor.value.setEditable(value)
-      },
+      }
     )
 
     watch(
@@ -454,7 +454,7 @@ export default defineComponent({
         } else {
           editor.value.chain().focus().setFontFamily(value).run()
         }
-      },
+      }
     )
 
     watch(
@@ -465,21 +465,21 @@ export default defineComponent({
         } else {
           editor.value.chain().focus().setFontSize(`${value}px`).run()
         }
-      },
+      }
     )
 
     watch(
       () => colorValue.value,
       (value: string) => {
         editor.value.chain().setColor(value).run()
-      },
+      }
     )
 
     const coreExtensions = [
       StarterKit,
       Image,
       TextAlign.configure({
-        types: ['heading', 'paragraph'],
+        types: ['heading', 'paragraph']
       }),
       Link,
       Underline,
@@ -489,11 +489,11 @@ export default defineComponent({
       FontSize,
       Color,
       Table.configure({
-        resizable: true,
+        resizable: true
       }),
       TableRow,
       TableCell,
-      TableHeader,
+      TableHeader
     ]
 
     const editor = useEditor({
@@ -517,7 +517,7 @@ export default defineComponent({
       },
       onBlur: () => {
         focused.value = false
-      },
+      }
     }) as ShallowRef<Editor>
 
     const updateContent = (value: string, emitUpdate = false): void => {
@@ -541,7 +541,7 @@ export default defineComponent({
 
       ctx.emit('updated', {
         html: editor.value.getHTML(),
-        text: editor.value.getText(),
+        text: editor.value.getText()
       })
       contentUpdated.value = false
     }
@@ -565,7 +565,7 @@ export default defineComponent({
               title: 'Undo',
               variant: 'text',
               disabled: menuDisabled.value,
-              click: () => editor.value.chain().focus().undo().run(),
+              click: () => editor.value.chain().focus().undo().run()
             },
             {
               name: 'redo',
@@ -573,9 +573,9 @@ export default defineComponent({
               title: 'Redo',
               variant: 'text',
               disabled: menuDisabled.value,
-              click: () => editor.value.chain().focus().redo().run(),
-            },
-          ],
+              click: () => editor.value.chain().focus().redo().run()
+            }
+          ]
         ],
         [
           'insert',
@@ -589,7 +589,7 @@ export default defineComponent({
               click: () => {
                 imageUrl.value = ''
                 imageDialogActive.value = true
-              },
+              }
             },
             {
               name: 'add-link',
@@ -600,7 +600,7 @@ export default defineComponent({
               click: () => {
                 link.value = ''
                 linkDialogActive.value = true
-              },
+              }
             },
             {
               name: 'add-table',
@@ -608,7 +608,7 @@ export default defineComponent({
               title: 'Table',
               variant: 'text',
               disabled: menuDisabled.value,
-              click: () => (tableDialogActive.value = true),
+              click: () => (tableDialogActive.value = true)
             },
             {
               name: 'horizontal-line',
@@ -617,9 +617,9 @@ export default defineComponent({
               variant: 'text',
               disabled: menuDisabled.value,
               click: () =>
-                editor.value.chain().focus().setHorizontalRule().run(),
-            },
-          ],
+                editor.value.chain().focus().setHorizontalRule().run()
+            }
+          ]
         ],
         [
           'style',
@@ -630,7 +630,7 @@ export default defineComponent({
               title: 'Paragraph',
               variant: getVariant('paragraph'),
               disabled: menuDisabled.value,
-              click: () => editor.value.chain().focus().setParagraph().run(),
+              click: () => editor.value.chain().focus().setParagraph().run()
             },
             {
               name: 'heading-1',
@@ -639,7 +639,7 @@ export default defineComponent({
               variant: getVariant('heading', { level: 1 }),
               disabled: menuDisabled.value,
               click: () =>
-                editor.value.chain().focus().toggleHeading({ level: 1 }).run(),
+                editor.value.chain().focus().toggleHeading({ level: 1 }).run()
             },
             {
               name: 'heading-2',
@@ -648,7 +648,7 @@ export default defineComponent({
               variant: getVariant('heading', { level: 2 }),
               disabled: menuDisabled.value,
               click: () =>
-                editor.value.chain().focus().toggleHeading({ level: 2 }).run(),
+                editor.value.chain().focus().toggleHeading({ level: 2 }).run()
             },
             {
               name: 'heading-3',
@@ -657,9 +657,9 @@ export default defineComponent({
               variant: getVariant('heading', { level: 3 }),
               disabled: menuDisabled.value,
               click: () =>
-                editor.value.chain().focus().toggleHeading({ level: 3 }).run(),
-            },
-          ],
+                editor.value.chain().focus().toggleHeading({ level: 3 }).run()
+            }
+          ]
         ],
         [
           'source',
@@ -669,10 +669,10 @@ export default defineComponent({
               icon: 'source-code',
               title: 'Source',
               variant: getVariant('source'),
-              click: () => toggleSourceMode(),
-            },
-          ],
-        ],
+              click: () => toggleSourceMode()
+            }
+          ]
+        ]
       ])
 
       return compactMenuItems(menu)
@@ -689,7 +689,7 @@ export default defineComponent({
               title: 'Bold',
               variant: getVariant('bold'),
               disabled: menuDisabled.value,
-              click: () => editor.value.chain().focus().toggleBold().run(),
+              click: () => editor.value.chain().focus().toggleBold().run()
             },
             {
               name: 'italic',
@@ -697,7 +697,7 @@ export default defineComponent({
               title: 'Italic',
               variant: getVariant('italic'),
               disabled: menuDisabled.value,
-              click: () => editor.value.chain().focus().toggleItalic().run(),
+              click: () => editor.value.chain().focus().toggleItalic().run()
             },
             {
               name: 'underline',
@@ -705,7 +705,7 @@ export default defineComponent({
               title: 'Underline',
               variant: getVariant('underline'),
               disabled: menuDisabled.value,
-              click: () => editor.value.chain().focus().toggleUnderline().run(),
+              click: () => editor.value.chain().focus().toggleUnderline().run()
             },
             {
               name: 'strike',
@@ -713,9 +713,9 @@ export default defineComponent({
               title: 'Strike',
               variant: getVariant('strike'),
               disabled: menuDisabled.value,
-              click: () => editor.value.chain().focus().toggleStrike().run(),
-            },
-          ],
+              click: () => editor.value.chain().focus().toggleStrike().run()
+            }
+          ]
         ],
         [
           'highlight',
@@ -726,7 +726,7 @@ export default defineComponent({
               title: 'Code',
               variant: getVariant('code'),
               disabled: menuDisabled.value,
-              click: () => editor.value.chain().focus().toggleCode().run(),
+              click: () => editor.value.chain().focus().toggleCode().run()
             },
             {
               name: 'highlight',
@@ -739,9 +739,9 @@ export default defineComponent({
                   .chain()
                   .focus()
                   .toggleHighlight({ color: '#74c0fc' })
-                  .run(),
-            },
-          ],
+                  .run()
+            }
+          ]
         ],
         [
           'align',
@@ -753,7 +753,7 @@ export default defineComponent({
               variant: getVariant({ textAlign: 'left' }),
               disabled: menuDisabled.value,
               click: () =>
-                editor.value.chain().focus().setTextAlign('left').run(),
+                editor.value.chain().focus().setTextAlign('left').run()
             },
             {
               name: 'align-center',
@@ -762,7 +762,7 @@ export default defineComponent({
               variant: getVariant({ textAlign: 'center' }),
               disabled: menuDisabled.value,
               click: () =>
-                editor.value.chain().focus().setTextAlign('center').run(),
+                editor.value.chain().focus().setTextAlign('center').run()
             },
             {
               name: 'align-right',
@@ -771,7 +771,7 @@ export default defineComponent({
               variant: getVariant({ textAlign: 'right' }),
               disabled: menuDisabled.value,
               click: () =>
-                editor.value.chain().focus().setTextAlign('right').run(),
+                editor.value.chain().focus().setTextAlign('right').run()
             },
             {
               name: 'align-justify',
@@ -780,9 +780,9 @@ export default defineComponent({
               variant: getVariant({ textAlign: 'justify' }),
               disabled: menuDisabled.value,
               click: () =>
-                editor.value.chain().focus().setTextAlign('justify').run(),
-            },
-          ],
+                editor.value.chain().focus().setTextAlign('justify').run()
+            }
+          ]
         ],
         [
           'clear',
@@ -793,7 +793,7 @@ export default defineComponent({
               title: 'Clear Format',
               variant: 'text',
               disabled: menuDisabled.value,
-              click: () => editor.value.chain().focus().clearNodes().run(),
+              click: () => editor.value.chain().focus().clearNodes().run()
             },
             {
               name: 'wrap',
@@ -801,9 +801,9 @@ export default defineComponent({
               title: 'Hard Break',
               variant: 'text',
               disabled: menuDisabled.value,
-              click: () => editor.value.chain().focus().setHardBreak().run(),
-            },
-          ],
+              click: () => editor.value.chain().focus().setHardBreak().run()
+            }
+          ]
         ],
         [
           'font',
@@ -818,7 +818,7 @@ export default defineComponent({
               modelValue: colorValue.value,
               'onUpdate:modelValue': (value: string): void => {
                 colorValue.value = value
-              },
+              }
             },
             {
               name: 'font-family',
@@ -831,7 +831,7 @@ export default defineComponent({
               modelValue: font.value,
               'onUpdate:modelValue': (value: string): void => {
                 font.value = value
-              },
+              }
             },
             {
               name: 'font-size',
@@ -844,9 +844,9 @@ export default defineComponent({
               modelValue: fontSizeValue.value,
               'onUpdate:modelValue': (value: string): void => {
                 fontSizeValue.value = value
-              },
-            },
-          ],
+              }
+            }
+          ]
         ],
         [
           'format-2',
@@ -858,7 +858,7 @@ export default defineComponent({
               variant: getVariant('orderedList'),
               disabled: menuDisabled.value,
               click: () =>
-                editor.value.chain().focus().toggleOrderedList().run(),
+                editor.value.chain().focus().toggleOrderedList().run()
             },
             {
               name: 'bulleted-list',
@@ -866,8 +866,7 @@ export default defineComponent({
               title: 'Bullet List',
               variant: getVariant('bulletList'),
               disabled: menuDisabled.value,
-              click: () =>
-                editor.value.chain().focus().toggleBulletList().run(),
+              click: () => editor.value.chain().focus().toggleBulletList().run()
             },
             {
               name: 'code-block',
@@ -875,7 +874,7 @@ export default defineComponent({
               title: 'Code Block',
               variant: getVariant('codeBlock'),
               disabled: menuDisabled.value,
-              click: () => editor.value.chain().focus().toggleCodeBlock().run(),
+              click: () => editor.value.chain().focus().toggleCodeBlock().run()
             },
             {
               name: 'blockquote',
@@ -883,11 +882,10 @@ export default defineComponent({
               title: 'Blockquote',
               variant: getVariant('blockquote'),
               disabled: menuDisabled.value,
-              click: () =>
-                editor.value.chain().focus().toggleBlockquote().run(),
-            },
-          ],
-        ],
+              click: () => editor.value.chain().focus().toggleBlockquote().run()
+            }
+          ]
+        ]
       ])
 
       return compactMenuItems(menu)
@@ -896,7 +894,7 @@ export default defineComponent({
     const menuRows = computed(() => {
       return {
         row1: getMenuRow1(),
-        row2: getMenuRow2(),
+        row2: getMenuRow2()
       }
     })
 
@@ -907,7 +905,7 @@ export default defineComponent({
         const sectionItems = items.filter(
           (item: ToolbarMenuItem) =>
             props.toolbarItems.length === 0 ||
-            props.toolbarItems.includes(item.name),
+            props.toolbarItems.includes(item.name)
         )
         if (result.length > 0 && sectionItems.length > 0) {
           result.push({
@@ -915,7 +913,7 @@ export default defineComponent({
             icon: '',
             title: '',
             variant: '',
-            type: 'divider',
+            type: 'divider'
           })
         }
         result = [...result, ...sectionItems]
@@ -925,7 +923,7 @@ export default defineComponent({
     }
 
     const setFocus = (
-      position: FocusPosition | undefined = undefined,
+      position: FocusPosition | undefined = undefined
     ): void => {
       if (sourceMode.value) {
         focused.value = true
@@ -977,8 +975,8 @@ export default defineComponent({
       addImage,
       sourceMode,
       source,
-      sourceElt,
+      sourceElt
     }
-  },
+  }
 })
 </script>

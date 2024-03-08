@@ -6,7 +6,7 @@ import {
   ref,
   watch,
   h,
-  nextTick,
+  nextTick
 } from 'vue'
 
 import { triggerDragEvent } from '../lib/colorpicker'
@@ -33,26 +33,26 @@ export default defineComponent({
       default: 0,
       validator: (value: number) => {
         return value >= 0 && value <= 360
-      },
+      }
     },
     saturation: {
       type: Number,
       default: 0,
       validator: (value: number) => {
         return value >= 0 && value <= 1
-      },
+      }
     },
     value: {
       type: Number,
       default: 0,
       validator: (value: number) => {
         return value >= 0 && value <= 1
-      },
+      }
     },
     focus: {
       type: Boolean,
-      default: true,
-    },
+      default: true
+    }
   },
   emits: ['update:saturation', 'update:value', 'change', 'select'],
   setup(props, { emit }) {
@@ -66,7 +66,7 @@ export default defineComponent({
     const currentHsv = reactive({
       h: props.hue,
       s: props.saturation,
-      v: props.value,
+      v: props.value
     })
 
     const emitChange = (s: number, v: number) => {
@@ -116,7 +116,7 @@ export default defineComponent({
             },
             end: (event) => {
               handleDrag(event as MouseEvent)
-            },
+            }
           })
           updateCursorPosition()
         }
@@ -129,7 +129,7 @@ export default defineComponent({
         nextTick(() => {
           if (val) elt.value?.focus()
         })
-      },
+      }
     )
 
     watch(
@@ -137,7 +137,7 @@ export default defineComponent({
       (hue: number) => {
         currentHsv.h = hue
         background.value = 'hsl(' + Math.round(currentHsv.h) + ', 100%, 50%)'
-      },
+      }
     )
 
     watch(
@@ -145,7 +145,7 @@ export default defineComponent({
       (value: number) => {
         currentHsv.v = value
         updateCursorPosition()
-      },
+      }
     )
 
     watch(
@@ -153,7 +153,7 @@ export default defineComponent({
       (saturation: number) => {
         currentHsv.s = saturation
         updateCursorPosition()
-      },
+      }
     )
 
     const hooks = {
@@ -183,7 +183,7 @@ export default defineComponent({
         }
         updateCursorPosition()
         emitChange(currentHsv.s, currentHsv.v)
-      },
+      }
     }
 
     return () => {
@@ -193,7 +193,7 @@ export default defineComponent({
           ref: elt,
           class: 'saturation',
           style: { backgroundColor: background.value },
-          ...hooks,
+          ...hooks
         },
         [
           h('div', { class: 'saturation__white' }),
@@ -205,13 +205,13 @@ export default defineComponent({
               style: {
                 top: cursorTop.value + 'px',
                 left: cursorLeft.value + 'px',
-                onClick: handleDrag,
-              },
+                onClick: handleDrag
+              }
             },
-            h('div'),
-          ),
-        ],
+            h('div')
+          )
+        ]
       )
     }
-  },
+  }
 })

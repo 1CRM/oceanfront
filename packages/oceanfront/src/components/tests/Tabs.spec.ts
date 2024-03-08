@@ -5,13 +5,13 @@ import OfTabs from '../Tabs.vue'
 test('displays message', () => {
   const wrapper = mount(OfTabs, {
     props: {
-      items: ['One', 'Two'],
+      items: ['One', 'Two']
     },
     global: {
       components: {
-        OfIcon,
-      },
-    },
+        OfIcon
+      }
+    }
   })
 
   expect(wrapper.text()).toContain('Two')

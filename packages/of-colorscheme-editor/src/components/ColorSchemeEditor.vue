@@ -26,7 +26,7 @@ const ColorSchemeEditor = defineComponent({
   name: 'ColorSchemeEditor',
   props: {
     colors: Object,
-    limits: Object,
+    limits: Object
   },
   emits: ['colorUpdated', 'palletteUpdated'],
   setup(props, ctx) {
@@ -40,7 +40,7 @@ const ColorSchemeEditor = defineComponent({
       (pallettes) => {
         ctx.emit('palletteUpdated', pallettes)
       },
-      { immediate: true },
+      { immediate: true }
     )
 
     const formatName = (name: string): string => {
@@ -56,9 +56,9 @@ const ColorSchemeEditor = defineComponent({
     return {
       pallettes,
       formatName,
-      updateColor,
+      updateColor
     }
-  },
+  }
 })
 
 export default ColorSchemeEditor

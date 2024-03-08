@@ -25,7 +25,7 @@ export const FontSize = Extension.create<FontSizeOptions>({
 
   addOptions() {
     return {
-      types: ['textStyle'],
+      types: ['textStyle']
     }
   },
 
@@ -43,12 +43,12 @@ export const FontSize = Extension.create<FontSizeOptions>({
               }
 
               return {
-                style: `font-size: ${attributes.fontSize}`,
+                style: `font-size: ${attributes.fontSize}`
               }
-            },
-          },
-        },
-      },
+            }
+          }
+        }
+      }
     ]
   },
 
@@ -66,7 +66,7 @@ export const FontSize = Extension.create<FontSizeOptions>({
             .setMark('textStyle', { fontSize: null })
             .removeEmptyTextStyle()
             .run()
-        },
+        }
     }
-  },
+  }
 })

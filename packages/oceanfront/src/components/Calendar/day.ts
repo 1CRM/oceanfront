@@ -10,10 +10,10 @@ export default defineComponent({
   mixins: [Base],
   props: {
     ...calendarProps.internal,
-    ...calendarProps.common,
+    ...calendarProps.common
   },
   computed: {
-    formatMgr: () => useFormats(),
+    formatMgr: () => useFormats()
   },
   methods: {
     getVisibleRange(): Timestamp[] {
@@ -35,15 +35,15 @@ export default defineComponent({
     collectSlots() {
       return {
         'day-title': this.dayTitleSlot(),
-        'super-title': this.superTitleSlot(),
+        'super-title': this.superTitleSlot()
       }
     },
     getCategoriesList() {
       return [
         {
           category: 'Today',
-          date: this.$props.day,
-        },
+          date: this.$props.day
+        }
       ]
     },
     getIgnoreCategories() {
@@ -54,14 +54,14 @@ export default defineComponent({
         ...this.$props,
         categoriesList: this.getCategoriesList(),
         ignoreCategories: this.getIgnoreCategories(),
-        visibleRange: this.getVisibleRange(),
+        visibleRange: this.getVisibleRange()
       }
-    },
+    }
   },
   render() {
     return h(dayColumns, this.getProps(), {
       ...this.$slots,
-      ...this.collectSlots(),
+      ...this.collectSlots()
     })
-  },
+  }
 })

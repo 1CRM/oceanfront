@@ -7,13 +7,13 @@ import {
   FieldRender,
   makeFieldContext,
   newFieldId,
-  provideFieldRender,
+  provideFieldRender
 } from '../lib/fields'
 
 export const OfFileField = defineComponent({
   name: 'OfFileField',
   props: {
-    ...BaseFieldProps,
+    ...BaseFieldProps
   },
   setup(props, ctx) {
     const fieldCtx = makeFieldContext(props, ctx)
@@ -30,8 +30,8 @@ export const OfFileField = defineComponent({
         stateValue.value = val
       },
       {
-        immediate: true,
-      },
+        immediate: true
+      }
     )
     const elt = ref<HTMLInputElement | undefined>()
     const focused = ref(false)
@@ -92,7 +92,7 @@ export const OfFileField = defineComponent({
       },
       onVueMounted(vnode: VNode) {
         elt.value = vnode.el as HTMLInputElement
-      },
+      }
     }
     const dragIn = {
       onDrop(evt: DragEvent) {
@@ -102,7 +102,7 @@ export const OfFileField = defineComponent({
           elt.value.files = files
         }
         handleUpdate(files)
-      },
+      }
     }
 
     const slots = {
@@ -114,7 +114,7 @@ export const OfFileField = defineComponent({
           return h(OfIcon, {
             name: 'cancel circle',
             scale: props.scale || 'input',
-            onClick: clickClear,
+            onClick: clickClear
           })
       },
       interactiveContent: () => {
@@ -125,12 +125,12 @@ export const OfFileField = defineComponent({
             {
               class: [
                 'of-field-content-text',
-                'of--align-' + (props.align || 'start'),
+                'of--align-' + (props.align || 'start')
               ],
               for: inputId.value,
-              onClick: (evt: MouseEvent) => evt.stopPropagation(),
+              onClick: (evt: MouseEvent) => evt.stopPropagation()
             },
-            stateValue.value.name,
+            stateValue.value.name
           )
         } else {
           label = h(
@@ -139,12 +139,12 @@ export const OfFileField = defineComponent({
               class: [
                 'of-field-content-text',
                 'of--align-' + (props.align || 'start'),
-                'of--text-placeholder',
+                'of--text-placeholder'
               ],
               for: inputId.value,
-              onClick: (evt: MouseEvent) => evt.stopPropagation(),
+              onClick: (evt: MouseEvent) => evt.stopPropagation()
             },
-            [props.placeholder || 'Attach a file'],
+            [props.placeholder || 'Attach a file']
           )
         }
         return h('div', { class: 'of-file-input' }, [
@@ -154,14 +154,14 @@ export const OfFileField = defineComponent({
             disabled: !fieldCtx.editable,
             name: fieldCtx.name,
             type: 'file',
-            ...hooks,
+            ...hooks
           }),
-          label,
+          label
         ])
       },
       prepend() {
         return h(OfIcon, { name: 'attach', size: props.scale || 'input' })
-      },
+      }
     }
 
     const fRender: FieldRender = fieldRender({
@@ -174,7 +174,7 @@ export const OfFileField = defineComponent({
       updated: computed(() => initialValue.value !== stateValue.value),
       value: stateValue,
       class: computed(() => ({ 'of-file-field': true })),
-      click: clickOpen,
+      click: clickOpen
     })
     provideFieldRender(fRender)
 
@@ -182,5 +182,5 @@ export const OfFileField = defineComponent({
       return h(OfFieldBase, props, { ...slots, ...ctx.slots })
     }
     return render
-  },
+  }
 })

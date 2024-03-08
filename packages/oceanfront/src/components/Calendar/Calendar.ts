@@ -22,5 +22,5 @@ export default defineComponent({
       default:
         return h(DayCalendar, this.$props, this.$slots)
     }
-  },
+  }
 })

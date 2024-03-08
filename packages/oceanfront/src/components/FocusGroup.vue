@@ -9,12 +9,12 @@ import { provideFocusGroup } from '../lib/focus'
 export default defineComponent({
   name: 'OfFocusGroup',
   props: {
-    focused: Boolean,
+    focused: Boolean
   },
   emits: ['focus', 'blur'],
   setup(props, ctx) {
     const state = {
-      focused: ref(!!props.focused),
+      focused: ref(!!props.focused)
     }
     watch(state.focused, (f) => {
       if (f) {
@@ -29,11 +29,11 @@ export default defineComponent({
       },
       blur() {
         state.focused.value = false
-      },
+      }
     })
     return {
-      state,
+      state
     }
-  },
+  }
 })
 </script>

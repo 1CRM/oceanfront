@@ -87,7 +87,7 @@ import {
   ref,
   Ref,
   nextTick,
-  watch,
+  watch
 } from 'vue'
 import { OfField } from '../components/Field'
 import { OfNavGroup } from '../components/NavGroup'
@@ -101,7 +101,7 @@ const OfOptionList = defineComponent({
   components: {
     OfField,
     OfListItem,
-    OfNavGroup,
+    OfNavGroup
   },
   props: {
     focus: { type: Boolean, default: false },
@@ -109,9 +109,9 @@ const OfOptionList = defineComponent({
     style: [Object, String],
     items: {
       type: [String, Object, Array] as PropType<ItemsProp>,
-      default: () => [],
+      default: () => []
     },
-    addSearch: { type: Boolean, default: false },
+    addSearch: { type: Boolean, default: false }
   },
   emits: ['blur', 'click'],
   setup(props, ctx) {
@@ -119,7 +119,7 @@ const OfOptionList = defineComponent({
     const allItems = computed(() => {
       return (
         itemMgr.getItemList(props.items) || {
-          items: [],
+          items: []
         }
       )
     })
@@ -180,7 +180,7 @@ const OfOptionList = defineComponent({
       () => props.focus,
       (val) => {
         if (val) focusFirstItem()
-      },
+      }
     )
 
     const onKeyPress = (evt: KeyboardEvent) => {
@@ -260,13 +260,13 @@ const OfOptionList = defineComponent({
       if (filterItems.value.length == 0) return
 
       const selected = filterItems.value.findIndex(
-        (item) => item.selected && item.selected === true,
+        (item) => item.selected && item.selected === true
       )
 
       if (!ignoreSelected && selected !== -1) {
         filterItems.value[selected].attrs = {
           ...filterItems.value[selected].attrs,
-          ...{ isFocused: true },
+          ...{ isFocused: true }
         }
       } else {
         scrollListTop()
@@ -302,9 +302,9 @@ const OfOptionList = defineComponent({
       onKeyPress,
 
       onItemBlur,
-      onItemFocus,
+      onItemFocus
     }
-  },
+  }
 })
 
 export default OfOptionList

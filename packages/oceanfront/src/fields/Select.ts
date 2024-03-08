@@ -10,7 +10,7 @@ import {
   fieldRender,
   makeFieldContext,
   newFieldId,
-  provideFieldRender,
+  provideFieldRender
 } from '../lib/fields'
 import { transformItemsList, useItems } from '../lib/items'
 
@@ -24,12 +24,12 @@ export const OfSelectField = defineComponent({
     addRemove: Boolean,
     closeAfterSelect: {
       type: Boolean,
-      default: true,
+      default: true
     },
     inDataTable: {
       type: Boolean,
-      default: false,
-    },
+      default: false
+    }
   },
   emits: ['focus', 'blur', 'update:modelValue'],
   setup(props, ctx) {
@@ -57,8 +57,8 @@ export const OfSelectField = defineComponent({
         pendingValue.value = undefined
       },
       {
-        immediate: true,
-      },
+        immediate: true
+      }
     )
 
     const elt = ref<HTMLElement | undefined>()
@@ -74,7 +74,7 @@ export const OfSelectField = defineComponent({
     })
     const opened = ref(false)
     const items = computed(() =>
-      transformItemsList(itemMgr, props.items, props.name, props.record),
+      transformItemsList(itemMgr, props.items, props.name, props.record)
     )
 
     const itemForValue = (value: any) => {
@@ -152,7 +152,7 @@ export const OfSelectField = defineComponent({
     const setValue = (
       val: any,
       _item?: any,
-      ev?: MouseEvent | KeyboardEvent,
+      ev?: MouseEvent | KeyboardEvent
     ) => {
       ev?.stopPropagation()
       ev?.preventDefault()
@@ -191,11 +191,11 @@ export const OfSelectField = defineComponent({
                   onClick: (e: Event) => {
                     e.stopPropagation()
                     setValue(val)
-                  },
+                  }
                 })
-              : undefined,
-          ],
-        ),
+              : undefined
+          ]
+        )
       )
     }
 
@@ -214,7 +214,7 @@ export const OfSelectField = defineComponent({
           evt.preventDefault()
           evt.stopPropagation()
         }
-      },
+      }
     }
 
     const slots = {
@@ -223,7 +223,7 @@ export const OfSelectField = defineComponent({
           return h(OfIcon, {
             class: 'of-select-icon',
             name: opened.value ? 'select up' : 'select down',
-            size: 'input',
+            size: 'input'
           })
       },
       interactiveContent: () => {
@@ -235,18 +235,18 @@ export const OfSelectField = defineComponent({
             {
               class: [
                 'of-field-content-text',
-                'of--align-' + (props.align || 'start'),
+                'of--align-' + (props.align || 'start')
               ],
               id: inputId.value,
               ref: elt,
               tabindex: fieldCtx.mode === 'fixed' ? -1 : 0,
               ariaLabel: fieldCtx.ariaLabel ?? props.label,
-              ...hooks,
+              ...hooks
             },
-            labels,
-          ),
+            labels
+          )
         ]
-      },
+      }
     }
 
     const fRender = fieldRender({
@@ -279,14 +279,14 @@ export const OfSelectField = defineComponent({
                 onUpdateValue: (val: any) => {
                   fieldCtx.onUpdate?.(val)
                 },
-                class: 'of--elevated-1',
+                class: 'of--elevated-1'
               })
             : undefined,
         visible: opened,
-        onBlur: closePopup,
+        onBlur: closePopup
       },
       updated: computed(() => initialValue.value !== stateValue.value),
-      value: stateValue,
+      value: stateValue
     })
     provideFieldRender(fRender)
 
@@ -294,5 +294,5 @@ export const OfSelectField = defineComponent({
       return h(OfFieldBase, props, { ...slots, ...ctx.slots })
     }
     return render
-  },
+  }
 })
