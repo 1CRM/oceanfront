@@ -9,7 +9,7 @@ import {
   triggerRef,
   unref,
   isReactive,
-  toRaw,
+  toRaw
 } from 'vue'
 import { hasOwn } from '@vue/shared'
 
@@ -19,7 +19,7 @@ export {
   isFunction,
   isPromise,
   isObject,
-  looseEqual,
+  looseEqual
 } from '@vue/shared'
 
 export const isDigit = (s: string): boolean => s >= '0' && s <= '9'
@@ -104,7 +104,7 @@ export function extendReactive<T extends object, U extends object>(
       }
       Reflect.deleteProperty(target, key)
       return true
-    },
+    }
   })
 }
 
@@ -160,7 +160,7 @@ export function restrictProps<T extends object, K extends keyof T>(
     deleteProperty(target: T, key: string): boolean {
       if (!limitProps || props.has(key)) delete (target as any)[key]
       return true
-    },
+    }
   })
 }
 
@@ -180,7 +180,7 @@ export function definedProps<T extends object, K extends keyof T>(
       return Reflect.ownKeys(target).filter(
         (k) => (target as any)[k] !== undefined
       )
-    },
+    }
   })
 }
 
@@ -216,7 +216,7 @@ const readonlyUnrefHandlers = {
       console.warn('Cannot delete property of readonly ref')
     }
     return true
-  },
+  }
 }
 
 export function readonlyUnref<T>(val: Ref<T>): T {
@@ -278,7 +278,7 @@ class PositionObserverImpl implements PositionObserver {
             height:
               entry.contentRect.height +
               parseInt(estyle.paddingTop, 10) +
-              parseInt(estyle.paddingBottom, 10),
+              parseInt(estyle.paddingBottom, 10)
           })
         }
         triggerRef(pos)

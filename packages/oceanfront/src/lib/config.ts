@@ -5,7 +5,7 @@ import {
   InjectionKey,
   ComputedRef,
   computed,
-  Ref,
+  Ref
 } from 'vue'
 
 export type Config = ConfigState

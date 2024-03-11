@@ -1,62 +1,48 @@
 <template>
   <of-overlay :active="active" @blur="hideOnBlur ? hide() : undefined">
     <template #default="{ active: dialogActive }">
-      <transition :name="transition">
-        <div class="of-dialog-outer">
+      <div class="of-dialog-outer">
+        <div
+          ref="dialog"
+          role="dialog"
+          :id="id"
+          class="of-dialog"
+          :class="classAttr"
+          v-if="dialogActive"
+        >
           <div
-            ref="dialog"
-            role="dialog"
-            :id="id"
-            class="of-dialog"
-            :class="classAttr"
-            v-if="dialogActive"
+            class="of-dialog-header"
+            ref="dialogHeader"
+            :class="{ 'drag-and-drop': dragAndDrop }"
+            v-on="{ mousedown: dragAndDrop ? dragAndDropAction : null }"
           >
             <div
-              class="of-dialog-header"
-              ref="dialogHeader"
-              :class="{ 'drag-and-drop': dragAndDrop }"
-              v-on="{ mousedown: dragAndDrop ? dragAndDropAction : null }"
+              v-if="showCloseButton"
+              class="dialog-close"
+              tabindex="0"
+              @click="hide()"
             >
-              <div
-                v-if="showCloseButton"
-                class="dialog-close"
-                tabindex="0"
-                @click="hide()"
-              >
-                <of-icon name="cancel" />
-              </div>
-              <slot name="header" />
+              <of-icon name="cancel" />
             </div>
-            <div class="of-dialog-content">
-              <slot />
+            <slot name="header" />
+          </div>
+          <div class="of-dialog-content">
+            <slot />
+          </div>
+          <div class="of-dialog-footer">
+            <div v-if="resize" class="dialog-resizer" @mousedown="resizeAction">
+              <of-icon name="popup resize" />
             </div>
-            <div class="of-dialog-footer">
-              <div
-                v-if="resize"
-                class="dialog-resizer"
-                @mousedown="resizeAction"
-              >
-                <of-icon name="popup resize" />
-              </div>
-              <slot name="footer" />
-            </div>
+            <slot name="footer" />
           </div>
         </div>
-      </transition>
+      </div>
     </template>
   </of-overlay>
 </template>
 
 <script lang="ts">
-import {
-  ref,
-  defineComponent,
-  computed,
-  watch,
-  Ref,
-  onMounted,
-  onUnmounted,
-} from 'vue'
+import { ref, defineComponent, computed, watch, Ref, onUnmounted } from 'vue'
 import { OfOverlay } from './Overlay'
 
 export default defineComponent({
@@ -72,7 +58,7 @@ export default defineComponent({
     dragAndDrop: { type: Boolean, default: true },
     transition: { type: String, default: 'slide-down' },
     hideOnBlur: { type: Boolean, default: true },
-    showCloseButton: { type: Boolean, default: false },
+    showCloseButton: { type: Boolean, default: false }
   },
   emits: ['update:modelValue'],
   setup: function (props, ctx) {
@@ -127,7 +113,7 @@ export default defineComponent({
       1: 0,
       2: 0,
       3: 0,
-      4: 0,
+      4: 0
     })
 
     let startWidth = ref()
@@ -275,8 +261,8 @@ export default defineComponent({
       dialog,
       dialogHeader,
       dragAndDropAction,
-      resizeAction,
+      resizeAction
     }
-  },
+  }
 })
 </script>

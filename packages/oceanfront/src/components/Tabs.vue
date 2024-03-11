@@ -1,138 +1,132 @@
 <template>
-  <transition>
-    <div
-      class="of-tabs"
-      ref="tabs"
-      :class="{
-        'of--with-border': withBorder,
-        [`of--density-${normalizedDensity}`]: true,
-        'top-tabs': topTabs,
-      }"
-      :style="offsetStyle"
-    >
-      <div :class="cls">
-        <div
-          :class="{
-            'of-tabs-navigation-header': true,
-            'of-tabs-navigation-header-show-next-navigation':
-              ofTabsNavigationHeaderShowNextNavigation,
-            'of-tabs-navigation-header-show-previous-navigation':
-              ofTabsNavigationHeaderShowPreviousNavigation,
-            'of-tabs-navigation-header-has-navigation': showNavigation,
-          }"
-        >
-          <div
-            v-if="showNavigation"
-            class="of-tabs-navigation of-tabs-navigation-prev"
-            @click="navigateHeader('prev')"
-          >
-            <of-icon
-              name="page previous"
-              :title="'Previous tab'"
-              scale="input"
-            />
-          </div>
-          <div class="of-tabs-header" ref="ofTabsHeader" role="tablist">
-            <template :key="tab.key" v-for="(tab, idx) in tabsList">
-              <div class="overflow-separator" v-if="tab.overflowButton" />
-              <div
-                @pointerup="(e) => tab.disabled || handleSelectTab(e, tab.key)"
-                @mouseover="
-                  tab.disabled || onMouseoverTab(tab.key, $event.target)
-                "
-                @mouseleave="tab.disabled || subMenuLeave(tab.key)"
-                @focus="onFocusTab(tab.key)"
-                @blur="onBlurTab(tab.key)"
-                @keydown="navigate($event)"
-                :ref="(el) => (tabsRefs[idx] = el)"
-                tabindex="0"
-                :class="[
-                  {
-                    'is-active': selectedTabKey === tab.key && showActiveTab,
-                    'is-disabled': tab.disabled,
-                    'of--focused':
-                      (showActiveTab && focusedTabKey === tab.key) ||
-                      openedMenuTabKey === tab.key ||
-                      (tab.key == -1 && outsideTabsOpened),
-                    'of-tab-header-item': true,
-                    'overflow-button': tab.overflowButton,
-                    'of--rounded': rounded,
-                    'of--with-border': withBorder,
-                  },
-                  tab.params?.className,
-                ]"
-                role="tab"
-                :aria-label="tab.ariaLabel"
-                :aria-haspopup="showSubMenu"
-                :aria-selected="selectedTabKey === tab.key"
-              >
-                <div class="of--layer of--layer-bg" />
-                <div class="of--layer of--layer-brd" />
-                <div class="of--layer of--layer-outl" />
-                <div class="of-tab-text">
-                  <of-icon v-if="tab.icon" :name="tab.icon" scale="1.1em" />
-                  <span>{{ tab.text }}</span>
-                </div>
-                <div class="of--layer of--layer-state" />
-              </div>
-            </template>
-            <div class="of-tabs-line" ref="tabLine"></div>
-          </div>
-          <div
-            v-if="showNavigation"
-            class="of-tabs-navigation of-tabs-navigation-next"
-            @click="navigateHeader('next')"
-          >
-            <of-icon name="page next" :title="'Next tab'" scale="input" />
-          </div>
-        </div>
-        <of-overlay
-          :active="subMenuActive"
-          :focus="false"
-          :capture="false"
-          :shade="false"
-          :target="subMenuOuter"
-        >
-          <slot name="sub-menu" v-if="showSubMenu">
-            <of-option-list
-              @mouseenter="subMenuClearTimeout()"
-              @mouseleave="subMenuLeave()"
-              @click="selectSubMenuTab"
-              @blur="onBlurList"
-              :class="[{ 'top-tabs-menu': topTabs }, overlayClassname]"
-              class="of--elevated-1"
-              :style="overlayStyle"
-              :items="subMenuTabsList"
-              :focus="optionListFocused"
-            >
-              <template #option-icon="item"
-                ><slot name="submenu-option-icon" v-bind="item"
-              /></template>
-            </of-option-list>
-          </slot>
-        </of-overlay>
-      </div>
-
-      <of-overlay
-        :active="outsideTabsOpened"
-        :focus="false"
-        :shade="false"
-        :capture="false"
-        :target="overflowButtonEl"
-        @blur="closeOverflowPopup"
+  <div
+    class="of-tabs"
+    ref="tabs"
+    :class="{
+      'of--with-border': withBorder,
+      [`of--density-${normalizedDensity}`]: true,
+      'top-tabs': topTabs
+    }"
+    :style="offsetStyle"
+  >
+    <div :class="cls">
+      <div
+        :class="{
+          'of-tabs-navigation-header': true,
+          'of-tabs-navigation-header-show-next-navigation':
+            ofTabsNavigationHeaderShowNextNavigation,
+          'of-tabs-navigation-header-show-previous-navigation':
+            ofTabsNavigationHeaderShowPreviousNavigation,
+          'of-tabs-navigation-header-has-navigation': showNavigation
+        }"
       >
-        <of-option-list
-          class="of--elevated-1"
-          :items="invisibleTabsList"
-          :focus="optionListFocused"
-          @mouseenter="subMenuClearTimeout()"
-          @mouseleave="subMenuLeave(-1)"
-          @click="selectInvisibleTab"
-          @blur="onBlurList"
-        />
+        <div
+          v-if="showNavigation"
+          class="of-tabs-navigation of-tabs-navigation-prev"
+          @click="navigateHeader('prev')"
+        >
+          <of-icon name="page previous" :title="'Previous tab'" scale="input" />
+        </div>
+        <div class="of-tabs-header" ref="ofTabsHeader" role="tablist">
+          <template :key="tab.key" v-for="(tab, idx) in tabsList">
+            <div class="overflow-separator" v-if="tab.overflowButton" />
+            <div
+              @pointerup="(e) => tab.disabled || handleSelectTab(e, tab.key)"
+              @mouseover="
+                tab.disabled || onMouseoverTab(tab.key, $event.target)
+              "
+              @mouseleave="tab.disabled || subMenuLeave(tab.key)"
+              @focus="onFocusTab(tab.key)"
+              @blur="onBlurTab(tab.key)"
+              @keydown="navigate($event)"
+              :ref="(el) => (tabsRefs[idx] = el)"
+              tabindex="0"
+              :class="[
+                {
+                  'is-active': selectedTabKey === tab.key && showActiveTab,
+                  'is-disabled': tab.disabled,
+                  'of--focused':
+                    (showActiveTab && focusedTabKey === tab.key) ||
+                    openedMenuTabKey === tab.key ||
+                    (tab.key == -1 && outsideTabsOpened),
+                  'of-tab-header-item': true,
+                  'overflow-button': tab.overflowButton,
+                  'of--rounded': rounded,
+                  'of--with-border': withBorder
+                },
+                tab.params?.className
+              ]"
+              role="tab"
+              :aria-label="tab.ariaLabel"
+              :aria-haspopup="showSubMenu"
+              :aria-selected="selectedTabKey === tab.key"
+            >
+              <div class="of--layer of--layer-bg" />
+              <div class="of--layer of--layer-brd" />
+              <div class="of--layer of--layer-outl" />
+              <div class="of-tab-text">
+                <of-icon v-if="tab.icon" :name="tab.icon" scale="1.1em" />
+                <span>{{ tab.text }}</span>
+              </div>
+              <div class="of--layer of--layer-state" />
+            </div>
+          </template>
+          <div class="of-tabs-line" ref="tabLine"></div>
+        </div>
+        <div
+          v-if="showNavigation"
+          class="of-tabs-navigation of-tabs-navigation-next"
+          @click="navigateHeader('next')"
+        >
+          <of-icon name="page next" :title="'Next tab'" scale="input" />
+        </div>
+      </div>
+      <of-overlay
+        :active="subMenuActive"
+        :focus="false"
+        :capture="false"
+        :shade="false"
+        :target="subMenuOuter"
+      >
+        <slot name="sub-menu" v-if="showSubMenu">
+          <of-option-list
+            @mouseenter="subMenuClearTimeout()"
+            @mouseleave="subMenuLeave()"
+            @click="selectSubMenuTab"
+            @blur="onBlurList"
+            :class="[{ 'top-tabs-menu': topTabs }, overlayClassname]"
+            class="of--elevated-1"
+            :style="overlayStyle"
+            :items="subMenuTabsList"
+            :focus="optionListFocused"
+          >
+            <template #option-icon="item"
+              ><slot name="submenu-option-icon" v-bind="item"
+            /></template>
+          </of-option-list>
+        </slot>
       </of-overlay>
     </div>
-  </transition>
+
+    <of-overlay
+      :active="outsideTabsOpened"
+      :focus="false"
+      :shade="false"
+      :capture="false"
+      :target="overflowButtonEl"
+      @blur="closeOverflowPopup"
+    >
+      <of-option-list
+        class="of--elevated-1"
+        :items="invisibleTabsList"
+        :focus="optionListFocused"
+        @mouseenter="subMenuClearTimeout()"
+        @mouseleave="subMenuLeave(-1)"
+        @click="selectInvisibleTab"
+        @blur="onBlurList"
+      />
+    </of-overlay>
+  </div>
 </template>
 
 <script lang="ts">
@@ -146,7 +140,7 @@ import {
   computed,
   nextTick,
   watch,
-  onBeforeUnmount,
+  onBeforeUnmount
 } from 'vue'
 import { watchPosition } from '../lib/util'
 import { ItemsProp, useItems } from '../lib/items'
@@ -205,7 +199,7 @@ const formatItems = (
       params: item.params ?? undefined,
       attrs: item.attrs ?? undefined,
       subMenuItems: subMenu,
-      field: item.field,
+      field: item.field
     } as Tab)
   }
 
@@ -216,7 +210,7 @@ const formatItems = (
       overflowButton: true,
       text: '...',
       key: -1,
-      parentKey: undefined,
+      parentKey: undefined
     } as Tab)
   }
   return rows
@@ -237,13 +231,12 @@ export default defineComponent({
     withBorder: Boolean,
     activeOffset: String,
     topTabs: { type: Boolean, default: false },
-    tabsList: Array,
     params: { type: Object, required: false },
-    submenu: Boolean,
+    submenu: Boolean
   },
   emits: {
     'update:modelValue': null,
-    'select-tab': null,
+    'select-tab': null
   },
   setup(props, context) {
     const themeOptions = useThemeOptions()
@@ -256,7 +249,7 @@ export default defineComponent({
     const offsetStyle = computed(() =>
       props.activeOffset
         ? {
-            '--tab-active-border': props.activeOffset,
+            '--tab-active-border': props.activeOffset
           }
         : {}
     )
@@ -352,7 +345,7 @@ export default defineComponent({
         disabledKey: 'disabled',
         iconKey: 'icon',
         textKey: 'text',
-        items: [],
+        items: []
       }
       Object.assign(itemList, itemMgr.getItemList(props.items))
 
@@ -424,12 +417,12 @@ export default defineComponent({
       if (value == 'next') {
         ofTabsHeader.value.scrollTo({
           left: ofTabsHeader.value.scrollLeft + scrollNum,
-          behavior: 'smooth',
+          behavior: 'smooth'
         })
       } else if (value == 'prev') {
         ofTabsHeader.value.scrollTo({
           left: ofTabsHeader.value.scrollLeft - scrollNum,
-          behavior: 'smooth',
+          behavior: 'smooth'
         })
       }
     }
@@ -942,8 +935,8 @@ export default defineComponent({
       openedMenuTabKey,
       firstActiveTabIdx,
       lastActiveTabIdx,
-      handleSelectTab,
+      handleSelectTab
     }
-  },
+  }
 })
 </script>

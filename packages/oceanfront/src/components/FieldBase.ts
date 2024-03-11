@@ -7,14 +7,14 @@ import {
   resolveComponent,
   VNode,
   watch,
-  WatchStopHandle,
+  WatchStopHandle
 } from 'vue'
 import {
   BaseFieldProps,
   FieldDragIn,
   provideFieldContext,
   Renderable,
-  useFieldRender,
+  useFieldRender
 } from '../lib/fields'
 import { useFocusGroup } from '../lib/focus'
 import { useRecords } from '../lib/records'
@@ -92,8 +92,8 @@ const makeDragIn = (spec: FieldDragIn, flag: Ref<boolean>) => {
         evt.stopPropagation()
         evt.preventDefault()
         spec.onDrop(evt)
-      },
-    },
+      }
+    }
   }
 }
 
@@ -168,9 +168,9 @@ export const OfFieldBase = defineComponent({
       onMousedown(_evt: MouseEvent) {
         // ctx.emit('mousedown', evt)
       },
-      onVnodeMounted: checkPad,
-      onVnodeUpdated: checkPad,
-      onVnodeUnmounted: checkPad,
+      onVueMounted: checkPad,
+      onVueUpdated: checkPad,
+      onVueUnmounted: checkPad
     }
 
     return () => {
@@ -199,7 +199,7 @@ export const OfFieldBase = defineComponent({
           required.value && mode.value !== 'fixed'
             ? h(OfIcon, {
                 name: 'required',
-                class: 'of--icon-required',
+                class: 'of--icon-required'
               })
             : null
 
@@ -213,17 +213,17 @@ export const OfFieldBase = defineComponent({
         const label = ctx.slots.label
           ? ctx.slots.label()
           : (labelPosition.value !== 'none' || required.value) &&
-            labelPosition.value !== 'input' &&
-            labelText
-          ? h(
-              'label',
-              {
-                class: 'of-field-label',
-                /*, for: render.inputId: triggering duplicate click events */
-              },
-              [labelText, asterisk]
-            )
-          : undefined
+              labelPosition.value !== 'input' &&
+              labelText
+            ? h(
+                'label',
+                {
+                  class: 'of-field-label'
+                  /*, for: render.inputId: triggering duplicate click events */
+                },
+                [labelText, asterisk]
+              )
+            : undefined
         const cls = [
           'of-field ',
           {
@@ -242,7 +242,7 @@ export const OfFieldBase = defineComponent({
             'of--loading': fieldRender.loading,
             'of--rounded': props.rounded,
             'of--undecorated': !!fieldRender.undecorated,
-            'of--updated': fieldRender.updated,
+            'of--updated': fieldRender.updated
           },
           'of--cursor-' + (fieldRender.cursor || 'default'),
           'of--density-' + density.value,
@@ -252,7 +252,7 @@ export const OfFieldBase = defineComponent({
           'of--variant-' + variant.value,
           'of--tint-' + tint.value,
           fieldRender.class,
-          props.class,
+          props.class
         ]
 
         const style: Record<string, string> = {}
@@ -273,15 +273,15 @@ export const OfFieldBase = defineComponent({
           (interactive.value
             ? ctx.slots.interactiveContent
             : ctx.slots.fixedContent
-            ? () =>
-                h(
-                  'div',
-                  {
-                    class: 'of-field-content-text',
-                  },
-                  ctx.slots.fixedContent?.()
-                )
-            : ctx.slots.interactiveContent)
+              ? () =>
+                  h(
+                    'div',
+                    {
+                      class: 'of-field-content-text'
+                    },
+                    ctx.slots.fixedContent?.()
+                  )
+              : ctx.slots.interactiveContent)
 
         const fieldInner: VNode[] = []
 
@@ -302,7 +302,7 @@ export const OfFieldBase = defineComponent({
               shade: false,
               target: mainId ? '#' + mainId : '',
               onBlur: overlayBlur,
-              sticky: props.sticky,
+              sticky: props.sticky
             },
             overlay
           )
@@ -317,7 +317,7 @@ export const OfFieldBase = defineComponent({
             'div',
             {
               class: 'of-field-main',
-              id: mainId,
+              id: mainId
             },
             [
               h('div', { class: 'of--layer of--layer-bg' }),
@@ -326,17 +326,17 @@ export const OfFieldBase = defineComponent({
               h(
                 'div',
                 {
-                  class: 'of-field-header',
+                  class: 'of-field-header'
                 },
                 label && labelPosition.value === 'frame'
                   ? h('div', { class: 'of-field-header-label' }, label)
                   : undefined
               ),
-              h('div', { class: 'of-field-body' }, inner),
+              h('div', { class: 'of-field-body' }, inner)
             ]
           ),
           h('div', { class: 'of-field-caption' }), // FIXME support custom slot
-          overlay,
+          overlay
         ]
         return h(
           'div',
@@ -346,7 +346,7 @@ export const OfFieldBase = defineComponent({
             style,
             tabindex: '-1',
             ...handlers,
-            ...dragIn?.handlers,
+            ...dragIn?.handlers
           },
           children
         )
@@ -355,5 +355,5 @@ export const OfFieldBase = defineComponent({
         return ''
       }
     }
-  },
+  }
 })

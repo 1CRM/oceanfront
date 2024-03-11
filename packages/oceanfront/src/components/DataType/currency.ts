@@ -10,9 +10,9 @@ export default defineComponent({
     const result = numberFormat?.format(this.$props.value.value)
     if (result) {
       return h('span', {
-        innerHTML: this.$props.value.params.symbol + ' ' + result.textValue,
+        innerHTML: this.$props.value.params.symbol + ' ' + result.textValue
       })
     }
     return ''
-  },
+  }
 })

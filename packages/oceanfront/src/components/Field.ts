@@ -7,7 +7,7 @@ import {
   h,
   ref,
   shallowRef,
-  watch,
+  watch
 } from 'vue'
 import { useFormats } from '../lib/formats'
 import { FormRecord, useRecords } from '../lib/records'
@@ -62,5 +62,5 @@ export const OfField = defineComponent({
           )
         : null
     }
-  },
+  }
 })

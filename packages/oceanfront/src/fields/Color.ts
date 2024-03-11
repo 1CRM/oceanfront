@@ -5,7 +5,7 @@ import {
   ref,
   resolveComponent,
   VNode,
-  watch,
+  watch
 } from 'vue'
 import { OfFieldBase } from '../components/FieldBase'
 import ColorHue from '../components/ColorHue'
@@ -17,7 +17,7 @@ import {
   hsvToRgb,
   loadColor,
   rgbToHex,
-  rgbToHsv,
+  rgbToHsv
 } from '../lib/color'
 import {
   BaseFieldProps,
@@ -25,7 +25,7 @@ import {
   FieldRender,
   makeFieldContext,
   newFieldId,
-  provideFieldRender,
+  provideFieldRender
 } from '../lib/fields'
 
 export const OfColorField = defineComponent({
@@ -92,7 +92,7 @@ export const OfColorField = defineComponent({
           '%, ' +
           Math.round(hsl.l * 100) +
           '%)',
-        hex: rgbToHex(rgb),
+        hex: rgbToHex(rgb)
       }
     })
 
@@ -117,7 +117,7 @@ export const OfColorField = defineComponent({
         }
       },
       {
-        immediate: true,
+        immediate: true
       }
     )
 
@@ -129,7 +129,7 @@ export const OfColorField = defineComponent({
         }
       },
       {
-        immediate: true,
+        immediate: true
       }
     )
 
@@ -178,13 +178,13 @@ export const OfColorField = defineComponent({
               modelValue: modelValue,
               'onUpdate:modelValue': (val: any) => {
                 choseColor(val, label)
-              },
+              }
             })
 
             const arrows = h(
               'div',
               {
-                class: 'color-picker-icon',
+                class: 'color-picker-icon'
               },
               prepareArrows(label)
             )
@@ -201,14 +201,14 @@ export const OfColorField = defineComponent({
             name: 'select up',
             onClick: () => {
               choseColor(null, label)
-            },
+            }
           })
 
           const downIcon = h(resolveComponent('OfIcon'), {
             name: 'select down',
             onClick: () => {
               choseColor(null, label, 'down')
-            },
+            }
           })
 
           return [upIcon, downIcon]
@@ -220,7 +220,7 @@ export const OfColorField = defineComponent({
           type: 'text',
           maxlength: 7,
           modelValue: hex.value,
-          'onUpdate:modelValue': choseColor,
+          'onUpdate:modelValue': choseColor
         })
 
         const hslLabels: string[] = ['h', 's', 'l']
@@ -240,7 +240,7 @@ export const OfColorField = defineComponent({
         const choseColorInputs: any = {
           hex: hexInput,
           hsl: hslInputs,
-          rgb: rgbInputs,
+          rgb: rgbInputs
         }
 
         return [choseColorInputs[popupMode.value]]
@@ -251,13 +251,13 @@ export const OfColorField = defineComponent({
         class: 'switcher',
         onClick: () => {
           nextMode(popupMode.value)
-        },
+        }
       })
 
       return h(
         'div',
         {
-          class: 'of-menu of-colorpicker-popup of--elevated-1',
+          class: 'of-menu of-colorpicker-popup of--elevated-1'
         },
         h('div', { class: 'color-picker' }, [
           h(ColorSaturation, {
@@ -269,17 +269,17 @@ export const OfColorField = defineComponent({
             onChange: (s: number, v: number) => setHsv({ ...hsv, s, v }),
             onBlur: onSaturationBlur,
             onFocus: onSaturationFocus,
-            onSelect: closePopup,
+            onSelect: closePopup
           }),
           h(ColorHue, {
             tabindex: !saturationFocused.value ? '-1' : '0',
             hue: hsv.h,
             onChange: (h: number) => setHsv({ ...hsv, h }),
             onBlur: focus,
-            onSelect: closePopup,
+            onSelect: closePopup
           }),
           switcher,
-          colorsInput(),
+          colorsInput()
         ])
       )
     }
@@ -303,7 +303,7 @@ export const OfColorField = defineComponent({
           evt.preventDefault()
           evt.stopPropagation()
         }
-      },
+      }
     }
     const choseColor = (val: any, label: any, directional = 'up') => {
       const hslNew: any = { ...hsl.value }
@@ -332,8 +332,8 @@ export const OfColorField = defineComponent({
           val
             ? (rgbNew[label] = val)
             : directional == 'up'
-            ? rgbNew[label]++
-            : rgbNew[label]--
+              ? rgbNew[label]++
+              : rgbNew[label]--
           break
       }
 
@@ -346,12 +346,12 @@ export const OfColorField = defineComponent({
           {
             class: [
               'of-field-content-text',
-              'of--align-' + (props.align || 'start'),
+              'of--align-' + (props.align || 'start')
             ],
             id: inputId.value,
             tabindex: 0,
             ref: elt,
-            ...hooks,
+            ...hooks
           },
           [compColor.value.hex]
         ),
@@ -361,11 +361,11 @@ export const OfColorField = defineComponent({
           {
             class: 'of-color-swatch',
             style: {
-              backgroundColor: compColor.value.hex,
-            },
+              backgroundColor: compColor.value.hex
+            }
           },
           h('div', { class: 'of-color-swatch-border' })
-        ),
+        )
     }
 
     const fRender: FieldRender = fieldRender({
@@ -377,14 +377,14 @@ export const OfColorField = defineComponent({
       popup: {
         content: () => (opened.value ? renderPopup() : undefined),
         visible: opened,
-        onBlur: closePopup,
+        onBlur: closePopup
       },
       updated: computed(() => initialValue.value !== stateValue.value),
-      value: stateValue,
+      value: stateValue
     })
     provideFieldRender(fRender)
     return () => {
       return h(OfFieldBase, props, { ...slots, ...ctx.slots })
     }
-  },
+  }
 })

@@ -21,7 +21,7 @@ import {
   layoutFunc,
   parseEvent,
   Timestamp,
-  uniqEvent,
+  uniqEvent
 } from '../../lib/calendar'
 import ColumnLayout from '../../lib/calendar/layout/columns'
 import StackLayout from '../../lib/calendar/layout/stack'
@@ -46,7 +46,7 @@ function formatRange(mgr: FormatState, e: InternalEvent, withinDate: Date) {
   )
   const spansNoon = startTS.hours < 12 != endTS.hours < 12
   const opts: DateTimeFormatterOptions = {
-    nativeOptions: { hour: 'numeric', minute: 'numeric' },
+    nativeOptions: { hour: 'numeric', minute: 'numeric' }
   }
   const fmt = mgr.getTextFormatter('date', opts)
   const resStart = fmt?.format(start).parts as any[]
@@ -69,7 +69,7 @@ export default defineComponent({
   props: {
     ...calendarProps.internal,
     ...calendarProps.common,
-    ...calendarProps.week,
+    ...calendarProps.week
   },
   emits: [
     'click:event',
@@ -85,7 +85,7 @@ export default defineComponent({
     'selection:cancel',
     'selection:allday',
     'focus:day',
-    'blur:day',
+    'blur:day'
   ],
   data() {
     const selecting = false
@@ -98,8 +98,8 @@ export default defineComponent({
         active: {},
         closeTimerId: {},
         width: {},
-        height: {},
-      } as any,
+        height: {}
+      } as any
     }
   },
   computed: {
@@ -157,10 +157,10 @@ export default defineComponent({
             ...(this.groupAllDay
               ? {
                   top,
-                  daysSpan: 1,
+                  daysSpan: 1
                 }
               : {}),
-            event: { ...p.event, uniq: uniqEvent(p.event, cat) },
+            event: { ...p.event, uniq: uniqEvent(p.event, cat) }
           }
         })
       }
@@ -186,7 +186,7 @@ export default defineComponent({
             g.placements.map((p) => {
               return {
                 ...p,
-                event: { ...p.event, uniq: uniqEvent(p.event, cat) },
+                event: { ...p.event, uniq: uniqEvent(p.event, cat) }
               }
             })
           )
@@ -201,7 +201,7 @@ export default defineComponent({
       if (start < 0) start = 0
       if (end > 24) end = 24
       return [start, end]
-    },
+    }
   },
   methods: {
     intervals() {
@@ -247,7 +247,7 @@ export default defineComponent({
       if (!slot) return ''
       return [
         h('div', { class: 'of-calendar-gutter' }),
-        h('div', { class: 'of-calendar-day-supertitle' }, slot()),
+        h('div', { class: 'of-calendar-day-supertitle' }, slot())
       ]
     },
     renderCategoryTitle(cat: categoryItem) {
@@ -269,7 +269,7 @@ export default defineComponent({
               event.preventDefault()
               this.$emit(eventName, event, slotArgs)
             }
-          },
+          }
         },
         this.renderSlot(slotName, slotArgs, () => cat.category)
       )
@@ -284,7 +284,7 @@ export default defineComponent({
 
       return h('div', { class: 'of-calendar-day-titles' }, [
         h('div', { class: 'of-calendar-gutter' }),
-        titles,
+        titles
       ])
     },
     allDayLabel() {
@@ -309,13 +309,13 @@ export default defineComponent({
             style: {
               'background-color': finalColor,
               width: 'calc(' + (e.daysSpan || 1) * 100 + '% - 4px)',
-              top: '' + e.top * eventHeight + 'px',
+              top: '' + e.top * eventHeight + 'px'
             },
             tabindex: '0',
             onClick: (event: any) => {
               this.$emit('click:event', event, {
                 ...e.event,
-                color: finalColor,
+                color: finalColor
               })
             },
             onKeypress: (event: KeyboardEvent) => {
@@ -323,7 +323,7 @@ export default defineComponent({
                 event.preventDefault()
                 this.$emit('click:event', event, {
                   ...e.event,
-                  color: finalColor,
+                  color: finalColor
                 })
               }
             },
@@ -342,7 +342,7 @@ export default defineComponent({
             },
             onBlur: () => {
               this.$emit('blur:day')
-            },
+            }
           },
           slot ? slot({ event: e.event }) : h('strong', e.event.name)
         )
@@ -365,10 +365,10 @@ export default defineComponent({
               selected:
                 this.selecting &&
                 this.$data.selectionCategory === 'allday-' + weekDay,
-              ['week-day-' + weekDay]: isDate,
-            },
+              ['week-day-' + weekDay]: isDate
+            }
           ],
-          ...this.allDaySelectingHandlers(cat.date),
+          ...this.allDaySelectingHandlers(cat.date)
         },
         events.map(this.allDayRowEvent(acc, eventHeight))
       )
@@ -388,7 +388,7 @@ export default defineComponent({
           const events: any = val
           titles[key] = [
             ...(titles[key] || []),
-            events.length + ' ' + category + this.$props.groupPostfix,
+            events.length + ' ' + category + this.$props.groupPostfix
           ]
           count[key] = (count[key] ?? 0) + events.length
         })
@@ -404,7 +404,7 @@ export default defineComponent({
         ? { height: 0, columns: [] as any[] }
         : this.$props.categoriesList.reduce(this.allDayRowCell, {
             height: 0,
-            columns: [] as any[],
+            columns: [] as any[]
           })
       const allDayheight = this.groupAllDay
         ? eventHeight * 2
@@ -436,8 +436,8 @@ export default defineComponent({
           {
             ...eventsNodes.props,
             style: {
-              'z-index': 1,
-            },
+              'z-index': 1
+            }
           },
           [
             h(
@@ -446,19 +446,17 @@ export default defineComponent({
                 id,
                 class: {
                   'of--elevated-1': count[index],
-                  'grouped-title': count[index],
+                  'grouped-title': count[index]
                 },
                 style: {
                   height: this.$data.allDayPopups['active'][id]
                     ? 'auto'
                     : allDayheight - 7 + 'px',
-                  'min-height': allDayheight - 7 + 'px',
+                  'min-height': allDayheight - 7 + 'px'
                 },
                 onMouseenter: (event: any) => openAllDay(event, id),
                 onMouseleave: () =>
-                  this.$data.allDayPopups['active'][id]
-                    ? closeAllDay(id)
-                    : null,
+                  this.$data.allDayPopups['active'][id] ? closeAllDay(id) : null
               },
               titles[index]
             ),
@@ -469,7 +467,7 @@ export default defineComponent({
                 capture: false,
                 shade: false,
                 target: '#' + id,
-                onBlur: () => closeAllDay(id),
+                onBlur: () => closeAllDay(id)
               },
               () => {
                 return h(
@@ -477,16 +475,16 @@ export default defineComponent({
                   {
                     style: {
                       width: this.$data.allDayPopups['width'][id] + 'px',
-                      height: count[index] * eventHeight + 'px',
+                      height: count[index] * eventHeight + 'px'
                     },
                     class: 'of--elevated-1 of-calendar-grouped-popup',
                     onMouseenter: () => clearCloseTimer(id),
-                    onMouseleave: () => closeAllDay(id),
+                    onMouseleave: () => closeAllDay(id)
                   },
                   eventsNodes
                 )
               }
-            ),
+            )
           ]
         )
       }
@@ -501,19 +499,19 @@ export default defineComponent({
           class: 'of-calendar-allday-row',
           style: {
             height: allDayheight + 'px',
-            'min-height': allDayheight + 'px',
-          },
+            'min-height': allDayheight + 'px'
+          }
         },
         [
           h(
             'div',
             {
               class: 'of-calendar-gutter',
-              style: this.groupAllDay ? 'height: inherit;' : '',
+              style: this.groupAllDay ? 'height: inherit;' : ''
             },
             this.allDayLabel()
           ),
-          this.groupAllDay ? grouped : columns,
+          this.groupAllDay ? grouped : columns
         ]
       )
     },
@@ -537,7 +535,7 @@ export default defineComponent({
         onMouseleave: () => {
           this.selecting = false
           this.$data.selectionCategory = ''
-        },
+        }
       }
     },
     intervalSelectionHandlers(cat: categoryItem) {
@@ -598,7 +596,7 @@ export default defineComponent({
             )
             this.selecting = false
           }
-        },
+        }
       }
     },
     dayRowEventHandlers(e: InternalEvent) {
@@ -630,7 +628,7 @@ export default defineComponent({
         },
         onBlur: () => {
           this.$emit('blur:day')
-        },
+        }
       }
     },
     dayRowEvent(cat: categoryItem) {
@@ -650,7 +648,7 @@ export default defineComponent({
               ...eventClass,
               'of-calendar-event': true,
               conflict: e.conflict,
-              'two-lines': brk,
+              'two-lines': brk
             },
             style: {
               'background-color': finalColor,
@@ -659,10 +657,10 @@ export default defineComponent({
               width: 'calc(' + e.width * 100 + '% - 4px)',
               top: 'calc(' + e.top + '% + 1px)',
               height: 'calc(' + e.height + '% - 3px)',
-              'min-height': 'calc(' + e.height + '% - 3px)',
+              'min-height': 'calc(' + e.height + '% - 3px)'
             },
             tabindex: '0',
-            ...this.dayRowEventHandlers(finalEvent),
+            ...this.dayRowEventHandlers(finalEvent)
           },
           this.renderSlot(
             'event-content',
@@ -691,8 +689,8 @@ export default defineComponent({
               this.$data.selecting &&
               intervalTime >= this.$data.selectionStart &&
               intervalTime < this.$data.selectionEnd &&
-              this.$data.selectionCategory == cat.category,
-          },
+              this.$data.selectionCategory == cat.category
+          }
         })
       }
     },
@@ -707,7 +705,7 @@ export default defineComponent({
         return h(
           'div',
           {
-            class: 'of-calendar-interval',
+            class: 'of-calendar-interval'
           },
           subIntevals
         )
@@ -721,7 +719,7 @@ export default defineComponent({
         'div',
         {
           class: ['of-calendar-day', weekDayCls],
-          ...this.intervalSelectionHandlers(cat),
+          ...this.intervalSelectionHandlers(cat)
         },
         [...intervals, ...events]
       )
@@ -744,17 +742,17 @@ export default defineComponent({
               this.$emit('selection:cancel')
               this.selecting = false
             }
-          },
+          }
         },
         [
           h(
             'div',
             {
-              class: 'of-calendar-gutter',
+              class: 'of-calendar-gutter'
             },
             intervals
           ),
-          days,
+          days
         ]
       )
     },
@@ -765,7 +763,7 @@ export default defineComponent({
     footer() {
       const slot = this.$slots['footer']
       return slot?.()
-    },
+    }
   },
   render() {
     const eventHeight =
@@ -782,11 +780,11 @@ export default defineComponent({
           '--of-calendar-iterval-height': `${hourHeight}px`,
           '--of-event-height': `${eventHeight}px`,
           '--of-calendar-conflict-color': conflictColor,
-          '--of-calendar-subinterval-height': subIntervalHeight,
+          '--of-calendar-subinterval-height': subIntervalHeight
         },
         onselectstart(e: Event) {
           e.preventDefault()
-        },
+        }
       },
       [
         this.header(),
@@ -794,10 +792,10 @@ export default defineComponent({
           this.superTitle(),
           this.title(),
           this.allDayRow(),
-          this.dayRow(),
+          this.dayRow()
         ]),
-        this.footer(),
+        this.footer()
       ]
     )
-  },
+  }
 })

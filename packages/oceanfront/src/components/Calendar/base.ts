@@ -4,16 +4,16 @@ import { useFormats } from '../../lib/formats'
 import { defineComponent, h } from 'vue'
 
 const weekDayFormat: DateTimeFormatterOptions = {
-  nativeOptions: { weekday: 'short' },
+  nativeOptions: { weekday: 'short' }
 }
 
 const dayFormat: DateTimeFormatterOptions = {
-  nativeOptions: { day: 'numeric' },
+  nativeOptions: { day: 'numeric' }
 }
 
 export default defineComponent({
   computed: {
-    formatMgr: () => useFormats(),
+    formatMgr: () => useFormats()
   },
   methods: {
     renderSlot(name: string, param: any, fallback: Function) {
@@ -30,7 +30,7 @@ export default defineComponent({
         'div',
         {
           class: 'of-calendar-day-title',
-          tabindex: weekday ? undefined : '0',
+          tabindex: weekday ? undefined : '0'
         },
         [
           weekday ? this.renderWeekDay(date) : null,
@@ -39,13 +39,13 @@ export default defineComponent({
             {
               class: {
                 'day-number': true,
-                today: date && sameDate(date, new Date()),
-              },
+                today: date && sameDate(date, new Date())
+              }
             },
             dayFmt?.format(date).textValue
-          ),
+          )
         ]
       )
-    },
-  },
+    }
+  }
 })

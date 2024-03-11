@@ -3,7 +3,7 @@ import { Config } from '../lib/config'
 import {
   TextFormatResult,
   TextFormatter,
-  TextInputResult,
+  TextInputResult
 } from '../lib/formats'
 import { LocaleState, useLocale } from '../lib/locale'
 import { isDigit } from '../lib/util'
@@ -79,7 +79,7 @@ export class NumberFormatter implements TextFormatter {
       minimumSignificantDigits: opts.minimumSignificantDigits,
       // signDisplay: this.signDisplay  // NYI in browsers
       style: opts.style,
-      useGrouping: opts.useGrouping,
+      useGrouping: opts.useGrouping
     }
   }
 
@@ -148,7 +148,7 @@ export class NumberFormatter implements TextFormatter {
       selAfterDigit: parsedAfterDigit,
       value,
       minDecs,
-      seps,
+      seps
     }
   }
 
@@ -203,7 +203,7 @@ export class NumberFormatter implements TextFormatter {
       value,
       textValue,
       fixedValue: ref(textValue),
-      textClass: this.inputClass,
+      textClass: this.inputClass
     }
   }
 
@@ -269,7 +269,7 @@ export class NumberFormatter implements TextFormatter {
 
     return {
       textValue: textValue === '' && unformat.input == '-' ? '-' : textValue,
-      selStart,
+      selStart
     }
   }
 
@@ -288,7 +288,7 @@ export class NumberFormatter implements TextFormatter {
         selStart,
         selEnd: selStart,
         updated: input.value !== textValue,
-        value: unformat.value,
+        value: unformat.value
       }
     }
     return { updated: false }

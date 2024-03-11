@@ -6,7 +6,7 @@ import {
   setLocale,
   setLocaleParams,
   useLocale,
-  LocaleParams,
+  LocaleParams
 } from '../lib/locale'
 import { FormRecord, setCurrentRecord } from '../lib/records'
 
@@ -18,7 +18,7 @@ export const OfConfig = defineComponent({
     locale: String,
     localeParams: Object as PropType<LocaleParams>,
     record: Object as PropType<FormRecord>,
-    theme: [String, Object],
+    theme: [String, Object]
   },
   setup(props, ctx) {
     extendConfig(() => {
@@ -34,9 +34,9 @@ export const OfConfig = defineComponent({
     return () => {
       const cfgProps: Record<string, any> = {
         locale: localeMgr.locale,
-        isMobile: layoutMgr.isMobile,
+        isMobile: layoutMgr.isMobile
       }
       return ctx.slots.default && ctx.slots.default(cfgProps)
     }
-  },
+  }
 })

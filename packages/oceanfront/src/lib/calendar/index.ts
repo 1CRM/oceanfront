@@ -15,7 +15,7 @@ export function toTimestamp(date: Date): Timestamp {
     month: date.getMonth(),
     day: date.getDate(),
     hours: date.getHours(),
-    minutes: date.getMinutes(),
+    minutes: date.getMinutes()
   }
 }
 
@@ -33,7 +33,7 @@ export function withZeroTime(ts: Timestamp): Timestamp {
     ...ts,
     date: d,
     hours: 0,
-    minutes: 0,
+    minutes: 0
   }
 }
 
@@ -189,12 +189,12 @@ export function getNormalizedTSRange(
     endTS = {
       ...toTimestamp(addDays(dayOrStartTS, 1)),
       hours: 0,
-      minutes: 0,
+      minutes: 0
     }
     dayOrStartTS = {
       ...toTimestamp(dayOrStartTS),
       hours: 0,
-      minutes: 0,
+      minutes: 0
     }
   }
   const start =
@@ -237,7 +237,7 @@ export function getGroups(
     offset: 0,
     zIndex: 0,
     columnAdjust: 0,
-    conflict: false,
+    conflict: false
   }))
   for (const p of placements) {
     let [start, end] = [p.start, p.end]
@@ -274,7 +274,7 @@ export function getGroups(
       groups.push({
         start,
         end,
-        placements: [p],
+        placements: [p]
       })
     }
   }
@@ -449,7 +449,7 @@ export const parseEvent = (
     startTime: getTimeIdentifier(startTS),
     endTime: getTimeIdentifier(endTS),
     category: e.category,
-    orig: e,
+    orig: e
   }
 }
 
@@ -459,6 +459,6 @@ export const uniqEvent = (
 ): InternalEvent => {
   return {
     ...e,
-    uniq: '' + getDayIdentifier(toTimestamp(cat.date)) + '|' + cat.category,
+    uniq: '' + getDayIdentifier(toTimestamp(cat.date)) + '|' + cat.category
   }
 }

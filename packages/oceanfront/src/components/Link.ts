@@ -5,7 +5,7 @@ import {
   isVNode,
   resolveComponent,
   ComponentInternalInstance,
-  PropType,
+  PropType
 } from 'vue'
 
 export type Link = {
@@ -30,7 +30,7 @@ function defaultLink(href: string | null) {
         evt?.preventDefault?.()
       }
       return Promise.resolve()
-    },
+    }
   }
 }
 
@@ -49,7 +49,7 @@ function renderLink(
         'of-link': true,
         'of--active': link.isExactActive,
         'of--disabled': !link.href,
-        'of--link': !!link.href,
+        'of--link': !!link.href
       },
       href: link.href,
       onClick: (evt: Event) => {
@@ -58,7 +58,7 @@ function renderLink(
         }
         return link.navigate(evt)
       },
-      ...comp.attrs,
+      ...comp.attrs
     },
     comp.slots.default?.(link)
   )
@@ -86,12 +86,12 @@ export const OfLink = defineComponent({
       type: String as PropType<
         'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false'
       >,
-      default: 'page',
+      default: 'page'
     },
     ariaLabel: { type: String, default: null },
     href: { type: String, default: null },
     to: [String, Object] as PropType<LinkTo>,
-    beforeNavigate: { type: Array as PropType<Function[]>, default: null },
+    beforeNavigate: { type: Array as PropType<Function[]>, default: null }
   },
   setup(props, ctx) {
     const inst = getCurrentInstance() as ComponentInternalInstance
@@ -110,7 +110,7 @@ export const OfLink = defineComponent({
             RouterLink,
             {
               custom: true,
-              to: props.to ?? '',
+              to: props.to ?? ''
             },
             (customSlot ||
               ((link: Link) =>
@@ -127,10 +127,10 @@ export const OfLink = defineComponent({
             ? customSlot(link)
             : renderLink(link, inst, props.beforeNavigate, props.ariaLabel)
         }
-      },
+      }
     }
   },
   render() {
     return this.doRender()
-  },
+  }
 })

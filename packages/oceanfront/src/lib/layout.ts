@@ -14,7 +14,7 @@ const windowRect = ref<WindowRect>({
   scrollX: 0,
   scrollY: 0,
   width: 0,
-  height: 0,
+  height: 0
 })
 const isHighDpi = window.matchMedia?.(
   '(-webkit-min-device-pixel-ratio: 2), (min-device-pixel-ratio: 2), (min-resolution: 192dpi))'
@@ -26,7 +26,7 @@ function initEvents() {
       scrollX: window.scrollX,
       scrollY: window.scrollY,
       width: window.innerWidth,
-      height: window.innerHeight,
+      height: window.innerHeight
     }
   }
   window.addEventListener('resize', onScroll, { passive: true })

@@ -3,6 +3,7 @@ import { resolve } from 'path'
 import vue from '@vitejs/plugin-vue'
 import dts from 'vite-plugin-dts'
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export default defineConfig(({ command, mode }) => {
   const dev = mode === 'development'
   const plugins = [
@@ -15,9 +16,9 @@ export default defineConfig(({ command, mode }) => {
     build: {
       lib: {
         entry: resolve(__dirname, 'src/index.ts'),
-        name: 'oceanfront',
+        name: 'oceanfront-html-editor',
         // the proper extensions will be added
-        fileName: 'oceanfront',
+        fileName: 'oceanfront-html-editor',
       },
       emptyOutDir: !dev,
       rollupOptions: {
@@ -31,7 +32,7 @@ export default defineConfig(({ command, mode }) => {
             vue: 'Vue',
           },
           // Rename combined CSS output from style.css
-          assetFileNames: 'oceanfront.[ext]',
+          assetFileNames: 'oceanfront-html-editor.[ext]',
         },
       },
       reportCompressedSize: !dev,

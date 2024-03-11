@@ -7,7 +7,7 @@ import {
   proxyRefs,
   readonly,
   SetupContext,
-  VNode,
+  VNode
 } from 'vue'
 import { ItemList } from './items_list'
 import { FormRecord, useRecords } from './records'
@@ -157,11 +157,11 @@ export const BaseFieldProps = {
   id: String,
   initialValue: {
     type: [String, Boolean, Number, Array, Object],
-    default: undefined,
+    default: undefined
   },
   inDataTable: {
     type: Boolean,
-    default: false,
+    default: false
   },
   inline: Boolean,
   inputLabel: String,
@@ -178,7 +178,7 @@ export const BaseFieldProps = {
   mode: String as PropType<FieldMode>,
   modelValue: {
     type: [String, Boolean, Number, Array, Object],
-    default: undefined,
+    default: undefined
   },
   muted: Boolean,
   name: String,
@@ -186,7 +186,7 @@ export const BaseFieldProps = {
   readonly: Boolean,
   record: {
     type: Object as PropType<FormRecord>,
-    required: false,
+    required: false
   },
   required: Boolean,
   rounded: Boolean,
@@ -217,7 +217,7 @@ export const BaseFieldProps = {
   sticky: { type: Boolean, default: true },
   switch: { type: Boolean, default: false },
   outside: { type: Boolean, default: true },
-  checked: { type: Boolean, default: false },
+  checked: { type: Boolean, default: false }
 }
 
 export function extendFieldFormat(
@@ -289,12 +289,12 @@ export function makeFieldContext<C>(
       (props.fixed || metadata.value?.fixed
         ? 'fixed'
         : props.disabled || metadata.value?.disabled
-        ? 'disabled'
-        : props.readonly || metadata.value?.readonly
-        ? 'readonly'
-        : props.locked || record.value?.locked
-        ? 'locked'
-        : 'editable')
+          ? 'disabled'
+          : props.readonly || metadata.value?.readonly
+            ? 'readonly'
+            : props.locked || record.value?.locked
+              ? 'locked'
+              : 'editable')
   )
   const editable = computed(() => mode.value === 'editable')
   const interactive = computed(() => mode.value !== 'fixed')
@@ -306,8 +306,8 @@ export function makeFieldContext<C>(
       (fmt && typeof fmt === 'string'
         ? fmt
         : typeof fmt === 'object'
-        ? (fmt as any).fieldType || (fmt as any).type
-        : undefined)
+          ? (fmt as any).fieldType || (fmt as any).type
+          : undefined)
     )
   })
   const initialValue = computed(() =>
@@ -378,8 +378,8 @@ export function makeFieldContext<C>(
       'muted',
       'name',
       'required',
-      'rounded',
-    ]),
+      'rounded'
+    ])
   })
   return fctx
 }

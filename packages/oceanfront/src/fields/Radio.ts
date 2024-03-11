@@ -7,7 +7,7 @@ import {
   fieldRender,
   newFieldId,
   provideFieldContext,
-  provideFieldRender,
+  provideFieldRender
 } from '../lib/fields'
 import { makeItems } from '../lib/items'
 
@@ -39,7 +39,7 @@ export const OfRadioField = defineComponent({
         stateValue.value = val
       },
       {
-        immediate: true,
+        immediate: true
       }
     )
     const items: any = computed(() => {
@@ -83,7 +83,7 @@ export const OfRadioField = defineComponent({
       'onUpdate:checked': (checked: boolean) => {
         stateValue.value = checked
         if (fieldCtx.onUpdate) fieldCtx.onUpdate(stateValue.value)
-      },
+      }
     }
     const slots = {
       interactiveContent: () => {
@@ -103,13 +103,13 @@ export const OfRadioField = defineComponent({
                 name: props.name,
                 mode: fieldCtx.mode,
                 scale: props.scale,
-                ...hooks,
+                ...hooks
               },
               { icon: ctx.slots.icon }
             )
-          ),
+          )
         ])
-      },
+      }
     }
 
     const fRender: FieldRender = fieldRender({
@@ -124,7 +124,7 @@ export const OfRadioField = defineComponent({
       inputId,
       updated: computed(() => initialValue.value !== stateValue.value),
       value: stateValue,
-      fieldContext: fieldCtx,
+      fieldContext: fieldCtx
     })
     provideFieldRender(fRender)
 
@@ -132,5 +132,5 @@ export const OfRadioField = defineComponent({
       return h(OfFieldBase, props, { ...slots, ...ctx.slots })
     }
     return render
-  },
+  }
 })

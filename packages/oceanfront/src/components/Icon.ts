@@ -8,7 +8,7 @@ export const OfIcon = defineComponent({
     effect: String,
     name: String,
     scale: [Number, String],
-    type: String,
+    type: String
   },
   setup(props, ctx) {
     const mgr = useIcons()
@@ -39,22 +39,22 @@ export const OfIcon = defineComponent({
           class: [
             {
               'of-icon': true,
-              'of-icon--svg': !!iconVal.svg,
+              'of-icon--svg': !!iconVal.svg
             },
             props.scale && !numSz ? 'of--icon-size-' + props.scale : undefined,
             props.class,
-            iconVal.class,
+            iconVal.class
           ],
           'data-name': props.name,
           style: numSz ? { '--icon-size': sz } : undefined,
-          ...ctx.attrs,
+          ...ctx.attrs
         },
         ctx.slots.default
           ? ctx.slots.default()
           : iconVal.svg
-          ? renderSvgIcon(iconVal.svg)
-          : iconVal.text
+            ? renderSvgIcon(iconVal.svg)
+            : iconVal.text
       )
     }
-  },
+  }
 })

@@ -38,7 +38,7 @@ import { ColorFormatter } from './formats/Color'
 import {
   DateFormatter,
   DateTimeFormatter,
-  TimeFormatter,
+  TimeFormatter
 } from './formats/DateTime'
 import { DurationFormatter } from './formats/Duration'
 import { NumberFormatter } from './formats/Number'
@@ -48,7 +48,7 @@ import { registerIconSet } from './lib/icons'
 import {
   registerFieldType,
   registerTextFormatter,
-  TextFormatterConstructor,
+  TextFormatterConstructor
 } from './lib/formats'
 import './scss/index.scss'
 import { materialIconSet } from '../icons/material'
@@ -88,7 +88,7 @@ export const components: Record<string, Component> = {
   OfDataType,
   OfBadge,
   OfOptionList,
-  OfFileField,
+  OfFileField
 }
 
 export const fieldTypes: Record<string, Component> = {
@@ -103,7 +103,7 @@ export const fieldTypes: Record<string, Component> = {
   datetime: OfDatetimeField,
   date: OfDateField,
   time: OfTimeField,
-  color: OfColorField,
+  color: OfColorField
 }
 
 export const textFormatters: Record<string, TextFormatterConstructor> = {
@@ -113,7 +113,7 @@ export const textFormatters: Record<string, TextFormatterConstructor> = {
   url: UrlFormatter,
   datetime: DateTimeFormatter,
   date: DateFormatter,
-  time: TimeFormatter,
+  time: TimeFormatter
 }
 
 export const directives: Record<string, Directive> = {}
@@ -139,7 +139,7 @@ export const Oceanfront: Plugin = {
     for (const idx in directives) {
       vue.directive(idx, directives[idx])
     }
-  },
+  }
 }
 
 export { OfFieldBase } from './components/FieldBase'
@@ -159,7 +159,7 @@ export {
   provideFieldContext,
   useFieldContext,
   provideFieldRender,
-  useFieldRender,
+  useFieldRender
 } from './lib/fields'
 export type {
   FieldContext,
@@ -169,7 +169,7 @@ export type {
   FieldFormatProp,
   FieldMode,
   FieldLabelPositionProp,
-  FieldRender,
+  FieldRender
 } from './lib/fields'
 export { ColorHue, ColorSaturation }
 export { provideFocusGroup, useFocusGroup } from './lib/focus'
@@ -178,20 +178,20 @@ export { provideLanguage, useLanguage } from './lib/language'
 export {
   registerFieldType,
   registerTextFormatter,
-  useFormats,
+  useFormats
 } from './lib/formats'
 export type {
   FormatState,
   TextFormatResult,
   TextFormatter,
   TextFormatterProp,
-  TextInputResult,
+  TextInputResult
 } from './lib/formats'
 export {
   registerIconSet,
   registerSvgIconEffect,
   showMissingIcons,
-  useIcons,
+  useIcons
 } from './lib/icons'
 export type { IconSet, SvgIcon, SvgIconEffect } from './lib/icons'
 export { registerItemList, useItems } from './lib/items'
@@ -205,7 +205,7 @@ export {
   calcOffset,
   calcPageValue,
   calcStartRecord,
-  calcTotalPages,
+  calcTotalPages
 } from './lib/paginator'
 export type { Paginator } from './lib/paginator'
 export { makeRecord, setCurrentRecord, useRecords } from './lib/records'
@@ -215,6 +215,6 @@ export type {
   FormRecord,
   Lock,
   LockOptions,
-  RecordMetadata,
+  RecordMetadata
 } from './lib/records'
 export type { Tab } from './lib/tab'

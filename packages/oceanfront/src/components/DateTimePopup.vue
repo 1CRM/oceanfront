@@ -4,8 +4,8 @@
     role="menu"
     class="of-menu of-datepicker-popup of--elevated-1"
     :class="{ 'with-time': withTime, 'with-date': withDate }"
-    @vnodeMounted="mounted"
-    @vnodeUnmounted="unmounted"
+    @vueMounted="mounted"
+    @vueUnmounted="unmounted"
   >
     <div class="of-date-picker-title" v-if="withDate && !withoutTitle">
       {{ title }}
@@ -38,7 +38,7 @@
           size="4"
           maxlength="4"
           :onblur="() => editYear(false)"
-          :onVnodeMounted="focusYearInput"
+          :onVueMounted="focusYearInput"
           :onkeydown="yearInputHandler"
           :value="selMonthStart.getFullYear()"
         />
@@ -54,7 +54,7 @@
             'selected-date': checkSelected(cell),
             'focused-date': checkFocused(cell),
             today: cell.today,
-            'other-month': cell.otherMonth,
+            'other-month': cell.otherMonth
           }"
           @click="cell.otherMonth ? null : selectDate(cell.date)"
         >
@@ -157,7 +157,7 @@ import {
   addMonths,
   sameDate,
   lastMonthDay,
-  parseDay,
+  parseDay
 } from '../lib/datetime'
 import { useFormats } from '../lib/formats'
 import {
@@ -166,7 +166,7 @@ import {
   ref,
   VNode,
   resolveComponent,
-  watch,
+  watch
 } from 'vue'
 import { useLocale } from '../lib/locale'
 
@@ -183,7 +183,7 @@ export default defineComponent({
     accept: Function,
     withoutTitle: Boolean,
     weekStart: Number,
-    showTodayButton: Boolean,
+    showTodayButton: Boolean
   },
   setup(props) {
     let theNode: VNode | null
@@ -221,8 +221,8 @@ export default defineComponent({
           day: '2-digit',
           hour: '2-digit',
           minute: '2-digit',
-          hourCycle: 'h23',
-        },
+          hourCycle: 'h23'
+        }
       })
     )
     const dateTimeFormatted = computed(() =>
@@ -251,7 +251,7 @@ export default defineComponent({
         localeOffset.value = dateTimeFormatted.value?.tzOffset * 1000
       },
       {
-        immediate: true,
+        immediate: true
       }
     )
     const updateSelected = (selected: Date) => {
@@ -271,8 +271,8 @@ export default defineComponent({
           year: 'numeric',
           day: 'numeric',
           weekday: 'short',
-          ...timeOpts,
-        },
+          ...timeOpts
+        }
       }
     )
     const monthYearFormater = formatMgr.getTextFormatter('date', {
@@ -282,8 +282,8 @@ export default defineComponent({
       nativeOptions: {
         timeZone: timeZone.value,
         month: 'short',
-        year: 'numeric',
-      },
+        year: 'numeric'
+      }
     })
     const selectDate = (selected: Date, focusTime = false) => {
       const date = new Date(selDateLocale.value.valueOf())
@@ -524,8 +524,8 @@ export default defineComponent({
       },
       unmounted: () => {
         theNode = null
-      },
+      }
     }
-  },
+  }
 })
 </script>

@@ -3,7 +3,7 @@ import { computed, ComputedRef, Ref, ref } from 'vue'
 const defaults = {
   selectFieldAddItems: 'Add Items',
   selectFieldRemoveItems: 'Remove Items',
-  listNoItems: 'No Items',
+  listNoItems: 'No Items'
 }
 
 const userLanuage: Ref<{ [key: string]: string }> = ref({})

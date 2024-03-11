@@ -1,97 +1,95 @@
 <template>
-  <transition>
-    <div :id="outerId" class="of-pagination">
-      <div class="of-pagination-header">
-        <span
-          class="of-buttonset"
-          :aria-label="ariaLabels?.pagination ?? 'Pagination'"
-          :class="{
-            'of-buttonset--rounded': rounded,
-            'of--elevated': variant == 'elevated',
-          }"
-        >
-          <of-button
-            v-if="showGoToFirst"
-            icon="page first"
-            :aria-label="ariaLabels?.first ?? 'Go To First'"
-            :variant="variantVal"
-            :density="densityVal"
-            @click="goToFirst()"
-          ></of-button>
-          <of-button
-            v-for="item in pages"
-            :key="item"
-            :active="page === item"
-            :ref="page === item ? 'activeButton' : null"
-            :variant="variantVal"
-            :density="densityVal"
-            :aria-label="(ariaLabels?.page ?? 'Page') + ' ' + item"
-            @click="onSelectPage(item)"
-          >
-            {{ item }}
-          </of-button>
-          <of-button
-            v-if="showGoToLast"
-            icon="page last"
-            :aria-label="ariaLabels?.last ?? 'Go To Last'"
-            :variant="variantVal"
-            :density="densityVal"
-            @click="goToLast()"
-          >
-          </of-button>
-          <of-button
-            v-if="showCustomOffsetPopup"
-            :id="outerId + '-expand'"
-            icon="select down"
-            :variant="variantVal"
-            :density="densityVal"
-            :aria-label="ariaLabels?.expand ?? 'Expand'"
-            @click="openOffsetPopup"
-          >
-            <template #default v-if="$slots['custom-offset-button']">
-              <slot name="custom-offset-button"></slot>
-            </template>
-          </of-button>
-        </span>
-      </div>
-
-      <of-overlay
-        :active="offsetPopupOpened"
-        :shade="false"
-        :target="'#' + outerId + '-expand'"
-        @blur="closeOffsetPopup()"
+  <div :id="outerId" class="of-pagination">
+    <div class="of-pagination-header">
+      <span
+        class="of-buttonset"
+        :aria-label="ariaLabels?.pagination ?? 'Pagination'"
+        :class="{
+          'of-buttonset--rounded': rounded,
+          'of--elevated': variant == 'elevated'
+        }"
       >
-        <slot name="custom-offset-popup" v-if="showCustomOffsetPopup">
-          <div role="menu" class="of-menu of-pagination-offset of--elevated-1">
-            <form
-              class="of-group"
-              method="POST"
-              action="#"
-              @submit.prevent="updateOffsetParams()"
-            >
-              <div class="of-group-row of--pad">
-                <of-text-field
-                  v-bind="startAtField"
-                  v-model.number="startAtValue"
-                  input-type="number"
-                />
-                <of-text-field
-                  v-bind="perPageField"
-                  v-model.number="perPageValue"
-                  input-type="number"
-                />
-              </div>
-              <div class="of-group-row of--pad">
-                <of-button icon="accept" @click="updateOffsetParams()"
-                  >Update</of-button
-                >
-              </div>
-            </form>
-          </div>
-        </slot>
-      </of-overlay>
+        <of-button
+          v-if="showGoToFirst"
+          icon="page first"
+          :aria-label="ariaLabels?.first ?? 'Go To First'"
+          :variant="variantVal"
+          :density="densityVal"
+          @click="goToFirst()"
+        ></of-button>
+        <of-button
+          v-for="item in pages"
+          :key="item"
+          :active="page === item"
+          :ref="page === item ? 'activeButton' : null"
+          :variant="variantVal"
+          :density="densityVal"
+          :aria-label="(ariaLabels?.page ?? 'Page') + ' ' + item"
+          @click="onSelectPage(item)"
+        >
+          {{ item }}
+        </of-button>
+        <of-button
+          v-if="showGoToLast"
+          icon="page last"
+          :aria-label="ariaLabels?.last ?? 'Go To Last'"
+          :variant="variantVal"
+          :density="densityVal"
+          @click="goToLast()"
+        >
+        </of-button>
+        <of-button
+          v-if="showCustomOffsetPopup"
+          :id="outerId + '-expand'"
+          icon="select down"
+          :variant="variantVal"
+          :density="densityVal"
+          :aria-label="ariaLabels?.expand ?? 'Expand'"
+          @click="openOffsetPopup"
+        >
+          <template #default v-if="$slots['custom-offset-button']">
+            <slot name="custom-offset-button"></slot>
+          </template>
+        </of-button>
+      </span>
     </div>
-  </transition>
+
+    <of-overlay
+      :active="offsetPopupOpened"
+      :shade="false"
+      :target="'#' + outerId + '-expand'"
+      @blur="closeOffsetPopup()"
+    >
+      <slot name="custom-offset-popup" v-if="showCustomOffsetPopup">
+        <div role="menu" class="of-menu of-pagination-offset of--elevated-1">
+          <form
+            class="of-group"
+            method="POST"
+            action="#"
+            @submit.prevent="updateOffsetParams()"
+          >
+            <div class="of-group-row of--pad">
+              <of-text-field
+                v-bind="startAtField"
+                v-model.number="startAtValue"
+                input-type="number"
+              />
+              <of-text-field
+                v-bind="perPageField"
+                v-model.number="perPageValue"
+                input-type="number"
+              />
+            </div>
+            <div class="of-group-row of--pad">
+              <of-button icon="accept" @click="updateOffsetParams()"
+                >Update</of-button
+              >
+            </div>
+          </form>
+        </div>
+      </slot>
+    </of-overlay>
+  </div>
 </template>
 
 <script lang="ts">
@@ -102,7 +100,7 @@ import {
   Ref,
   watchEffect,
   watch,
-  nextTick,
+  nextTick
 } from 'vue'
 import { OfOverlay } from './Overlay'
 import { Paginator } from '../lib/paginator'
@@ -124,7 +122,7 @@ export default defineComponent({
     perPage: Number,
     rounded: Boolean,
     ariaLabels: Object,
-    showOnlyPage: { type: Boolean, default: true },
+    showOnlyPage: { type: Boolean, default: true }
   },
   emits: ['update:modelValue', 'select-page', 'update-offset'],
   setup(props, context) {
@@ -213,7 +211,7 @@ export default defineComponent({
       const paginator: Paginator = {
         page: page,
         startRecord: startAtValue.value,
-        perPage: perPageValue.value,
+        perPage: perPageValue.value
       }
       context.emit('select-page', paginator)
     }
@@ -278,7 +276,7 @@ export default defineComponent({
       hidden: false,
       label: 'Start At',
       readOnly: false,
-      class: 'of--small',
+      class: 'of--small'
     }
 
     //TODO: replace number text input with select for per page selection
@@ -286,7 +284,7 @@ export default defineComponent({
       hidden: false,
       label: 'Per Page',
       readOnly: false,
-      class: 'of--small',
+      class: 'of--small'
     }
 
     const pageItems = computed(() => {
@@ -297,7 +295,7 @@ export default defineComponent({
         items.push({
           text: page,
           value: page,
-          disabled: false,
+          disabled: false
         })
       }
 
@@ -309,7 +307,7 @@ export default defineComponent({
       const paginator: Paginator = {
         page: page.value,
         startRecord: startAtValue.value,
-        perPage: perPageValue.value,
+        perPage: perPageValue.value
       }
       context.emit('update-offset', paginator)
     }
@@ -338,8 +336,8 @@ export default defineComponent({
       perPageField,
       perPageValue,
       pageItems,
-      updateOffsetParams,
+      updateOffsetParams
     }
-  },
+  }
 })
 </script>

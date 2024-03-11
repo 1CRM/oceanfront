@@ -22,10 +22,10 @@ export const OfToggle = defineComponent({
     required: Boolean,
     switch: Boolean,
     value: String,
-    scale: [String, Number],
+    scale: [String, Number]
   },
   emits: {
-    'update:checked': null,
+    'update:checked': null
   },
   setup(props, ctx) {
     const defaultId = newFieldId()
@@ -56,7 +56,7 @@ export const OfToggle = defineComponent({
         const val = !value.value
         if (props.name && record.value) record.value.value[props.name] = val
         else ctx.emit('update:checked', val)
-      },
+      }
     }
 
     const setElt = (e: VNode) => {
@@ -71,7 +71,7 @@ export const OfToggle = defineComponent({
         inputId: inputId.value,
         name: props.name,
         scale: props.scale,
-        onInputMounted: setElt,
+        onInputMounted: setElt
       })
       return h(
         'div',
@@ -84,14 +84,14 @@ export const OfToggle = defineComponent({
               'of--focused': focused.value,
               'of--muted': props.muted,
               'of--locked': locked.value,
-              'of--checked': !!value.value,
-            },
+              'of--checked': !!value.value
+            }
           ],
           tabIndex: -1,
-          ...handlers,
+          ...handlers
         },
         content
       )
     }
-  },
+  }
 })

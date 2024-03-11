@@ -8,8 +8,8 @@ export const OfFormat = defineComponent({
     options: Object,
     value: {
       type: [String, Boolean, Number, Array, Object],
-      default: undefined,
-    },
+      default: undefined
+    }
   },
   setup(props) {
     const formatMgr = useFormats()
@@ -28,5 +28,5 @@ export const OfFormat = defineComponent({
       }
       return props.value === undefined ? '' : '' + props.value
     }
-  },
+  }
 })

@@ -19,10 +19,10 @@ export const OfRadio = defineComponent({
     readonly: Boolean,
     record: Object as PropType<FormRecord>,
     required: Boolean,
-    value: String,
+    value: String
   },
   emits: {
-    'update:checked': null,
+    'update:checked': null
   },
   setup(props, ctx) {
     const defaultId = newFieldId()
@@ -51,7 +51,7 @@ export const OfRadio = defineComponent({
         else {
           ctx.emit('update:checked', val)
         }
-      },
+      }
     }
 
     const setElt = (e: VNode) => {
@@ -63,7 +63,7 @@ export const OfRadio = defineComponent({
         label: props.label,
         inputId: inputId.value,
         name: props.name,
-        onInputMounted: setElt,
+        onInputMounted: setElt
       })
       return h(
         'div',
@@ -76,14 +76,14 @@ export const OfRadio = defineComponent({
               'of--focused': focused.value,
               'of--muted': props.muted,
               'of--locked': locked.value,
-              'of--checked': props.checked,
-            },
+              'of--checked': props.checked
+            }
           ],
           tabIndex: -1,
-          ...handlers,
+          ...handlers
         },
         content
       )
     }
-  },
+  }
 })

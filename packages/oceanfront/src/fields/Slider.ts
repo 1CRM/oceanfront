@@ -7,7 +7,7 @@ import {
   shallowRef,
   triggerRef,
   watch,
-  watchEffect,
+  watchEffect
 } from 'vue'
 import { OfFieldBase } from '../components/FieldBase'
 import {
@@ -15,7 +15,7 @@ import {
   fieldRender,
   newFieldId,
   provideFieldContext,
-  provideFieldRender,
+  provideFieldRender
 } from '../lib/fields'
 import { watchPosition } from '../lib/util'
 
@@ -32,7 +32,7 @@ export const OfSliderField = defineComponent({
     ...BaseFieldProps,
     min: [String, Number],
     max: [String, Number],
-    step: [String, Number],
+    step: [String, Number]
   },
   setup(props, ctx) {
     const pendingValue = ref<number>(0)
@@ -66,7 +66,7 @@ export const OfSliderField = defineComponent({
         stateValue.value = val
       },
       {
-        immediate: true,
+        immediate: true
       }
     )
 
@@ -117,7 +117,7 @@ export const OfSliderField = defineComponent({
           pendingValue.value = stateValue.value
           cancelMove()
         }
-      },
+      }
     }
     const thumbHooks = {
       onMousedown(evt: MouseEvent) {
@@ -141,7 +141,7 @@ export const OfSliderField = defineComponent({
         document.addEventListener('touchmove', handleMove)
         document.addEventListener('touchend', stopMove)
         handleMove(evt)
-      },
+      }
     }
     const trackHooks = {
       onMousedown(evt: MouseEvent) {
@@ -160,7 +160,7 @@ export const OfSliderField = defineComponent({
         pendingValue.value = startVal
         document.addEventListener('mousemove', handleMove)
         document.addEventListener('mouseup', stopMove)
-      },
+      }
     }
 
     const cancelMove = () => {
@@ -248,13 +248,13 @@ export const OfSliderField = defineComponent({
           {
             class: {
               'of-slider': true,
-              'of--focused': focused.value,
+              'of--focused': focused.value
             },
-            onVnodeMounted: () => {
+            onVueMounted: () => {
               // watch is not triggered on first render
               nextTick(() => triggerRef(trackElt))
             },
-            ...trackHooks,
+            ...trackHooks
           },
           [
             h('input', {
@@ -264,20 +264,20 @@ export const OfSliderField = defineComponent({
               type: 'text',
               class: 'of-field-input',
               value: lazyInputValue,
-              ...inputHooks,
+              ...inputHooks
             }),
             h(
               'div',
               {
                 class: thumbClass.value,
                 ref: thumbElt,
-                ...thumbHooks,
+                ...thumbHooks
               },
               h(
                 'div',
                 {
                   ref: labelElt,
-                  class: 'of-slider-label-container',
+                  class: 'of-slider-label-container'
                 },
                 pendingValue.value
               )
@@ -286,16 +286,16 @@ export const OfSliderField = defineComponent({
               'div',
               {
                 class: 'of-slider-track',
-                ref: trackElt,
+                ref: trackElt
               },
               h('div', {
                 class: 'of-slider-track-process',
-                ref: trackProcessElt,
+                ref: trackProcessElt
               })
-            ),
+            )
           ]
         )
-      },
+      }
     }
     const fRender = fieldRender({
       class: 'of-slider-field',
@@ -305,12 +305,12 @@ export const OfSliderField = defineComponent({
       pendingValue,
       updated: computed(() => initialValue.value !== stateValue.value),
       undecorated: true,
-      value: stateValue,
+      value: stateValue
     })
     provideFieldRender(fRender)
 
     return () => {
       return h(OfFieldBase, props, { ...slots, ...ctx.slots })
     }
-  },
+  }
 })

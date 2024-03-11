@@ -43,7 +43,7 @@ export default function layout(
       columns.push({
         placements: [p],
         offset: 0,
-        end: lastEnd,
+        end: lastEnd
       })
     }
   }

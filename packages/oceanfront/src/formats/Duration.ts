@@ -32,7 +32,7 @@ export class DurationFormatter implements TextFormatter {
 
     return {
       input,
-      value,
+      value
     }
   }
 
@@ -65,7 +65,7 @@ export class DurationFormatter implements TextFormatter {
     return {
       error,
       value,
-      textValue,
+      textValue
     }
   }
 

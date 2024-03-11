@@ -5,7 +5,7 @@ import {
   CalendarEvent,
   InternalEvent,
   parseEvent,
-  uniqEvent,
+  uniqEvent
 } from '../../lib/calendar'
 import {
   addDays,
@@ -14,7 +14,7 @@ import {
   parseDay,
   monthGrid,
   MonthGridCell,
-  MonthGridData,
+  MonthGridData
 } from '../../lib/datetime'
 import { useFormats } from '../../lib/formats'
 import { useLocale } from '../../lib/locale'
@@ -27,7 +27,7 @@ export default defineComponent({
   props: {
     ...calendarProps.internal,
     ...calendarProps.common,
-    ...calendarProps.month,
+    ...calendarProps.month
   },
   emits: [
     'click:event',
@@ -37,7 +37,7 @@ export default defineComponent({
     'click:more',
     'click:week',
     'focus:day',
-    'blur:day',
+    'blur:day'
   ],
   computed: {
     eventsLimitNumber(): number {
@@ -66,7 +66,7 @@ export default defineComponent({
           ? locale.localeParams?.weekStart ?? 1
           : this.weekStart
       return parseDay(day)
-    },
+    }
   },
   methods: {
     dayEvents(day: Date): InternalEvent[] {
@@ -94,7 +94,7 @@ export default defineComponent({
         'div',
         {
           class: 'day-title',
-          tabindex: slot ? '0' : undefined,
+          tabindex: slot ? '0' : undefined
         },
         content
       )
@@ -117,8 +117,8 @@ export default defineComponent({
             }
           },
           style: {
-            top: '' + top + 'px',
-          },
+            top: '' + top + 'px'
+          }
         },
         slot ? slot(count) : `${count} more`
       )
@@ -134,7 +134,7 @@ export default defineComponent({
           class: { ...eventClass, 'of-calendar-event': true },
           style: {
             'background-color': finalColor,
-            top: `${top}px`,
+            top: `${top}px`
           },
           tabindex: '0',
           onClick: (event: any) => {
@@ -159,7 +159,7 @@ export default defineComponent({
           },
           onBlur: () => {
             this.$emit('blur:day')
-          },
+          }
         },
         this.renderSlot('allday-event-content', { event: e }, () =>
           h('strong', e.name)
@@ -180,7 +180,7 @@ export default defineComponent({
         ? {}
         : {
             '--of-month-day-heigth':
-              '' + dayHeight * this.eventHeightNumber + 'px',
+              '' + dayHeight * this.eventHeightNumber + 'px'
           }
       if (!this.$props.fixedRowHeight) {
         //--of-month-day-heigth
@@ -199,7 +199,7 @@ export default defineComponent({
               event.preventDefault()
               this.$emit('click:day', event, day.date)
             }
-          },
+          }
         },
         day.otherMonth && this.hideOtherMonths
           ? []
@@ -211,8 +211,8 @@ export default defineComponent({
                   more,
                   day.date,
                   events.length * this.eventHeightNumber
-                ),
-              ]),
+                )
+              ])
             ]
       )
     },
@@ -234,11 +234,11 @@ export default defineComponent({
                 event.preventDefault()
                 this.$emit('click:week', event, wn, firstDay)
               }
-            },
+            }
           },
           wnSlot ? wnSlot(wn) : wn
         ),
-        rowDays.map(this.renderRowDay),
+        rowDays.map(this.renderRowDay)
       ])
     },
     renderGrid() {
@@ -251,7 +251,7 @@ export default defineComponent({
       const style = this.fixedRowHeight
         ? {
             '--of-month-day-heigth':
-              '' + this.eventHeightNumber * this.eventsLimitNumber + 'px',
+              '' + this.eventHeightNumber * this.eventsLimitNumber + 'px'
           }
         : {}
       return h('div', { class: 'of-calendar-month-grid', style }, [
@@ -265,8 +265,8 @@ export default defineComponent({
               {
                 class: [
                   'of-calendar-category-title',
-                  'week-day-' + weekDay.getDay(),
-                ],
+                  'week-day-' + weekDay.getDay()
+                ]
               },
               h(
                 'div',
@@ -274,11 +274,11 @@ export default defineComponent({
                 this.renderWeekDay(weekDay)
               )
             )
-          }),
+          })
         ]),
-        this.monthGrid.grid.map(this.renderRow),
+        this.monthGrid.grid.map(this.renderRow)
       ])
-    },
+    }
   },
   render() {
     return h(
@@ -286,13 +286,13 @@ export default defineComponent({
       {
         class: 'container of--calendar',
         style: {
-          '--of-event-height': `${this.eventHeightNumber}px`,
+          '--of-event-height': `${this.eventHeightNumber}px`
         },
         onSelectStart(e: Event) {
           e.preventDefault()
-        },
+        }
       },
       [this.header(), this.renderGrid(), this.footer()]
     )
-  },
+  }
 })

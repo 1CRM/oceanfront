@@ -13,7 +13,7 @@ export const ToggleInner = defineComponent({
     name: String,
     mode: String as PropType<FieldMode>,
     scale: [String, Number],
-    outside: Boolean,
+    outside: Boolean
   },
   emits: ['focus', 'blur', 'inputMounted'],
   setup(props, ctx) {
@@ -28,9 +28,9 @@ export const ToggleInner = defineComponent({
       onBlur() {
         ctx.emit('blur')
       },
-      onVnodeMounted(vnode: VNode) {
+      onVueMounted(vnode: VNode) {
         ctx.emit('inputMounted', vnode)
-      },
+      }
     }
     return () => {
       const inputLabel = props.label
@@ -40,10 +40,10 @@ export const ToggleInner = defineComponent({
             {
               class: [
                 'of-field-content-text',
-                'of--align-' + (props.align || 'start'),
+                'of--align-' + (props.align || 'start')
               ],
               for: props.inputId,
-              onClick: (evt: MouseEvent) => evt.stopPropagation(),
+              onClick: (evt: MouseEvent) => evt.stopPropagation()
             },
             [inputLabel]
           )
@@ -63,7 +63,7 @@ export const ToggleInner = defineComponent({
               type: 'checkbox',
               value: '1',
               'aria-label': props.label ?? props.ariaLabel,
-              ...hooks,
+              ...hooks
             }),
             props.switch
               ? h(
@@ -71,33 +71,33 @@ export const ToggleInner = defineComponent({
                   { class: ['of-switch', { outside: !props.outside }] },
                   [
                     h('div', {
-                      class: ['of-switch-track', { outside: !props.outside }],
+                      class: ['of-switch-track', { outside: !props.outside }]
                     }),
                     h('div', {
-                      class: ['of-switch-thumb', { outside: !props.outside }],
-                    }),
+                      class: ['of-switch-thumb', { outside: !props.outside }]
+                    })
                   ]
                 )
               : ctx.slots.icon
-              ? ctx.slots.icon(props.checked)
-              : h(OfIcon, {
-                  class: 'of-toggle-icon',
-                  name: icon.value,
-                  scale: props.scale || 'input',
-                }),
+                ? ctx.slots.icon(props.checked)
+                : h(OfIcon, {
+                    class: 'of-toggle-icon',
+                    name: icon.value,
+                    scale: props.scale || 'input'
+                  })
           ]
-        ),
+        )
       ]
       if (label) inner.push(label)
       return [
         h(
           'div',
           {
-            class: 'of-toggle-wrapper',
+            class: 'of-toggle-wrapper'
           },
           inner
-        ),
+        )
       ]
     }
-  },
+  }
 })

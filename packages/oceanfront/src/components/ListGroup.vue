@@ -15,7 +15,7 @@ export default defineComponent({
   props: {
     modelValue: Boolean,
     transition: String,
-    value: [Boolean, String],
+    value: [Boolean, String]
   },
   emits: ['update:modelValue'],
   setup(props, ctx) {
@@ -26,8 +26,8 @@ export default defineComponent({
     }
     return {
       state,
-      toggle,
+      toggle
     }
-  },
+  }
 })
 </script>

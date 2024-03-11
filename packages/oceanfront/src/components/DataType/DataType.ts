@@ -9,8 +9,8 @@ export default defineComponent({
   props: {
     value: {
       type: [String, Boolean, Number, Array, Object] as PropType<DataTypeValue>,
-      default: null,
-    },
+      default: null
+    }
   },
   render() {
     if (this.$props.value && typeof this.$props.value === 'object') {
@@ -25,5 +25,5 @@ export default defineComponent({
     }
 
     return this.$props.value
-  },
+  }
 })

@@ -37,8 +37,8 @@
           col.class,
           {
             sortable: col.sortable !== false,
-            [sort.order]: sort.column === col.value,
-          },
+            [sort.order]: sort.column === col.value
+          }
         ]"
         :key="idx"
       >
@@ -87,7 +87,7 @@
           listedRows,
           tableLeft,
           highlightLastMoved,
-          currentInnerDepth,
+          currentInnerDepth
         }"
         :coords="[rowidx]"
         :point-next="[rowidx + 1]"
@@ -180,7 +180,7 @@ import {
   ComputedRef,
   Ref,
   shallowRef,
-  reactive,
+  reactive
 } from 'vue'
 import { DataTableHeader } from '../lib/datatable'
 import { useThemeOptions } from '../lib/theme'
@@ -194,13 +194,13 @@ import OfTableRow from './TableRow.vue'
 enum RowsSelectorValues {
   Page = 'page',
   All = 'all',
-  DeselectAll = 'deselect-all',
+  DeselectAll = 'deselect-all'
 }
 
 enum RowSortOrders {
   asc = 'asc',
   desc = 'desc',
-  noOrder = '',
+  noOrder = ''
 }
 
 interface ExtraSortField {
@@ -227,7 +227,7 @@ export default defineComponent({
     OfField,
     OfOptionList,
     OfOverlay,
-    OfIcon,
+    OfIcon
   },
   // components: { OfFormat },
   props: {
@@ -245,25 +245,25 @@ export default defineComponent({
     draggable: Boolean,
     dragOptions: {
       type: Object as any,
-      required: false,
+      required: false
     },
     editable: {
       type: Boolean,
-      default: false,
+      default: false
     },
     editType: {
       type: String,
-      default: 'inline',
+      default: 'inline'
     },
     showOldValues: {
       type: Boolean,
-      default: false,
+      default: false
     },
     nestedIndicator: {
       type: String,
-      default: 'name',
+      default: 'name'
     },
-    density: [String, Number],
+    density: [String, Number]
   },
   emits: {
     'rows-selected': null,
@@ -273,7 +273,7 @@ export default defineComponent({
     'rows-sorted': null,
     'rows-moved': null,
     'rows-edited': null,
-    'row-edited': null,
+    'row-edited': null
   },
   setup(props, ctx) {
     const themeOptions = useThemeOptions()
@@ -295,7 +295,7 @@ export default defineComponent({
       nested: false,
       allNested: true,
       nestedLimit: 5,
-      allParent: true,
+      allParent: true
     })
     const dragLeft = computed(() => {
       return 55 + 20 * nestDepth.value + 'px'
@@ -360,7 +360,7 @@ export default defineComponent({
         currentCoords.value = data.coords
         nestDepth.value = data.depth
         fixArrow(data.element, data.fixArrowNext)
-      },
+      }
     }
     const eventStart = (event: MouseEvent | TouchEvent) => {
       if (event.type === 'touchstart') {
@@ -382,10 +382,10 @@ export default defineComponent({
     document.addEventListener('mouseup', eventEnd)
     document.addEventListener('mousedown', eventStart)
     document.addEventListener('touchstart', eventStart, {
-      passive: true,
+      passive: true
     })
     document.addEventListener('touchend', eventEnd, {
-      passive: true,
+      passive: true
     })
     const switchItems = (itemIndexes: number[], targetIndexes: number[]) => {
       if (itemIndexes.length && targetIndexes.length) {
@@ -416,7 +416,7 @@ export default defineComponent({
           let order = targetIndexes[targetDepth - 1] - 0.5
           targetItemParent.push({
             ...{ ...item, highlighted: true },
-            order,
+            order
           })
           item.toRemove = true
         }
@@ -470,23 +470,6 @@ export default defineComponent({
       }
       return 0
     })
-    const orderAndCheck = (
-      item: any,
-      idx: number,
-      selectedValues: Record<string, any>
-    ) => {
-      item.order = item.hasOwnProperty('order') ? item.order : idx
-      item.selected =
-        item.selected || (selectedValues && selectedValues[item.id])
-          ? selectedValues[item.id]
-          : !!(selectedValues && selectedValues[RowsSelectorValues.All])
-      if (item.subitems?.length) {
-        item.subitems.forEach((v: any, i: number) => {
-          v = orderAndCheck(v, i, selectedValues)
-        })
-      }
-      return item
-    }
 
     const fillListedRows = (
       item: any,
@@ -506,6 +489,7 @@ export default defineComponent({
         })
       }
     }
+
     const listedRows = computed(() => {
       let arr: any = []
       rows.value.map((v: any, i: number) => {
@@ -513,22 +497,7 @@ export default defineComponent({
       })
       return arr
     })
-    const rows = computed(() => {
-      const result = []
-      let count = perPage.value
-      let propItems: any = items.value
-      let selectedRecords = rowsRecord.value?.value
-      for (
-        let idx = iterStart.value;
-        count > 0 && idx < propItems.length;
-        idx++
-      ) {
-        let item: any = propItems[idx]
-        item = orderAndCheck(item, idx, selectedRecords)
-        result.push(item)
-      }
-      return result
-    })
+
     const outerId = computed(() => {
       return 'of-data-table-' + ++sysDataTableIndex
     })
@@ -594,21 +563,21 @@ export default defineComponent({
       for (const field of extraSortFields) {
         const item = {
           value: field.value,
-          text: field.label,
+          text: field.label
         }
         const itemAsc = {
           icon: 'select up',
           selected:
             sort.value.column === field.value &&
             sort.value.order === RowSortOrders.asc,
-          order: RowSortOrders.asc,
+          order: RowSortOrders.asc
         }
         const itemDesc = {
           icon: 'select down',
           selected:
             sort.value.column === field.value &&
             sort.value.order === RowSortOrders.desc,
-          order: RowSortOrders.desc,
+          order: RowSortOrders.desc
         }
         selectedColFields.value.push({ ...itemDesc, ...item })
         selectedColFields.value.push({ ...itemAsc, ...item })
@@ -676,7 +645,7 @@ export default defineComponent({
         })
         .join(' ')
       return {
-        '--of-table-columns': `${dragWidth} ${selectorWidth} ${widths}`,
+        '--of-table-columns': `${dragWidth} ${selectorWidth} ${widths}`
       }
     })
 
@@ -688,6 +657,47 @@ export default defineComponent({
       showSelector(props.rowsSelector, rows.value)
     )
     const selectAll = computed(() => props.selectAll)
+
+    const orderItems = (item: any, idx: number) => {
+      item.order = item.hasOwnProperty('order') ? item.order : idx
+      if (item.subitems?.length) {
+        item.subitems.forEach((v: any, i: number) => {
+          v = orderItems(v, i)
+        })
+      }
+      return item
+    }
+
+    const checkItems = (item: any) => {
+      const selectedValues = rowsRecord.value.value
+      item.selected =
+        item.selected || (selectedValues && selectedValues[item.id])
+          ? selectedValues[item.id]
+          : !!(selectedValues && selectedValues[RowsSelectorValues.All])
+      if (item.subitems?.length) {
+        item.subitems.forEach((v: any, _i: number) => {
+          checkItems(v)
+        })
+      }
+      return item
+    }
+
+    const rows = computed(() => {
+      const result = []
+      let count = perPage.value
+      let propItems: any = items.value
+      for (
+        let idx = iterStart.value;
+        count > 0 && idx < propItems.length;
+        idx++
+      ) {
+        let item: any = propItems[idx]
+        item = orderItems(item, idx)
+        result.push(item)
+      }
+      return result
+    })
+
     const rowsRecord: ComputedRef<FormRecord> = computed(() => {
       let ids: any = {}
 
@@ -707,6 +717,17 @@ export default defineComponent({
       }
       return makeRecord(ids)
     })
+
+    watch(
+      rows,
+      (newRows) => {
+        for (const row of newRows) {
+          checkItems(row)
+        }
+      },
+      { deep: true }
+    )
+
     watch(
       () => rowsRecord.value.value,
       (val) => {
@@ -771,18 +792,18 @@ export default defineComponent({
       {
         key: 'page',
         text: 'Select Page',
-        value: () => selectRows(RowsSelectorValues.Page),
+        value: () => selectRows(RowsSelectorValues.Page)
       },
       {
         key: 'all',
         text: 'Select All',
-        value: () => selectRows(RowsSelectorValues.All),
+        value: () => selectRows(RowsSelectorValues.All)
       },
       {
         key: 'clear',
         text: 'Deselect All',
-        value: () => selectRows(RowsSelectorValues.DeselectAll),
-      },
+        value: () => selectRows(RowsSelectorValues.DeselectAll)
+      }
     ]
 
     const setSort = function (column: string, order: string) {
@@ -800,8 +821,8 @@ export default defineComponent({
         sort.value.column !== column
           ? RowSortOrders.asc
           : sort.value.order == RowSortOrders.asc
-          ? RowSortOrders.desc
-          : RowSortOrders.asc
+            ? RowSortOrders.desc
+            : RowSortOrders.asc
       setSort(column, field?.order || autoOrder)
       selectRows(RowsSelectorValues.DeselectAll)
       ctx.emit('rows-sorted', sort.value)
@@ -825,7 +846,7 @@ export default defineComponent({
 
     const tableClass = computed(() => [
       'of-data-table',
-      'of--density-' + density.value,
+      'of--density-' + density.value
     ])
 
     return {
@@ -869,9 +890,9 @@ export default defineComponent({
       highlightLastMoved,
       dragEvents,
       dragLeft,
-      isTouchable,
+      isTouchable
     }
-  },
+  }
 })
 </script>
 <style lang="scss">

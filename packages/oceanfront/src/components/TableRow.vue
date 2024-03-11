@@ -8,7 +8,7 @@
       odd: index % 2 != 0,
       nested: item.nested,
       selected: isTouchable ? selectedItem : highlighted || isCurrentTarget,
-      active: active,
+      active: active
     }"
     :key="item.id ?? index"
   >
@@ -92,8 +92,7 @@
           ...dragInfo,
           isLastChild: subidx === item.subitems.length - 1,
           highlighted:
-            highlighted ||
-            coords.join('-') === dragInfo?.draggingItem.join('-'),
+            highlighted || coords.join('-') === dragInfo?.draggingItem.join('-')
         }"
         :edit-type="editType"
         :editable="editable"
@@ -136,18 +135,18 @@ export default defineComponent({
     columns: Object as any,
     pointNext: {
       type: Array,
-      required: true,
+      required: true
     },
     rowsRecord: Object as any,
     coords: {
       type: Array,
-      required: true,
+      required: true
     },
     depth: {
       type: Number,
-      default: 0,
+      default: 0
     },
-    isTouchable: Boolean,
+    isTouchable: Boolean
   },
   emits: ['dragstart', 'update:row', 'setCoords', 'setDepth'],
   setup(props, ctx) {
@@ -161,7 +160,7 @@ export default defineComponent({
 
     const rowItem = reactive<RowItem>({
       item: props.row,
-      columns: props.columns,
+      columns: props.columns
     })
 
     const item = computed({
@@ -170,7 +169,7 @@ export default defineComponent({
       },
       set(val) {
         ctx.emit('update:row', val)
-      },
+      }
     }) as any
     watch(
       () => [props.row, props.columns],
@@ -269,7 +268,7 @@ export default defineComponent({
       },
       setCoords: (data: any) => {
         ctx.emit('setCoords', data)
-      },
+      }
     }
     watch(
       () => item.value,
@@ -521,7 +520,7 @@ export default defineComponent({
             coords: coords,
             element: element,
             fixArrowNext: fixArrowNext,
-            depth: depth,
+            depth: depth
           })
         }
         return
@@ -537,7 +536,7 @@ export default defineComponent({
         depth: props.depth,
         element: event.target,
         canBeNested: item.value.nested,
-        innerDepth: selfNestedDepth.value,
+        innerDepth: selfNestedDepth.value
       })
     }
     const rowUpdated = () => {
@@ -560,8 +559,8 @@ export default defineComponent({
       rowItem,
       currentCords,
       selectedItem,
-      active,
+      active
     }
-  },
+  }
 })
 </script>

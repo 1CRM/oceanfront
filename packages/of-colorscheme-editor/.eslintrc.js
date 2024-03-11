@@ -1,12 +1,12 @@
 module.exports = {
   root: true,
   env: {
-    node: true,
+    node: true
   },
   extends: [
     'plugin:vue/vue3-recommended',
     'plugin:@typescript-eslint/recommended',
-    'plugin:prettier/recommended',
+    'plugin:prettier/recommended'
   ],
   rules: {
     'no-console': process.env.NODE_ENV === 'production' ? 'error' : 'off',
@@ -17,26 +17,26 @@ module.exports = {
       'warn',
       {
         argsIgnorePattern: '^_.*$',
-        varsIgnorePattern: '^_.*$',
-      },
+        varsIgnorePattern: '^_.*$'
+      }
     ],
     'vue/attributes-order': 'off',
     'vue/html-self-closing': 'off',
     'vue/max-attributes-per-line': 'off',
-    'vue/require-default-prop': 'off',
+    'vue/require-default-prop': 'off'
   },
   parser: 'vue-eslint-parser',
   parserOptions: {
     parser: '@typescript-eslint/parser',
-    extraFileExtensions: ['.vue'],
+    extraFileExtensions: ['.vue']
   },
   plugins: ['vitest'],
   overrides: [
     {
       files: ['**/__tests__/*.{j,t}s?(x)'],
       env: {
-        mocha: true,
-      },
-    },
-  ],
+        mocha: true
+      }
+    }
+  ]
 }

@@ -8,7 +8,7 @@ import {
   onUnmounted,
   provide,
   reactive,
-  watch,
+  watch
 } from 'vue'
 
 const NAV_GROUP = 'ofnavgrp' as unknown as InjectionKey<NavGroup>
@@ -134,7 +134,7 @@ export function reactiveNavGroup(): NavGroup {
     register(target: NavGroupTarget): NavGroupUnregister | null {
       items.add(target)
       return {
-        unregister: () => items.delete(target),
+        unregister: () => items.delete(target)
       }
     },
     navigate(event: KeyboardEvent): boolean {
@@ -171,6 +171,6 @@ export function reactiveNavGroup(): NavGroup {
         }
       }
       return false
-    },
+    }
   }
 }

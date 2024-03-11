@@ -5,7 +5,7 @@
         class="editable-field-value field-value"
         :class="{
           active: active,
-          inline: mode === 'inline',
+          inline: mode === 'inline'
         }"
         ref="elem"
       >
@@ -99,7 +99,7 @@ import {
   nextTick,
   ref,
   shallowRef,
-  watch,
+  watch
 } from 'vue'
 import { OfIcon } from './Icon'
 import { DataTypeValue } from '../lib/datatype'
@@ -112,7 +112,7 @@ const supportedTypes = [
   'time',
   'datetime',
   'text',
-  'number',
+  'number'
 ]
 const OfEditableField = defineComponent({
   name: 'OfEditableField',
@@ -120,7 +120,7 @@ const OfEditableField = defineComponent({
   props: {
     modelValue: Object,
     mode: String as any,
-    showOldValues: Boolean,
+    showOldValues: Boolean
   },
   emits: ['update:modelValue'],
   setup(props, ctx) {
@@ -137,7 +137,7 @@ const OfEditableField = defineComponent({
       },
       set(val) {
         itemValue.value = val
-      },
+      }
     }) as any
     const active = ref(false)
     const type = computed(() => {
@@ -244,9 +244,9 @@ const OfEditableField = defineComponent({
       onInputBlur,
       onKeyDown,
       showItem,
-      classes,
+      classes
     }
-  },
+  }
 })
 
 export default OfEditableField
@@ -370,7 +370,9 @@ export default OfEditableField
   min-width: 250px;
   background: var(--of-color-menu-bg, var(--of-color-surface-variant));
   padding: 7px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25), 0 1px 2px rgba(0, 0, 0, 0.5);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.25),
+    0 1px 2px rgba(0, 0, 0, 0.5);
   border-radius: 5px;
 }
 .editable-field-value {

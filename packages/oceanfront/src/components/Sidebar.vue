@@ -1,19 +1,19 @@
 <template>
   <of-overlay
-    :active="active"
+    :active="activeSlot"
     align="left"
     :pad="false"
-    :embed="embed"
+    :embed="embedVal"
     @blur="hide"
   >
-    <template #default="{ active, state }">
+    <template #default="{ state }">
       <transition :name="state === 'overlay' ? 'slide-right' : undefined">
         <nav
           class="of-sidebar"
           :class="classAttr"
-          :id="id"
+          :id="idVal"
           role="navigation"
-          v-if="active"
+          v-if="activeSlot"
         >
           <slot></slot>
         </nav>
@@ -35,34 +35,32 @@ export default defineComponent({
     embed: Boolean,
     id: String,
     loading: Boolean,
-    modelValue: Boolean,
+    modelValue: Boolean
   },
   emits: ['update:modelValue'],
   setup(props, ctx) {
-    const active = ref(props.modelValue)
+    const activeSlot = ref(props.modelValue)
     watch(
       () => props.modelValue,
       (val) => {
-        active.value = val
+        activeSlot.value = val
       }
     )
-    const embed = computed(() => props.embed)
-    const loading = computed(() => props.loading)
+    const embedVal = computed(() => props.embed)
     const classAttr = computed(() => props.class)
     const hide = () => {
-      active.value = false
+      activeSlot.value = false
       ctx.emit('update:modelValue', false)
     }
-    const show = () => (active.value = true)
+    const show = () => (activeSlot.value = true)
     return {
-      active,
-      id: computed(() => props.id),
+      activeSlot,
+      idVal: computed(() => props.id),
       classAttr,
-      embed,
+      embedVal,
       hide,
-      loading,
-      show,
+      show
     }
-  },
+  }
 })
 </script>

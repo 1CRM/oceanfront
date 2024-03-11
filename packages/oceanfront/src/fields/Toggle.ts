@@ -7,7 +7,7 @@ import {
   fieldRender,
   newFieldId,
   provideFieldContext,
-  provideFieldRender,
+  provideFieldRender
 } from '../lib/fields'
 
 export const supportedTypes = new Set(['checkbox', 'switch'])
@@ -18,7 +18,7 @@ export const OfToggleField = defineComponent({
     ...BaseFieldProps,
     inputType: String,
     switch: Boolean,
-    outside: { type: Boolean, default: true },
+    outside: { type: Boolean, default: true }
   },
   setup(props, ctx) {
     const fieldCtx = provideFieldContext(props, ctx)
@@ -35,7 +35,7 @@ export const OfToggleField = defineComponent({
         stateValue.value = val ?? props.checked
       },
       {
-        immediate: true,
+        immediate: true
       }
     )
 
@@ -55,8 +55,8 @@ export const OfToggleField = defineComponent({
       return pi && supportedTypes.has(pi)
         ? pi
         : props.switch
-        ? 'switch'
-        : 'checkbox'
+          ? 'switch'
+          : 'checkbox'
     })
 
     const focus = () => {
@@ -84,7 +84,7 @@ export const OfToggleField = defineComponent({
       'onUpdate:checked': (checked: boolean) => {
         stateValue.value = checked
         if (fieldCtx.onUpdate) fieldCtx.onUpdate(stateValue.value)
-      },
+      }
     }
 
     const slots = {
@@ -103,11 +103,11 @@ export const OfToggleField = defineComponent({
             mode: fieldCtx.mode,
             scale: fieldCtx.scale,
             ariaLabel: fieldCtx.ariaLabel,
-            ...hooks,
+            ...hooks
           },
           { icon: ctx.slots.icon }
         )
-      },
+      }
     }
 
     const fRender: FieldRender = fieldRender({
@@ -124,7 +124,7 @@ export const OfToggleField = defineComponent({
       updated: computed(() => initialValue.value !== stateValue.value),
       value: stateValue,
       undecorated: true,
-      fieldContext: fieldCtx,
+      fieldContext: fieldCtx
     })
     provideFieldRender(fRender)
 
@@ -132,5 +132,5 @@ export const OfToggleField = defineComponent({
       return h(OfFieldBase, props, { ...slots, ...ctx.slots })
     }
     return render
-  },
+  }
 })

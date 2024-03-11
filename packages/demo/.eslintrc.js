@@ -1,12 +1,12 @@
 module.exports = {
   root: true,
   env: {
-    node: true,
+    node: true
   },
   extends: [
     'plugin:@typescript-eslint/recommended',
     'plugin:vue/vue3-recommended',
-    'plugin:prettier/recommended',
+    'plugin:prettier/recommended'
   ],
   rules: {
     'no-console': process.env.NODE_ENV === 'production' ? 'error' : 'off',
@@ -18,8 +18,8 @@ module.exports = {
       'error',
       {
         argsIgnorePattern: '^_.*$',
-        varsIgnorePattern: '^_.*$',
-      },
+        varsIgnorePattern: '^_.*$'
+      }
     ],
     'vue/attributes-order': 'off',
     'vue/html-closing-bracket-newline': 'off',
@@ -28,19 +28,19 @@ module.exports = {
     'vue/max-attributes-per-line': 'off',
     'vue/no-dupe-keys': 'off', // seems broken
     'vue/require-default-prop': 'off',
-    'vue/singleline-html-element-content-newline': 'off',
+    'vue/singleline-html-element-content-newline': 'off'
   },
   parser: 'vue-eslint-parser',
   parserOptions: {
     parser: '@typescript-eslint/parser',
-    extraFileExtensions: ['.vue'],
+    extraFileExtensions: ['.vue']
   },
   overrides: [
     {
       files: ['**/__tests__/*.{j,t}s?(x)'],
       env: {
-        mocha: true,
-      },
-    },
-  ],
+        mocha: true
+      }
+    }
+  ]
 }

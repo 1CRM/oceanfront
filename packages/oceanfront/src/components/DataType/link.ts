@@ -11,11 +11,11 @@ export default defineComponent({
         href: this.$props.value.params.href || null,
         to: this.$props.value.params.to || null,
         beforeNavigate: this.$props.value.params.beforeNavigate || null,
-        ariaLabel: this.$props.value.params.ariaLabel || null,
+        ariaLabel: this.$props.value.params.ariaLabel || null
       },
       {
-        default: () => this.$props.value.value,
+        default: () => this.$props.value.value
       }
     )
-  },
+  }
 })

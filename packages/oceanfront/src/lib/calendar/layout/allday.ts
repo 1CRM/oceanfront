@@ -2,7 +2,7 @@ import {
   daysInEvent,
   CalendarAlldayEventPlacement,
   InternalEvent,
-  Timestamp,
+  Timestamp
 } from '..'
 
 export type BusyInfo = {
@@ -32,7 +32,7 @@ export const layoutAllday = (
     return {
       event: e,
       daysSpan: nDays,
-      top: freeRow,
+      top: freeRow
     }
   })
 }

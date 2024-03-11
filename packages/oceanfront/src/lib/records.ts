@@ -105,7 +105,7 @@ class BasicRecord<T extends object = Record<string, any>>
     return {
       release: () => {
         this._state.value.locked = false
-      },
+      }
     }
   }
 
