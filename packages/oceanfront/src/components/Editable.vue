@@ -208,7 +208,7 @@ const OfEditableField = defineComponent({
       const input = elem.value?.querySelector(placement) as HTMLInputElement
       if (!input) return
       input.style.height = '14px'
-      input.style.height = input.scrollHeight + 'px'
+      nextTick(() => (input.style.height = input.scrollHeight + 'px'))
       if (focus) {
         input.focus()
       }
