@@ -370,7 +370,9 @@ export default OfEditableField
   min-width: 250px;
   background: var(--of-color-menu-bg, var(--of-color-surface-variant));
   padding: 7px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25), 0 1px 2px rgba(0, 0, 0, 0.5);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.25),
+    0 1px 2px rgba(0, 0, 0, 0.5);
   border-radius: 5px;
 }
 .editable-field-value {
