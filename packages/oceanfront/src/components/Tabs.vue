@@ -442,18 +442,18 @@ export default defineComponent({
     //If selected tab isn't visible make scrolling
     const repositionTabs = function () {
       if (showNavigation.value) {
-        const currentTabHeaderItem = tabs.value.querySelector(
+        const currentTabHeaderItem = tabs.value?.querySelector(
           '.of-tab-header-item.is-active'
         )
 
         const prevNavBounds = tabs.value
-          .querySelector('.of-tabs-navigation.of-tabs-navigation-prev')
-          .getBoundingClientRect()
+          ?.querySelector('.of-tabs-navigation.of-tabs-navigation-prev')
+          ?.getBoundingClientRect()
         const nextNavBounds = tabs.value
-          .querySelector('.of-tabs-navigation.of-tabs-navigation-next')
-          .getBoundingClientRect()
-        const currentItemBounds = currentTabHeaderItem.getBoundingClientRect()
-
+          ?.querySelector('.of-tabs-navigation.of-tabs-navigation-next')
+          ?.getBoundingClientRect()
+        const currentItemBounds = currentTabHeaderItem?.getBoundingClientRect()
+        if (!prevNavBounds || !nextNavBounds || !currentItemBounds) return
         let scroll = 0
 
         //check right bound

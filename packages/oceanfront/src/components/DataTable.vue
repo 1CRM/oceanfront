@@ -466,7 +466,7 @@ export default defineComponent({
     const tableLeft = computed(() => {
       if (tableElt.value) {
         const tab = tableElt.value as HTMLDivElement
-        return tab.getBoundingClientRect().left
+        return tab?.getBoundingClientRect()?.left ?? 0
       }
       return 0
     })
@@ -509,7 +509,8 @@ export default defineComponent({
         ?.getBoundingClientRect()
       if (!elem) return
       let elem_top = elem.top
-      let table_top = tableElt?.value?.getBoundingClientRect().top
+      let table_top = tableElt?.value?.getBoundingClientRect()?.top
+      if (!table_top) return
       let table_scroll_top = tableElt?.value?.scrollTop
       if (table_top === undefined || table_scroll_top === undefined) return
       if (point_next) {

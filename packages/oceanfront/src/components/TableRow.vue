@@ -491,8 +491,9 @@ export default defineComponent({
             selectedItem.value = true
           }
         }
-        const height = element?.getBoundingClientRect().height
-        const top = element?.getBoundingClientRect().top
+        const height = element?.getBoundingClientRect()?.height
+        const top = element?.getBoundingClientRect()?.top
+        if (!height || !top) return
         let pagex =
           (event as MouseEvent).pageX ??
           (event as TouchEvent).changedTouches[0].pageX

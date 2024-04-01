@@ -148,7 +148,7 @@ export const OfSliderField = defineComponent({
         const tg = trackElt.value as HTMLDivElement | null
         if (!tg || !fieldCtx.editable || evt.button !== 0) return
         const dims = tg.getBoundingClientRect()
-        if (!dims.width) return
+        if (!dims?.width) return
         evt.stopPropagation()
         evt.preventDefault()
         focus()
