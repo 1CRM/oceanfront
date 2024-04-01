@@ -78,7 +78,7 @@ export default defineComponent({
     const handleDrag = (event: MouseEvent) => {
       if (instance) {
         const clientRect = instance.vnode.el?.getBoundingClientRect()
-
+        if (!clientRect) return
         let left = event.clientX - clientRect.left
         let top = event.clientY - clientRect.top
 

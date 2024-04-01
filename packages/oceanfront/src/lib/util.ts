@@ -226,8 +226,13 @@ export function readonlyUnref<T>(val: Ref<T>): T {
 type EltPos = { x: number; y: number; width: number; height: number }
 
 const eltPos = (elt: Element): EltPos => {
-  const sz = elt.getBoundingClientRect()
-  return { x: sz.x, y: sz.y, width: sz.width, height: sz.height }
+  const sz = elt?.getBoundingClientRect()
+  return {
+    x: sz.x ?? 0,
+    y: sz.y ?? 0,
+    width: sz.width ?? 0,
+    height: sz.height ?? 0
+  }
 }
 
 const scrollEvent = (evt: Event) => {

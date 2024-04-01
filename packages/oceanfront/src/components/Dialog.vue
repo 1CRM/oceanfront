@@ -152,8 +152,8 @@ export default defineComponent({
       )
 
       const resizerElement = dialog.value.querySelector('.dialog-resizer')
-      const resizer = resizerElement.getBoundingClientRect()
-
+      const resizer = resizerElement?.getBoundingClientRect()
+      if (resizer) return
       let newOffsetX =
         startWidth + e.clientX - parseInt(resizer.x, 10) - resizer.width / 4
       let newOffsetY =

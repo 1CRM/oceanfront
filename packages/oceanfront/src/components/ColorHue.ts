@@ -23,7 +23,7 @@ export default defineComponent({
     const getBarLeftPosition = () => {
       if (bar.value && barHandle.value) {
         const rect = bar.value?.getBoundingClientRect()
-
+        if (!rect) return 0
         if (currentHue.value === 360) {
           return rect.width - barHandle.value.offsetWidth / 2
         }
@@ -51,7 +51,7 @@ export default defineComponent({
     const handleDrag = (event: MouseEvent) => {
       if (bar.value && barHandle.value) {
         const rect = bar.value?.getBoundingClientRect()
-
+        if (!rect) return
         let left = event.clientX - rect.left
         left = Math.min(left, rect.width - barHandle.value.offsetWidth / 2)
         left = Math.max(barHandle.value.offsetWidth / 2, left)

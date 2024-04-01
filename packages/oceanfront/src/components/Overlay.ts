@@ -143,9 +143,9 @@ export const OfOverlay = defineComponent({
         if (!targetElt) return // or make fixed/absolute
 
         const parentRect = relativeParentRect(outer)
-        const outerRect = outer.getBoundingClientRect()
-        const targetRect = targetElt.getBoundingClientRect()
-        if (!targetRect || !parentRect) return // or hide?
+        const outerRect = outer?.getBoundingClientRect()
+        const targetRect = targetElt?.getBoundingClientRect()
+        if (!targetRect || !parentRect || !outerRect || !targetRect) return // or hide?
 
         const neededWidth = outerRect.width + targetRect.left
         const offsetWidth = Math.max(neededWidth - parentRect.width, 0)
