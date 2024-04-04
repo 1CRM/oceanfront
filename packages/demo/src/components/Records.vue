@@ -137,12 +137,12 @@ const testRecord = makeRecord({
   six: '2021-02-15',
   seven: '12:00:00',
   eight: 'https://1crm.com/',
-  nine: ['optionB', 'optionA'],
+  nine: ['optionB', 'optionA']
 })
 
 const items = [
   { value: 'optionA', text: 'A' },
-  { value: 'optionB', text: 'B' },
+  { value: 'optionB', text: 'B' }
 ]
 
 export default defineComponent({
@@ -165,9 +165,9 @@ export default defineComponent({
       sampleBinding,
       testRecord,
       textValue,
-      items,
+      items
     }
-  },
+  }
 })
 </script>
 

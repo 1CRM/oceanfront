@@ -61,13 +61,21 @@ class BasicRecord<T extends object = Record<string, any>>
   }
 
   constructor(initial?: T) {
-    const init = deepToRaw(initial || {}) as T
-    this._initial = ref(structuredClone(init)) as Ref<T>
+    const init = toRaw(initial || {})
+    this._value = reactive(init) as T
+    this._initial = this.initializeData(init)
     this._rules = ref([])
     this._state = ref({ locked: false })
-    this._value = reactive(toRaw(initial || {})) as T
     this._metadata = {}
     watchEffect(this._checkUpdated.bind(this))
+  }
+
+  private initializeData(initData: Object): Ref<T> {
+    try {
+      return ref(structuredClone(deepToRaw(initData || {})) as T) as Ref<T>
+    } catch {
+      return ref(Object.assign({}, initData)) as Ref<T>
+    }
   }
 
   _checkUpdated() {
@@ -122,11 +130,27 @@ class BasicRecord<T extends object = Record<string, any>>
   }
 
   reset() {
-    this.value = structuredClone(this._initial.value)
+    let init: T
+
+    try {
+      init = deepToRaw(this._initial.value || {}) as T
+      this.value = structuredClone(init)
+    } catch {
+      init = toRaw(this._initial.value || {}) as T
+      Object.assign(this.value, init)
+    }
   }
 
   reinit() {
-    this._initial.value = structuredClone(deepToRaw(this.value))
+    let init: T
+
+    try {
+      init = deepToRaw(this.value || {}) as T
+      this._initial.value = structuredClone(init)
+    } catch {
+      init = toRaw(this.value || {}) as T
+      Object.assign(this._initial.value, init)
+    }
   }
 
   get updated(): boolean {
