@@ -390,13 +390,15 @@ export const OfTextField = defineComponent({
             type: inputType.value,
             'aria-label': fieldCtx.ariaLabel ?? fieldCtx.label,
             autocomplete: fieldCtx.autocomplete ?? null,
-            value: lazyInputValue,
+            value: inputValue.value,
             ...hooks
           })
         })
       },
       fixedContent: () => {
-        return formatter.value?.formatFixed?.(fieldCtx.value) ?? lazyInputValue
+        return (
+          formatter.value?.formatFixed?.(fieldCtx.value) ?? inputValue.value
+        )
       }
     }
 
