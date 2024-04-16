@@ -304,6 +304,7 @@ export const OfTextField = defineComponent({
               // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
               inputElt.setSelectionRange(upd.selStart, upd.selEnd!)
             }
+            inputValue.value = iVal
             lazyInputValue = iVal
             pendingValue.value = upd.value
           }
