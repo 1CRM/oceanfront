@@ -106,7 +106,7 @@ export const OfListItem = defineComponent({
           custom: (link: Link) => {
             const active =
               props.active ??
-              (link.href ? link.isExactActive : navGroup && isCurrent.value)
+              (link.href ? link.isExactActive : navGroup && !!props.active)
             const href = link.href
             const activate = (evt: Event) => {
               if (link.href) {
