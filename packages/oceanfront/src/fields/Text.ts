@@ -252,6 +252,12 @@ export const OfTextField = defineComponent({
         if (fmt?.handleBlur) {
           fmt.handleBlur(evt)
         }
+
+        //In Safari, the change event is not triggered when the input with type == 'phone' is blurred
+        if (/Safari/.test(navigator.userAgent) && props.type === 'phone') {
+          const inputElt = evt.target as HTMLInputElement | HTMLTextAreaElement
+          inputElt.dispatchEvent(new Event('change'))
+        }
       },
       onFocus(_evt: FocusEvent) {
         focused.value = true
