@@ -196,6 +196,8 @@ export const OfTextField = defineComponent({
 
     let closing: number | null = null
     let focusing: number | null = null
+    let dispatchChange = false
+
     const openItemsPopup = (_evt?: MouseEvent) => {
       if (itemsOpened.value) {
         closeItemsPopup()
@@ -253,10 +255,15 @@ export const OfTextField = defineComponent({
           fmt.handleBlur(evt)
         }
 
-        //In Safari, the change event is not triggered when the input with type == 'phone' is blurred
-        if (/Safari/.test(navigator.userAgent) && props.type === 'phone') {
+        //In Safari, the change event is not triggered when the input with 'handleInput' in the formatter is blurred
+        if (
+          /Safari/.test(navigator.userAgent) &&
+          (props.type === 'phone' || props.type === 'number') &&
+          dispatchChange
+        ) {
           const inputElt = evt.target as HTMLInputElement | HTMLTextAreaElement
           inputElt.dispatchEvent(new Event('change'))
+          dispatchChange = false
         }
       },
       onFocus(_evt: FocusEvent) {
@@ -304,6 +311,7 @@ export const OfTextField = defineComponent({
           const upd = fmt.handleInput(evt)
           if (upd) {
             if (!upd.updated) return
+            dispatchChange = true
             const iVal = upd.textValue ?? ''
             inputElt.value = iVal
             if (upd.selStart !== undefined) {
