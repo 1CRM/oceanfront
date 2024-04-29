@@ -200,7 +200,7 @@ export const OfSelectField = defineComponent({
     }
 
     const hooks = {
-      onBlur(_evt: FocusEvent) {
+      onBlur() {
         focused.value = false
       },
       onFocus(_evt: FocusEvent) {
@@ -241,8 +241,7 @@ export const OfSelectField = defineComponent({
               ref: elt,
               tabindex: fieldCtx.mode === 'fixed' ? -1 : 0,
               ariaLabel: fieldCtx.ariaLabel ?? props.label,
-              ...hooks,
-              ...selectMouseEvents
+              ...hooks
             },
             labels
           )
@@ -253,7 +252,7 @@ export const OfSelectField = defineComponent({
       onMouseenter: () => {
         clearTimeout(selectTimerId)
       },
-      onMouseleave: (e: MouseEvent) => {
+      onMouseleave: () => {
         if (!opened.value) return false
         selectTimerId = window.setTimeout(() => {
           closePopup()
@@ -271,6 +270,7 @@ export const OfSelectField = defineComponent({
       }),
       class: 'of-select-field',
       click: clickOpen,
+      ...selectMouseEvents,
       cursor: computed(() => (fieldCtx.editable ? 'pointer' : null)),
       focus,
       focused,
@@ -283,7 +283,6 @@ export const OfSelectField = defineComponent({
             ? h(OfSelectPopup, {
                 items: items.value,
                 multi: props.multi,
-                active: opened.value,
                 addRemove: props.addRemove,
                 closeAfterSelect: props.closeAfterSelect,
                 closePopup,
@@ -292,11 +291,11 @@ export const OfSelectField = defineComponent({
                   fieldCtx.onUpdate?.(val)
                 },
                 class: 'of--elevated-1',
-                ...selectMouseEvents
+                ...selectMouseEvents,
+                onBlur: closePopup
               })
             : undefined,
         visible: opened,
-        onBlur: closePopup,
         capture: false
       },
       updated: computed(() => initialValue.value !== stateValue.value),

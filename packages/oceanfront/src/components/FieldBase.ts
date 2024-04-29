@@ -152,7 +152,7 @@ export const OfFieldBase = defineComponent({
     const padState = { listen: watchPosition() }
     const checkPad = (node: VNode) => calcPadding(node, padState)
 
-    const handlers = {
+    const handlers: any = {
       onBlur(_evt: FocusEvent) {
         focused.value = false
         if (focusGrp) focusGrp.blur()
@@ -172,7 +172,12 @@ export const OfFieldBase = defineComponent({
       onVueUpdated: checkPad,
       onVueUnmounted: checkPad
     }
-
+    if (fieldRender.onMouseleave) {
+      handlers.onmouseleave = fieldRender.onMouseleave
+    }
+    if (fieldRender.onMouseenter) {
+      handlers.onmouseenter = fieldRender.onMouseenter
+    }
     return () => {
       try {
         const outerId = (fieldRender.inputId ?? props.id) + '-outer'
