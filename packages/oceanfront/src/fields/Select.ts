@@ -36,7 +36,7 @@ export const OfSelectField = defineComponent({
     const config = useConfig()
     const itemMgr = useItems(config)
     const fieldCtx = makeFieldContext(props, ctx as SetupContext)
-
+    let selectTimerId: number | undefined
     const initialValue = computed(() => {
       let initial = fieldCtx.initialValue
       if (initial === undefined) initial = props.defaultValue
@@ -241,14 +241,25 @@ export const OfSelectField = defineComponent({
               ref: elt,
               tabindex: fieldCtx.mode === 'fixed' ? -1 : 0,
               ariaLabel: fieldCtx.ariaLabel ?? props.label,
-              ...hooks
+              ...hooks,
+              ...selectMouseEvents
             },
             labels
           )
         ]
       }
     }
-
+    const selectMouseEvents = {
+      onMouseenter: () => {
+        clearTimeout(selectTimerId)
+      },
+      onMouseleave: (e: MouseEvent) => {
+        if (!opened.value) return false
+        selectTimerId = window.setTimeout(() => {
+          closePopup()
+        }, 500)
+      }
+    }
     const fRender = fieldRender({
       blank: computed(() => {
         if (props.multi)
@@ -272,6 +283,7 @@ export const OfSelectField = defineComponent({
             ? h(OfSelectPopup, {
                 items: items.value,
                 multi: props.multi,
+                active: opened.value,
                 addRemove: props.addRemove,
                 closeAfterSelect: props.closeAfterSelect,
                 closePopup,
@@ -279,11 +291,13 @@ export const OfSelectField = defineComponent({
                 onUpdateValue: (val: any) => {
                   fieldCtx.onUpdate?.(val)
                 },
-                class: 'of--elevated-1'
+                class: 'of--elevated-1',
+                ...selectMouseEvents
               })
             : undefined,
         visible: opened,
-        onBlur: closePopup
+        onBlur: closePopup,
+        capture: false
       },
       updated: computed(() => initialValue.value !== stateValue.value),
       value: stateValue

@@ -139,6 +139,7 @@ export interface FieldPopup {
   content?: () => Renderable | undefined
   visible?: boolean
   onBlur?: () => void
+  capture?: boolean
   // position?
 }
 

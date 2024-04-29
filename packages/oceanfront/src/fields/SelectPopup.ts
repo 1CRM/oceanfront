@@ -35,7 +35,6 @@ export const OfSelectPopup = defineComponent({
     const itemMgr = useItems(config)
 
     const removing = ref(false)
-    let selectTimerId: number | undefined
     const isSelected = (item: any): boolean => {
       if (!props.multi) return props.value === item
       const values = Array.isArray(props.value) ? props.value : []
@@ -144,16 +143,6 @@ export const OfSelectPopup = defineComponent({
         props.closePopup?.(true)
       }
     }
-    const selectMouseEvents = {
-      onMouseenter: () => {
-        clearTimeout(selectTimerId)
-      },
-      onMouseleave: () => {
-        selectTimerId = window.setTimeout(() => {
-          props.closePopup?.(true)
-        }, 500)
-      }
-    }
 
     return () => {
       return h(
@@ -162,8 +151,7 @@ export const OfSelectPopup = defineComponent({
           items: filteredItems.value,
           class: props.class,
           onClick: setValue,
-          addSearch: props.addSearch,
-          ...selectMouseEvents
+          addSearch: props.addSearch
         },
         { header: () => addRemoveButtons() }
       )
