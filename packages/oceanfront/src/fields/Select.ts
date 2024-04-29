@@ -36,7 +36,7 @@ export const OfSelectField = defineComponent({
     const config = useConfig()
     const itemMgr = useItems(config)
     const fieldCtx = makeFieldContext(props, ctx as SetupContext)
-
+    let selectTimerId: number | undefined
     const initialValue = computed(() => {
       let initial = fieldCtx.initialValue
       if (initial === undefined) initial = props.defaultValue
@@ -200,7 +200,7 @@ export const OfSelectField = defineComponent({
     }
 
     const hooks = {
-      onBlur(_evt: FocusEvent) {
+      onBlur() {
         focused.value = false
       },
       onFocus(_evt: FocusEvent) {
@@ -248,7 +248,17 @@ export const OfSelectField = defineComponent({
         ]
       }
     }
-
+    const selectMouseEvents = {
+      onMouseenter: () => {
+        clearTimeout(selectTimerId)
+      },
+      onMouseleave: () => {
+        if (!opened.value) return false
+        selectTimerId = window.setTimeout(() => {
+          closePopup()
+        }, 500)
+      }
+    }
     const fRender = fieldRender({
       blank: computed(() => {
         if (props.multi)
@@ -260,6 +270,7 @@ export const OfSelectField = defineComponent({
       }),
       class: 'of-select-field',
       click: clickOpen,
+      ...selectMouseEvents,
       cursor: computed(() => (fieldCtx.editable ? 'pointer' : null)),
       focus,
       focused,
@@ -279,11 +290,13 @@ export const OfSelectField = defineComponent({
                 onUpdateValue: (val: any) => {
                   fieldCtx.onUpdate?.(val)
                 },
-                class: 'of--elevated-1'
+                class: 'of--elevated-1',
+                ...selectMouseEvents,
+                onBlur: closePopup
               })
             : undefined,
         visible: opened,
-        onBlur: closePopup
+        capture: false
       },
       updated: computed(() => initialValue.value !== stateValue.value),
       value: stateValue

@@ -152,7 +152,7 @@ export const OfFieldBase = defineComponent({
     const padState = { listen: watchPosition() }
     const checkPad = (node: VNode) => calcPadding(node, padState)
 
-    const handlers = {
+    const handlers: any = {
       onBlur(_evt: FocusEvent) {
         focused.value = false
         if (focusGrp) focusGrp.blur()
@@ -172,18 +172,24 @@ export const OfFieldBase = defineComponent({
       onVueUpdated: checkPad,
       onVueUnmounted: checkPad
     }
-
+    if (fieldRender.onMouseleave) {
+      handlers.onmouseleave = fieldRender.onMouseleave
+    }
+    if (fieldRender.onMouseenter) {
+      handlers.onmouseenter = fieldRender.onMouseenter
+    }
     return () => {
       try {
         const outerId = (fieldRender.inputId ?? props.id) + '-outer'
         const mainId = (fieldRender.inputId ?? props.id) + '-main'
-        let overlay, overlayActive, overlayBlur
+        let overlay, overlayActive, overlayBlur, overlayCapture
         const dragIn =
           fieldRender.dragIn && makeDragIn(fieldRender.dragIn, dragOver)
         if (fieldRender.popup) {
           overlay = fieldRender.popup.content
           overlayActive = fieldRender.popup.visible ?? true
           overlayBlur = fieldRender.popup.onBlur
+          overlayCapture = fieldRender.popup.capture
         }
         const showFocused =
           focused.value ||
@@ -298,7 +304,7 @@ export const OfFieldBase = defineComponent({
             OfOverlay,
             {
               active: overlayActive,
-              capture: true,
+              capture: overlayCapture ?? true,
               shade: false,
               target: mainId ? '#' + mainId : '',
               onBlur: overlayBlur,

@@ -29,6 +29,8 @@ export interface FieldRender {
   blank?: boolean
   class?: string | string[] | Record<string, boolean>
   click?: (evt?: MouseEvent) => boolean | void
+  onMouseleave?: (evt?: MouseEvent) => boolean | void
+  onMouseenter?: (evt?: MouseEvent) => boolean | void
   content?: () => Renderable | undefined
   cursor?: string
   dragIn?: FieldDragIn
@@ -139,6 +141,7 @@ export interface FieldPopup {
   content?: () => Renderable | undefined
   visible?: boolean
   onBlur?: () => void
+  capture?: boolean
   // position?
 }
 

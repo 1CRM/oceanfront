@@ -35,7 +35,6 @@ export const OfSelectPopup = defineComponent({
     const itemMgr = useItems(config)
 
     const removing = ref(false)
-
     const isSelected = (item: any): boolean => {
       if (!props.multi) return props.value === item
       const values = Array.isArray(props.value) ? props.value : []
