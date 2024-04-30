@@ -291,8 +291,7 @@ export const OfSelectField = defineComponent({
                   fieldCtx.onUpdate?.(val)
                 },
                 class: 'of--elevated-1',
-                ...selectMouseEvents,
-                onBlur: closePopup
+                ...selectMouseEvents
               })
             : undefined,
         visible: opened,
