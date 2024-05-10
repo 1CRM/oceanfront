@@ -947,6 +947,7 @@ export default defineComponent({
       if (footer.value?.textContent || footer.value?.innerHTML) {
         footerIsEmpty.value = false
       }
+      dataUpdated.value = true
       source.value = editor.value?.getHTML()
     })
 
