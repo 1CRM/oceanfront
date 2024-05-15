@@ -41,15 +41,18 @@
                       v-bind="item"
                       density="3"
                     />
-                    <of-button
-                      density="3"
-                      :variant="item.variant"
-                      @click="item.click"
-                      :icon="item.icon"
-                      :title="item.title"
-                      :disabled="item.disabled"
-                      v-else
-                    />
+                    <div class="editor-action" v-else>
+                      <div class="tooltip">
+                        <div class="tooltip-text">{{ item.title }}</div>
+                      </div>
+                      <of-button
+                        density="3"
+                        :variant="item.variant"
+                        @click="item.click"
+                        :icon="item.icon"
+                        :disabled="item.disabled"
+                      />
+                    </div>
                   </template>
                 </div>
               </template>
