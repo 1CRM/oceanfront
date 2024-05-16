@@ -1,8 +1,9 @@
 .of-editor {
   --content-margin: var(--of-editor-content-margin, 0.75em);
-  overflow: hidden;
   max-height: 100%;
-
+  .of-field-content-text {
+    overflow: visible;
+  }
   .editor-outer {
     background-color: rgb(255, 255, 255);
     display: flex;
@@ -82,6 +83,46 @@
       .of-field {
         flex-basis: 10em;
         max-width: 15em;
+      }
+
+      .editor-action {
+        position: relative;
+        display: inline-block;
+        .tooltip {
+          font-size: 0.8em;
+          visibility: hidden;
+          width: 120px;
+          text-align: center;
+          position: absolute;
+          z-index: 1;
+          bottom: 125%;
+          left: 50%;
+          margin-left: -60px;
+          opacity: 0;
+          .tooltip-text {
+            width: fit-content;
+            background-color: #555;
+            color: #fff;
+            padding: 4px 8px;
+            transition: opacity 0.3s;
+            border-radius: 6px;
+            margin: 0 auto;
+          }
+          &::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #555 transparent transparent transparent;
+          }
+        }
+        &:hover .tooltip {
+          visibility: visible;
+          opacity: 1;
+        }
       }
     }
 
