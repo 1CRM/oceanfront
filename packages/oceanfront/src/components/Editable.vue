@@ -29,8 +29,13 @@
           @input="resizeInput"
           @blur="onInputBlur(true)"
           @focus="onInputFocus"
+          @update:model-value="updateValue"
           @keydown:enter="onKeyDown"
           v-model="item.value"
+          :label="item.label"
+          label-position="frame"
+          :invalid="isInvalid"
+          :format="item.format"
         >
           <template v-if="item.icon" #prepend>
             <of-icon :name="item.icon" />
@@ -45,7 +50,11 @@
               @blur="onInputBlur(true)"
               @focus="onInputFocus"
               @keydown:enter="onKeyDown"
+              @update:model-value="updateValue"
               v-model="item.value"
+              label-position="frame"
+              :invalid="isInvalid"
+              :format="item.format"
             ></of-text-field>
             <of-button
               v-if="item.value != item.originalValue"
@@ -78,7 +87,7 @@
         class="editable"
         in-data-table
         @focus="onInputFocus"
-        label=""
+        :label="item.label"
         :type="type"
         :mode="inputMode"
         @blur="onInputBlur"
@@ -88,10 +97,12 @@
         :input-type="item.inputType"
         :outside="item.outside"
         :key="modelValue?.key"
+        :invalid="isInvalid"
+        :format="item.format"
       ></of-field>
     </template>
     <template v-else>
-      <component :is="item.value" :mode="'editable'" @change="changeValue" />
+      <component :is="item.value" :mode="'editable'" />
     </template>
   </template>
 </template>
@@ -100,6 +111,7 @@
 import {
   computed,
   defineComponent,
+  inject,
   nextTick,
   ref,
   shallowRef,
@@ -125,11 +137,13 @@ const OfEditableField = defineComponent({
     modelValue: Object,
     mode: String as any,
     showOldValues: Boolean,
-    index: Number
+    index: Number,
+    name: String
   },
   emits: ['update:modelValue', 'valueChanged'],
   setup(props, ctx) {
     const itemValue: any = ref(props.modelValue || ({} as DataTypeValue))
+    const isInvalid = ref(false)
     watch(
       () => props.modelValue,
       (value) => {
@@ -146,6 +160,9 @@ const OfEditableField = defineComponent({
     }) as any
     const active = ref(false)
     const type = computed(() => {
+      if (props.modelValue?.format?.type) {
+        return props.modelValue?.format?.type
+      }
       if (props.modelValue?.type) {
         return props.modelValue.type
       }
@@ -155,11 +172,6 @@ const OfEditableField = defineComponent({
     const classes = computed(() => props.modelValue?.classes || [])
     if (item.value && !item.value.hasOwnProperty('originalValue')) {
       item.value.originalValue = item.value.value
-    }
-    const updateValue = () => {
-      if (['date', 'time', 'datetime', 'select'].includes(type.value)) {
-        onInputBlur()
-      }
     }
     const showItem = computed(() => {
       const res = { ...item.value }
@@ -215,15 +227,29 @@ const OfEditableField = defineComponent({
         input.focus()
       }
     }
-    const changeValue = (name: string, value: string | number) => {
-      ctx.emit('valueChanged', { name, value, index: props.index })
+    const fieldUpdated: Function = inject(
+      'fieldUpdated',
+      () => null
+    ) as Function
+    const updateValue = (val: String | Boolean | Number) => {
+      if (item.value.hasOwnProperty('customValidate')) {
+        const result = item.value.customValidate(props.name, val)
+        if (result instanceof Promise) {
+          result.then((data: boolean) => {
+            isInvalid.value = !data
+          })
+        } else {
+          isInvalid.value = !result
+        }
+      }
+      ctx.emit('valueChanged', { name: props.name, value: val })
+      fieldUpdated({ name: props.name, value: val, index: props.index })
     }
     return {
       item,
       type,
       elem,
       resetValue,
-      updateValue,
       resizeInput,
       onInputFocus,
       inputMode,
@@ -233,7 +259,8 @@ const OfEditableField = defineComponent({
       showItem,
       classes,
       supportedTypes,
-      changeValue
+      updateValue,
+      isInvalid
     }
   }
 })

@@ -82,7 +82,6 @@
           :draggable="params.draggable === 'On'"
           @rows-selected="onRowsSelected"
           @rows-moved="OnRowsMoved"
-          @row-edited="onRowEdited"
           @rows-sorted="onRowsSorted"
           @rows-edited="onRowsEdited"
           :headers="editableHeaders"
@@ -295,13 +294,20 @@ export default defineComponent({
     const editableItems = [
       {
         text: [
-          { editable: true, type: 'text', value: 'Text 1' },
-          { editable: true, type: 'text', value: 'Text 1' }
+          {
+            editable: true,
+            type: 'text',
+            value: 'Text 1',
+            name: 'text',
+            label: 'test'
+          },
+          { editable: true, type: 'text', value: 'Text 1', name: 'sub_text' }
         ],
         number: {
           editable: true,
           type: 'number',
-          value: 0
+          value: 0,
+          label: 'test'
         },
         toggle: { editable: true, type: 'toggle', value: true },
         date: { editable: true, type: 'date', value: '2021-01-01' },
@@ -660,10 +666,6 @@ export default defineComponent({
     }
     const onRowsEdited = () => {}
 
-    const onRowEdited = () => {
-      console.log('hayaaaaaaaaaaaaaa')
-    }
-
     return {
       universalHeaders,
       draggableHeaders,
@@ -677,7 +679,6 @@ export default defineComponent({
       onRowsSelected,
       onRowsEdited,
       OnRowsMoved,
-      onRowEdited,
       onRowsSorted,
       params,
       densityOptions,

@@ -65,18 +65,20 @@
       </svg>
       <template v-if="Array.isArray(item[col.value])">
         <div class="editable-fields">
-          <template v-for="(elm, idx) in item[col.value]" :key="idx">
+          <template v-for="(elm, idxs) in item[col.value]" :key="idxs">
             <template v-if="elm.editable && editable">
               <of-editable-field
                 :index="index"
                 :mode="editType"
-                v-model="item[col.value][idx]"
+                v-model="item[col.value][idxs]"
                 :show-old-values="showOldValues"
+                @value-changed="fieldEdited"
+                :name="elm.name"
               ></of-editable-field>
             </template>
             <template v-else>
-              <div class="field-value" :key="idx">
-                <of-data-type :value="item[col.value][idx]"></of-data-type>
+              <div class="field-value" :key="idxs">
+                <of-data-type :value="item[col.value][idxs]"></of-data-type>
               </div>
             </template>
           </template>
@@ -89,6 +91,8 @@
             :mode="editType"
             v-model="item[col.value]"
             :show-old-values="showOldValues"
+            @value-changed="fieldEdited"
+            :name="col.value"
           ></of-editable-field>
         </template>
         <template v-else>
@@ -170,7 +174,7 @@ export default defineComponent({
     },
     isTouchable: Boolean
   },
-  emits: ['dragstart', 'update:row', 'setCoords', 'setDepth'],
+  emits: ['dragstart', 'update:row', 'setCoords', 'setDepth', 'update:field'],
   setup(props, ctx) {
     const index = computed(() => props.idx)
     const active = computed(() => props.row?.active || false)
@@ -568,6 +572,13 @@ export default defineComponent({
     const rowUpdated = () => {
       return
     }
+    const fieldEdited = (data: {
+      name: String
+      value: String | Boolean | Number
+    }) => {
+      ctx.emit('update:field', { name: data.name, value: data.value })
+      return
+    }
     return {
       item,
       itemRef,
@@ -585,7 +596,8 @@ export default defineComponent({
       rowItem,
       currentCords,
       selectedItem,
-      active
+      active,
+      fieldEdited
     }
   }
 })
