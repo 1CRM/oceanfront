@@ -41,8 +41,8 @@ export default defineComponent({
       sampleCode,
       content,
       editable,
-      updated,
+      updated
     }
-  },
+  }
 })
 </script>
