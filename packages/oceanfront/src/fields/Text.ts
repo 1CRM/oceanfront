@@ -37,6 +37,16 @@ const allowInputTypes = new Set([
   'url'
 ])
 
+const allowedNumberInputKeys = new Set([
+  'ArrowLeft',
+  'ArrowRight',
+  'ArrowUp',
+  'ArrowDown',
+  'Backspace',
+  'Enter',
+  'Tab'
+])
+
 const _inputTypeFrom = (type?: string) => {
   if (type && allowInputTypes.has(type)) return type
   return 'text'
@@ -336,6 +346,14 @@ export const OfTextField = defineComponent({
         }
       },
       onKeydown(evt: KeyboardEvent) {
+        if (
+          !allowedNumberInputKeys.has(evt.key) &&
+          props.inputType === 'number' &&
+          !parseInt(evt.key as string)
+        ) {
+          evt.preventDefault()
+          return
+        }
         if (evt.key === 'Enter') {
           const target = evt.target as
             | (HTMLInputElement | HTMLTextAreaElement)

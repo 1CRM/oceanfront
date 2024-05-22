@@ -7,6 +7,7 @@ import Link from './link'
 export default defineComponent({
   name: 'OfDataType',
   props: {
+    editable: Boolean,
     value: {
       type: [String, Boolean, Number, Array, Object] as PropType<DataTypeValue>,
       default: null

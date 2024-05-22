@@ -54,7 +54,7 @@
             nestedLimit: 5,
             nested: true,
             allNested: true,
-            allParent: true,
+            allParent: true
           }"
           :nested="params.nested === 'Nested'"
           :edit-type="params.editType"
@@ -111,7 +111,7 @@
             nestedLimit: 10,
             nested: true,
             allNested: true,
-            allParent: true,
+            allParent: true
           }"
           editable
           @rows-sorted="onRowsSorted"
@@ -133,7 +133,7 @@ const nestedOptions = ['Default', 'Nested']
 const editableOptions = ['Off', 'On']
 const editOptions = [
   { text: 'Inline', value: 'inline' },
-  { text: 'Popup', value: 'popup' },
+  { text: 'Popup', value: 'popup' }
 ]
 const oldValuesOptions = ['Hide', 'Show']
 
@@ -143,7 +143,7 @@ const params = reactive({
   nested: 'Default',
   editable: 'Off',
   editType: 'inline',
-  showOldValues: 'Hide',
+  showOldValues: 'Hide'
 })
 
 export default defineComponent({
@@ -152,7 +152,7 @@ export default defineComponent({
       'Category 1',
       'Category 2',
       'Category 3',
-      'Category 4',
+      'Category 4'
     ]
     const universalHeaders = [
       {
@@ -160,12 +160,12 @@ export default defineComponent({
         value: 'name',
         divider: true,
         width: '150px',
-        sortable: false,
+        sortable: false
       },
       { text: 'Category', value: 'category', sortable: false },
       { text: 'Date & Time', value: 'datetime', sortable: false },
       { text: 'Amount', value: 'amount', sortable: false },
-      { text: 'Scale', value: 'scale', align: 'end', sortable: false },
+      { text: 'Size', value: 'size', align: 'end', sortable: false }
     ]
 
     const universalItems = ref([
@@ -176,16 +176,16 @@ export default defineComponent({
         datetime: {
           editable: true,
           value: '2022-06-17 12:44:44',
-          type: 'datetime',
+          type: 'datetime'
         },
         draggable: true,
         category: {
           value: 'Category 1',
           type: 'select',
           items: categoryOptions,
-          editable: true,
+          editable: true
         },
-        size: { value: 15.56, format: 'currency', params: { symbol: '&#36;' } },
+        size: { value: 15.56, format: 'currency', params: { symbol: '&#36;' } }
       },
       {
         draggable: true,
@@ -196,18 +196,18 @@ export default defineComponent({
           value: 'Category 2',
           type: 'select',
           items: categoryOptions,
-          editable: true,
+          editable: true
         },
         datetime: {
           editable: true,
           value: '2021-06-17 12:20:00',
-          type: 'datetime',
+          type: 'datetime'
         },
         size: {
           value: -15.56,
           format: 'currency',
-          params: { symbol: '&#36;' },
-        },
+          params: { symbol: '&#36;' }
+        }
       },
       {
         id: '3',
@@ -218,14 +218,14 @@ export default defineComponent({
           value: 'Category 3',
           type: 'select',
           items: categoryOptions,
-          editable: true,
+          editable: true
         },
         datetime: {
           editable: true,
           value: '2023-08-13 22:14:00',
-          type: 'datetime',
+          type: 'datetime'
         },
-        size: 15125.56,
+        size: 15125.56
       },
       {
         id: '4',
@@ -236,14 +236,14 @@ export default defineComponent({
           value: 'Category 4',
           type: 'select',
           items: categoryOptions,
-          editable: true,
+          editable: true
         },
         datetime: {
           editable: true,
           value: '2020-13-20 11:11:11',
-          type: 'datetime',
+          type: 'datetime'
         },
-        size: 15125.56,
+        size: 15125.56
       },
       {
         id: '5',
@@ -254,14 +254,14 @@ export default defineComponent({
           value: 'Category 4',
           type: 'select',
           items: categoryOptions,
-          editable: true,
+          editable: true
         },
         datetime: {
           editable: true,
           value: '2020-13-20 11:11:11',
-          type: 'datetime',
+          type: 'datetime'
         },
-        size: 15125.56,
+        size: 15125.56
       },
       {
         id: '6',
@@ -272,15 +272,15 @@ export default defineComponent({
           value: 'Category 4',
           type: 'select',
           items: categoryOptions,
-          editable: true,
+          editable: true
         },
         datetime: {
           editable: true,
           value: '2020-13-20 11:11:11',
-          type: 'datetime',
+          type: 'datetime'
         },
-        size: 15125.56,
-      },
+        size: 15125.56
+      }
     ])
     const editableHeaders = [
       { text: 'Text', value: 'text', sortable: false },
@@ -289,26 +289,40 @@ export default defineComponent({
       { text: 'Toggle', value: 'toggle', sortable: false },
       { text: 'Date', value: 'date', sortable: false },
       { text: 'Time', value: 'time', sortable: false },
-      { text: 'Date & Time', value: 'datetime', sortable: false },
+      { text: 'Date & Time', value: 'datetime', sortable: false }
     ]
     const editableItems = [
       {
-        text: { editable: true, type: 'text', value: 'Text 1' },
-        number: { editable: true, type: 'number', value: '100' },
+        text: [
+          {
+            editable: true,
+            type: 'text',
+            value: 'Text 1',
+            name: 'text',
+            label: 'test'
+          },
+          { editable: true, type: 'text', value: 'Text 1', name: 'sub_text' }
+        ],
+        number: {
+          editable: true,
+          type: 'number',
+          value: 0,
+          label: 'test'
+        },
         toggle: { editable: true, type: 'toggle', value: true },
         date: { editable: true, type: 'date', value: '2021-01-01' },
         time: { editable: true, type: 'time', value: '15:15:15' },
         datetime: {
           editable: true,
           type: 'datetime',
-          value: '2021-01-01 15:15:15',
+          value: '2021-01-01 15:15:15'
         },
         select: {
           editable: true,
           type: 'select',
           value: 'Select 1',
-          items: ['Select 1', 'Select 2', 'Select 3', 'Select 4'],
-        },
+          items: ['Select 1', 'Select 2', 'Select 3', 'Select 4']
+        }
       },
       {
         text: { editable: true, type: 'text', value: 'Text 2' },
@@ -319,14 +333,14 @@ export default defineComponent({
         datetime: {
           editable: true,
           type: 'datetime',
-          value: '2022-02-02 16:16:16',
+          value: '2022-02-02 16:16:16'
         },
         select: {
           editable: true,
           type: 'select',
           value: 'Select 2',
-          items: ['Select 1', 'Select 2', 'Select 3', 'Select 4'],
-        },
+          items: ['Select 1', 'Select 2', 'Select 3', 'Select 4']
+        }
       },
       {
         text: { editable: true, type: 'text', value: 'Text 3' },
@@ -337,14 +351,14 @@ export default defineComponent({
         datetime: {
           editable: true,
           type: 'datetime',
-          value: '2023-03-03 17:17:17',
+          value: '2023-03-03 17:17:17'
         },
         select: {
           editable: true,
           type: 'select',
           value: 'Select 3',
-          items: ['Select 1', 'Select 2', 'Select 3', 'Select 4'],
-        },
+          items: ['Select 1', 'Select 2', 'Select 3', 'Select 4']
+        }
       },
       {
         text: { editable: true, type: 'text', value: 'Text 4' },
@@ -355,15 +369,15 @@ export default defineComponent({
         datetime: {
           editable: true,
           type: 'datetime',
-          value: '2024-04-04 18:18:18',
+          value: '2024-04-04 18:18:18'
         },
         select: {
           editable: true,
           type: 'select',
           value: 'Select 4',
-          items: ['Select 1', 'Select 2', 'Select 3', 'Select 4'],
-        },
-      },
+          items: ['Select 1', 'Select 2', 'Select 3', 'Select 4']
+        }
+      }
     ]
 
     const draggableHeaders = [
@@ -374,14 +388,14 @@ export default defineComponent({
         sort: 'desc',
         extra_sort_fields: [
           { label: 'Address', value: 'address' },
-          { label: 'Phone', value: 'phone' },
-        ],
+          { label: 'Phone', value: 'phone' }
+        ]
       },
       { text: 'Category', value: 'category' },
       { text: 'Address', value: 'address', sortable: false },
       { text: 'Phone', value: 'phone', sortable: false },
       { text: 'Amount', value: 'amount', sortable: false },
-      { text: 'Size', value: 'size', align: 'end', sort: 'asc' },
+      { text: 'Size', value: 'size', align: 'end', sort: 'asc' }
     ]
     const newDraggableHeaders = [
       {
@@ -391,11 +405,11 @@ export default defineComponent({
         sort: 'desc',
         extra_sort_fields: [
           { label: 'Address', value: 'address' },
-          { label: 'Phone', value: 'phone' },
-        ],
+          { label: 'Phone', value: 'phone' }
+        ]
       },
       { text: 'Category', value: 'category' },
-      { text: 'Address', value: 'address', sortable: false },
+      { text: 'Address', value: 'address', sortable: false }
     ]
     const draggableItems = [
       {
@@ -405,7 +419,7 @@ export default defineComponent({
         address: 'New York, NY, USA',
         amount: 100,
         phone: '+1 (961) 209-1256',
-        size: 15.56,
+        size: 15.56
       },
       {
         draggable: true,
@@ -414,7 +428,7 @@ export default defineComponent({
         category: 'Category 2',
         address: 'San Francisco, CA, USA',
         phone: '+1 (416) 269-0823',
-        size: -15.56,
+        size: -15.56
       },
       {
         id: '3',
@@ -424,7 +438,7 @@ export default defineComponent({
         draggable: true,
         address: 'Orléans, CA, USA',
         phone: '+1 (125) 853-7161',
-        size: 15125.56,
+        size: 15125.56
       },
       {
         id: '4',
@@ -434,7 +448,7 @@ export default defineComponent({
         address: 'New York, NY, USA',
         phone: '+1 (041) 102-0224',
         amount: 1500,
-        size: 45.56,
+        size: 45.56
       },
       {
         id: '5',
@@ -444,8 +458,8 @@ export default defineComponent({
         address: 'Lisbon, CA, USA ',
         phone: '+1 (041) 102-0224',
         size: 12.55,
-        amount: 200,
-      },
+        amount: 200
+      }
     ]
 
     const newDraggableItems = [
@@ -468,7 +482,7 @@ export default defineComponent({
             category: 'Category 2',
             address: 'San Francisco, CA, USA',
             phone: '+1 (416) 269-0823',
-            size: -15.56,
+            size: -15.56
           },
           {
             draggable: true,
@@ -478,7 +492,7 @@ export default defineComponent({
             category: 'Category 2',
             address: 'San Francisco, CA, USA',
             phone: '+1 (416) 269-0823',
-            size: -15.56,
+            size: -15.56
           },
           {
             draggable: true,
@@ -488,9 +502,9 @@ export default defineComponent({
             category: 'Category 2',
             address: 'San Francisco, CA, USA',
             phone: '+1 (416) 269-0823',
-            size: -15.56,
-          },
-        ],
+            size: -15.56
+          }
+        ]
       },
       {
         draggable: true,
@@ -510,7 +524,7 @@ export default defineComponent({
             category: 'Category 2',
             address: 'San Francisco, CA, USA',
             phone: '+1 (416) 269-0823',
-            size: -15.56,
+            size: -15.56
           },
           {
             draggable: true,
@@ -519,7 +533,7 @@ export default defineComponent({
             category: 'Category 2',
             address: 'San Francisco, CA, USA',
             phone: '+1 (416) 269-0823',
-            size: -15.56,
+            size: -15.56
           },
           {
             draggable: true,
@@ -529,10 +543,10 @@ export default defineComponent({
             category: 'Category 2',
             address: 'San Francisco, CA, USA',
             phone: '+1 (416) 269-0823',
-            size: -15.56,
-          },
+            size: -15.56
+          }
         ],
-        size: -15.56,
+        size: -15.56
       },
       {
         draggable: true,
@@ -541,7 +555,7 @@ export default defineComponent({
         category: 'Category 2',
         address: 'San Francisco, CA, USA',
         phone: '+1 (416) 269-0823',
-        size: -15.56,
+        size: -15.56
       },
       {
         draggable: true,
@@ -550,7 +564,7 @@ export default defineComponent({
         category: 'Category 2',
         address: 'San Francisco, CA, USA',
         phone: '+1 (416) 269-0823',
-        size: -15.56,
+        size: -15.56
       },
       {
         draggable: true,
@@ -560,7 +574,7 @@ export default defineComponent({
         category: 'Category 2',
         address: 'San Francisco, CA, USA',
         phone: '+1 (416) 269-0823',
-        size: -15.56,
+        size: -15.56
       },
       {
         draggable: true,
@@ -571,7 +585,7 @@ export default defineComponent({
         category: 'Category 2',
         address: 'San Francisco, CA, USA',
         phone: '+1 (416) 269-0823',
-        size: -15.56,
+        size: -15.56
       },
       {
         draggable: true,
@@ -580,7 +594,7 @@ export default defineComponent({
         category: 'Category 2',
         address: 'San Francisco, CA, USA',
         phone: '+1 (416) 269-0823',
-        size: -15.56,
+        size: -15.56
       },
       {
         id: '3',
@@ -590,7 +604,7 @@ export default defineComponent({
         draggable: true,
         address: 'Orléans, CA, USA',
         phone: '+1 (125) 853-7161',
-        size: 15125.56,
+        size: 15125.56
       },
       {
         id: '4',
@@ -600,7 +614,7 @@ export default defineComponent({
         address: 'New York, NY, USA',
         phone: '+1 (041) 102-0224',
         amount: 1500,
-        size: 45.56,
+        size: 45.56
       },
       {
         id: '5',
@@ -610,7 +624,7 @@ export default defineComponent({
         address: 'Lisbon, CA, USA ',
         phone: '+1 (041) 102-0224',
         size: 12.55,
-        amount: 200,
+        amount: 200
       },
       {
         id: '6',
@@ -620,10 +634,9 @@ export default defineComponent({
         address: 'Lisbon, CA, USA ',
         phone: '+1 (041) 102-0224',
         size: 12.55,
-        amount: 200,
-      },
+        amount: 200
+      }
     ]
-
     const initialItems2 = [...universalItems.value]
     const footerItems = [{ size: 100.5 }]
     const onRowsSelected = function (values: any) {
@@ -673,8 +686,8 @@ export default defineComponent({
       nestedOptions,
       editableOptions,
       editOptions,
-      oldValuesOptions,
+      oldValuesOptions
     }
-  },
+  }
 })
 </script>

@@ -63,17 +63,43 @@
           d="M4 8H14.5C17.5376 8 20 10.4624 20 13.5V13.5C20 16.5376 17.5376 19 14.5 19H5"
         />
       </svg>
-      <template v-if="item[col.value]?.editable && editable">
-        <of-editable-field
-          :mode="editType"
-          v-model="item[col.value]"
-          :show-old-values="showOldValues"
-        ></of-editable-field>
+      <template v-if="Array.isArray(item[col.value])">
+        <div class="editable-fields">
+          <template v-for="(elm, idxs) in item[col.value]" :key="idxs">
+            <template v-if="elm.editable && editable">
+              <of-editable-field
+                :index="index"
+                :mode="editType"
+                v-model="item[col.value][idxs]"
+                :show-old-values="showOldValues"
+                @value-changed="fieldEdited"
+                :name="elm.name"
+              ></of-editable-field>
+            </template>
+            <template v-else>
+              <div class="field-value" :key="idxs">
+                <of-data-type :value="item[col.value][idxs]"></of-data-type>
+              </div>
+            </template>
+          </template>
+        </div>
       </template>
       <template v-else>
-        <div class="field-value">
-          <of-data-type :value="item[col.value]"></of-data-type>
-        </div>
+        <template v-if="item[col.value]?.editable && editable">
+          <of-editable-field
+            :index="index"
+            :mode="editType"
+            v-model="item[col.value]"
+            :show-old-values="showOldValues"
+            @value-changed="fieldEdited"
+            :name="col.value"
+          ></of-editable-field>
+        </template>
+        <template v-else>
+          <div class="field-value">
+            <of-data-type :value="item[col.value]"></of-data-type>
+          </div>
+        </template>
       </template>
     </div>
   </div>
@@ -148,7 +174,7 @@ export default defineComponent({
     },
     isTouchable: Boolean
   },
-  emits: ['dragstart', 'update:row', 'setCoords', 'setDepth'],
+  emits: ['dragstart', 'update:row', 'setCoords', 'setDepth', 'update:field'],
   setup(props, ctx) {
     const index = computed(() => props.idx)
     const active = computed(() => props.row?.active || false)
@@ -171,6 +197,14 @@ export default defineComponent({
         ctx.emit('update:row', val)
       }
     }) as any
+    watch(
+      () => item.value,
+      (val) => {
+        ctx.emit('update:row', val)
+      },
+      { deep: true, immediate: false }
+    )
+
     watch(
       () => [props.row, props.columns],
       ([item, columns]) => {
@@ -270,11 +304,6 @@ export default defineComponent({
         ctx.emit('setCoords', data)
       }
     }
-    watch(
-      () => item.value,
-      () => ctx.emit('update:row', item.value),
-      { immediate: false, deep: true }
-    )
     const setChildCoords = (idx: number) => {
       const arr =
         props.coords?.map((v: any) => {
@@ -543,6 +572,13 @@ export default defineComponent({
     const rowUpdated = () => {
       return
     }
+    const fieldEdited = (data: {
+      name: String
+      value: String | Boolean | Number
+    }) => {
+      ctx.emit('update:field', { name: data.name, value: data.value })
+      return
+    }
     return {
       item,
       itemRef,
@@ -560,7 +596,8 @@ export default defineComponent({
       rowItem,
       currentCords,
       selectedItem,
-      active
+      active,
+      fieldEdited
     }
   }
 })

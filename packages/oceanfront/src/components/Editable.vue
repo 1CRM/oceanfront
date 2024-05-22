@@ -24,13 +24,18 @@
         <of-text-field
           :mode="active && mode === 'inline' ? 'editable' : 'fixed'"
           multiline
-          prepend="adwawdawd"
           type="textarea"
+          :input-type="type"
           @input="resizeInput"
           @blur="onInputBlur(true)"
           @focus="onInputFocus"
+          @update:model-value="updateValue"
           @keydown:enter="onKeyDown"
           v-model="item.value"
+          :label="item.label"
+          label-position="frame"
+          :invalid="isInvalid"
+          :format="item.format"
         >
           <template v-if="item.icon" #prepend>
             <of-icon :name="item.icon" />
@@ -40,13 +45,16 @@
           <div class="edit-overlay-desk">
             <of-text-field
               multiline
-              class="awdawdawd"
               type="textarea"
               @input="resizeInput"
               @blur="onInputBlur(true)"
               @focus="onInputFocus"
               @keydown:enter="onKeyDown"
+              @update:model-value="updateValue"
               v-model="item.value"
+              label-position="frame"
+              :invalid="isInvalid"
+              :format="item.format"
             ></of-text-field>
             <of-button
               v-if="item.value != item.originalValue"
@@ -73,22 +81,29 @@
   </template>
   <template v-else>
     <span v-if="item.prepend" class="editable-prepend">{{ item.prepend }}</span>
-    <of-field
-      :class="['in-data-table-' + type, [...classes]]"
-      class="editable"
-      in-data-table
-      @focus="onInputFocus"
-      label=""
-      :type="type"
-      :mode="inputMode"
-      @blur="onInputBlur"
-      @update:model-value="updateValue"
-      v-model="item.value"
-      :items="item.items"
-      :input-type="item.inputType"
-      :outside="item.outside"
-      :key="modelValue?.key"
-    ></of-field>
+    <template v-if="supportedTypes.includes(item.type)">
+      <of-field
+        :class="['in-data-table-' + type, [...classes]]"
+        class="editable"
+        in-data-table
+        @focus="onInputFocus"
+        :label="item.label"
+        :type="type"
+        :mode="inputMode"
+        @blur="onInputBlur"
+        @update:model-value="updateValue"
+        v-model="item.value"
+        :items="item.items"
+        :input-type="item.inputType"
+        :outside="item.outside"
+        :key="modelValue?.key"
+        :invalid="isInvalid"
+        :format="item.format"
+      ></of-field>
+    </template>
+    <template v-else>
+      <component :is="item.value" :mode="'editable'" />
+    </template>
   </template>
 </template>
 
@@ -96,6 +111,7 @@
 import {
   computed,
   defineComponent,
+  inject,
   nextTick,
   ref,
   shallowRef,
@@ -120,11 +136,14 @@ const OfEditableField = defineComponent({
   props: {
     modelValue: Object,
     mode: String as any,
-    showOldValues: Boolean
+    showOldValues: Boolean,
+    index: Number,
+    name: String
   },
-  emits: ['update:modelValue'],
+  emits: ['update:modelValue', 'valueChanged'],
   setup(props, ctx) {
     const itemValue: any = ref(props.modelValue || ({} as DataTypeValue))
+    const isInvalid = ref(false)
     watch(
       () => props.modelValue,
       (value) => {
@@ -141,23 +160,18 @@ const OfEditableField = defineComponent({
     }) as any
     const active = ref(false)
     const type = computed(() => {
+      if (props.modelValue?.format?.type) {
+        return props.modelValue?.format?.type
+      }
       if (props.modelValue?.type) {
-        if (supportedTypes.includes(props.modelValue.type)) {
-          return props.modelValue.type
-        } else {
-          throw new TypeError('Unsupported "type" property')
-        }
+        return props.modelValue.type
       }
       return 'text'
     })
+
     const classes = computed(() => props.modelValue?.classes || [])
     if (item.value && !item.value.hasOwnProperty('originalValue')) {
       item.value.originalValue = item.value.value
-    }
-    const updateValue = () => {
-      if (['date', 'time', 'datetime', 'select'].includes(type.value)) {
-        onInputBlur()
-      }
     }
     const showItem = computed(() => {
       const res = { ...item.value }
@@ -213,30 +227,29 @@ const OfEditableField = defineComponent({
         input.focus()
       }
     }
-    watch(
-      () => item.value,
-      () => {
-        if (type.value === 'number' && item.value.value) {
-          let val = item.value.value + ''
-          item.value.value = parseInt(val.replace(/\D/g, '').trim())
+    const fieldUpdated: Function = inject(
+      'fieldUpdated',
+      () => null
+    ) as Function
+    const updateValue = (val: String | Boolean | Number) => {
+      if (item.value.hasOwnProperty('customValidate')) {
+        const result = item.value.customValidate(props.name, val)
+        if (result instanceof Promise) {
+          result.then((data: boolean) => {
+            isInvalid.value = !data
+          })
+        } else {
+          isInvalid.value = !result
         }
-      },
-      { deep: true }
-    )
-    watch(
-      () => item.value,
-      () => {
-        ctx.emit('update:modelValue', item.value)
-      },
-      { deep: true, immediate: false }
-    )
-
+      }
+      ctx.emit('valueChanged', { name: props.name, value: val })
+      fieldUpdated({ name: props.name, value: val, index: props.index })
+    }
     return {
       item,
       type,
       elem,
       resetValue,
-      updateValue,
       resizeInput,
       onInputFocus,
       inputMode,
@@ -244,7 +257,10 @@ const OfEditableField = defineComponent({
       onInputBlur,
       onKeyDown,
       showItem,
-      classes
+      classes,
+      supportedTypes,
+      updateValue,
+      isInvalid
     }
   }
 })
@@ -381,5 +397,11 @@ export default OfEditableField
     position: absolute;
     z-index: 1;
   }
+}
+.editable-fields {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: 2px;
 }
 </style>
