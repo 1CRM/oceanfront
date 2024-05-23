@@ -44,7 +44,8 @@ const allowedNumberInputKeys = new Set([
   'ArrowDown',
   'Backspace',
   'Enter',
-  'Tab'
+  'Tab',
+  'Delete'
 ])
 
 const _inputTypeFrom = (type?: string) => {
@@ -315,6 +316,11 @@ export const OfTextField = defineComponent({
       },
       onInput(evt: InputEvent) {
         const inputElt = evt.target as HTMLInputElement | HTMLTextAreaElement
+        if (props.inputType === 'number') {
+          if (inputElt.value.length > 1 && inputElt.value[0] === '0') {
+            inputElt.value = '0'
+          }
+        }
         if (hasItems.value) search(inputElt.value)
         const fmt = formatter.value
         if (fmt?.handleInput) {
@@ -349,7 +355,7 @@ export const OfTextField = defineComponent({
         if (
           !allowedNumberInputKeys.has(evt.key) &&
           props.inputType === 'number' &&
-          !parseInt(evt.key as string)
+          !(evt.key === '0' || parseInt(evt.key as string))
         ) {
           evt.preventDefault()
           return
