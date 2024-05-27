@@ -8,7 +8,9 @@
       odd: index % 2 != 0,
       nested: item.nested,
       selected: isTouchable ? selectedItem : highlighted || isCurrentTarget,
-      active: active
+      active: active,
+      'row-editable': rowEditable,
+      'row-editing': editingRow
     }"
     :key="item.id ?? index"
   >
@@ -66,7 +68,7 @@
       <template v-if="Array.isArray(item[col.value])">
         <div class="editable-fields">
           <template v-for="(elm, idxs) in item[col.value]" :key="idxs">
-            <template v-if="elm.editable && editable">
+            <template v-if="elm.editable && rowEditable && editable">
               <of-editable-field
                 :index="index"
                 :mode="editType"
@@ -85,7 +87,7 @@
         </div>
       </template>
       <template v-else>
-        <template v-if="item[col.value]?.editable && editable">
+        <template v-if="item[col.value]?.editable && rowEditable && editable">
           <of-editable-field
             :index="index"
             :mode="editType"
@@ -183,7 +185,12 @@ export default defineComponent({
       item: any
       columns: any
     }
-
+    const rowEditable = computed(() => {
+      return props.row?.editable ?? true
+    })
+    const editingRow = computed(() => {
+      return props.row?.editingRow ?? false
+    })
     const rowItem = reactive<RowItem>({
       item: props.row,
       columns: props.columns
@@ -597,7 +604,9 @@ export default defineComponent({
       currentCords,
       selectedItem,
       active,
-      fieldEdited
+      fieldEdited,
+      rowEditable,
+      editingRow
     }
   }
 })
