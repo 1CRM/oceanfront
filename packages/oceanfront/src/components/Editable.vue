@@ -283,8 +283,8 @@ export default OfEditableField
       position: relative;
       &.of--focused {
         .of-field-main {
-          position: absolute;
-          transform: translateY(-50%);
+          position: relative;
+          transform: translateY(0px);
           width: 100%;
         }
       }
