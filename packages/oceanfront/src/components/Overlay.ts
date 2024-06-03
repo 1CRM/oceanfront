@@ -177,9 +177,31 @@ export const OfOverlay = defineComponent({
           )
           outer.style.setProperty('--overlay-dyn-pad-top', '0')
         } else {
+          let paddingTop = targetRect.bottom
+          const child = outer.firstElementChild
+          const observer = new MutationObserver((mutationList, observer) => {
+            for (const mutation of mutationList) {
+              if (
+                mutation.type === 'childList' &&
+                !mutation.target?.classList.contains('loading')
+              ) {
+                observer.disconnect()
+                reposition()
+                break
+              }
+            }
+          })
+          if (child)
+            observer.observe(child, {
+              childList: true,
+              subtree: true
+            })
+          if (outerRect.height - targetRect.bottom - 24 < child?.clientHeight) {
+            paddingTop = outerRect.height - child?.clientHeight - 48
+          }
           outer.style.setProperty(
             '--overlay-dyn-pad-top',
-            Math.max(targetRect.bottom, 0) + 'px'
+            Math.max(paddingTop, 0) + 'px'
           )
         }
       })
