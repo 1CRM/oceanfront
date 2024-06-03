@@ -252,6 +252,7 @@
   box-sizing: border-box;
   background: var(--of-color-menu-bg, var(--of-color-surface-variant));
   max-height: 100%;
+  height: auto;
   max-width: 400px;
   min-width: 200px;
   &.top-tabs-menu{
