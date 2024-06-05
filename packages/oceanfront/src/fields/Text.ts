@@ -258,7 +258,12 @@ export const OfTextField = defineComponent({
           | (HTMLInputElement | HTMLTextAreaElement)
           | null
         if (target) {
-          ctx.emit('blur', target.value)
+          const fmt = formatter.value
+          let val = target.value
+          if (fmt) {
+            val = fmt.unformat(val)
+          }
+          ctx.emit('blur', val)
         }
         focused.value = false
         const fmt = formatter.value
@@ -325,8 +330,7 @@ export const OfTextField = defineComponent({
         const fmt = formatter.value
         if (fmt?.handleInput) {
           const upd = fmt.handleInput(evt)
-          if (upd) {
-            if (!upd.updated) return
+          if (upd && upd.updated) {
             dispatchChange = true
             const iVal = upd.textValue ?? ''
             inputElt.value = iVal
@@ -365,7 +369,12 @@ export const OfTextField = defineComponent({
             | (HTMLInputElement | HTMLTextAreaElement)
             | null
           if (target) {
-            ctx.emit('keydown:enter', target.value)
+            const fmt = formatter.value
+            let val = target.value
+            if (fmt) {
+              val = fmt.unformat(val)
+            }
+            ctx.emit('keydown:enter', val)
           }
         }
         if (

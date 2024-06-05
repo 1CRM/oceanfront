@@ -90,8 +90,10 @@
         :label="item.label"
         :type="type"
         :mode="inputMode"
+        @input="resizeInput"
         @blur="onInputBlur"
         @update:model-value="updateValue"
+        @keydown:enter="onKeyDown"
         v-model="item.value"
         :items="item.items"
         :input-type="item.inputType"
@@ -99,6 +101,7 @@
         :key="modelValue?.key"
         :invalid="isInvalid"
         :format="item.format"
+        label-position="frame"
       ></of-field>
     </template>
     <template v-else>
@@ -188,8 +191,12 @@ const OfEditableField = defineComponent({
       })
     }
 
-    const onInputBlur = (delay = false) => {
-      if (delay) {
+    const onInputBlur = (value: Boolean | String | Number = false) => {
+      if (typeof value !== 'boolean') {
+        item.value.value = value
+        updateValue(value)
+      }
+      if (value) {
         setTimeout(() => {
           active.value = false
         }, 150)
@@ -205,6 +212,7 @@ const OfEditableField = defineComponent({
     }
     const onKeyDown = (value: any) => {
       item.value.value = value
+      updateValue(value)
       onInputBlur()
     }
     const inputMode = computed(() => {
