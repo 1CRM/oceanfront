@@ -184,6 +184,10 @@ export default defineComponent({
     editable: {
       type: Boolean,
       default: true
+    },
+    oneRow: {
+      type: Boolean,
+      default: false
     }
   },
   emits: {
@@ -895,9 +899,24 @@ export default defineComponent({
     }
 
     const menuRows = computed(() => {
-      return {
-        row1: getMenuRow1(),
-        row2: getMenuRow2()
+      if (props.oneRow) {
+        const menu = [...getMenuRow1(), ...getMenuRow2()]
+        const sourceIndex = menu.findIndex(
+          (item: ToolbarMenuItem) => item.name === 'source-mode'
+        )
+        //move 'source mode' to the end
+        if (!!~sourceIndex) {
+          menu.splice(menu.length - 1, 0, menu.splice(sourceIndex, 1)[0])
+        }
+
+        return {
+          row1: menu
+        }
+      } else {
+        return {
+          row1: getMenuRow1(),
+          row2: getMenuRow2()
+        }
       }
     })
 
