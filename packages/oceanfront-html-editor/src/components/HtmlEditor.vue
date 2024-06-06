@@ -906,6 +906,13 @@ export default defineComponent({
         )
         //move 'source mode' to the end
         if (!!~sourceIndex) {
+          menu.push({
+            name: 'divider',
+            icon: '',
+            title: '',
+            variant: '',
+            type: 'divider'
+          })
           menu.splice(menu.length - 1, 0, menu.splice(sourceIndex, 1)[0])
         }
 
