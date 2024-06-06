@@ -22,7 +22,7 @@
           ><of-icon name="cancel"></of-icon
         ></span>
         <of-text-field
-          :mode="active && mode === 'inline' ? 'editable' : 'fixed'"
+          :mode="active && mode === 'inline' ? 'editable' : inputMode"
           multiline
           type="textarea"
           :input-type="type"
