@@ -11,6 +11,7 @@ import { useNavGroup } from '../lib/nav'
 import { Link, LinkTo, OfLink } from './Link'
 import { OfIcon } from './Icon'
 import { OfField } from './Field'
+import { OfButton } from './Button'
 
 export const OfListItem = defineComponent({
   name: 'OfListItem',
@@ -34,7 +35,6 @@ export const OfListItem = defineComponent({
     const navGroup = useNavGroup()
     const elt = ref<HTMLElement>()
     const expand = computed(() => props.expand)
-    const field = computed(() => props.field)
     const isCurrent = ref(!!props.active)
     const isFocused = ref(false)
     if (navGroup) {
@@ -76,13 +76,26 @@ export const OfListItem = defineComponent({
         }
       }
     )
-
     const content = () => {
       const result = [
-        h('div', { class: 'of-list-item-content' }, [
-          ctx.slots.default?.(),
-          field.value ? h(OfField, field.value) : null
-        ])
+        h(
+          'div',
+          {
+            class: 'of-list-item-content',
+            style: { justifyContent: 'space-between' }
+          },
+          [
+            h('div', { class: 'of-list-item-content' }, [
+              ctx.slots.default?.()
+            ]),
+            props.field
+              ? h(
+                  props.field.type === 'button' ? OfButton : OfField,
+                  props.field
+                )
+              : null
+          ]
+        )
       ]
       if (expand.value !== null) {
         result.push(

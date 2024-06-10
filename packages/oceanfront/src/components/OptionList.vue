@@ -249,8 +249,10 @@ const OfOptionList = defineComponent({
     }
 
     const click = (item: any, event: Event): any => {
+      event.stopPropagation()
       closeAfterClick.value = item.closeAfterClick
       if (item.disabled) return
+      if (item.field) item = { ...item, field: {} }
       ctx.emit('click', item.value, item, event)
       showSearch.value = false
       searchText.value = ''
