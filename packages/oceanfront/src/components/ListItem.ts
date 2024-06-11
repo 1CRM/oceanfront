@@ -29,7 +29,8 @@ export const OfListItem = defineComponent({
     mousedown: null,
     keydown: null,
     blur: null,
-    focus: null
+    focus: null,
+    'button-click': null
   },
   setup(props, ctx) {
     const navGroup = useNavGroup()
@@ -89,10 +90,14 @@ export const OfListItem = defineComponent({
               ctx.slots.default?.()
             ]),
             props.field
-              ? h(
-                  props.field.type === 'button' ? OfButton : OfField,
-                  props.field
-                )
+              ? h(props.field.type === 'button' ? OfButton : OfField, {
+                  ...props.field,
+                  onMousedown: (event: MouseEvent) => {
+                    if (props.field?.click)
+                      props.field.click(event, props.field)
+                    ctx.emit('button-click', event, props.field)
+                  }
+                })
               : null
           ]
         )
