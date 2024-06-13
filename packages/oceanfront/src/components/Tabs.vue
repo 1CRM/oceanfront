@@ -93,6 +93,7 @@
             @mouseenter="subMenuClearTimeout()"
             @mouseleave="subMenuLeave()"
             @click="selectSubMenuTab"
+            @close="closeSubMenu()"
             @blur="onBlurList"
             :class="[{ 'top-tabs-menu': topTabs }, overlayClassname]"
             class="of--elevated-1"

@@ -57,6 +57,7 @@
               @keydown="(event) => click(item, event)"
               @blur="onItemBlur"
               @focus="onItemFocus"
+              @button-click="buttonClick"
               :attrs="item.attrs"
               :key="idx"
               :field="item.field"
@@ -113,7 +114,7 @@ const OfOptionList = defineComponent({
     },
     addSearch: { type: Boolean, default: false }
   },
-  emits: ['blur', 'click'],
+  emits: ['blur', 'click', 'close'],
   setup(props, ctx) {
     const itemMgr = useItems()
     const allItems = computed(() => {
@@ -249,13 +250,18 @@ const OfOptionList = defineComponent({
     }
 
     const click = (item: any, event: Event): any => {
+      event.stopPropagation()
       closeAfterClick.value = item.closeAfterClick
       if (item.disabled) return
+      if (item.field) item = { ...item, field: {} }
       ctx.emit('click', item.value, item, event)
       showSearch.value = false
       searchText.value = ''
     }
-
+    const buttonClick = (event: MouseEvent) => {
+      event.stopPropagation()
+      ctx.emit('close')
+    }
     const focusFirstItem = (ignoreSelected = false) => {
       if (filterItems.value.length == 0) return
 
@@ -302,7 +308,8 @@ const OfOptionList = defineComponent({
       onKeyPress,
 
       onItemBlur,
-      onItemFocus
+      onItemFocus,
+      buttonClick
     }
   }
 })

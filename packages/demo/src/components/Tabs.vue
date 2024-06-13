@@ -68,10 +68,10 @@
       <div
         :class="{
           [`demo-tabs-content-${params.variant}`]: true,
-          'with-border': params.border,
+          'with-border': params.border
         }"
         :style="{
-          '--border-width': params.borderWidth,
+          '--border-width': params.borderWidth
         }"
         class="demo-tabs-content"
       >
@@ -92,10 +92,10 @@
       <div
         :class="{
           [`demo-tabs-content-${params.variant}`]: true,
-          'with-border': params.border,
+          'with-border': params.border
         }"
         :style="{
-          '--border-width': params.borderWidth,
+          '--border-width': params.borderWidth
         }"
         class="demo-tabs-content"
       >
@@ -116,10 +116,10 @@
       <div
         :class="{
           [`demo-tabs-content-${params.variant}`]: true,
-          'with-border': params.border,
+          'with-border': params.border
         }"
         :style="{
-          '--border-width': params.borderWidth,
+          '--border-width': params.borderWidth
         }"
         class="demo-tabs-content"
       >
@@ -141,10 +141,10 @@
       <div
         :class="{
           [`demo-tabs-content-${params.variant}`]: true,
-          'with-border': params.border,
+          'with-border': params.border
         }"
         :style="{
-          '--border-width': params.borderWidth,
+          '--border-width': params.borderWidth
         }"
         class="demo-tabs-content"
       >
@@ -181,7 +181,7 @@ export default defineComponent({
       rounded: false,
       border: false,
       borderWidth: '1px',
-      density: 'default',
+      density: 'default'
     })
 
     const testItems = [
@@ -190,8 +190,8 @@ export default defineComponent({
       'Tab 3',
       {
         text: 'Tab 4',
-        params: { module: 'Test', layout: 'Standard' },
-      },
+        params: { module: 'Test', layout: 'Standard' }
+      }
     ]
 
     const testItems2 = [
@@ -202,7 +202,7 @@ export default defineComponent({
       'Tab 5',
       { text: 'Tab 6', disabled: true },
       'Tab 7',
-      'Tab 8',
+      'Tab 8'
     ]
 
     const testItems3 = [
@@ -215,7 +215,7 @@ export default defineComponent({
       'Tab 7',
       { text: 'Tab 8', disabled: true },
       'Tab 9',
-      { text: 'Tab 10', icon: 'led blue' },
+      { text: 'Tab 10', icon: 'led blue' }
     ]
 
     const testItems4 = [
@@ -223,7 +223,7 @@ export default defineComponent({
       'Tab 2',
       'Tab 3',
       { text: 'Tab 4' },
-      { text: 'Tab 5' },
+      { text: 'Tab 5' }
     ]
 
     const testItems5 = [
@@ -231,21 +231,21 @@ export default defineComponent({
         text: 'Tab 1',
         subMenuItems: [
           { text: 'SubMenu Tab11', icon: 'led blue' },
-          { text: 'SubMenu Tab12', icon: 'led red' },
-        ],
+          { text: 'SubMenu Tab12', icon: 'led red' }
+        ]
       },
       {
         text: 'Tab 2',
-        subMenuItems: [{ text: 'SubMenu Tab21' }, { text: 'SubMenu Tab22' }],
+        subMenuItems: [{ text: 'SubMenu Tab21' }, { text: 'SubMenu Tab22' }]
       },
       {
         text: 'Tab 3',
         subMenuItems: [
           { text: 'SubMenu Tab31' },
           { text: 'SubMenu Tab32' },
-          { text: 'SubMenu Tab33' },
-        ],
-      },
+          { text: 'SubMenu Tab33' }
+        ]
+      }
     ]
 
     const testItems6 = [
@@ -256,7 +256,7 @@ export default defineComponent({
       'Tab 5',
       { text: 'Tab 6', disabled: true },
       'Tab 7',
-      'Tab 8',
+      'Tab 8'
     ]
 
     const selected1 = ref(0)
@@ -295,10 +295,9 @@ export default defineComponent({
       selected5,
 
       testItems6,
-      selected6,
-
+      selected6
     }
-  },
+  }
 })
 </script>
 
