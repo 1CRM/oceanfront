@@ -1,6 +1,7 @@
 import { defineComponent, h } from 'vue'
 import CategoryCalendar from './category'
 import DayCalendar from './day'
+import YearCalendar from './year'
 import MonthCalendar from './month'
 import NDaysCalendar from './ndays'
 import calendarProps from './props'
@@ -19,6 +20,8 @@ export default defineComponent({
         return h(NDaysCalendar, this.$props, this.$slots)
       case 'month':
         return h(MonthCalendar, this.$props, this.$slots)
+      case 'year':
+        return h(YearCalendar, this.$props, this.$slots)
       default:
         return h(DayCalendar, this.$props, this.$slots)
     }

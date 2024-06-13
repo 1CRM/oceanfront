@@ -148,7 +148,7 @@ export { OfSelectPopup } from './fields/SelectPopup'
 export type { CalendarEvent, InternalEvent } from './lib/calendar'
 export { extendConfig, useConfig } from './lib/config'
 export type { Config, ConfigFunction } from './lib/config'
-export { addDays, addMonths, addMinutes } from './lib/datetime'
+export { addDays, addMonths, addMinutes, addYears } from './lib/datetime'
 export {
   defineFieldType,
   extendFieldFormat,
