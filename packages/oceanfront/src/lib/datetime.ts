@@ -10,6 +10,13 @@ export const addMonths = (d: Date, months: number): Date => {
   date.setDate(1)
   return date
 }
+// always sets day to 1!
+export const addYears = (d: Date, years: number): Date => {
+  const date = new Date(d.getTime())
+  date.setFullYear(date.getFullYear() + years)
+  date.setDate(1)
+  return date
+}
 
 export const addDays = (d: Date, days: number): Date => {
   const date = new Date(d.getTime())
@@ -77,6 +84,11 @@ export const isoWeekNumber = (d: Date): number => {
   if (w < 1) return weeksInYear(y - 1)
   if (w > weeksInYear(y)) return 1
   return w
+}
+
+export interface YearGridCell {
+  date: Date
+  today: boolean
 }
 
 export interface MonthGridCell {

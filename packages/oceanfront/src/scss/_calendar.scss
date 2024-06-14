@@ -205,6 +205,58 @@ div.of-date-picker-cur-year {
   z-index: 1;
 }
 
+.of-calendar-year-grid {
+  display: grid;
+  grid-gap: 10px;
+  grid-template-columns: auto auto auto auto auto auto;
+  .of-calendar-month-titles {
+    display: grid;
+    justify-content: center;
+    border: solid 1px var(--calendar-grid-color);
+    grid-template-columns:  40px 1fr;
+    width: 100%;
+    height: max-content;
+    text-align: center;
+    & > div:first-of-type {
+      width: 100%;
+      grid-column: 1 / span 2;
+      background-color: var(--calendar-day-color);
+    }
+    & .day-of-month {
+      background-color: var(--calendar-day-color);
+      justify-content: center;
+      align-content: center;
+      cursor: pointer;
+      font-size: 20px;
+    }
+    & .day-of-month.today,  {
+        background-color: var(--calendar-today-background);
+        color: var(--calendar-today-color);
+    }
+    & > div {
+      border-bottom: solid 1px var(--calendar-grid-color);
+    }
+    .month-name{
+      font-size: 16px;
+    }
+  }
+  .of-calendar-month-day {
+    border-right: 0;
+    &:hover {
+      outline: none;
+    }
+    & .events {
+      height: var(--of-month-day-height, auto);
+      position: relative;
+    }
+  }
+}
+@media (max-width: 768px) {
+  .of-calendar-year-grid {
+    grid-template-columns: auto auto auto auto;
+  }
+}
+
 .of-calendar-allday-row,
 .of-calendar-day-row,
 .of-calendar-day-titles,

@@ -6,7 +6,15 @@ import {
   Timestamp
 } from '../../lib/calendar'
 
-const validTypes = ['day', 'month', 'week', 'category', 'ndays', 'month']
+const validTypes = [
+  'day',
+  'month',
+  'week',
+  'category',
+  'ndays',
+  'month',
+  'year'
+]
 
 function validateType(type: string): boolean {
   return validTypes.indexOf(type) >= 0
@@ -35,6 +43,16 @@ export default {
     }
   },
   month: {
+    fixedRowHeight: Boolean,
+    eventsLimit: {
+      type: [String, Number],
+      default: '5'
+    },
+    hideOtherMonths: Boolean,
+    hideWeekends: Boolean,
+    weekStart: Number
+  },
+  year: {
     fixedRowHeight: Boolean,
     eventsLimit: {
       type: [String, Number],

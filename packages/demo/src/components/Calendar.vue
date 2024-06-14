@@ -18,7 +18,7 @@
           background: 'var(--color-bg-event)',
           color: 'var(--color-event)',
           border: 'solid 1px var(--color-border-event)',
-          'border-radius': '10px',
+          'border-radius': '10px'
         }"
       >
         {{ detailsEvent.name }}
@@ -119,7 +119,7 @@
               'background-color':
                 category === values.selectedCategory ? '#eee' : 'inherit',
               width: '100%',
-              'justify-content': 'center',
+              'justify-content': 'center'
             }"
           >
             <of-icon name="user" /><i>{{ category }} </i>
@@ -156,7 +156,7 @@ import {
   InternalEvent,
   makeRecord,
   addDays,
-  addMinutes,
+  addMinutes
 } from 'oceanfront'
 
 const types = [
@@ -165,6 +165,7 @@ const types = [
   { value: 'category', text: 'Category' },
   { value: 'ndays', text: 'N Days' },
   { value: 'month', text: 'Month' },
+  { value: 'year', text: 'Year' }
 ]
 
 function eventColor(e: InternalEvent) {
@@ -190,9 +191,9 @@ function eventColor(e: InternalEvent) {
 const state = makeRecord({
   useSlots: false,
   limitHours: false,
-  type: 'month',
+  type: 'year',
   layout: 'columns',
-  groupAllDayEvents: false,
+  groupAllDayEvents: false
 })
 
 const categories = ['Project task', 'Event', 'Absence', 'Holiday']
@@ -203,7 +204,7 @@ const classes = [
   'state-danger',
   'state-ignore',
   'state-special',
-  'state-primary',
+  'state-primary'
 ]
 
 function randomElement<T>(list: T[]): T {
@@ -255,7 +256,7 @@ function regenerateEvents() {
         duration,
         class: randomElement(classes),
         allDay: Math.random() > 0.7,
-        category: randomElement(categories),
+        category: randomElement(categories)
       }
       list.push(event)
     }
@@ -301,9 +302,9 @@ export default defineComponent({
       },
       hidePopup: () => {
         detailsVisible.value = false
-      },
+      }
     }
-  },
+  }
 })
 </script>
 
