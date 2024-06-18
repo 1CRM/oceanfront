@@ -439,6 +439,8 @@ export const OfTextField = defineComponent({
             'aria-label': fieldCtx.ariaLabel ?? fieldCtx.label,
             autocomplete: fieldCtx.autocomplete ?? null,
             autocapitalize: fieldCtx.autocapitalize ?? null,
+            autocorrect: fieldCtx.autocorrect ?? null,
+            spellcheck: fieldCtx.spellcheck ?? null,
             value: inputValue.value,
             ...hooks
           })

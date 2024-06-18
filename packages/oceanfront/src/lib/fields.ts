@@ -89,6 +89,8 @@ export interface FieldContext {
   ariaLabel?: string
   autocomplete?: string
   autocapitalize?: string
+  autocorrect?: string
+  spellcheck?: string
   labelPosition?: string
   mode?: FieldMode
   muted?: boolean // if editable, reduce indicators
@@ -175,6 +177,8 @@ export const BaseFieldProps = {
   ariaLabel: String,
   autocomplete: String,
   autocapitalize: String,
+  autocorrect: String,
+  spellcheck: String,
   labelPosition: String as PropType<FieldLabelPositionProp>,
   loading: Boolean,
   locked: Boolean,
@@ -380,6 +384,8 @@ export function makeFieldContext<C>(
       'ariaLabel',
       'autocomplete',
       'autocapitalize',
+      'autocorrect',
+      'spellcheck',
       'loading',
       'muted',
       'name',
