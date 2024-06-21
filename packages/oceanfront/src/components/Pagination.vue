@@ -119,6 +119,7 @@ export default defineComponent({
     density: { type: [String, Number], default: null },
     customOffsetPopup: [Boolean, String],
     startRecord: Number,
+    minPerPage: Number,
     perPage: Number,
     rounded: Boolean,
     ariaLabels: Object,
@@ -246,6 +247,7 @@ export default defineComponent({
     )
 
     const perPageValue: Ref<number> = ref(props.perPage || 20)
+    const minPerPageValue: Ref<number> = ref(props.minPerPage || 1)
 
     watch(
       () => props.perPage,
@@ -256,7 +258,9 @@ export default defineComponent({
 
     watchEffect(() => {
       if (startAtValue.value <= 0) startAtValue.value = 1
-      if (perPageValue.value <= 0) perPageValue.value = 1
+      if (perPageValue.value < minPerPageValue.value) {
+        perPageValue.value = minPerPageValue.value
+      }
     })
 
     const showCustomOffsetPopup = computed(
