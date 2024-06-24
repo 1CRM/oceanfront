@@ -10,7 +10,7 @@ import { unref } from 'vue'
 export const defaultBaseColors = (): any => {
   return {
     primary: rgb_to_hex(hsl_to_rgb(189 / 360, 0.47, 0.5)),
-    secondary: rgb_to_hex(hsl_to_rgb(15 / 360, 0.83, 0.5)),
+    secondary: rgb_to_hex(hsl_to_rgb(189.06 / 360, 0.5248, 0.198)),
     tertiary: rgb_to_hex(hsl_to_rgb(227 / 360, 0.97, 0.5)),
     neutral: rgb_to_hex(hsl_to_rgb(80 / 360, 0.06, 0.44)),
     section: rgb_to_hex(hsl_to_rgb(211 / 360, 0.87, 0.53))
