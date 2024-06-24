@@ -18,5 +18,9 @@
   },
   "devDependencies": {
     "turbo": "^1.12.4"
+  },
+  "resolutions": {
+    "ws": "^8.17.1",
+    "braces": "^3.0.3"
   }
 }
