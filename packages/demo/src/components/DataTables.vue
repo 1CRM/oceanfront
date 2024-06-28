@@ -164,7 +164,7 @@ export default defineComponent({
       },
       { text: 'Category', value: 'category', sortable: false },
       { text: 'Date & Time', value: 'datetime', sortable: false },
-      { text: 'Amount', value: 'amount', sortable: false },
+      { text: 'Amount', value: 'amount', sortable: false, sum_total: true },
       { text: 'Size', value: 'size', align: 'end', sortable: false }
     ]
 

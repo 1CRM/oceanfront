@@ -102,6 +102,7 @@
         :idx="rowidx"
         :is-touchable="isTouchable"
         @update:row="updateRow"
+        @update:field="updateField"
       >
         <template #rows-selector>
           <slot name="rows-selector" :record="rowsRecord" :item="row" />
@@ -111,7 +112,41 @@
         </template>
       </of-table-row>
     </template>
-
+    <of-table-row
+      v-if="sumTotalColumns.length"
+      :total-amount="true"
+      :row="sumTotals"
+      :drag-info="{
+        draggable: false,
+        dragInProgress: false,
+        nestedIndicator: nestedIndicator,
+        currentCoords,
+        nested: draggingOptions.nested,
+        currentCanBeNested: false,
+        draggingItem,
+        nestedLimit: draggingOptions.nestedLimit,
+        allParent: draggingOptions.allParent,
+        listedRows,
+        tableLeft,
+        highlightLastMoved,
+        currentInnerDepth
+      }"
+      :coords="[rows.length + 1]"
+      :point-next="[rows.length + 1]"
+      v-on="dragEvents"
+      :rows-selector="addRowsSelector"
+      :edit-type="editType"
+      :show-old-values="showOldValues"
+      :columns="columns"
+      :rows-record="rowsRecord"
+      :idx="rows.length + 1"
+      :is-touchable="isTouchable"
+      @update:row="updateRow"
+    >
+      <template #rows-selector>
+        <div />
+      </template>
+    </of-table-row>
     <template v-if="footerRows?.length">
       <div
         class="of-data-table-footer"
@@ -463,6 +498,9 @@ export default defineComponent({
       ctx.emit('row-edited', row)
       ctx.emit('rows-edited', items.value)
     }
+    const updateField = () => {
+      updateSumTotal()
+    }
     const tableLeft = computed(() => {
       if (tableElt.value) {
         const tab = tableElt.value as HTMLDivElement
@@ -527,6 +565,7 @@ export default defineComponent({
     const sortPopupTarget = ref('')
     const selectedColFields: Ref<Object[]> = ref([])
     const selectLocked = ref(false)
+    const sumTotals: Ref<Object> = ref({})
 
     const createColId = (idx: number) => outerId.value + '-header-' + idx
 
@@ -610,10 +649,60 @@ export default defineComponent({
       }
       return cols
     })
+    const sumTotalColumns = computed(() => {
+      const indexes: any[] = []
+      props.headers?.forEach(
+        (hdr, index) => hdr.sum_total && indexes.push(index)
+      )
+      return indexes
+    })
     const perPage = computed(
       () => parseInt(props.itemsPerPage as any, 10) || 10
     )
     const page = ref(0)
+    const updateSumTotal = () => {
+      if (!sumTotalColumns.value.length || !items.value.length) return
+      let value = 0
+      let label = ''
+      let values: object[] = []
+      const name = columns.value[0].value
+      const fieldName = columns.value[sumTotalColumns.value[0]].value
+      sumTotalColumns.value.forEach((col) => {
+        const name = columns.value[col].value
+        items.value?.forEach((v) => {
+          if (Array.isArray(v[name])) {
+            let i = 0
+            v[name].forEach((column: object, index: number) => {
+              if (isNaN(column?.value)) {
+                i++
+                return
+              }
+              if (!values[index - i]) {
+                label = column?.label
+                values.push({ ...column, value: +column.value })
+              } else {
+                values[index - i].value += +column.value
+              }
+            })
+          } else {
+            label = v[name]?.label
+            value += +v[name].value
+          }
+        })
+      })
+      const field = values.length
+        ? values
+        : {
+            value: value,
+            format: items.value[0][fieldName].format
+          }
+      sumTotals.value = {
+        [name]: label || 'Total amounts',
+        nested: null,
+        [fieldName]: field,
+        draggable: false
+      }
+    }
     watch(
       () => props.page,
       (p) => (page.value = parseInt(p as string, 10) || 1), // FIXME check in range
@@ -623,6 +712,22 @@ export default defineComponent({
       () => props.items,
       (p) => (items.value = p as Record<string, any>),
       { immediate: true }
+    )
+    watch(
+      () => sumTotalColumns.value,
+      (cols) => {
+        if (cols.length) {
+          updateSumTotal()
+        }
+      },
+      { immediate: true }
+    )
+    watch(
+      () => props.items,
+      () => {
+        updateSumTotal()
+      },
+      { deep: true }
     )
     const iterStart = computed(() => {
       if (props.itemsCount != null) return 0 // external navigation
@@ -887,11 +992,14 @@ export default defineComponent({
       currentCanBeNested,
       currentInnerDepth,
       updateRow,
+      updateField,
       currentCoords,
       highlightLastMoved,
       dragEvents,
       dragLeft,
-      isTouchable
+      isTouchable,
+      sumTotals,
+      sumTotalColumns
     }
   }
 })
