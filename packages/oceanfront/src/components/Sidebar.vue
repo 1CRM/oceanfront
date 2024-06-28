@@ -4,6 +4,8 @@
     align="left"
     :pad="false"
     :embed="embedVal"
+    :capture="capture"
+    :shade="shade"
     @blur="hide"
   >
     <template #default="{ state }">
@@ -35,7 +37,15 @@ export default defineComponent({
     embed: Boolean,
     id: String,
     loading: Boolean,
-    modelValue: Boolean
+    modelValue: Boolean,
+    capture: {
+      type: Boolean,
+      default: true
+    },
+    shade: {
+      type: Boolean,
+      default: true
+    }
   },
   emits: ['update:modelValue'],
   setup(props, ctx) {

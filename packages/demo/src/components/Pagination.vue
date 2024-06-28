@@ -18,6 +18,7 @@
           :variant="variant"
           :density="params.density"
           :per-page="perPage"
+          :min-per-page="minPerPage"
           :total-pages="total"
           :start-record="startRecord"
           @select-page="selectPage"
@@ -41,11 +42,13 @@ export default defineComponent({
   :model-value="1"
   variant="outlined"
   :total-pages="20"
-  custom-offset-popup
+  :min-per-page="5"
+ custom-offset-popup
 />
 `
     const total = 20
     const perPage = ref(20)
+    const minPerPage = ref(5)
     const page = ref(1)
     const startRecord = ref(1)
 
@@ -64,20 +67,21 @@ export default defineComponent({
 
     const densityOptions = ['default', '0', '1', '2', '3']
     const params = reactive({
-      density: 'default',
+      density: 'default'
     })
     return {
       sampleCode,
       total,
       page,
       perPage,
+      minPerPage,
       startRecord,
       densityOptions,
       params,
       variants,
       selectPage,
-      updateOffset,
+      updateOffset
     }
-  },
+  }
 })
 </script>
