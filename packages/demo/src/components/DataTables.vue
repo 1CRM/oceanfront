@@ -172,7 +172,10 @@ export default defineComponent({
       {
         name: { value: 'First item', editable: true },
         id: '1',
-        amount: { value: 10, editable: true, type: 'number' },
+        amount: [
+          { value: 10, editable: true, type: 'number' },
+          { value: 20, editable: true, type: 'number' }
+        ],
         datetime: {
           editable: true,
           value: '2022-06-17 12:44:44',
@@ -190,7 +193,10 @@ export default defineComponent({
       {
         draggable: true,
         id: '2',
-        amount: { value: 40, editable: true, type: 'number' },
+        amount: [
+          { value: 40, editable: true, type: 'number' },
+          { value: 50, editable: true, type: 'number' }
+        ],
         name: { value: 'Second item', editable: true },
         category: {
           value: 'Category 2',
@@ -212,7 +218,7 @@ export default defineComponent({
       {
         id: '3',
         draggable: true,
-        amount: { value: 100, editable: true, type: 'number' },
+        amount: [{ value: 100, editable: true, type: 'number' }],
         name: { value: 'Third item', editable: true },
         category: {
           value: 'Category 3',
@@ -230,7 +236,7 @@ export default defineComponent({
       {
         id: '4',
         draggable: true,
-        amount: { value: 45, editable: true, type: 'number' },
+        amount: [{ value: 45, editable: true, type: 'number' }],
         name: { value: 'Fourth item', editable: true },
         category: {
           value: 'Category 4',
@@ -248,7 +254,7 @@ export default defineComponent({
       {
         id: '5',
         draggable: true,
-        amount: { value: 45, editable: true, type: 'number' },
+        amount: [{ value: 45, editable: true, type: 'number' }],
         name: { value: 'Fourth item', editable: true },
         category: {
           value: 'Category 4',
@@ -266,7 +272,7 @@ export default defineComponent({
       {
         id: '6',
         draggable: true,
-        amount: { value: 45, editable: true, type: 'number' },
+        amount: [{ value: 45, editable: true, type: 'number' }],
         name: { value: 'Fourth item', editable: true },
         category: {
           value: 'Category 4',
