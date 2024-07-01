@@ -158,6 +158,7 @@ const OfEditableField = defineComponent({
         return itemValue.value
       },
       set(val) {
+        console.log(val, '11111')
         itemValue.value = val
       }
     }) as any
@@ -171,7 +172,6 @@ const OfEditableField = defineComponent({
       }
       return 'text'
     })
-
     const classes = computed(() => props.modelValue?.classes || [])
     if (item.value && !item.value.hasOwnProperty('originalValue')) {
       item.value.originalValue = item.value.value

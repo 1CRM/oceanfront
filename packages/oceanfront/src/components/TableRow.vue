@@ -10,7 +10,8 @@
       selected: isTouchable ? selectedItem : highlighted || isCurrentTarget,
       active: active,
       'row-editable': rowEditable,
-      'row-editing': editingRow
+      'row-editing': editingRow,
+      'total-amount': hasTotalAmount
     }"
     :key="item.id ?? index"
   >
@@ -79,7 +80,14 @@
               ></of-editable-field>
             </template>
             <template v-else>
-              <div class="field-value" :key="idxs">
+              <div
+                class="field-value"
+                :key="idxs"
+                :class="{
+                  postfix: idxs,
+                  'total-amount-fields': hasTotalAmount
+                }"
+              >
                 <of-data-type :value="item[col.value][idxs]"></of-data-type>
               </div>
             </template>
@@ -98,7 +106,10 @@
           ></of-editable-field>
         </template>
         <template v-else>
-          <div class="field-value">
+          <div
+            class="field-value"
+            :class="{ 'total-amount-fields': hasTotalAmount }"
+          >
             <of-data-type :value="item[col.value]"></of-data-type>
           </div>
         </template>
@@ -174,7 +185,8 @@ export default defineComponent({
       type: Number,
       default: 0
     },
-    isTouchable: Boolean
+    isTouchable: Boolean,
+    totalAmount: Boolean
   },
   emits: ['dragstart', 'update:row', 'setCoords', 'setDepth', 'update:field'],
   setup(props, ctx) {
@@ -190,6 +202,9 @@ export default defineComponent({
     })
     const editingRow = computed(() => {
       return props.row?.editingRow ?? false
+    })
+    const hasTotalAmount = computed(() => {
+      return props.totalAmount ?? false
     })
     const rowItem = reactive<RowItem>({
       item: props.row,
@@ -606,7 +621,8 @@ export default defineComponent({
       active,
       fieldEdited,
       rowEditable,
-      editingRow
+      editingRow,
+      hasTotalAmount
     }
   }
 })

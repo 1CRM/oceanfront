@@ -12,4 +12,5 @@ export interface DataTableHeader {
   sort?: 'asc' | 'desc' // provide via formatter?
   extra_sort_fields?: { label: string; value: string; order?: string }[]
   editable?: boolean | string
+  sum_total?: boolean
 }
