@@ -15,7 +15,7 @@ export default defineComponent({
   },
   render() {
     if (this.$props.value && typeof this.$props.value === 'object') {
-      switch (this.$props.value.format) {
+      switch (this.$props.value.format?.type || this.$props.value.format) {
         case 'currency':
           return h(Currency, this.$props, this.$slots)
         case 'link':
