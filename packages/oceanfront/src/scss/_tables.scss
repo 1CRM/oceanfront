@@ -109,6 +109,10 @@
     &.selected > div {
       background-color: $base-color-highlight;
     }
+    &.total-amount > div{
+      font-weight: 500;
+      border-top: 3px double #ddd;
+    }
   }
 
   > .of-data-table-footer > div {

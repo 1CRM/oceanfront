@@ -117,12 +117,14 @@
       :total-amount="true"
       :row="sumTotals"
       :drag-info="{
-        draggable: false,
-        dragInProgress: false,
+        draggable: draggable,
+        dragInProgress: dragInProgress,
         nestedIndicator: nestedIndicator,
         currentCoords,
         nested: draggingOptions.nested,
-        currentCanBeNested: false,
+        currentCanBeNested:
+          draggingOptions.nested &&
+          (draggingOptions.allNested || currentCanBeNested),
         draggingItem,
         nestedLimit: draggingOptions.nestedLimit,
         allParent: draggingOptions.allParent,
@@ -636,7 +638,10 @@ export default defineComponent({
     const closeSortPopup = () => {
       sortPopupOpened.value = false
     }
-
+    const setSort = function (column: string, order: string) {
+      sort.value.order = order
+      sort.value.column = column
+    }
     const columns = computed(() => {
       const cols: any[] = []
       for (const hdr of props.headers as DataTableHeader[]) {
@@ -664,15 +669,18 @@ export default defineComponent({
       if (!sumTotalColumns.value.length || !items.value.length) return
       let value = 0
       let label = ''
-      let values: object[] = []
       const name = columns.value[0].value
-      const fieldName = columns.value[sumTotalColumns.value[0]].value
+      const row = {
+        nested: null,
+        draggable: false
+      }
       sumTotalColumns.value.forEach((col) => {
-        const name = columns.value[col].value
+        let values: object[] = []
+        const fieldName = columns.value[col].value
         items.value?.forEach((v) => {
-          if (Array.isArray(v[name])) {
+          if (Array.isArray(v[fieldName])) {
             let i = 0
-            v[name].forEach((column: object, index: number) => {
+            v[fieldName].forEach((column: object, index: number) => {
               if (isNaN(column?.value)) {
                 i++
                 return
@@ -684,23 +692,20 @@ export default defineComponent({
                 values[index - i].value += +column.value
               }
             })
+            row[fieldName] = values
           } else {
-            label = v[name]?.label
-            value += +v[name].value
+            label = v[fieldName]?.label
+            value += +(v[fieldName].value || v[fieldName])
+            row[fieldName] = {
+              value: value,
+              format: items.value[0][fieldName].format
+            }
           }
         })
       })
-      const field = values.length
-        ? values
-        : {
-            value: value,
-            format: items.value[0][fieldName].format
-          }
       sumTotals.value = {
-        [name]: label || 'Total amounts',
-        nested: null,
-        [fieldName]: field,
-        draggable: false
+        ...row,
+        [name]: label || 'Total amounts'
       }
     }
     watch(
@@ -911,11 +916,6 @@ export default defineComponent({
         value: () => selectRows(RowsSelectorValues.DeselectAll)
       }
     ]
-
-    const setSort = function (column: string, order: string) {
-      sort.value.order = order
-      sort.value.column = column
-    }
 
     const onSort = function (
       column: string,

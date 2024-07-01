@@ -65,7 +65,6 @@
           @rows-edited="onRowsEdited"
           :headers="universalHeaders"
           :items="universalItems"
-          :footer-items="footerItems"
         />
       </div>
     </div>
@@ -98,7 +97,6 @@
           @rows-sorted="onRowsSorted"
           :headers="draggableHeaders"
           :items="draggableItems"
-          :footer-items="footerItems"
         />
       </div>
     </div>
@@ -165,7 +163,13 @@ export default defineComponent({
       { text: 'Category', value: 'category', sortable: false },
       { text: 'Date & Time', value: 'datetime', sortable: false },
       { text: 'Amount', value: 'amount', sortable: false, sum_total: true },
-      { text: 'Size', value: 'size', align: 'end', sortable: false }
+      {
+        text: 'Size',
+        value: 'size',
+        align: 'end',
+        sortable: false,
+        sum_total: true
+      }
     ]
 
     const universalItems = ref([
@@ -231,7 +235,11 @@ export default defineComponent({
           value: '2023-08-13 22:14:00',
           type: 'datetime'
         },
-        size: 15125.56
+        size: {
+          value: 1512.56,
+          format: 'currency',
+          params: { symbol: '&#36;' }
+        }
       },
       {
         id: '4',
@@ -246,10 +254,14 @@ export default defineComponent({
         },
         datetime: {
           editable: true,
-          value: '2020-13-20 11:11:11',
+          value: '2022-06-17 12:44:44',
           type: 'datetime'
         },
-        size: 15125.56
+        size: {
+          value: 1512.56,
+          format: 'currency',
+          params: { symbol: '&#36;' }
+        }
       },
       {
         id: '5',
@@ -264,10 +276,14 @@ export default defineComponent({
         },
         datetime: {
           editable: true,
-          value: '2020-13-20 11:11:11',
+          value: '2020-12-20 11:11:11',
           type: 'datetime'
         },
-        size: 15125.56
+        size: {
+          value: 15125.5,
+          format: 'currency',
+          params: { symbol: '&#36;' }
+        }
       },
       {
         id: '6',
@@ -282,10 +298,14 @@ export default defineComponent({
         },
         datetime: {
           editable: true,
-          value: '2020-13-20 11:11:11',
+          value: '2020-12-20 11:11:11',
           type: 'datetime'
         },
-        size: 15125.56
+        size: {
+          value: 15125.56,
+          format: 'currency',
+          params: { symbol: '&#36;' }
+        }
       }
     ])
     const editableHeaders = [
@@ -401,7 +421,13 @@ export default defineComponent({
       { text: 'Address', value: 'address', sortable: false },
       { text: 'Phone', value: 'phone', sortable: false },
       { text: 'Amount', value: 'amount', sortable: false },
-      { text: 'Size', value: 'size', align: 'end', sort: 'asc' }
+      {
+        text: 'Size',
+        value: 'size',
+        align: 'end',
+        sort: 'asc',
+        sum_total: true
+      }
     ]
     const newDraggableHeaders = [
       {
@@ -444,7 +470,7 @@ export default defineComponent({
         draggable: true,
         address: 'Orléans, CA, USA',
         phone: '+1 (125) 853-7161',
-        size: 15125.56
+        size: 15125.51
       },
       {
         id: '4',
@@ -454,7 +480,7 @@ export default defineComponent({
         address: 'New York, NY, USA',
         phone: '+1 (041) 102-0224',
         amount: 1500,
-        size: 45.56
+        size: 45.5
       },
       {
         id: '5',
