@@ -11,11 +11,13 @@ export default defineComponent({
     const numberFormat = formatMgr.getTextFormatter('number')
     const result = numberFormat?.format(this.$props.value.value)
     const symbol = this.$props.value?.params?.symbol || '$'
-    if (result) {
+    if (result?.value) {
       return h('span', {
         innerHTML: symbol + ' ' + result.textValue
       })
     }
-    return ''
+    return h('span', {
+      innerHTML: '—'
+    })
   }
 })
