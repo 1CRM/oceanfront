@@ -667,7 +667,6 @@ export default defineComponent({
     const page = ref(0)
     const updateSumTotal = () => {
       if (!sumTotalColumns.value.length || !items.value.length) return
-      let value = 0
       let label = ''
       const name = columns.value[0].value
       const row = {
@@ -676,6 +675,7 @@ export default defineComponent({
       }
       sumTotalColumns.value.forEach((col) => {
         let values: object[] = []
+        let value = 0
         const fieldName = columns.value[col].value
         items.value?.forEach((v) => {
           if (Array.isArray(v[fieldName])) {
@@ -695,17 +695,18 @@ export default defineComponent({
             row[fieldName] = values
           } else {
             label = v[fieldName]?.label
-            value += +(v[fieldName].value || v[fieldName])
+            value += +(v[fieldName]?.value ?? v[fieldName])
             row[fieldName] = {
               value: value,
-              format: items.value[0][fieldName].format
+              format: items.value[0][fieldName]?.format
             }
           }
         })
       })
       sumTotals.value = {
         ...row,
-        [name]: label || 'Total amounts'
+        [name]: label || 'Total amounts',
+        editable: false
       }
     }
     watch(

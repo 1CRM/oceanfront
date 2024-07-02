@@ -158,7 +158,6 @@ const OfEditableField = defineComponent({
         return itemValue.value
       },
       set(val) {
-        console.log(val, '11111')
         itemValue.value = val
       }
     }) as any
