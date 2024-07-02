@@ -692,16 +692,20 @@ export default defineComponent({
                 values[index - i].value += +column.value
               }
             })
-            row[fieldName] = values
           } else {
             label = v[fieldName]?.label
-            value += +(v[fieldName]?.value ?? v[fieldName])
-            row[fieldName] = {
-              value: value,
-              format: items.value[0][fieldName]?.format
-            }
+            if (!isNaN(+(v[fieldName]?.value ?? v[fieldName])))
+              value += +(v[fieldName]?.value ?? v[fieldName])
           }
         })
+        if (values.length) {
+          row[fieldName] = values
+        } else {
+          row[fieldName] = {
+            value: value || '',
+            format: items.value[0][fieldName]?.format
+          }
+        }
       })
       sumTotals.value = {
         ...row,
