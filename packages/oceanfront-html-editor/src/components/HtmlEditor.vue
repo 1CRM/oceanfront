@@ -145,6 +145,7 @@ import TableRow from '@tiptap/extension-table-row'
 import TableCell from '@tiptap/extension-table-cell'
 import TableHeader from '@tiptap/extension-table-header'
 import { FontSize } from '../extensions/font_size'
+import { Span, Abbr, OneCrmArticle, OneCrmCategory } from '../extensions/tags'
 import { FormRecord } from 'oceanfront'
 
 type ToolbarMenuItem = {
@@ -500,7 +501,11 @@ export default defineComponent({
       }),
       TableRow,
       TableCell,
-      TableHeader
+      TableHeader,
+      Span,
+      Abbr,
+      OneCrmArticle,
+      OneCrmCategory
     ]
 
     const editor = useEditor({

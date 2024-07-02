@@ -214,6 +214,10 @@
       border-top: 2px solid rgba(#0d0d0d, 0.1);
       margin: 2rem 0;
     }
+
+    abbr {
+      border-bottom: 1px dotted;
+    }
   }
 
   .ProseMirror Mirror-focused [contenteditable='false'] {
