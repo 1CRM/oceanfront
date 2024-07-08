@@ -539,64 +539,76 @@ export default defineComponent({
       }
     },
     intervalSelectionHandlers(cat: categoryItem) {
-      return {
-        onMousemove: (e: MouseEvent | TouchEvent) => {
-          const ts = this.getEventTimestamp(e, toTimestamp(cat.date))
-          this.$emit('mousemove:time', e, ts)
-          if (this.selecting) {
-            const [startTs, endTs] = this.getEventIntervalRange(ts)
-            if (startTs < this.selectionStart) {
-              this.selecting = 'start'
-              this.selectionStart = startTs
-            } else if (endTs > this.selectionEnd) {
-              this.selecting = 'end'
-              this.selectionEnd = endTs
-            } else if (this.selecting == 'start') {
-              this.selectionStart = startTs
-            } else if (this.selecting == 'end') {
-              this.selectionEnd = endTs
-            }
-            this.$emit(
-              'selection:change',
-              this.selectionStart,
-              this.selectionEnd,
-              this.selectionCategory
-            )
-          }
-        },
-
-        onMousedown: (e: MouseEvent | TouchEvent) => {
-          const ts = this.getEventTimestamp(e, toTimestamp(cat.date))
-          const [startTsId, endTsId] = this.getEventIntervalRange(ts)
-          this.$emit('mousedown:time', e, ts)
-          const leftPressed = (e as MouseEvent).buttons === 1
-          if (this.selectable && leftPressed) {
-            this.$data.selecting = 'end'
-            this.$data.selectionStart = startTsId
-            this.$data.selectionEnd = endTsId
-            this.$data.selectionCategory = cat.category
-            this.$emit(
-              'selection:change',
-              this.selectionStart,
-              this.selectionEnd,
-              this.selectionCategory
-            )
-          }
-        },
-        onMouseup: (e: MouseEvent | TouchEvent) => {
-          const ts = this.getEventTimestamp(e, toTimestamp(cat.date))
-          this.$emit('mouseup:time', e, ts)
-          const leftReleased = ((e as MouseEvent).buttons & 1) === 0
-          if (this.selecting && leftReleased) {
-            this.$emit(
-              'selection:end',
-              this.selectionStart,
-              this.selectionEnd,
-              this.selectionCategory
-            )
-            this.selecting = false
-          }
+      const onStartSelect = (e: MouseEvent | TouchEvent) => {
+        const ts = this.getEventTimestamp(e, toTimestamp(cat.date))
+        const [startTsId, endTsId] = this.getEventIntervalRange(ts)
+        this.$emit('mousedown:time', e, ts)
+        if (this.selectable) {
+          this.$data.selecting = 'end'
+          this.$data.selectionStart = startTsId
+          this.$data.selectionEnd = endTsId
+          this.$data.selectionCategory = cat.category
+          this.$emit(
+            'selection:change',
+            this.selectionStart,
+            this.selectionEnd,
+            this.selectionCategory
+          )
         }
+      }
+
+      const onEndSelect = (e: MouseEvent | TouchEvent) => {
+        const ts = this.getEventTimestamp(e, toTimestamp(cat.date))
+        this.$emit('mouseup:time', e, ts)
+        if (this.selecting) {
+          this.$emit(
+            'selection:end',
+            this.selectionStart,
+            this.selectionEnd,
+            this.selectionCategory
+          )
+          this.selecting = false
+        }
+      }
+
+      const onMove = (e: MouseEvent | TouchEvent) => {
+        const ts = this.getEventTimestamp(e, toTimestamp(cat.date))
+        this.$emit('mousemove:time', e, ts)
+        if (this.selecting) {
+          const [startTs, endTs] = this.getEventIntervalRange(ts)
+          if (startTs < this.selectionStart) {
+            this.selecting = 'start'
+            this.selectionStart = startTs
+          } else if (endTs > this.selectionEnd) {
+            this.selecting = 'end'
+            this.selectionEnd = endTs
+          } else if (this.selecting == 'start') {
+            this.selectionStart = startTs
+          } else if (this.selecting == 'end') {
+            this.selectionEnd = endTs
+          }
+          this.$emit(
+            'selection:change',
+            this.selectionStart,
+            this.selectionEnd,
+            this.selectionCategory
+          )
+        }
+      }
+
+      return {
+        onMousemove: (e: MouseEvent) => onMove(e),
+        onTouchmove: (e: TouchEvent) => onMove(e),
+        onMousedown: (e: MouseEvent) => {
+          if (e.buttons === 1) onStartSelect(e)
+        },
+        onTouchstart: (e: TouchEvent) => {
+          if (e.touches.length === 1) onStartSelect(e)
+        },
+        onMouseup: (e: MouseEvent) => {
+          if ((e.buttons & 1) === 0) onEndSelect(e)
+        },
+        onTouchend: (e: TouchEvent) => onEndSelect(e)
       }
     },
     dayRowEventHandlers(e: InternalEvent) {
