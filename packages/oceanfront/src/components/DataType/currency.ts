@@ -13,7 +13,7 @@ export default defineComponent({
     const symbol = this.$props.value?.params?.symbol || '$'
     if (result?.value) {
       return h('span', {
-        innerHTML: symbol + ' ' + result.textValue
+        innerHTML: symbol + '&nbsp;' + result.textValue
       })
     }
     return h('span', {
