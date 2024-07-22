@@ -17,6 +17,9 @@
       @updated="updated"
       :editable="editable"
       label="Message"
+      :on-image-upload="onImageUpload"
+      :on-image-upload-success="onImageUploadSuccess"
+      :on-image-upload-error="onImageUploadError"
     />
     <br />
     <of-html-editor
@@ -56,15 +59,27 @@ export default defineComponent({
     const editable = ref(true)
 
     const updated = (val: any) => {
-      console.log(val)
+      console.log('updated', val)
     }
+
+    const onImageUpload = async (file: File) => {
+      return {
+        url: URL.createObjectURL(file)
+      }
+    }
+
+    const onImageUploadSuccess = () => {}
+    const onImageUploadError = () => {}
 
     return {
       sampleCode,
       content,
       content2,
       editable,
-      updated
+      updated,
+      onImageUpload,
+      onImageUploadSuccess,
+      onImageUploadError
     }
   }
 })

@@ -104,6 +104,10 @@
       <of-button @click="addLink">Apply</of-button>
     </of-dialog>
     <of-dialog class="of-editor-popup insert" v-model="imageDialogActive">
+      <of-file-field
+        v-bind="imageUploadFieldProps"
+        @update:model-value="onUpload"
+      />
       <of-field v-bind="imageFieldProps" />
       <of-button @click="closeImageDialog">Cancel</of-button>
       <of-button @click="addImage">Apply</of-button>
@@ -189,6 +193,18 @@ export default defineComponent({
     oneRow: {
       type: Boolean,
       default: false
+    },
+    onImageUpload: {
+      type: Function,
+      default: null
+    },
+    onImageUploadSuccess: {
+      type: Function,
+      default: null
+    },
+    onImageUploadError: {
+      type: Function,
+      default: null
     }
   },
   emits: {
@@ -357,6 +373,19 @@ export default defineComponent({
         type: 'text'
       }
     })
+    const imageUploadFieldProps = computed(() => {
+      return {
+        modelValue: imageUrl.value,
+        'onUpdate:modelValue': (file: File) => {
+          handleImageUpload(file)
+        },
+
+        label: 'File',
+        id: 'image-file',
+        name: 'image-file',
+        type: 'file'
+      }
+    })
 
     const closeImageDialog = () => {
       imageDialogActive.value = false
@@ -366,6 +395,13 @@ export default defineComponent({
       closeImageDialog()
       if (imageUrl.value) {
         editor.value.chain().focus().setImage({ src: imageUrl.value }).run()
+      }
+    }
+
+    const addImageByUrl = (url = '', alt = '') => {
+      closeImageDialog()
+      if (url) {
+        editor.value.chain().focus().setImage({ src: url, alt: alt }).run()
       }
     }
 
@@ -977,6 +1013,25 @@ export default defineComponent({
         : '--of-editor-content-height: 320px; --of-editor-editable-area-height: 400px;'
     })
 
+    const onUpload = async (file: File) => {
+      console.log('onUpload', file)
+    }
+    const handleImageUpload = async (file: File) => {
+      if (file && props.onImageUpload) {
+        try {
+          const response = await props.onImageUpload(file)
+          if (props.onImageUploadSuccess) {
+            props.onImageUploadSuccess(response)
+            addImageByUrl(response.url, response.alt)
+          }
+        } catch (error) {
+          if (props.onImageUploadError) {
+            props.onImageUploadError(error)
+          }
+        }
+      }
+    }
+
     onMounted(() => {
       if (footer.value?.textContent || footer.value?.innerHTML) {
         footerIsEmpty.value = false
@@ -1006,11 +1061,14 @@ export default defineComponent({
       addLink,
       imageDialogActive,
       imageFieldProps,
+      imageUploadFieldProps,
       closeImageDialog,
       addImage,
       sourceMode,
       source,
-      sourceElt
+      sourceElt,
+      handleImageUpload,
+      onUpload
     }
   }
 })
