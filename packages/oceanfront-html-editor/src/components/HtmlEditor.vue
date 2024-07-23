@@ -1013,9 +1013,8 @@ export default defineComponent({
         : '--of-editor-content-height: 320px; --of-editor-editable-area-height: 400px;'
     })
 
-    const onUpload = async (file: File) => {
-      console.log('onUpload', file)
-    }
+    const onUpload = async () => {}
+
     const handleImageUpload = async (file: File) => {
       if (file && props.onImageUpload) {
         try {
