@@ -401,7 +401,12 @@ export default defineComponent({
     const addImageByUrl = (url = '', alt = '') => {
       closeImageDialog()
       if (url) {
-        editor.value.chain().focus().setImage({ src: url, alt: alt }).run()
+        editor.value
+          .chain()
+          .focus()
+          .setParagraph()
+          .insertContent(`<img src="${url}" alt="${alt}" />`)
+          .run()
       }
     }
 
