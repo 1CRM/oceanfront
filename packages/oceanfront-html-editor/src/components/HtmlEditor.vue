@@ -401,12 +401,7 @@ export default defineComponent({
     const addImageByUrl = (url = '', alt = '') => {
       closeImageDialog()
       if (url) {
-        editor.value
-          .chain()
-          .focus()
-          .setParagraph()
-          .insertContent(`<img src="${url}" alt="${alt}" />`)
-          .run()
+        editor.value.chain().focus().setImage({ src: url, alt }).run()
       }
     }
 
@@ -463,7 +458,13 @@ export default defineComponent({
     watch(
       () => props.modelValue,
       (value: string) => {
-        if (!record.value) updateContent(value)
+        if (!record.value && !contentUpdated.value) {
+          updateContent(value)
+          contentUpdated.value = false
+
+          dataUpdated.value = true
+          source.value = editor.value.getHTML()
+        }
       }
     )
 
@@ -473,7 +474,13 @@ export default defineComponent({
           (htmlFieldName.value ?? props.name ?? '') as string
         ],
       (value: string) => {
-        updateContent(value)
+        if (!contentUpdated.value) {
+          updateContent(value)
+          contentUpdated.value = false
+
+          dataUpdated.value = true
+          source.value = editor.value.getHTML()
+        }
       }
     )
 
@@ -526,7 +533,9 @@ export default defineComponent({
 
     const coreExtensions = [
       StarterKit,
-      Image,
+      Image.configure({
+        inline: true
+      }),
       TextAlign.configure({
         types: ['heading', 'paragraph']
       }),
@@ -558,12 +567,7 @@ export default defineComponent({
       onUpdate: () => {
         dataUpdated.value = true
         source.value = editor.value.getHTML()
-        setTimeout(() => {
-          if (!contentUpdated.value) {
-            updateData()
-          }
-          contentUpdated.value = false
-        })
+        setTimeout(() => updateData())
       },
       onFocus: () => {
         focused.value = true
@@ -596,7 +600,6 @@ export default defineComponent({
         html: editor.value.getHTML(),
         text: editor.value.getText()
       })
-      contentUpdated.value = false
     }
 
     const getVariant = (name: any, params = {}): string => {
