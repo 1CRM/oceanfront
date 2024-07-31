@@ -5,13 +5,14 @@ import {
   PropType,
   reactive,
   ref,
+  resolveComponent,
   watch
 } from 'vue'
 import { useNavGroup } from '../lib/nav'
 import { Link, LinkTo, OfLink } from './Link'
 import { OfIcon } from './Icon'
 import { OfField } from './Field'
-import { OfButton } from './Button'
+//import { OfButton } from './Button'
 
 export const OfListItem = defineComponent({
   name: 'OfListItem',
@@ -77,6 +78,8 @@ export const OfListItem = defineComponent({
         }
       }
     )
+    const OfButton = resolveComponent('OfButton')
+
     const content = () => {
       const result = [
         h(
