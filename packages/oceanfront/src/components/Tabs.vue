@@ -430,13 +430,16 @@ export default defineComponent({
 
     const repositionLine = function () {
       if (variant.value !== 'osx' && tabs.value) {
-        const currentTabHeaderItem = tabs.value.querySelector(
+        const currentTabHeaderItem = tabs.value?.querySelector?.(
           '.of-tab-header-item.is-active'
         )
 
-        let tabLine: HTMLDivElement = tabs.value.querySelector('.of-tabs-line')
-        tabLine.style.width = currentTabHeaderItem?.clientWidth + 'px'
-        tabLine.style.left = currentTabHeaderItem?.offsetLeft + 'px'
+        let tabLine: HTMLDivElement =
+          tabs.value?.querySelector?.('.of-tabs-line')
+        if (tabLine) {
+          tabLine.style.width = currentTabHeaderItem?.clientWidth + 'px'
+          tabLine.style.left = currentTabHeaderItem?.offsetLeft + 'px'
+        }
       }
     }
 
@@ -549,10 +552,10 @@ export default defineComponent({
       overflowButtonEl.value = tabs.value?.querySelector(
         '.of-tab-header-item.overflow-button'
       )
-      const overflowButton = tabs.value.querySelector(
+      const overflowButton = tabs.value?.querySelector(
         '.of-tab-header-item.overflow-button'
       )
-      const overflowSeparator = tabs.value.querySelector('.overflow-separator')
+      const overflowSeparator = tabs.value?.querySelector('.overflow-separator')
 
       width += overflowButton?.offsetWidth ?? 0
       width += overflowSeparator?.offsetWidth ?? 0
