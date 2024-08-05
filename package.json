@@ -17,10 +17,12 @@
     "test": "turbo run test --no-daemon"
   },
   "devDependencies": {
-    "turbo": "^1.12.4"
+    "turbo": "^2.0.11"
   },
   "resolutions": {
     "ws": "^8.17.1",
-    "braces": "^3.0.3"
+    "braces": "^3.0.3",
+    "vue": "~3.4.21",
+    "vitest": ">=0.30.0 <1"
   }
 }
