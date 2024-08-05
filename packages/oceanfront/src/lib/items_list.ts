@@ -4,6 +4,7 @@ export interface ItemList {
   iconKey?: string
   specialKey?: string
   textKey?: string
+  postfixKey?: string
   valueKey?: string
   selectedTextKey?: string
   classKey?: string
