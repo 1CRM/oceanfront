@@ -65,7 +65,13 @@
               <slot name="option-icon" v-bind="item">
                 <of-icon v-if="item.icon" :name="item.icon" size="input" />
               </slot>
-              {{ item.text }}
+              <div class="of-list-item-text">
+                {{ item.text }}
+              </div>
+              <div v-if="item.postfix" class="of-list-item-postfix">
+                <component v-if="isVNode(item.postfix)" :is="item.postfix" />
+                <div v-else>{{ item.postfix }}</div>
+              </div>
             </of-list-item>
           </template>
         </div>
@@ -88,7 +94,8 @@ import {
   ref,
   Ref,
   nextTick,
-  watch
+  watch,
+  isVNode
 } from 'vue'
 import { OfField } from '../components/Field'
 import { OfNavGroup } from '../components/NavGroup'
@@ -112,7 +119,8 @@ const OfOptionList = defineComponent({
       type: [String, Object, Array] as PropType<ItemsProp>,
       default: () => []
     },
-    addSearch: { type: Boolean, default: false }
+    addSearch: { type: Boolean, default: false },
+    alwaysShowSearch: { type: Boolean, default: false }
   },
   emits: ['blur', 'click', 'close'],
   setup(props, ctx) {
@@ -134,7 +142,7 @@ const OfOptionList = defineComponent({
     const searchField = ref<any>(null)
     const searchText: Ref<string> = ref('')
     const searchNotEmpty = computed(() => searchText.value !== '')
-    const showSearch: Ref<boolean> = ref(false)
+    const showSearch: Ref<boolean> = ref(props.alwaysShowSearch)
 
     const onSearchInput = (_: never, value: string) => {
       if (showSearch.value) search(value)
@@ -287,7 +295,11 @@ const OfOptionList = defineComponent({
     }
 
     nextTick(() => {
-      focusFirstItem()
+      if (showSearch.value) {
+        focusSearch()
+      } else {
+        focusFirstItem()
+      }
     })
 
     return {
@@ -309,7 +321,8 @@ const OfOptionList = defineComponent({
 
       onItemBlur,
       onItemFocus,
-      buttonClick
+      buttonClick,
+      isVNode
     }
   }
 })

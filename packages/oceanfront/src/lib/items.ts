@@ -16,6 +16,7 @@ export const transformItemsList = (
     disabledKey: 'disabled',
     items: [],
     specialKey: 'special',
+    postfixKey: 'postfix',
     textKey: 'text',
     selectedTextKey: 'selectedText',
     valueKey: 'value',
