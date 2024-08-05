@@ -17,7 +17,7 @@
     "test": "turbo run test --no-daemon"
   },
   "devDependencies": {
-    "turbo": "^1.12.4"
+    "turbo": "^2.0.11"
   },
   "resolutions": {
     "ws": "^8.17.1",
