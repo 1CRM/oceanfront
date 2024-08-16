@@ -69,11 +69,12 @@
       <div class="rename-divider"></div>
       <span
         v-if="
-          item.hasOwnProperty('originalValue') &&
-          item.originalValue != item.value &&
-          showOldValues
+          item.hasOwnProperty('hint') ||
+          (item.hasOwnProperty('originalValue') &&
+            item.originalValue != item.value &&
+            showOldValues)
         "
-        class="old-value"
+        class="hint-value"
       >
         <of-data-type :value="showItem"></of-data-type>
       </span>
@@ -177,9 +178,11 @@ const OfEditableField = defineComponent({
     }
     const showItem = computed(() => {
       const res = { ...item.value }
-      res.value = res.hasOwnProperty('originalValue')
-        ? res.originalValue
-        : res.value
+      res.value = res.hasOwnProperty('hint')
+        ? res.hint
+        : res.hasOwnProperty('originalValue')
+          ? res.originalValue
+          : res.value
       return res as DataTypeValue
     })
     const elem = shallowRef<HTMLInputElement | undefined>()
@@ -369,7 +372,7 @@ export default OfEditableField
   .rename-divider {
     border-bottom: 1px dashed grey;
   }
-  .old-value {
+  .hint-value {
     opacity: 70%;
     font-size: 0.85em;
     padding-left: var(--field-h-pad, 4px);

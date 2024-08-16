@@ -192,6 +192,11 @@ const OfOptionList = defineComponent({
       }
     )
 
+    watch(
+      () => props.alwaysShowSearch,
+      (val) => (showSearch.value = val)
+    )
+
     const onKeyPress = (evt: KeyboardEvent) => {
       let consumed = false
 
@@ -263,7 +268,7 @@ const OfOptionList = defineComponent({
       if (item.disabled) return
       if (item.field) item = { ...item, field: {} }
       ctx.emit('click', item.value, item, event)
-      showSearch.value = false
+      showSearch.value = props.alwaysShowSearch
       searchText.value = ''
     }
     const buttonClick = (event: MouseEvent) => {
