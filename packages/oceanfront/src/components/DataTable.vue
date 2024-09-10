@@ -669,7 +669,7 @@ export default defineComponent({
       if (!sumTotalColumns.value.length || !items.value.length) return
       let label = ''
       const name = columns.value[0].value
-      const row = {
+      const row: any = {
         nested: null,
         draggable: false
       }
@@ -677,10 +677,10 @@ export default defineComponent({
         let values: object[] = []
         let value = 0
         const fieldName = columns.value[col].value
-        items.value?.forEach((v) => {
+        items.value?.forEach((v: any) => {
           if (Array.isArray(v[fieldName])) {
             let i = 0
-            v[fieldName].forEach((column: object, index: number) => {
+            v[fieldName].forEach((column: any, index: number) => {
               if (isNaN(column?.value)) {
                 i++
                 return
@@ -689,7 +689,7 @@ export default defineComponent({
                 label = column?.label
                 values.push({ ...column, value: +column.value })
               } else {
-                values[index - i].value += +column.value
+                ;(values[index - i] as any).value += +column.value
               }
             })
           } else {
@@ -703,7 +703,7 @@ export default defineComponent({
         } else {
           row[fieldName] = {
             value: value || '',
-            format: items.value[0][fieldName]?.format
+            format: (items.value as any)[0][fieldName]?.format
           }
         }
       })

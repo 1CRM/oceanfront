@@ -54,7 +54,7 @@
                   'of--rounded': rounded,
                   'of--with-border': withBorder
                 },
-                tab.params?.className
+                (tab.params as any)?.className
               ]"
               role="tab"
               :aria-label="tab.ariaLabel"

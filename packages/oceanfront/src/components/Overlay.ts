@@ -183,7 +183,7 @@ export const OfOverlay = defineComponent({
             for (const mutation of mutationList) {
               if (
                 mutation.type === 'childList' &&
-                !mutation.target?.classList.contains('loading')
+                !(mutation.target as HTMLElement)?.classList.contains('loading')
               ) {
                 observer.disconnect()
                 reposition()
@@ -196,8 +196,12 @@ export const OfOverlay = defineComponent({
               childList: true,
               subtree: true
             })
-          if (outerRect.height - targetRect.bottom - 24 < child?.clientHeight) {
-            paddingTop = outerRect.height - child?.clientHeight - 48
+          if (
+            outerRect.height - targetRect.bottom - 24 <
+            (child as HTMLElement)?.clientHeight
+          ) {
+            paddingTop =
+              outerRect.height - (child as HTMLElement)?.clientHeight - 48
           }
           outer.style.setProperty(
             '--overlay-dyn-pad-top',

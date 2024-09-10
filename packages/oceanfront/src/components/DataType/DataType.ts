@@ -15,11 +15,14 @@ export default defineComponent({
   },
   render() {
     if (this.$props.value && typeof this.$props.value === 'object') {
-      switch (this.$props.value.format?.type || this.$props.value.format) {
+      switch (
+        (this.$props.value.format as any)?.type ||
+        this.$props.value.format
+      ) {
         case 'currency':
-          return h(Currency, this.$props, this.$slots)
+          return h(Currency, this.$props as any, this.$slots)
         case 'link':
-          return h(Link, this.$props, this.$slots)
+          return h(Link, this.$props as any, this.$slots)
         default:
           return this.$props.value.value
       }

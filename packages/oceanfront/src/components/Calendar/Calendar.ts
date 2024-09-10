@@ -13,17 +13,17 @@ export default defineComponent({
   render() {
     switch (this.$props.type) {
       case 'week':
-        return h(WeekCalendar, this.$props, this.$slots)
+        return h(WeekCalendar, this.$props as any, this.$slots)
       case 'category':
-        return h(CategoryCalendar, this.$props, this.$slots)
+        return h(CategoryCalendar, this.$props as any, this.$slots)
       case 'ndays':
-        return h(NDaysCalendar, this.$props, this.$slots)
+        return h(NDaysCalendar, this.$props as any, this.$slots)
       case 'month':
-        return h(MonthCalendar, this.$props, this.$slots)
+        return h(MonthCalendar, this.$props as any, this.$slots)
       case 'year':
-        return h(YearCalendar, this.$props, this.$slots)
+        return h(YearCalendar, this.$props as any, this.$slots)
       default:
-        return h(DayCalendar, this.$props, this.$slots)
+        return h(DayCalendar, this.$props as any, this.$slots)
     }
   }
 })

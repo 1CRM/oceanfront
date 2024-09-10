@@ -14,7 +14,7 @@ import {
 const NAV_GROUP = 'ofnavgrp' as unknown as InjectionKey<NavGroup>
 
 export function provideNavGroup(grp: NavGroup | null): void {
-  provide(NAV_GROUP, grp)
+  provide(NAV_GROUP, grp as any)
 }
 
 export function useNavGroup(): NavGroup | null {
