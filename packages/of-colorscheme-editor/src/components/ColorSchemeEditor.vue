@@ -2,9 +2,9 @@
   <div v-for="(color, name) in colors" :key="name" class="row content">
     <div class="column" style="max-width: 10em">
       <of-field
-        :model-value="colors[name]"
+        :model-value="colors?.[name]"
         type="color"
-        @update:model-value="(v) => updateColor(name, v)"
+        @update:model-value="(v: any) => updateColor(name, v)"
       >
         <template #label>
           <label class="of-field-label">

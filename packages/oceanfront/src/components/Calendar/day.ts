@@ -51,7 +51,7 @@ export default defineComponent({
     },
     getProps() {
       return {
-        ...this.$props,
+        ...(this.$props as any),
         categoriesList: this.getCategoriesList(),
         ignoreCategories: this.getIgnoreCategories(),
         visibleRange: this.getVisibleRange()
