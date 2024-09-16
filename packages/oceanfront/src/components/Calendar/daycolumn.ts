@@ -275,7 +275,7 @@ export default defineComponent({
       )
     },
     title() {
-      if (!this.$props.categoryTitles) {
+      if (!this.$props.categoryTitles || this.$props.type === 'custom') {
         return ''
       }
       const titles = !this.$props.categoriesList
@@ -397,7 +397,7 @@ export default defineComponent({
       return { titles, count }
     },
     allDayRow() {
-      if (!this.hasAllDay) return ''
+      if (!this.hasAllDay || this.$props.type === 'custom') return ''
       const eventHeight =
         parseInt(this.$props.eventHeight as unknown as string) || 20
       const { height, columns } = !this.$props.categoriesList
@@ -737,6 +737,10 @@ export default defineComponent({
       )
     },
     dayRow() {
+      if (this.$props.type === 'custom') {
+        const slot = this.$slots['custom']
+        return slot?.()
+      }
       const intervals = this.intervals().map((interval) =>
         h(
           'div',
