@@ -730,6 +730,9 @@
             padding: calc(var(--field-v-pad)/2) var(--field-h-pad) var(--field-v-pad);
           }
         }
+        > .of-field-prepend {
+          margin-top: 1em;
+        }
       }
     }
   }
