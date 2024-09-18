@@ -13,7 +13,8 @@ const validTypes = [
   'category',
   'ndays',
   'month',
-  'year'
+  'year',
+  'custom'
 ]
 
 function validateType(type: string): boolean {
