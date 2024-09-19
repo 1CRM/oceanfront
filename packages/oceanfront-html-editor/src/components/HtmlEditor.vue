@@ -155,6 +155,7 @@ import {
   OneCrmArticle,
   OneCrmCategory,
   Select,
+  Option,
   Checkbox,
   InputText,
   InputButton

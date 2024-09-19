@@ -122,7 +122,7 @@ const Select = Node.create({
   name: 'select',
   inline: false,
   group: 'block',
-  content: 'block+',
+  content: 'option+',
 
   addAttributes() {
     return {
@@ -150,8 +150,7 @@ const Select = Node.create({
 
 const Option = Node.create({
   name: 'option',
-  inline: false,
-  group: 'block',
+  inline: true,
   content: 'inline*',
 
   addAttributes() {
