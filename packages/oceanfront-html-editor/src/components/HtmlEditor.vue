@@ -170,7 +170,7 @@ type ToolbarMenuItem = {
   disabled?: boolean
   type?: string
   items?: Array<any>
-  click?: Function
+  click?: () => void
 }
 
 export default defineComponent({
@@ -193,7 +193,7 @@ export default defineComponent({
       type: Array as PropType<Extension[]>
     },
     toolbarItems: {
-      type: Array as PropType<String[]>,
+      type: Array as PropType<string[]>,
       default: () => []
     },
     editable: {

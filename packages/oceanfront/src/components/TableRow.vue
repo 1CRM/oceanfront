@@ -595,8 +595,8 @@ export default defineComponent({
       return
     }
     const fieldEdited = (data: {
-      name: String
-      value: String | Boolean | Number
+      name: string
+      value: string | boolean | number
     }) => {
       ctx.emit('update:field', { name: data.name, value: data.value })
       return

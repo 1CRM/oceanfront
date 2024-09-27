@@ -1,3 +1,5 @@
+@use "sass:color";
+
 @mixin state-mixin($color, $bg, $border) {
   // box-shadow: none;
   // .text-emphasis-variant(@text);
@@ -42,7 +44,7 @@
 @mixin state-mixin-grad($color, $bg, $border) {
   @include state-mixin(
     $color,
-    linear-gradient(to bottom, lighten($bg, 2%) 15%, darken($bg, 2%) 85%),
+    linear-gradient(to bottom, color.adjust($bg, $lightness: 2%) 15%, color.adjust($bg, $lightness: -2%) 85%),
     $border
   );
 }
@@ -90,7 +92,7 @@
 }
 
 .state-info {
-  @include state-mixin-grad(#469, #cfeaff, darken(#cfeaff, 16%));
+  @include state-mixin-grad(#469, #cfeaff, color.adjust(#cfeaff, $lightness: -16%));
 }
 
 .state-draft {
@@ -106,7 +108,7 @@
 }
 
 .state-special {
-  @include state-mixin-grad(#fff6ff, #a7a, darken(#a7a, 12%));
+  @include state-mixin-grad(#fff6ff, #a7a, color.adjust(#a7a, $lightness: -12%));
   @include state-event-mixin(#806633, #fff0d1, #c92);
 }
 

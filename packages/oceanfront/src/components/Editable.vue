@@ -193,7 +193,7 @@ const OfEditableField = defineComponent({
       })
     }
 
-    const onInputBlur = (value: Boolean | String | Number = false) => {
+    const onInputBlur = (value: boolean | string | number = false) => {
       if (typeof value !== 'boolean') {
         item.value.value = value
         updateValue(value)
@@ -237,11 +237,11 @@ const OfEditableField = defineComponent({
         input.focus()
       }
     }
-    const fieldUpdated: Function = inject(
+    const fieldUpdated: (params: any) => any = inject(
       'fieldUpdated',
       () => null
-    ) as Function
-    const updateValue = (val: String | Boolean | Number) => {
+    ) as () => any
+    const updateValue = (val: string | boolean | number) => {
       if (item.value.hasOwnProperty('customValidate')) {
         const result = item.value.customValidate(props.name, val)
         if (result instanceof Promise) {

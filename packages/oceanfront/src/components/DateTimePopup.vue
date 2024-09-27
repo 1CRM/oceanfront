@@ -373,7 +373,11 @@ export default defineComponent({
         const date = focusedDate.value.getDate()
         if (event.shiftKey) {
           // + - 1 month
-          arrowUp ? nextMonth() : prevMonth()
+          if (arrowUp) {
+            nextMonth()
+          } else {
+            prevMonth()
+          }
           focusedDate.value = addMonths(focusedDate.value, arrowUp ? 1 : -1)
           const lastDate = lastMonthDay(focusedDate.value).getDate()
           if (date > lastDate) {
@@ -386,7 +390,11 @@ export default defineComponent({
           const month = focusedDate.value.getMonth()
           focusedDate.value = addDays(focusedDate.value, arrowUp ? 7 : -7)
           if (focusedDate.value.getMonth() !== month) {
-            arrowUp ? nextMonth() : prevMonth()
+            if (arrowUp) {
+              nextMonth()
+            } else {
+              prevMonth()
+            }
           }
         } else {
           // + - 1 day

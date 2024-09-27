@@ -87,6 +87,7 @@ const defineField = (type: InputType, name: string, cls: string) =>
         try {
           const loadedValue = df.loadValue(value)
           if (loadedValue instanceof Date) value = loadedValue
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (e) {}
         return value
       }

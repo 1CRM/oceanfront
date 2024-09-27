@@ -112,6 +112,7 @@ export const OfColorField = defineComponent({
               stateValue.value = rgbToHsv(rgb as any)
             }
           }
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (e) {
           // ignore invalid color
         }
@@ -315,7 +316,11 @@ export const OfColorField = defineComponent({
           break
         case 'hsl':
           let increment: number
-          label == 'h' ? (increment = 1) : (increment = 0.01)
+          if (label == 'h') {
+            increment = 1
+          } else {
+            increment = 0.01
+          }
 
           if (val) {
             hslNew[label] = val * increment
@@ -329,11 +334,15 @@ export const OfColorField = defineComponent({
           rgbNew = hslToRgb(hslNew)
           break
         default:
-          val
-            ? (rgbNew[label] = val)
-            : directional == 'up'
-              ? rgbNew[label]++
-              : rgbNew[label]--
+          if (val) {
+            rgbNew[label] = val
+          } else {
+            if (directional == 'up') {
+              rgbNew[label]++
+            } else {
+              rgbNew[label]--
+            }
+          }
           break
       }
 

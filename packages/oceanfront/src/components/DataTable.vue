@@ -496,7 +496,7 @@ export default defineComponent({
           sortSubitems(value)
         })
     }
-    const updateRow = (row: Object) => {
+    const updateRow = (row: object) => {
       ctx.emit('row-edited', row)
       ctx.emit('rows-edited', items.value)
     }
@@ -565,9 +565,9 @@ export default defineComponent({
     const sortPopupChangeTimerId = ref()
     const sortPopupOpened = ref(false)
     const sortPopupTarget = ref('')
-    const selectedColFields: Ref<Object[]> = ref([])
+    const selectedColFields: Ref<object[]> = ref([])
     const selectLocked = ref(false)
-    const sumTotals: Ref<Object> = ref({})
+    const sumTotals: Ref<object> = ref({})
 
     const createColId = (idx: number) => outerId.value + '-header-' + idx
 
@@ -1042,7 +1042,9 @@ export default defineComponent({
     * {
       cursor: grabbing !important;
     }
-    user-select: none;
+    & {
+      user-select: none;
+    }
   }
 }
 </style>
