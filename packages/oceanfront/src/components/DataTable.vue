@@ -1042,7 +1042,9 @@ export default defineComponent({
     * {
       cursor: grabbing !important;
     }
-    user-select: none;
+    & {
+      user-select: none;
+    }
   }
 }
 </style>

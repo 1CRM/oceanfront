@@ -4,13 +4,13 @@ import vue from '@vitejs/plugin-vue'
 import dts from 'vite-plugin-dts'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export default defineConfig(({ command, mode }) => {
+export default defineConfig(({ command, mode }): any => {
   const dev = mode === 'development'
   const plugins = [
     vue(),
     dts({
-      rollupTypes: true,
-    }),
+      rollupTypes: true
+    })
   ]
   return {
     build: {
@@ -18,7 +18,7 @@ export default defineConfig(({ command, mode }) => {
         entry: resolve(__dirname, 'src/index.ts'),
         name: 'oceanfront',
         // the proper extensions will be added
-        fileName: 'oceanfront',
+        fileName: 'oceanfront'
       },
       emptyOutDir: !dev,
       rollupOptions: {
@@ -29,21 +29,28 @@ export default defineConfig(({ command, mode }) => {
           // Provide global variables to use in the UMD build
           // for externalized deps
           globals: {
-            vue: 'Vue',
+            vue: 'Vue'
           },
           // Rename combined CSS output from style.css
-          assetFileNames: 'oceanfront.[ext]',
-        },
+          assetFileNames: 'oceanfront.[ext]'
+        }
       },
       reportCompressedSize: !dev,
-      sourcemap: true,
+      sourcemap: true
+    },
+    css: {
+      preprocessorOptions: {
+        scss: {
+          api: 'modern-compiler'
+        }
+      }
     },
     define: {
       __DEV__: JSON.stringify(dev),
       __VUE_OPTIONS_API__: 'true',
       __VUE_PROD_DEVTOOLS__: 'false',
-      'process.env.NODE_ENV': JSON.stringify(mode),
+      'process.env.NODE_ENV': JSON.stringify(mode)
     },
-    plugins,
+    plugins
   }
 })

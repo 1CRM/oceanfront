@@ -155,7 +155,9 @@
       margin-top: var(--content-margin);
     }
 
-    margin: var(--content-margin);
+    & {
+      margin: var(--content-margin);
+    }
 
     &:focus {
       outline: none;
