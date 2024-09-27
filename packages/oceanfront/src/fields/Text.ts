@@ -296,6 +296,7 @@ export const OfTextField = defineComponent({
           try {
             // FIXME change text formatter to catch exception
             val = fmt.unformat(val)
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
           } catch (e) {
             invalid.value = true
             // FIXME support an onInvalidInput hook maybe?

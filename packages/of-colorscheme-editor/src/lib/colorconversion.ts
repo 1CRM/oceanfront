@@ -189,6 +189,7 @@ export function rgb_to_hsv_a(
   b?: number
 ): ThreeNumbers {
   ;[r, g, b] = rgb_to_array(r, g, b)
+  // eslint-disable-next-line @typescript-eslint/no-unused-expressions
   ;(r = r / 255), (g = g / 255), (b = b / 255)
 
   const max = Math.max(r, g, b)

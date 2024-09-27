@@ -70,7 +70,7 @@ class BasicRecord<T extends object = Record<string, any>>
     watchEffect(this._checkUpdated.bind(this))
   }
 
-  private initializeData(initData: Object): Ref<T> {
+  private initializeData(initData: object): Ref<T> {
     try {
       return ref(structuredClone(deepToRaw(initData || {})) as T) as Ref<T>
     } catch {

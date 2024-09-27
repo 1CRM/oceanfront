@@ -20,6 +20,6 @@ export interface ItemList {
 }
 
 export interface Item {
-  value: String | Number
-  text: String | Number
+  value: string | number
+  text: string | number
 }

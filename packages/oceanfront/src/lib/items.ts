@@ -50,7 +50,7 @@ export function makeItemList(items?: any[] | ItemList): ItemList {
 }
 
 export function makeItems(
-  items: String | Number | Number[] | String[] | Item[]
+  items: string | number | number[] | string[] | Item[]
 ): Item[] {
   if (typeof items === 'string' || typeof items === 'number') {
     return [

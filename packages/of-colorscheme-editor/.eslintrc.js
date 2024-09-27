@@ -20,6 +20,7 @@ module.exports = {
         varsIgnorePattern: '^_.*$'
       }
     ],
+    '@typescript-eslint/no-unsafe-function-type': 'off',
     'vue/attributes-order': 'off',
     'vue/html-self-closing': 'off',
     'vue/max-attributes-per-line': 'off',

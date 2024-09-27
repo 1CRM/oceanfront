@@ -4,7 +4,7 @@ export interface Tab {
   text: string
   visible: boolean
   overflowButton: boolean
-  params?: Object | undefined
+  params?: object | undefined
   icon?: string
   disabled?: boolean
   subMenuItems?: Array<Tab> | undefined

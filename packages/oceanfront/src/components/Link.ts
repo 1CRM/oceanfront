@@ -38,7 +38,7 @@ function renderLink(
   link: Link,
   comp: ComponentInternalInstance,
   beforeNavigate: Function[],
-  ariaLabel: String | null
+  ariaLabel: string | null
 ) {
   return h(
     'a',

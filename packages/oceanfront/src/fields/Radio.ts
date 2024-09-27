@@ -92,7 +92,7 @@ export const OfRadioField = defineComponent({
             h(
               RadioInner,
               {
-                onSelectItem: (value: String | Number) => {
+                onSelectItem: (value: string | number) => {
                   clickToggle(value)
                 },
                 checked: stateValue.value === item.value,

@@ -21,6 +21,7 @@ module.exports = {
         varsIgnorePattern: '^_.*$'
       }
     ],
+    '@typescript-eslint/no-unsafe-function-type': 'off',
     'vue/attributes-order': 'off',
     'vue/html-closing-bracket-newline': 'off',
     'vue/html-indent': 'off',

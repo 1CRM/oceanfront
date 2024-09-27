@@ -164,7 +164,7 @@ const formatItems = (
   list: any,
   params: any,
   visible = true,
-  addOverflowButton: Boolean = false
+  addOverflowButton: boolean = false
 ): Array<Tab> => {
   const rows = []
 
@@ -578,7 +578,7 @@ export default defineComponent({
       }
     }
 
-    const getTab = function (key: Number): Tab | undefined {
+    const getTab = function (key: number): Tab | undefined {
       for (const tab of tabsList.value) {
         if (tab.key === key) return tab
       }
@@ -715,7 +715,7 @@ export default defineComponent({
     const onMouseoverTab = (
       key: number,
       elt: HTMLElement | EventTarget | null,
-      forceFocus: Boolean = false
+      forceFocus: boolean = false
     ) => {
       if (
         !props.params?.hideSubmenuOnHover ||
@@ -883,7 +883,11 @@ export default defineComponent({
             focusedIdx = idx
             result = true
           } else {
-            prev ? focusedIdx-- : focusedIdx++
+            if (prev) {
+              focusedIdx--
+            } else {
+              focusedIdx++
+            }
           }
         } else {
           result = true
