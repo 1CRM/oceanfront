@@ -31,7 +31,7 @@
           <h4>Dialog with nested</h4>
           <of-select-field
             :items="['one', 'two']"
-            v-model="selectValue"
+            v-model="selectValueSecondDialog"
             label="Test select"
           />
           <p>
@@ -46,7 +46,7 @@
             <of-select-field
               :items="['one', 'two']"
               label="Test select"
-              v-model="selectValue"
+              v-model="selectValueSecondDialog"
             />
           </div>
         </of-dialog>
@@ -750,7 +750,11 @@
       <template #default>
         <div class="container">
           <h4>Simple Dialog</h4>
-          <of-select-field :items="['one', 'two']" label="Test select" />
+          <of-select-field
+            :items="['one', 'two']"
+            v-model="selectValueSixthDialog"
+            label="Test select"
+          />
         </div>
       </template>
     </of-dialog>
@@ -780,6 +784,8 @@ export default defineComponent({
     })
     const textValue = ref('62.14')
     const selectValue: Ref<string> = ref('')
+    const selectValueSecondDialog: Ref<string> = ref('')
+    const selectValueSixthDialog: Ref<string> = ref('')
     const change = () => {
       textValue.value = new Date().getTime().toString()
     }
@@ -818,6 +824,8 @@ export default defineComponent({
       nestedDialogActive,
       sampleCode,
       selectValue,
+      selectValueSecondDialog,
+      selectValueSixthDialog,
       toggleDialog: () => {
         dialogActive.value = !dialogActive.value
       },
