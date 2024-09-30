@@ -116,7 +116,7 @@ export const OfFieldBase = defineComponent({
   name: 'OfFieldBase',
   inheritAttrs: false,
   props: BaseFieldProps,
-  emits: ['update:modelValue', 'input', 'click'],
+  emits: ['update:modelValue', 'input', 'click', 'focused'],
   setup(props, ctx) {
     const fieldRender = useFieldRender()
     const fieldCtx = provideFieldContext(props, ctx as any)
@@ -160,6 +160,7 @@ export const OfFieldBase = defineComponent({
       onClick(evt: MouseEvent) {
         evt.stopPropagation()
         fieldRender.click?.(evt)
+        ctx.emit('click')
       },
       onFocus(_evt: FocusEvent) {
         focused.value = true
@@ -178,6 +179,12 @@ export const OfFieldBase = defineComponent({
     if (fieldRender.onMouseenter) {
       handlers.onmouseenter = fieldRender.onMouseenter
     }
+    watch(
+      () => fieldRender.focused,
+      (val) => {
+        if (val) ctx.emit('focused')
+      }
+    )
     return () => {
       try {
         const outerId = (fieldRender.inputId ?? props.id) + '-outer'
