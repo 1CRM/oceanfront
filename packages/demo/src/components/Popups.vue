@@ -8,7 +8,11 @@
       <template #default>
         <div class="container">
           <h4>Simple Dialog</h4>
-          <of-select-field :items="['one', 'two']" label="Test select" />
+          <of-select-field
+            :items="['one', 'two']"
+            v-model="selectValue"
+            label="Test select"
+          />
         </div>
       </template>
     </of-dialog>
@@ -25,7 +29,11 @@
       <template #default>
         <div class="container">
           <h4>Dialog with nested</h4>
-          <of-select-field :items="['one', 'two']" label="Test select" />
+          <of-select-field
+            :items="['one', 'two']"
+            v-model="selectValue"
+            label="Test select"
+          />
           <p>
             <of-button @click="toggleNestedDialog">
               Show nested dialog
@@ -35,7 +43,11 @@
         <of-dialog v-model="nestedDialogActive">
           <div class="container">
             <h4>Nested Dialog</h4>
-            <of-select-field :items="['one', 'two']" label="Test select" />
+            <of-select-field
+              :items="['one', 'two']"
+              label="Test select"
+              v-model="selectValue"
+            />
           </div>
         </of-dialog>
       </template>
@@ -104,7 +116,7 @@
                       label="Select"
                       :items="[
                         { value: 'optionA', text: 'A' },
-                        { value: 'optionB', text: 'B' },
+                        { value: 'optionB', text: 'B' }
                       ]"
                       :record="testRecord"
                       name="one"
@@ -747,7 +759,7 @@
 
 <script lang="ts">
 import { makeRecord } from 'oceanfront'
-import { computed, defineComponent, ref } from 'vue'
+import { computed, defineComponent, Ref, ref } from 'vue'
 
 export default defineComponent({
   setup() {
@@ -764,9 +776,10 @@ export default defineComponent({
       five: '2021-03-14 15:45',
       six: '2021-02-15',
       seven: '12:00:00',
-      eight: 'https://1crm.com/',
+      eight: 'https://1crm.com/'
     })
     const textValue = ref('62.14')
+    const selectValue: Ref<string> = ref('')
     const change = () => {
       textValue.value = new Date().getTime().toString()
     }
@@ -804,6 +817,7 @@ export default defineComponent({
       sixthDialogActive,
       nestedDialogActive,
       sampleCode,
+      selectValue,
       toggleDialog: () => {
         dialogActive.value = !dialogActive.value
       },
@@ -824,8 +838,8 @@ export default defineComponent({
       },
       toggleSixthDialog: () => {
         sixthDialogActive.value = !sixthDialogActive.value
-      },
+      }
     }
-  },
+  }
 })
 </script>
