@@ -102,6 +102,8 @@
         :key="modelValue?.key"
         :invalid="isInvalid"
         :format="item.format"
+        :multi="multi"
+        :add-remove="addRemove"
         label-position="frame"
       ></of-field>
     </template>
@@ -142,7 +144,9 @@ const OfEditableField = defineComponent({
     mode: String as any,
     showOldValues: Boolean,
     index: Number,
-    name: String
+    name: String,
+    multi: Boolean,
+    addRemove: Boolean
   },
   emits: ['update:modelValue', 'valueChanged'],
   setup(props, ctx) {
