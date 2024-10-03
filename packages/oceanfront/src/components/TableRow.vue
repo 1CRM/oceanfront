@@ -77,6 +77,8 @@
                 :show-old-values="showOldValues"
                 @value-changed="fieldEdited"
                 :name="elm.name"
+                :multi="elm.multi"
+                :add-remove="elm.addRemove"
               ></of-editable-field>
             </template>
             <template v-else>
@@ -103,6 +105,8 @@
             :show-old-values="showOldValues"
             @value-changed="fieldEdited"
             :name="col.value"
+            :multi="item[col.value]?.multi"
+            :add-remove="item[col.value]?.addRemove"
           ></of-editable-field>
         </template>
         <template v-else>
