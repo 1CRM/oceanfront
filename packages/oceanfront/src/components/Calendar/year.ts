@@ -222,11 +222,15 @@ export default defineComponent({
     },
     getDate(month: number, day: number) {
       const year = new Date(this.day).getFullYear()
-      return new Date(`${year} ${month + 1} ${day}`)
+      return new Date(
+        `${year}-${month + 1 < 10 ? '0' + (month + 1) : month + 1}-${day < 10 ? '0' + day : day}`
+      )
     },
     renderRow(month: number, day: number) {
       const year = new Date(this.day).getFullYear()
-      const date = new Date(`${year} ${month + 1} ${day}`)
+      const date = new Date(
+        `${year}-${month + 1 < 10 ? '0' + (month + 1) : month + 1}-${day < 10 ? '0' + day : day}`
+      )
       return this.renderDayEvents({ date, today: true })
     },
     renderGrid() {
