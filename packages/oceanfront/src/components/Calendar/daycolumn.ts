@@ -598,12 +598,19 @@ export default defineComponent({
 
       return {
         onMousemove: (e: MouseEvent) => onMove(e),
-        onTouchmove: (e: TouchEvent) => onMove(e),
+        onTouchmove: (e: TouchEvent) => {
+          if (e.touches.length === 2) {
+            if (e.cancelable) e.preventDefault()
+            onMove(e)
+          }
+        },
         onMousedown: (e: MouseEvent) => {
           if (e.buttons === 1) onStartSelect(e)
         },
         onTouchstart: (e: TouchEvent) => {
-          if (e.touches.length === 1) onStartSelect(e)
+          if (e.touches.length === 2) {
+            onStartSelect(e)
+          }
         },
         onMouseup: (e: MouseEvent) => {
           if ((e.buttons & 1) === 0) onEndSelect(e)
