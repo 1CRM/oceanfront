@@ -672,7 +672,7 @@ export default defineComponent({
     const initialItems2 = [...universalItems.value]
     const footerItems = [{ size: 100.5 }]
     const onRowsSelected = function (values: any) {
-      console.log(values)
+      console.log('onRowsSelected', values)
     }
     const OnRowsMoved = function (values: any) {
       console.log('OnRowsMoved', values)
