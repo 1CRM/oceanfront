@@ -303,6 +303,7 @@
   .editor-outer {
     height: auto;
     border-radius: var(--field-border-radius);
+    padding: 0 var(--field-h-pad);
   }
 }
 
