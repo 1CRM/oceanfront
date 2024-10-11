@@ -29,7 +29,7 @@
             <div v-if="editor && isEditable" class="editor-toolbar">
               <template v-for="(row, index) in menuRows" :key="index">
                 <div class="editor-toolbar-row">
-                  <template v-for="item in row" :key="item.name">
+                  <template v-for="item in row" :key="item.key ?? item.name">
                     <div class="divider" v-if="item.type === 'divider'"></div>
                     <of-select-field
                       v-else-if="item.type === 'select'"
@@ -170,6 +170,7 @@ type ToolbarMenuItem = {
   disabled?: boolean
   type?: string
   items?: Array<any>
+  key?: string
   click?: () => void
 }
 
@@ -975,7 +976,8 @@ export default defineComponent({
             icon: '',
             title: '',
             variant: '',
-            type: 'divider'
+            type: 'divider',
+            key: `divider-${Date.now()}-${sourceIndex + 1}`
           })
           menu.splice(menu.length - 1, 0, menu.splice(sourceIndex, 1)[0])
         }
@@ -993,6 +995,7 @@ export default defineComponent({
 
     const compactMenuItems = (menu: Map<string, ToolbarMenuItem[]>) => {
       let result: ToolbarMenuItem[] = []
+      let counter = 0
 
       menu.forEach((items, _section) => {
         const sectionItems = items.filter(
@@ -1006,9 +1009,11 @@ export default defineComponent({
             icon: '',
             title: '',
             variant: '',
-            type: 'divider'
+            type: 'divider',
+            key: `divider1-${Date.now()}-${counter}`
           })
         }
+        counter++
         result = [...result, ...sectionItems]
       })
 
