@@ -231,7 +231,8 @@ import OfTableRow from './TableRow.vue'
 enum RowsSelectorValues {
   Page = 'page',
   All = 'all',
-  DeselectAll = 'deselect-all'
+  DeselectAll = 'deselect-all',
+  DeselectPage = 'deselect-page'
 }
 
 enum RowSortOrders {
@@ -306,6 +307,7 @@ export default defineComponent({
     'rows-selected': null,
     'rows-select-all': null,
     'rows-select-page': null,
+    'rows-deselect-page': null,
     'rows-deselect-all': null,
     'rows-sorted': null,
     'rows-moved': null,
@@ -865,7 +867,9 @@ export default defineComponent({
     )
     const selectRows = function (val: any) {
       if (!rows.value) return false
-      const checked = val == RowsSelectorValues.DeselectAll ? false : true
+      const checked =
+        val != RowsSelectorValues.DeselectAll &&
+        val != RowsSelectorValues.DeselectPage
       headerRowsSelectorChecked.value = checked
 
       if (val === RowsSelectorValues.All) {
@@ -883,7 +887,10 @@ export default defineComponent({
         delete rowsRecord.value.value[RowsSelectorValues.All]
         selectLocked.value = false
         if (val == RowsSelectorValues.DeselectAll) {
+          rowsRecord.value.value = {}
           ctx.emit('rows-deselect-all')
+        } else if (val == RowsSelectorValues.DeselectPage) {
+          ctx.emit('rows-deselect-page')
         } else if (val == RowsSelectorValues.Page) {
           ctx.emit('rows-select-page')
         }
@@ -901,7 +908,7 @@ export default defineComponent({
     const onUpdateHeaderRowsSelector = function (val: any) {
       let select = val
         ? RowsSelectorValues.Page
-        : RowsSelectorValues.DeselectAll
+        : RowsSelectorValues.DeselectPage
       selectRows(select)
     }
     const selectRowsItems = [
