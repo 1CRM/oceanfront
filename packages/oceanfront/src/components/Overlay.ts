@@ -201,11 +201,16 @@ export const OfOverlay = defineComponent({
             (child as HTMLElement)?.clientHeight
           ) {
             paddingTop =
-              outerRect.height - (child as HTMLElement)?.clientHeight - 48
+              targetRect.top - (child as HTMLElement)?.clientHeight - 5
           }
           outer.style.setProperty(
             '--overlay-dyn-pad-top',
             Math.max(paddingTop, 0) + 'px'
+          )
+          const children = outer.children
+          children[0]?.style?.setProperty(
+            'margin-bottom',
+            `-${(child as HTMLElement)?.clientHeight - 5 - outerRect.height + targetRect.top}px`
           )
         }
       })
