@@ -28,7 +28,7 @@ export const ToggleInner = defineComponent({
       onBlur() {
         ctx.emit('blur')
       },
-      onVueMounted(vnode: VNode) {
+      onVnodeMounted(vnode: VNode) {
         ctx.emit('inputMounted', vnode)
       }
     }

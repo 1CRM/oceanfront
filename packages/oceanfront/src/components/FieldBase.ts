@@ -169,9 +169,9 @@ export const OfFieldBase = defineComponent({
       onMousedown(_evt: MouseEvent) {
         // ctx.emit('mousedown', evt)
       },
-      onVueMounted: checkPad,
-      onVueUpdated: checkPad,
-      onVueUnmounted: checkPad
+      onVnodeMounted: checkPad,
+      onVnodeUpdated: checkPad,
+      onVnodeUnmounted: checkPad
     }
     if (fieldRender.onMouseleave) {
       handlers.onmouseleave = fieldRender.onMouseleave

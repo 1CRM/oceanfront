@@ -287,8 +287,8 @@ export const OfOverlay = defineComponent({
           disabled: !portalTo.value,
           to: portalTo.value,
           ref: portal,
-          onVueMounted: updateState,
-          onVueBeforeUnmount: () => {
+          onVnodeMounted: updateState,
+          onVnodeBeforeUnmount: () => {
             bind(false)
             if (focused) removeFromStack(elt.value)
           }

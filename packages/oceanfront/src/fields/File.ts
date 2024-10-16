@@ -90,7 +90,7 @@ export const OfFileField = defineComponent({
       onFocus(_evt: FocusEvent) {
         focused.value = true
       },
-      onVueMounted(vnode: VNode) {
+      onVnodeMounted(vnode: VNode) {
         elt.value = vnode.el as HTMLInputElement
       }
     }
