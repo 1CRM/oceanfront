@@ -413,7 +413,7 @@ export const OfTextField = defineComponent({
           if (!itemsOpened.value) openItemsPopup()
         }
       },
-      onVueMounted(vnode: VNode) {
+      onVnodeMounted(vnode: VNode) {
         elt.value = vnode.el as HTMLInputElement
       }
     }
@@ -485,9 +485,8 @@ export const OfTextField = defineComponent({
     })
     provideFieldRender(fRender)
 
-    const render = () => {
+    return () => {
       return h(OfFieldBase, props, { ...slots, ...ctx.slots })
     }
-    return render
   }
 })

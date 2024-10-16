@@ -38,7 +38,7 @@
           size="4"
           maxlength="4"
           :onblur="() => editYear(false)"
-          :onVueMounted="focusYearInput"
+          :onVnodeMounted="focusYearInput"
           :onkeydown="yearInputHandler"
           :value="selMonthStart.getFullYear()"
         />

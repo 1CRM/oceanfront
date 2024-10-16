@@ -250,7 +250,7 @@ export const OfSliderField = defineComponent({
               'of-slider': true,
               'of--focused': focused.value
             },
-            onVueMounted: () => {
+            onVnodeMounted: () => {
               // watch is not triggered on first render
               nextTick(() => triggerRef(trackElt))
             },
