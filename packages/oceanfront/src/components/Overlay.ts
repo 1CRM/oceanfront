@@ -208,7 +208,7 @@ export const OfOverlay = defineComponent({
             Math.max(paddingTop, 0) + 'px'
           )
           const children = outer.children
-          children[0]?.style?.setProperty(
+          ;(children[0] as HTMLElement)?.style?.setProperty(
             'margin-bottom',
             `-${(child as HTMLElement)?.clientHeight - 5 - outerRect.height + targetRect.top}px`
           )
