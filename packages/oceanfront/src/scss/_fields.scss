@@ -972,6 +972,11 @@
     fill: #989c92;
   }
 }
+.of-field.of-toggle-field.of--label-frame {
+  .of-toggle-wrapper {
+    --field-v-pad: calc(var(--field-v-pad-base) + 0.166em);
+  }
+}
 .radio-group {
   width: 100%;
   display: flex;
