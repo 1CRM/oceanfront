@@ -208,10 +208,21 @@ export const OfOverlay = defineComponent({
             Math.max(paddingTop, 0) + 'px'
           )
           const children = outer.children
-          ;(children[0] as HTMLElement)?.style?.setProperty(
-            'margin-bottom',
-            `-${(child as HTMLElement)?.clientHeight - 5 - outerRect.height + targetRect.top}px`
-          )
+          if (targetRect.top < 0) {
+            ;(children[0] as HTMLElement)?.style?.setProperty(
+              'margin-top',
+              `${targetRect.top}px`
+            )
+          } else {
+            ;(children[0] as HTMLElement)?.style?.setProperty(
+              'margin-bottom',
+              `-${(child as HTMLElement)?.clientHeight - 5 - outerRect.height + targetRect.top}px`
+            )
+            ;(children[0] as HTMLElement)?.style?.setProperty(
+              'margin-top',
+              '3px'
+            )
+          }
         }
       })
     }
