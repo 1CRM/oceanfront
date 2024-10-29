@@ -83,6 +83,7 @@ export const OfOverlay = defineComponent({
     const clickCapture = ref<HTMLElement | undefined>()
     const portal = ref<HTMLElement | undefined>()
     const portalTo = ref<HTMLElement | undefined>()
+    const instanceZIndex = ref(overlayZIndex)
     const handlers = {
       onClick(evt: MouseEvent) {
         const outer = elt.value
@@ -122,6 +123,7 @@ export const OfOverlay = defineComponent({
       ;((findFocus as HTMLElement) || outer).focus()
       overlayStack.push(outer)
       overlayZIndex++
+      instanceZIndex.value = overlayZIndex
       outer.style.zIndex = overlayZIndex.toString()
       focused = true
     }
@@ -329,7 +331,7 @@ export const OfOverlay = defineComponent({
                             'of-overlay-capture': props.active && props.capture
                           },
                           style: {
-                            'z-index': overlayZIndex
+                            'z-index': instanceZIndex.value
                           },
                           onClick: handlers.onClick,
                           ref: clickCapture
@@ -340,7 +342,7 @@ export const OfOverlay = defineComponent({
                       {
                         class: ['of-overlay', cls, props.class],
                         style: {
-                          'z-index': overlayZIndex
+                          'z-index': instanceZIndex.value
                         },
                         id: props.id,
                         role: 'document',
