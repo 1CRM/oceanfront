@@ -148,8 +148,10 @@ export const OfOverlay = defineComponent({
         const outerRect = outer?.getBoundingClientRect()
         const targetRect = targetElt?.getBoundingClientRect()
         if (!targetRect || !parentRect || !outerRect || !targetRect) return // or hide?
-
-        const neededWidth = outerRect.width + targetRect.left
+        const neededWidth =
+          outerRect.width +
+          targetRect.left -
+          parseInt(getComputedStyle(outer).paddingRight)
         const offsetWidth = Math.max(neededWidth - parentRect.width, 0)
         if (neededWidth > window.innerWidth) {
           const rightOffset = parseInt(getComputedStyle(outer).paddingRight)
