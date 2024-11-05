@@ -116,7 +116,7 @@ export const OfFieldBase = defineComponent({
   name: 'OfFieldBase',
   inheritAttrs: false,
   props: BaseFieldProps,
-  emits: ['update:modelValue', 'input', 'click', 'focused'],
+  emits: ['update:modelValue', 'input', 'click', 'focused', 'keydown'],
   setup(props, ctx) {
     const fieldRender = useFieldRender()
     const fieldCtx = provideFieldContext(props, ctx as any)
@@ -168,6 +168,9 @@ export const OfFieldBase = defineComponent({
       },
       onMousedown(_evt: MouseEvent) {
         // ctx.emit('mousedown', evt)
+      },
+      onKeydown(evt: MouseEvent) {
+        ctx.emit('keydown', evt)
       },
       onVnodeMounted: checkPad,
       onVnodeUpdated: checkPad,

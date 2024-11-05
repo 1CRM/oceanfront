@@ -36,7 +36,6 @@ export const OfColorField = defineComponent({
     const fieldCtx = makeFieldContext(props, ctx)
     const opened = ref(false)
     const focused = ref(false)
-    const saturationFocused = ref(false)
     const elt = ref<HTMLElement | undefined>()
     let defaultFieldId: string
     const inputId = computed(() => {
@@ -142,14 +141,6 @@ export const OfColorField = defineComponent({
       if (stateValue.value && fieldCtx.onUpdate) fieldCtx.onUpdate(data)
     }
 
-    const onSaturationBlur = () => {
-      saturationFocused.value = false
-    }
-
-    const onSaturationFocus = () => {
-      saturationFocused.value = true
-    }
-
     const nextMode = (currentMode: string) => {
       types.forEach((type, index: number) => {
         if (type == currentMode) {
@@ -179,6 +170,11 @@ export const OfColorField = defineComponent({
               modelValue: modelValue,
               'onUpdate:modelValue': (val: any) => {
                 choseColor(val, label)
+              },
+              onKeydown(evt: KeyboardEvent) {
+                if (evt.key == 'ArrowUp') choseColor(null, label)
+                if (evt.key == 'ArrowDown') choseColor(null, label, 'down')
+                if (evt.key == 'Enter') closePopup()
               }
             })
 
@@ -247,9 +243,10 @@ export const OfColorField = defineComponent({
         return [choseColorInputs[popupMode.value]]
       }
 
-      const switcher = h(resolveComponent('OfIcon'), {
-        name: 'page next',
-        class: 'switcher',
+      const switcher = h(resolveComponent('OfButton'), {
+        variant: 'text',
+        class: 'next-mode',
+        icon: 'page next',
         onClick: () => {
           nextMode(popupMode.value)
         }
@@ -262,25 +259,20 @@ export const OfColorField = defineComponent({
         },
         h('div', { class: 'color-picker' }, [
           h(ColorSaturation, {
-            tabindex: saturationFocused.value ? '-1' : '0',
+            tabindex: 0,
             saturation: hsv.s,
             hue: hsv.h,
             value: hsv.v,
-            focus: saturationFocused.value,
             onChange: (s: number, v: number) => setHsv({ ...hsv, s, v }),
-            onBlur: onSaturationBlur,
-            onFocus: onSaturationFocus,
             onSelect: closePopup
           }),
           h(ColorHue, {
-            tabindex: !saturationFocused.value ? '-1' : '0',
+            tabindex: 0,
             hue: hsv.h,
             onChange: (h: number) => setHsv({ ...hsv, h }),
-            onBlur: focus,
             onSelect: closePopup
           }),
-          switcher,
-          colorsInput()
+          h('div', { class: 'switcher' }, [colorsInput(), switcher])
         ])
       )
     }
@@ -293,12 +285,11 @@ export const OfColorField = defineComponent({
       },
       onKeydown(evt: KeyboardEvent) {
         let consumed = false
-        if ([' ', 'ArrowUp', 'ArrowDown'].includes(evt.key)) {
+        if ([' ', 'Enter', 'ArrowUp', 'ArrowDown'].includes(evt.key)) {
           consumed = true
           togglePopup()
         } else if (evt.key == 'Tab' && opened.value) {
           consumed = true
-          saturationFocused.value = true
         }
         if (consumed) {
           evt.preventDefault()
@@ -346,7 +337,7 @@ export const OfColorField = defineComponent({
           break
       }
 
-      setHsv(rgbToHsv(rgbNew))
+      if (rgbNew) setHsv(rgbToHsv(rgbNew))
     }
     const slots = {
       interactiveContent: () =>
