@@ -29,6 +29,7 @@ type InputType = 'date' | 'datetime' | 'time'
 
 type RenderOpts = {
   close: (date?: Date) => any
+  onBlur: Function
   selectedDate: Ref<Date>
   monthStart: Ref<Date>
   withTime: boolean
@@ -45,7 +46,8 @@ export const renderDateTimePopup = (opts: RenderOpts): any => {
     withTime: opts.withTime,
     withDate: opts.withDate,
     showTodayButton: opts.showTodayButton,
-    accept: opts.close
+    accept: opts.close,
+    onBlur: () => opts.close()
   })
 }
 
@@ -182,6 +184,7 @@ const defineField = (type: InputType, name: string, cls: string) =>
       const renderPopup = () => {
         return renderDateTimePopup({
           close: acceptResult,
+          onBlur: closePopup,
           selectedDate: editableDate,
           monthStart,
           withTime,
