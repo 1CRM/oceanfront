@@ -169,7 +169,8 @@ export const OfFieldBase = defineComponent({
       onMousedown(_evt: MouseEvent) {
         // ctx.emit('mousedown', evt)
       },
-      onKeydown(evt: MouseEvent) {
+      onKeydown(evt: KeyboardEvent) {
+        fieldRender.keydown?.(evt)
         ctx.emit('keydown', evt)
       },
       onVnodeMounted: checkPad,
