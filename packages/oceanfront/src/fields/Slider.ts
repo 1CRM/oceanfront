@@ -264,6 +264,12 @@ export const OfSliderField = defineComponent({
               type: 'text',
               class: 'of-field-input',
               value: lazyInputValue,
+              role: 'slider',
+              'aria-describedby': props.label,
+              'aria-valuemin': opts.value.min,
+              'aria-valuemax': opts.value.max,
+              'aria-valuenow': lazyInputValue,
+              'aria-orientation': 'horizontal',
               ...inputHooks
             }),
             h(
