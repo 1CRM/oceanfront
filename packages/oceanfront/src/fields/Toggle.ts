@@ -102,7 +102,7 @@ export const OfToggleField = defineComponent({
             name: props.name,
             mode: fieldCtx.mode,
             scale: fieldCtx.scale,
-            ariaLabel: fieldCtx.ariaLabel,
+            ariaLabel: fieldCtx.ariaLabel ?? props.label,
             ...hooks
           },
           { icon: ctx.slots.icon }

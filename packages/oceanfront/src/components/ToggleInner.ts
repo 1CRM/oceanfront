@@ -51,10 +51,16 @@ export const ToggleInner = defineComponent({
       const inner = [
         h(
           'div',
-          { class: { 'of-toggle-input': true, 'of--focused': props.focused } },
+          {
+            class: {
+              'of-toggle-input': true,
+              'of-toggle-input-switch': props.switch,
+              'of--focused': props.focused
+            }
+          },
           [
             h('input', {
-              class: 'of-field-input',
+              class: ['of-field-input', { 'of--focused': props.focused }],
               checked: props.checked,
               id: props.inputId,
               // disabled: disabled.value,
@@ -62,7 +68,7 @@ export const ToggleInner = defineComponent({
               name: props.name,
               type: 'checkbox',
               value: '1',
-              'aria-label': props.label ?? props.ariaLabel,
+              'aria-label': (props.ariaLabel ?? '') + ' ' + props.label,
               ...hooks
             }),
             props.switch

@@ -12,7 +12,7 @@
           v-bind="{
             ...props,
             inputType: customProps.switch ? 'switch' : null,
-            inputLabel: checkedValue ? 'On' : 'Off',
+            inputLabel: checkedValue ? 'On' : 'Off'
           }"
         />
       </template>
@@ -40,6 +40,6 @@ export default defineComponent({
     const customProps = reactive({ switch: false })
     const checkedValue = ref(false)
     return { checkedValue, customProps, sampleCode }
-  },
+  }
 })
 </script>

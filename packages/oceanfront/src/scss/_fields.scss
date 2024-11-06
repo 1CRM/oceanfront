@@ -47,7 +47,7 @@
 .of--cursor-text {
   cursor: text;
 }
-.of--block{
+.of--block {
   --of-field-width: 100%;
 }
 
@@ -155,7 +155,7 @@
       hover: var(--of-primary-tint) 60%,
       disabled: var(--of-primary-tint) 60%,
       focus: var(--of-primary-tint) 100%,
-      invalid: var(--of-color-error) 100%,
+      invalid: var(--of-color-error) 100%
     )
   );
   @include define-color-opacity(
@@ -165,7 +165,7 @@
       hover: var(--of-primary-tint) 90%,
       disabled: var(--of-primary-tint) 55%,
       focus: var(--of-primary-tint) 100%,
-      invalid: var(--of-color-error) 100%,
+      invalid: var(--of-color-error) 100%
     )
   );
   @include define-color-opacity(
@@ -173,7 +173,7 @@
     (var(--of-color-on-surface) 4%),
     (
       hover: var(--of-color-on-surface) 6%,
-      focus: var(--of-color-on-surface) 8%,
+      focus: var(--of-color-on-surface) 8%
     )
   );
   @include define-color-opacity(
@@ -181,7 +181,7 @@
     (var(--of-color-on-surface), 100%),
     (
       disabled: var(--of-color-on-surface) 38%,
-      placeholder: var(--of-color-on-surface) 55%,
+      placeholder: var(--of-color-on-surface) 55%
     )
   );
   @include define-color-opacity(
@@ -189,7 +189,7 @@
     (var(--of-color-on-surface), 100%),
     (
       disabled: var(--of-color-on-surface) 38%,
-      placeholder: var(--of-color-on-surface) 55%,
+      placeholder: var(--of-color-on-surface) 55%
     )
   );
 }
@@ -203,7 +203,7 @@
       hover: var(--of-primary-tint) 90%,
       disabled: var(--of-primary-tint) 55%,
       focus: var(--of-primary-tint) 100%,
-      invalid: var(--of-color-error) 100%,
+      invalid: var(--of-color-error) 100%
     )
   );
 }
@@ -663,7 +663,9 @@
     opacity: 0;
     transform: scaleX(0);
     transform-origin: center;
-    transition: opacity 90ms, transform 150ms;
+    transition:
+      opacity 90ms,
+      transform 150ms;
     will-change: opacity, transform;
     z-index: 1;
   }
@@ -710,8 +712,7 @@
           box-sizing: border-box;
           line-height: 1;
           padding: calc(var(--field-v-pad))
-            calc(var(--field-size-append) + var(--field-h-pad))
-            0
+            calc(var(--field-size-append) + var(--field-h-pad)) 0
             calc(var(--field-size-prepend) + var(--field-h-pad));
 
           .of-field-label {
@@ -723,11 +724,13 @@
       > .of-field-body {
         > .of-field-inner {
           margin-top: 1em;
-          > .of-field-input{
-            padding: calc(var(--field-v-pad)/2) var(--field-h-pad) var(--field-v-pad);
+          > .of-field-input {
+            padding: calc(var(--field-v-pad) / 2) var(--field-h-pad)
+              var(--field-v-pad);
           }
-          > .of-file-input{
-            padding: calc(var(--field-v-pad)/2) var(--field-h-pad) var(--field-v-pad);
+          > .of-file-input {
+            padding: calc(var(--field-v-pad) / 2) var(--field-h-pad)
+              var(--field-v-pad);
           }
         }
         > .of-field-prepend {
@@ -768,7 +771,14 @@
   display: inline-flex;
   outline: none;
 }
-
+.of-field.of--focused
+  .of-toggle-input.of--focused:not(.of-toggle-input-switch) {
+  .of-toggle-icon {
+    box-shadow: 0 0 2px 4px rgba(100, 100, 100, 0.15);
+    background-color: rgba(100, 100, 100, 0.15);
+    border-radius: 50%;
+  }
+}
 .of-switch {
   align-items: center;
   box-sizing: border-box;
@@ -785,14 +795,17 @@
     background-color: var(--field-color);
     border-radius: 50%;
     box-sizing: border-box;
-    box-shadow: 0 2px 1px 0 rgba(100, 100, 100, 0.15),
+    box-shadow:
+      0 2px 1px 0 rgba(100, 100, 100, 0.15),
       0 -2px 1px 0 rgba(100, 100, 100, 0.15);
     content: '';
     height: 1em;
     left: 0;
     position: absolute;
     top: 0;
-    transition: left 0.15s ease-in-out, background-color 0.15s ease-in-out;
+    transition:
+      left 0.15s ease-in-out,
+      background-color 0.15s ease-in-out;
     width: 1em;
   }
   &-thumb.outside {
@@ -808,15 +821,17 @@
     box-sizing: border-box;
     flex: auto;
     height: 100%;
-    transition: background-color 0.15s ease-in-out, border 0.15s ease-in-out;
+    transition:
+      background-color 0.15s ease-in-out,
+      border 0.15s ease-in-out;
   }
   &-track.outside {
     height: 1em;
-    background-color: #F0F1EE;
+    background-color: #f0f1ee;
     border: none;
   }
   .of--checked & {
-    .of-switch-thumb{
+    .of-switch-thumb {
       left: calc(1em - 1px);
     }
     .of-switch-thumb:not(.outside) {
