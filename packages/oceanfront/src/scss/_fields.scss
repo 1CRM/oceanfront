@@ -977,6 +977,10 @@
   height: 1.2em;
 }
 
+.of-field.of-select-field .remove-item:focus-visible {
+  outline: 1px solid var(--of-primary-tint);
+}
+
 .of-field.of-toggle-field.of--mode-fixed {
   .of-switch {
     .of-switch-track {
