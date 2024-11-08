@@ -122,9 +122,9 @@ const defineField = (type: InputType, name: string, cls: string) =>
       }
 
       const closePopup = (refocus?: boolean) => {
-        ctx.emit('blur')
         opened.value = false
         if (refocus) focus()
+        ctx.emit('blur')
       }
 
       const onCancel = (e: MouseEvent | TouchEvent | KeyboardEvent) => {
@@ -146,6 +146,13 @@ const defineField = (type: InputType, name: string, cls: string) =>
           }
         }
       }
+
+      watch(
+        () => props.mode,
+        (val) => {
+          if (val === 'editable' && props.inDataTable) clickOpen()
+        }
+      )
 
       watch(
         () => fieldCtx.value,
@@ -175,10 +182,9 @@ const defineField = (type: InputType, name: string, cls: string) =>
       }
 
       const acceptResult = (date?: Date) => {
-        ctx.emit('blur')
         if (date && fieldCtx.onUpdate)
           fieldCtx.onUpdate(formatter.value.formatPortable(date))
-        opened.value = false
+        closePopup(true)
       }
 
       const renderPopup = () => {

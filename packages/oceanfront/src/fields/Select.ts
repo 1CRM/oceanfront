@@ -49,6 +49,12 @@ export const OfSelectField = defineComponent({
     const stateValue = ref()
 
     watch(
+      () => props.mode,
+      (val) => {
+        if (val === 'editable') focus()
+      }
+    )
+    watch(
       () => fieldCtx.value,
       (val) => {
         if (val === undefined || val === '') val = null
