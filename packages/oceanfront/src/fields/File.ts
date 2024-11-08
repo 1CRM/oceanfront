@@ -112,9 +112,14 @@ export const OfFileField = defineComponent({
           (fieldCtx.editable || fieldCtx.mode === 'locked')
         )
           return h(OfIcon, {
+            class: 'of-icon-clear-file',
             name: 'cancel circle',
             scale: props.scale || 'input',
-            onClick: clickClear
+            tabindex: '0',
+            onClick: clickClear,
+            onKeydown(evt: KeyboardEvent) {
+              if (evt.key == 'Enter') clickClear()
+            }
           })
       },
       interactiveContent: () => {

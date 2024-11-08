@@ -119,6 +119,9 @@
       cursor: inherit;
     }
   }
+  .of-icon-clear-file:focus-visible {
+    outline: 1px solid var(--of-primary-tint);
+  }
 }
 
 .of-file-input {
