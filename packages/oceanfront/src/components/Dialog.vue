@@ -21,6 +21,7 @@
               class="dialog-close"
               tabindex="0"
               @click="hide()"
+              @keydown.enter="hide()"
             >
               <of-icon name="cancel" />
             </div>
