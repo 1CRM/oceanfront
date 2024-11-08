@@ -51,6 +51,7 @@
                         @click="item.click"
                         :icon="item.icon"
                         :disabled="item.disabled"
+                        :aria-label="item.title"
                       />
                     </div>
                   </template>

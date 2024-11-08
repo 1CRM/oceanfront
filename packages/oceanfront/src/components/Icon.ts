@@ -8,7 +8,8 @@ export const OfIcon = defineComponent({
     effect: String,
     name: String,
     scale: [Number, String],
-    type: String
+    type: String,
+    ariaLabel: String
   },
   setup(props, ctx) {
     const mgr = useIcons()
@@ -36,6 +37,7 @@ export const OfIcon = defineComponent({
         'i',
         {
           'aria-hidden': 'true',
+          'aria-label': props.ariaLabel ?? props.name,
           class: [
             {
               'of-icon': true,

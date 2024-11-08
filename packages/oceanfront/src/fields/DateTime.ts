@@ -29,6 +29,7 @@ type InputType = 'date' | 'datetime' | 'time'
 
 type RenderOpts = {
   close: (date?: Date) => any
+  onBlur: Function
   selectedDate: Ref<Date>
   monthStart: Ref<Date>
   withTime: boolean
@@ -45,7 +46,8 @@ export const renderDateTimePopup = (opts: RenderOpts): any => {
     withTime: opts.withTime,
     withDate: opts.withDate,
     showTodayButton: opts.showTodayButton,
-    accept: opts.close
+    accept: opts.close,
+    onBlur: () => opts.close()
   })
 }
 
@@ -120,9 +122,9 @@ const defineField = (type: InputType, name: string, cls: string) =>
       }
 
       const closePopup = (refocus?: boolean) => {
-        ctx.emit('blur')
         opened.value = false
         if (refocus) focus()
+        ctx.emit('blur')
       }
 
       const onCancel = (e: MouseEvent | TouchEvent | KeyboardEvent) => {
@@ -144,6 +146,13 @@ const defineField = (type: InputType, name: string, cls: string) =>
           }
         }
       }
+
+      watch(
+        () => props.mode,
+        (val) => {
+          if (val === 'editable' && props.inDataTable) clickOpen()
+        }
+      )
 
       watch(
         () => fieldCtx.value,
@@ -173,15 +182,15 @@ const defineField = (type: InputType, name: string, cls: string) =>
       }
 
       const acceptResult = (date?: Date) => {
-        ctx.emit('blur')
         if (date && fieldCtx.onUpdate)
           fieldCtx.onUpdate(formatter.value.formatPortable(date))
-        opened.value = false
+        closePopup(true)
       }
 
       const renderPopup = () => {
         return renderDateTimePopup({
           close: acceptResult,
+          onBlur: closePopup,
           selectedDate: editableDate,
           monthStart,
           withTime,

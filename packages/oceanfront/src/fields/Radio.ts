@@ -31,25 +31,47 @@ export const OfRadioField = defineComponent({
       if (initial === undefined) initial = props.defaultValue
       return initial ?? null
     })
-    const stateValue = ref()
-    watch(
-      () => fieldCtx.value,
-      (val) => {
-        if (val === undefined || val === '') val = null
-        stateValue.value = val
-      },
-      {
-        immediate: true
-      }
-    )
     const items: any = computed(() => {
       if (typeof props.items === 'string' || Array.isArray(props.items)) {
         return makeItems(props.items)
       }
       return []
     })
-    const elt = ref<HTMLInputElement | undefined>()
+    const stateValue = ref()
     const focused = ref(false)
+    const focusIndex = ref()
+    const setFocusIndex = (
+      delta: number | undefined = undefined,
+      index: number | undefined = undefined
+    ) => {
+      if (index !== undefined && focusIndex.value !== undefined) {
+        focusIndex.value = index
+      } else if (delta) {
+        const newIndex = focusIndex.value + delta
+        const length = items.value.length - 1
+        focusIndex.value =
+          newIndex > length ? 0 : newIndex < 0 ? length : newIndex
+      } else if (focused.value) {
+        const currentIndex = items.value.findIndex(
+          (item: any) => item.value == stateValue.value
+        )
+        focusIndex.value = currentIndex == -1 ? 0 : currentIndex
+      }
+    }
+
+    watch(
+      () => fieldCtx.value,
+      (val) => {
+        if (val === undefined || val === '') val = null
+        stateValue.value = val
+        setFocusIndex()
+      },
+      {
+        immediate: true
+      }
+    )
+
+    const elt = ref<HTMLInputElement | undefined>()
     let defaultFieldId: string
     const inputId = computed(() => {
       let id = fieldCtx.id
@@ -67,15 +89,16 @@ export const OfRadioField = defineComponent({
       if (fieldCtx.editable) {
         if (fieldCtx.onUpdate) fieldCtx.onUpdate(data)
       }
-      focus()
       return false
     }
     const hooks = {
       onBlur(_evt: FocusEvent) {
         focused.value = false
+        focusIndex.value = undefined
       },
-      onFocus(_evt: FocusEvent) {
+      onFocus(index: number) {
         focused.value = true
+        setFocusIndex(undefined, index)
       },
       onInputMounted(vnode: VNode) {
         elt.value = vnode.el as HTMLInputElement
@@ -88,7 +111,7 @@ export const OfRadioField = defineComponent({
     const slots = {
       interactiveContent: () => {
         return h('div', { class: ['radio-group', gridClass(props.grid)] }, [
-          items.value.map((item: any) =>
+          items.value.map((item: any, index: number) =>
             h(
               RadioInner,
               {
@@ -96,11 +119,13 @@ export const OfRadioField = defineComponent({
                   clickToggle(value)
                 },
                 checked: stateValue.value === item.value,
+                focused: focusIndex.value === index,
+                index,
                 label: item.text,
                 value: item.value,
                 inputId: inputId.value + item.value,
                 align: props.align,
-                name: props.name,
+                name: props.name ?? inputId.value,
                 mode: fieldCtx.mode,
                 scale: props.scale,
                 ...hooks
@@ -116,7 +141,10 @@ export const OfRadioField = defineComponent({
       active: true, // always show content
       blank: computed(() => !stateValue.value),
       class: computed(() => {
-        return { 'of-toggle-field': true, 'of--checked': !!stateValue.value }
+        return {
+          'of-toggle-field': true,
+          'of--checked': !!stateValue.value
+        }
       }),
       cursor: computed(() => (fieldCtx.editable ? 'pointer' : null)),
       focus,
@@ -124,7 +152,24 @@ export const OfRadioField = defineComponent({
       inputId,
       updated: computed(() => initialValue.value !== stateValue.value),
       value: stateValue,
-      fieldContext: fieldCtx
+      fieldContext: fieldCtx,
+      keydown: (event: KeyboardEvent) => {
+        let consumed = false
+        if (['ArrowRight', 'ArrowDown'].includes(event.code)) {
+          setFocusIndex(+1)
+          consumed = true
+        } else if (['ArrowLeft', 'ArrowUp'].includes(event.code)) {
+          setFocusIndex(-1)
+          consumed = true
+        } else if (['Enter', 'Space'].includes(event.code)) {
+          clickToggle(items.value[focusIndex.value].value)
+          consumed = true
+        }
+        if (consumed) {
+          event.preventDefault()
+          event.stopPropagation()
+        }
+      }
     })
     provideFieldRender(fRender)
 

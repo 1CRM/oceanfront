@@ -6,6 +6,7 @@
     :class="{ 'with-time': withTime, 'with-date': withDate }"
     @vueMounted="mounted"
     @vueUnmounted="unmounted"
+    @keydown="onPopupKeydown"
   >
     <div class="of-date-picker-title" v-if="withDate && !withoutTitle">
       {{ title }}
@@ -185,7 +186,8 @@ export default defineComponent({
     weekStart: Number,
     showTodayButton: Boolean
   },
-  setup(props) {
+  emits: ['blur'],
+  setup(props, ctx) {
     let theNode: VNode | null
     const selDate = ref(props.date ?? new Date())
     const selDateLocale = ref(props.date ?? new Date())
@@ -354,6 +356,9 @@ export default defineComponent({
         dateSelector?.value?.focus()
       }
     }
+    const onPopupKeydown = (e: KeyboardEvent) => {
+      if (e.key == 'Escape') ctx.emit('blur')
+    }
 
     const onDateKeydown = (event: KeyboardEvent) => {
       let consumed = false
@@ -502,6 +507,7 @@ export default defineComponent({
       onAccept: () => props.accept?.(selDate.value),
       onCancel: () => props.accept?.(),
       onDateKeydown,
+      onPopupKeydown,
       onTimeKeydown,
       onTimeKeyup,
 

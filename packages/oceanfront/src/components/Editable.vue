@@ -3,11 +3,13 @@
     <div class="editable-field-value-handler">
       <div
         class="editable-field-value field-value"
+        tabindex="0"
         :class="{
           active: active,
           inline: mode === 'inline'
         }"
         ref="elem"
+        @keydown.enter.prevent="() => onInputFocus()"
       >
         <div class="of-field-main"></div>
         <span
@@ -30,6 +32,7 @@
           @blur="onInputBlur(true)"
           @focus="onInputFocus"
           @update:model-value="updateValue"
+          @keydown.enter.stop="elem?.focus()"
           @keydown:enter="onKeyDown"
           v-model="item.value"
           :label="item.label"
@@ -83,29 +86,41 @@
   <template v-else>
     <span v-if="item.prepend" class="editable-prepend">{{ item.prepend }}</span>
     <template v-if="supportedTypes.includes(item.type)">
-      <of-field
-        :class="['in-data-table-' + type, [...classes]]"
-        class="editable"
-        in-data-table
-        @focus="onInputFocus"
-        :label="item.label"
-        :type="type"
-        :mode="inputMode"
-        @input="resizeInput"
-        @blur="onInputBlur"
-        @update:model-value="updateValue"
-        @keydown:enter="onKeyDown"
-        v-model="item.value"
-        :items="item.items"
-        :input-type="item.inputType"
-        :outside="item.outside"
-        :key="modelValue?.key"
-        :invalid="isInvalid"
-        :format="item.format"
-        :multi="multi"
-        :add-remove="addRemove"
-        label-position="frame"
-      ></of-field>
+      <div
+        class="editable-field-value-handler"
+        :tabindex="inputMode === 'editable' ? -1 : 0"
+        @keydown.enter="onInputFocus()"
+        ref="elemFieldHandler"
+      >
+        <of-field
+          :class="['in-data-table-' + type, [...classes]]"
+          class="editable"
+          in-data-table
+          @focus="onInputFocus"
+          :label="item.label"
+          :type="type"
+          :mode="inputMode"
+          @input="resizeInput"
+          @blur="
+            () => {
+              onInputBlur()
+              elemFieldHandler?.focus()
+            }
+          "
+          @update:model-value="updateValue"
+          @keydown:enter="onKeyDown"
+          v-model="item.value"
+          :items="item.items"
+          :input-type="item.inputType"
+          :outside="item.outside"
+          :key="modelValue?.key"
+          :invalid="isInvalid"
+          :format="item.format"
+          :multi="multi"
+          :add-remove="addRemove"
+          label-position="frame"
+        ></of-field>
+      </div>
     </template>
     <template v-else>
       <component :is="item.value" :mode="'editable'" />
@@ -190,6 +205,7 @@ const OfEditableField = defineComponent({
       return res as DataTypeValue
     })
     const elem = shallowRef<HTMLInputElement | undefined>()
+    const elemFieldHandler = shallowRef<HTMLInputElement | undefined>()
     const resetValue = () => {
       item.value.value = item.value.originalValue
       nextTick(() => {
@@ -263,6 +279,7 @@ const OfEditableField = defineComponent({
       item,
       type,
       elem,
+      elemFieldHandler,
       resetValue,
       resizeInput,
       onInputFocus,
@@ -340,6 +357,18 @@ export default OfEditableField
   .field-value:not(.editable-field-value) {
     padding-left: var(--field-h-pad, 0.5em);
   }
+  .editable-field-value,
+  .editable-field-value-handler {
+    &:hover,
+    &:focus-visible {
+      color: var(--of-primary-tint);
+      cursor: pointer;
+      &:not(.active) {
+        border-radius: 4px;
+        outline: 1px solid var(--of-primary-tint);
+      }
+    }
+  }
   .editable-field-value {
     position: relative;
     .reset-value-button {
@@ -356,14 +385,6 @@ export default OfEditableField
     .of-field-inner .of-field-input {
       padding: 0;
       line-height: 1.6;
-    }
-    &:hover {
-      color: var(--of-primary-tint);
-      cursor: pointer;
-      &:not(.active) {
-        border-radius: 4px;
-        outline: 1px solid var(--of-primary-tint);
-      }
     }
     &.active:not(.inline) {
       .of-field-content-text {

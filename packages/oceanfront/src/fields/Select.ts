@@ -13,6 +13,7 @@ import {
   provideFieldRender
 } from '../lib/fields'
 import { transformItemsList, useItems } from '../lib/items'
+import { useLanguage } from '../lib/language'
 
 type ActiveItem = { text?: string; [key: string]: any }
 
@@ -33,6 +34,7 @@ export const OfSelectField = defineComponent({
   },
   emits: ['focus', 'blur', 'update:modelValue'],
   setup(props, ctx) {
+    const lang = useLanguage()
     const config = useConfig()
     const itemMgr = useItems(config)
     const fieldCtx = makeFieldContext(props, ctx as SetupContext)
@@ -48,6 +50,12 @@ export const OfSelectField = defineComponent({
     const pendingValue = ref() // store selected but unconfirmed value
     const stateValue = ref()
 
+    watch(
+      () => props.mode,
+      (val) => {
+        if (val === 'editable') focus()
+      }
+    )
     watch(
       () => fieldCtx.value,
       (val) => {
@@ -186,11 +194,21 @@ export const OfSelectField = defineComponent({
             itemText(val),
             fieldCtx.editable
               ? h(OfIcon, {
+                  class: 'remove-item',
                   name: 'cancel',
                   size: '14px',
+                  tabindex: 0,
+                  ariaLabel: lang.value.remove + ' ' + itemText(val),
                   onClick: (e: Event) => {
                     e.stopPropagation()
                     setValue(val)
+                  },
+                  onKeydown(e: KeyboardEvent) {
+                    if (e.code === 'Enter') {
+                      e.stopPropagation()
+                      setValue(val)
+                      focus()
+                    }
                   }
                 })
               : undefined
@@ -290,6 +308,7 @@ export const OfSelectField = defineComponent({
                 onUpdateValue: (val: any) => {
                   fieldCtx.onUpdate?.(val)
                 },
+                'onKeydown:escape': () => closePopup(),
                 class: 'of--elevated-1',
                 ...selectMouseEvents
               })

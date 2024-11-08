@@ -31,6 +31,7 @@ export interface FieldRender {
   click?: (evt?: MouseEvent) => boolean | void
   onMouseleave?: (evt?: MouseEvent) => boolean | void
   onMouseenter?: (evt?: MouseEvent) => boolean | void
+  keydown?: (evt?: KeyboardEvent) => boolean | void
   content?: () => Renderable | undefined
   cursor?: string
   dragIn?: FieldDragIn

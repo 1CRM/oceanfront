@@ -11,20 +11,15 @@
   }
 
   .switcher {
-    margin-top: 22px;
-    cursor: pointer;
-    display: block;
-    float: right;
-    height: 20px;
-    padding: 8px;
-
-    &:hover {
-      color: var(--of-primary-tint);
+    display: flex;
+    .next-mode {
+      margin: 22px 0 0 10px;
     }
   }
 
   .color-picker-input {
     display: flex;
+    flex: 1;
 
     .of-field {
       margin: 0 3px;
