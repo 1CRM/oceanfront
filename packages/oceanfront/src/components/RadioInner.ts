@@ -1,4 +1,4 @@
-import { PropType, computed, defineComponent, h, VNode, ref } from 'vue'
+import { PropType, computed, defineComponent, h, VNode } from 'vue'
 import { OfIcon } from './Icon'
 import { FieldMode } from '../lib/fields'
 
