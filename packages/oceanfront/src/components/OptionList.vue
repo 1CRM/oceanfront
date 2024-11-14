@@ -1,6 +1,5 @@
 <template>
   <div
-    tabindex="-1"
     role="menu"
     class="of-menu options"
     :class="menuClass"

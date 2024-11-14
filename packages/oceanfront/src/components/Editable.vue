@@ -1,13 +1,15 @@
 <template>
   <template v-if="type === 'text' || type === 'number'">
-    <div class="editable-field-value-handler">
+    <div :class="['editable-field-value-handler', 'input-mode-' + inputMode]">
       <div
-        class="editable-field-value field-value"
-        tabindex="0"
-        :class="{
-          active: active,
-          inline: mode === 'inline'
-        }"
+        :tabindex="inputMode === 'editable' ? undefined : 0"
+        :class="[
+          'editable-field-value',
+          'field-value',
+          'input-mode-' + inputMode,
+          { active: active },
+          { inline: mode === 'inline' }
+        ]"
         ref="elem"
         @keydown.enter.prevent="() => onInputFocus()"
       >
@@ -87,8 +89,8 @@
     <span v-if="item.prepend" class="editable-prepend">{{ item.prepend }}</span>
     <template v-if="supportedTypes.includes(item.type)">
       <div
-        class="editable-field-value-handler"
-        :tabindex="inputMode === 'editable' ? -1 : 0"
+        :class="['editable-field-value-handler', 'mode-' + inputMode]"
+        :tabindex="inputMode === 'editable' ? undefined : 0"
         @keydown.enter="onInputFocus()"
         ref="elemFieldHandler"
       >
@@ -357,8 +359,8 @@ export default OfEditableField
   .field-value:not(.editable-field-value) {
     padding-left: var(--field-h-pad, 0.5em);
   }
-  .editable-field-value,
-  .editable-field-value-handler {
+  .editable-field-value:not(.input-mode-editable),
+  .editable-field-value-handler:not(.input-mode-editable) {
     &:hover,
     &:focus-visible {
       color: var(--of-primary-tint);
