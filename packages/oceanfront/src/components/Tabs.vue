@@ -200,7 +200,8 @@ const formatItems = (
       params: item.params ?? undefined,
       attrs: item.attrs ?? undefined,
       subMenuItems: subMenu,
-      field: item.field
+      field: item.field,
+      class: item.class ?? undefined
     } as Tab)
   }
 

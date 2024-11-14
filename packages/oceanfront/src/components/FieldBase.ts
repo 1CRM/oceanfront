@@ -361,7 +361,7 @@ export const OfFieldBase = defineComponent({
             class: cls,
             id: outerId,
             style,
-            tabindex: '-1',
+            tabindex: props.tabindex ?? '-1',
             ...handlers,
             ...dragIn?.handlers
           },

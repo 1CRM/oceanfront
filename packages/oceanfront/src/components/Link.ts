@@ -40,11 +40,20 @@ function renderLink(
   beforeNavigate: Function[],
   ariaLabel: string | null
 ) {
+  const onClick = (evt: Event) => {
+    {
+      if (beforeNavigate && beforeNavigate.length > 0) {
+        beforeNavigate.forEach((f: Function) => f())
+      }
+      return link.navigate(evt)
+    }
+  }
   return h(
     'a',
     {
       'aria-current': link.isExactActive ? comp.props.ariaCurrentValue : null,
       'aria-label': ariaLabel ?? null,
+      tabindex: '0',
       class: {
         'of-link': true,
         'of--active': link.isExactActive,
@@ -52,11 +61,9 @@ function renderLink(
         'of--link': !!link.href
       },
       href: link.href,
-      onClick: (evt: Event) => {
-        if (beforeNavigate && beforeNavigate.length > 0) {
-          beforeNavigate.forEach((f: Function) => f())
-        }
-        return link.navigate(evt)
+      onClick,
+      onKeydown: (e: KeyboardEvent) => {
+        if (e.key == 'Enter') onClick(e)
       },
       ...comp.attrs
     },

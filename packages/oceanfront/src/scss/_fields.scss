@@ -284,6 +284,9 @@
     --field-border-opacity: #{use-opacity(field-border, invalid)};
   }
   &.of--mode-fixed {
+    &:focus[tabindex='0'] {
+      outline: 1px solid var(--of-primary-tint);
+    }
     .of-toggle-input {
       --field-color: #{use-color(field-color, disabled)};
       --field-opacity: #{use-opacity(field-color, disabled)};

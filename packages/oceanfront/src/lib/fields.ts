@@ -215,6 +215,7 @@ export const BaseFieldProps = {
   cursor: String,
   dragIn: Object as PropType<FieldDragIn>,
   focused: Boolean,
+  tabindex: String,
   hovered: Boolean,
   inputId: String,
   inputValue: null,
