@@ -61,6 +61,7 @@ export const OfTextField = defineComponent({
     inputType: String,
     focusItems: { type: Boolean, default: true },
     filterItems: { type: Boolean, default: true },
+    capture: { type: Boolean, default: true },
     setItem: Function
   },
   emits: [
@@ -500,7 +501,8 @@ export const OfTextField = defineComponent({
             : undefined,
         visible: itemsOpened,
         onBlur: closeItemsPopup,
-        focus: props.focusItems
+        focus: props.focusItems,
+        capture: props.capture
       },
       updated: computed(() => initialValue.value !== stateValue.value),
       value: stateValue
