@@ -58,11 +58,15 @@ export const OfTextField = defineComponent({
   props: {
     ...BaseFieldProps,
     rows: [Number, String],
-    inputType: String
+    inputType: String,
+    focusItems: { type: Boolean, default: true },
+    filterItems: { type: Boolean, default: true },
+    setItem: Function
   },
   emits: [
     'focus',
     'input',
+    'keydown:escape',
     'keydown:enter',
     'keyup:enter',
     'update:modelValue',
@@ -132,9 +136,14 @@ export const OfTextField = defineComponent({
         immediate: true
       }
     )
+    watch(
+      () => props.items,
+      () => (itemsOpened.value = true)
+    )
 
     const elt = ref<HTMLInputElement | undefined>()
     const focused = ref(false)
+    const focusFirstItem = ref(false)
     let defaultFieldId: string
     const inputId = computed(() => {
       let id = fieldCtx.id
@@ -157,16 +166,12 @@ export const OfTextField = defineComponent({
     const itemsOpened = ref(false)
 
     const hasItems = computed(() => {
-      return (
-        fieldCtx.editable &&
-        !multiline.value &&
-        (props.items as any[])?.length > 0
-      )
+      return fieldCtx.editable && !multiline.value && props.items !== undefined
     })
 
     const items = computed(() => {
       const input = searchText.value?.trim().toLowerCase()
-      if (!input) return props.items
+      if (!input || !props.filterItems) return props.items
       return (props.items as any[]).filter((item) => {
         if (item.value !== undefined) {
           const optionText: string = item.text
@@ -385,8 +390,15 @@ export const OfTextField = defineComponent({
           openItemsPopup()
           evt.preventDefault()
           evt.stopPropagation()
-        } else if (evt.key == 'Tab' || evt.key === 'Escape') {
+        } else if (evt.key === 'Escape') {
           closeItemsPopup()
+          ctx.emit('keydown:escape')
+        } else if (evt.key === 'Tab') {
+          if (itemsOpened.value) {
+            focusFirstItem.value = true
+            evt.preventDefault()
+            evt.stopPropagation()
+          }
         } else if (
           !(
             /(^Key([A-Z]$))/.test(evt.code) ||
@@ -473,12 +485,22 @@ export const OfTextField = defineComponent({
           hasItems.value && itemsOpened.value
             ? h(OfOptionList, {
                 items: formatItems.value,
-                class: 'of--elevated-1',
-                onClick: setItem
+                focusOnMount: false,
+                focus: focusFirstItem.value,
+                class: [
+                  'of--elevated-1',
+                  'of-text-items',
+                  { 'text-items-loading': props.loading }
+                ],
+                onFocused: () => (focusFirstItem.value = false),
+                onBlur: () => (focusFirstItem.value = false),
+                onClick: (val) =>
+                  props.setItem ? props.setItem(val) : setItem(val)
               })
             : undefined,
         visible: itemsOpened,
-        onBlur: closeItemsPopup
+        onBlur: closeItemsPopup,
+        focus: props.focusItems
       },
       updated: computed(() => initialValue.value !== stateValue.value),
       value: stateValue

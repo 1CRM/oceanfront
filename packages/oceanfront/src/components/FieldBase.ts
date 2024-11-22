@@ -193,7 +193,7 @@ export const OfFieldBase = defineComponent({
       try {
         const outerId = (fieldRender.inputId ?? props.id) + '-outer'
         const mainId = (fieldRender.inputId ?? props.id) + '-main'
-        let overlay, overlayActive, overlayBlur, overlayCapture
+        let overlay, overlayActive, overlayBlur, overlayCapture, overlayFocus
         const dragIn =
           fieldRender.dragIn && makeDragIn(fieldRender.dragIn, dragOver)
         if (fieldRender.popup) {
@@ -201,6 +201,7 @@ export const OfFieldBase = defineComponent({
           overlayActive = fieldRender.popup.visible ?? true
           overlayBlur = fieldRender.popup.onBlur
           overlayCapture = fieldRender.popup.capture
+          overlayFocus = fieldRender.popup.focus
         }
         const showFocused =
           focused.value ||
@@ -319,7 +320,8 @@ export const OfFieldBase = defineComponent({
               shade: false,
               target: mainId ? '#' + mainId : '',
               onBlur: overlayBlur,
-              sticky: props.sticky
+              sticky: props.sticky,
+              focus: overlayFocus
             },
             overlay
           )

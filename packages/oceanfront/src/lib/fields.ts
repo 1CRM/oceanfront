@@ -146,6 +146,7 @@ export interface FieldPopup {
   visible?: boolean
   onBlur?: () => void
   capture?: boolean
+  focus?: boolean
   // position?
 }
 
