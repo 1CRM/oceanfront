@@ -61,6 +61,8 @@ export const OfTextField = defineComponent({
     inputType: String,
     focusItems: { type: Boolean, default: true },
     filterItems: { type: Boolean, default: true },
+    showEmptyList: { type: Boolean, default: false },
+    openItemsOnChange: { type: Boolean, default: false },
     capture: { type: Boolean, default: true },
     setItem: Function
   },
@@ -139,7 +141,9 @@ export const OfTextField = defineComponent({
     )
     watch(
       () => props.items,
-      () => (itemsOpened.value = true)
+      () => {
+        if (props.openItemsOnChange) itemsOpened.value = true
+      }
     )
 
     const elt = ref<HTMLInputElement | undefined>()
@@ -167,7 +171,11 @@ export const OfTextField = defineComponent({
     const itemsOpened = ref(false)
 
     const hasItems = computed(() => {
-      return fieldCtx.editable && !multiline.value && props.items !== undefined
+      return (
+        fieldCtx.editable &&
+        !multiline.value &&
+        ((props.items as any[])?.length > 0 || props.showEmptyList)
+      )
     })
 
     const items = computed(() => {
