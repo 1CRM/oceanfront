@@ -683,21 +683,31 @@ export default defineComponent({
           if (Array.isArray(v[fieldName])) {
             let i = 0
             v[fieldName].forEach((column: any, index: number) => {
-              if (isNaN(column?.value)) {
+              const fieldValue =
+                typeof column?.value === 'object'
+                  ? column?.rawValue ?? ''
+                  : column?.value ?? ''
+
+              if (isNaN(+fieldValue)) {
                 i++
                 return
               }
+
               if (!values[index - i]) {
                 label = column?.label
-                values.push({ ...column, value: +column.value })
+                values.push({ ...column, value: +fieldValue })
               } else {
-                ;(values[index - i] as any).value += +column.value
+                ;(values[index - i] as any).value += +fieldValue
               }
             })
           } else {
             label = v[fieldName]?.label
-            if (!isNaN(+(v[fieldName]?.value ?? v[fieldName])))
-              value += +(v[fieldName]?.value ?? v[fieldName])
+            let fieldValue = v[fieldName]?.value ?? v[fieldName]
+
+            if (typeof fieldValue === 'object')
+              fieldValue = v[fieldName]?.rawValue ?? ''
+
+            if (!isNaN(+fieldValue)) value += +fieldValue
           }
         })
         if (values.length) {
@@ -705,7 +715,10 @@ export default defineComponent({
         } else {
           row[fieldName] = {
             value: value || '',
-            format: (items.value as any)[0][fieldName]?.format
+            format:
+              (items.value as any)[0][fieldName]?.format ??
+              (items.value as any)[0][fieldName]?.totalFormat ??
+              {}
           }
         }
       })
