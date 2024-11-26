@@ -296,7 +296,7 @@ export const OfTextField = defineComponent({
           dispatchChange = false
         }
 
-        closeItemsPopup(true)
+        if (!props.focusItems) closeItemsPopup(true)
       },
       onFocus(_evt: FocusEvent) {
         focused.value = true
