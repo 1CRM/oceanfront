@@ -95,7 +95,7 @@ export const OfOverlay = defineComponent({
         }
       },
       onKeydown(evt: KeyboardEvent) {
-        if (focused && evt.key == 'Escape') {
+        if (evt.key == 'Escape') {
           focused = false
           ctx.emit('blur', true)
           removeFromStack(elt.value)

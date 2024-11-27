@@ -58,11 +58,18 @@ export const OfTextField = defineComponent({
   props: {
     ...BaseFieldProps,
     rows: [Number, String],
-    inputType: String
+    inputType: String,
+    focusItems: { type: Boolean, default: true },
+    filterItems: { type: Boolean, default: true },
+    showEmptyList: { type: Boolean, default: false },
+    openItemsOnChange: { type: Boolean, default: false },
+    capture: { type: Boolean, default: true },
+    setItem: Function
   },
   emits: [
     'focus',
     'input',
+    'keydown:escape',
     'keydown:enter',
     'keyup:enter',
     'update:modelValue',
@@ -132,9 +139,17 @@ export const OfTextField = defineComponent({
         immediate: true
       }
     )
+    watch(
+      () => props.items,
+      () => {
+        if (props.openItemsOnChange) itemsOpened.value = true
+      }
+    )
 
     const elt = ref<HTMLInputElement | undefined>()
     const focused = ref(false)
+    const focusFirstItem = ref(false)
+    const optionListFocused = ref(false)
     let defaultFieldId: string
     const inputId = computed(() => {
       let id = fieldCtx.id
@@ -160,13 +175,13 @@ export const OfTextField = defineComponent({
       return (
         fieldCtx.editable &&
         !multiline.value &&
-        (props.items as any[])?.length > 0
+        ((props.items as any[])?.length > 0 || props.showEmptyList)
       )
     })
 
     const items = computed(() => {
       const input = searchText.value?.trim().toLowerCase()
-      if (!input) return props.items
+      if (!input || !props.filterItems) return props.items
       return (props.items as any[]).filter((item) => {
         if (item.value !== undefined) {
           const optionText: string = item.text
@@ -281,6 +296,8 @@ export const OfTextField = defineComponent({
           inputElt.dispatchEvent(new Event('change'))
           dispatchChange = false
         }
+
+        if (!optionListFocused.value && !props.capture) closeItemsPopup(true)
       },
       onFocus(_evt: FocusEvent) {
         focused.value = true
@@ -327,7 +344,11 @@ export const OfTextField = defineComponent({
             inputElt.value = '0'
           }
         }
-        if (hasItems.value) search(inputElt.value)
+        if (hasItems.value) {
+          search(inputElt.value)
+          inputValue.value = inputElt.value
+          if (!itemsOpened.value) openItemsPopup()
+        }
         const fmt = formatter.value
         if (fmt?.handleInput) {
           const upd = fmt.handleInput(evt)
@@ -385,8 +406,15 @@ export const OfTextField = defineComponent({
           openItemsPopup()
           evt.preventDefault()
           evt.stopPropagation()
-        } else if (evt.key == 'Tab' || evt.key === 'Escape') {
+        } else if (evt.key === 'Escape') {
           closeItemsPopup()
+          ctx.emit('keydown:escape')
+        } else if (evt.key === 'Tab') {
+          if (itemsOpened.value) {
+            focusFirstItem.value = true
+            evt.preventDefault()
+            evt.stopPropagation()
+          }
         } else if (
           !(
             /(^Key([A-Z]$))/.test(evt.code) ||
@@ -473,12 +501,30 @@ export const OfTextField = defineComponent({
           hasItems.value && itemsOpened.value
             ? h(OfOptionList, {
                 items: formatItems.value,
-                class: 'of--elevated-1',
-                onClick: setItem
+                focusOnMount: false,
+                focus: focusFirstItem.value,
+                class: [
+                  'of--elevated-1',
+                  'of-text-items',
+                  { 'text-items-loading': props.loading }
+                ],
+                onFocused: () => {
+                  focusFirstItem.value = false
+                  optionListFocused.value = true
+                },
+                onBlur: () => {
+                  focusFirstItem.value = false
+                  optionListFocused.value = false
+                  if (!props.capture) closeItemsPopup(true)
+                },
+                onClick: (val) =>
+                  props.setItem ? props.setItem(val) : setItem(val)
               })
             : undefined,
         visible: itemsOpened,
-        onBlur: closeItemsPopup
+        onBlur: closeItemsPopup,
+        focus: props.focusItems,
+        capture: props.capture
       },
       updated: computed(() => initialValue.value !== stateValue.value),
       value: stateValue

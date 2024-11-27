@@ -111,7 +111,7 @@ const OfOptionList = defineComponent({
     OfNavGroup
   },
   props: {
-    focus: { type: Boolean, default: false },
+    focus: { type: Boolean, default: true },
     class: [Object, String],
     style: [Object, String],
     items: {
@@ -121,7 +121,7 @@ const OfOptionList = defineComponent({
     addSearch: { type: Boolean, default: false },
     alwaysShowSearch: { type: Boolean, default: false }
   },
-  emits: ['blur', 'click', 'close'],
+  emits: ['blur', 'click', 'close', 'focused'],
   setup(props, ctx) {
     const itemMgr = useItems()
     const allItems = computed(() => {
@@ -296,15 +296,15 @@ const OfOptionList = defineComponent({
           }
         })
       }
+      ctx.emit('focused')
     }
 
-    nextTick(() => {
-      if (showSearch.value) {
-        focusSearch()
-      } else {
-        focusFirstItem()
-      }
-    })
+    if (props.focus) {
+      nextTick(() => {
+        if (showSearch.value) focusSearch()
+        else focusFirstItem()
+      })
+    }
 
     return {
       lang,
