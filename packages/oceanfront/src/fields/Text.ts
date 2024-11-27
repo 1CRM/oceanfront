@@ -149,6 +149,7 @@ export const OfTextField = defineComponent({
     const elt = ref<HTMLInputElement | undefined>()
     const focused = ref(false)
     const focusFirstItem = ref(false)
+    const optionListFocused = ref(false)
     let defaultFieldId: string
     const inputId = computed(() => {
       let id = fieldCtx.id
@@ -296,7 +297,7 @@ export const OfTextField = defineComponent({
           dispatchChange = false
         }
 
-        if (!props.focusItems) closeItemsPopup(true)
+        if (!optionListFocused.value && !props.capture) closeItemsPopup(true)
       },
       onFocus(_evt: FocusEvent) {
         focused.value = true
@@ -343,7 +344,11 @@ export const OfTextField = defineComponent({
             inputElt.value = '0'
           }
         }
-        if (hasItems.value) search(inputElt.value)
+        if (hasItems.value) {
+          search(inputElt.value)
+          inputValue.value = inputElt.value
+          if (!itemsOpened.value) openItemsPopup()
+        }
         const fmt = formatter.value
         if (fmt?.handleInput) {
           const upd = fmt.handleInput(evt)
@@ -503,8 +508,15 @@ export const OfTextField = defineComponent({
                   'of-text-items',
                   { 'text-items-loading': props.loading }
                 ],
-                onFocused: () => (focusFirstItem.value = false),
-                onBlur: () => (focusFirstItem.value = false),
+                onFocused: () => {
+                  focusFirstItem.value = false
+                  optionListFocused.value = true
+                },
+                onBlur: () => {
+                  focusFirstItem.value = false
+                  optionListFocused.value = false
+                  if (!props.capture) closeItemsPopup(true)
+                },
                 onClick: (val) =>
                   props.setItem ? props.setItem(val) : setItem(val)
               })
