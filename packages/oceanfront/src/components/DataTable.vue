@@ -683,10 +683,7 @@ export default defineComponent({
           if (Array.isArray(v[fieldName])) {
             let i = 0
             v[fieldName].forEach((column: any, index: number) => {
-              const fieldValue =
-                typeof column?.value === 'object'
-                  ? column?.rawValue ?? ''
-                  : column?.value ?? ''
+              const fieldValue = column?.rawValue ?? column?.value ?? ''
 
               if (isNaN(+fieldValue)) {
                 i++
@@ -702,10 +699,8 @@ export default defineComponent({
             })
           } else {
             label = v[fieldName]?.label
-            let fieldValue = v[fieldName]?.value ?? v[fieldName]
-
-            if (typeof fieldValue === 'object')
-              fieldValue = v[fieldName]?.rawValue ?? ''
+            let fieldValue =
+              v[fieldName]?.rawValue ?? v[fieldName]?.value ?? v[fieldName]
 
             if (!isNaN(+fieldValue)) value += +fieldValue
           }
