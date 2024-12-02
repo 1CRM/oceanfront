@@ -37,6 +37,7 @@ export const OfIcon = defineComponent({
       return h(
         'i',
         {
+          role: 'img',
           'aria-label': props.ariaLabel ?? props.title ?? props.name,
           class: [
             {

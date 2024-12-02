@@ -30,6 +30,7 @@
           type="toggle"
           variant="basic"
           class="row-selector"
+          aria-label="Row Selector"
           :locked="selectLocked"
           :mode="selectLocked ? 'disabled' : 'editable'"
           :record="selectLocked ? undefined : rowsRecord"
