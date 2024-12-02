@@ -251,14 +251,15 @@ export const OfSelectField = defineComponent({
           h(
             'div',
             {
+              role: 'textbox',
               class: [
                 'of-field-content-text',
                 'of--align-' + (props.align || 'start')
               ],
               id: inputId.value,
               ref: elt,
-              tabindex: fieldCtx.mode === 'fixed' ? -1 : 0,
-              ariaLabel: fieldCtx.ariaLabel ?? props.label,
+              tabindex: fieldCtx.mode === 'fixed' ? undefined : 0,
+              ariaLabel: fieldCtx.ariaLabel ?? props.label ?? inputValue.value,
               ...hooks
             },
             labels

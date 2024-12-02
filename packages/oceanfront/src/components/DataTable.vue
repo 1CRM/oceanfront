@@ -14,19 +14,34 @@
             class="header-rows-selector"
             keep-text-color
             split
-            tabindex="-1"
+            @click="() => (!selectLocked ? onUpdateHeaderRowsSelector() : null)"
+            :aria-label="
+              selectRowsItems.find((r: any) => r.key === 'page')?.text
+            "
             :items="selectRowsItems"
           >
-            <of-field
-              type="toggle"
-              variant="basic"
-              :class="['row-selector', 'header']"
-              v-model="headerRowsSelectorChecked"
-              :mode="selectLocked ? 'disabled' : 'editable'"
-              :locked="selectLocked"
-              :aria-label="selectRowsItems.find((r) => r.key === 'page')?.text"
-              @update:model-value="onUpdateHeaderRowsSelector"
-            />
+            <div
+              :class="[
+                'of-field',
+                'of-toggle-field',
+                'row-selector',
+                { 'of--mode-disabled': selectLocked },
+                { 'of--checked': headerRowsSelectorChecked }
+              ]"
+            >
+              <div class="of-field-body">
+                <div class="of-toggle-wrapper">
+                  <div class="of-toggle-input">
+                    <of-icon
+                      :name="
+                        'checkbox' +
+                        (headerRowsSelectorChecked ? ' checked' : '')
+                      "
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
           </of-button>
         </slot>
         <slot name="header-first-cell" />
@@ -913,10 +928,12 @@ export default defineComponent({
       }
     }
     const headerRowsSelectorChecked = ref(false)
-    const onUpdateHeaderRowsSelector = function (val: any) {
-      let select = val
+    const onUpdateHeaderRowsSelector = function () {
+      headerRowsSelectorChecked.value = !headerRowsSelectorChecked.value
+      const select = headerRowsSelectorChecked.value
         ? RowsSelectorValues.Page
         : RowsSelectorValues.DeselectPage
+
       selectRows(select)
     }
     const selectRowsItems = [
