@@ -239,7 +239,6 @@ import { useThemeOptions } from '../lib/theme'
 import { OfIcon } from './Icon'
 import { OfOverlay } from './Overlay'
 import OfOptionList from './OptionList.vue'
-import { OfField } from './Field'
 import { OfButton } from './Button'
 import OfTableRow from './TableRow.vue'
 
@@ -277,7 +276,6 @@ export default defineComponent({
   components: {
     OfTableRow,
     OfButton,
-    OfField,
     OfOptionList,
     OfOverlay,
     OfIcon
