@@ -726,7 +726,8 @@ export default defineComponent({
             format:
               (items.value as any)[0][fieldName]?.format ??
               (items.value as any)[0][fieldName]?.totalFormat ??
-              {}
+              {},
+            params: (items.value as any)[0][fieldName]?.params ?? {}
           }
         }
       })
