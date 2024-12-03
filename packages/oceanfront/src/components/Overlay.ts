@@ -112,6 +112,17 @@ export const OfOverlay = defineComponent({
         targetPos.observe(target.value)
       }
     }
+
+    const pushToStack = () => {
+      if (!elt.value) return false
+
+      overlayStack.push(elt.value)
+      overlayZIndex++
+      instanceZIndex.value = overlayZIndex
+
+      elt.value.style.zIndex = overlayZIndex.toString()
+    }
+
     const focus = () => {
       const outer = elt.value
       if (!outer) return false
@@ -121,10 +132,6 @@ export const OfOverlay = defineComponent({
         'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
       )
       ;((findFocus as HTMLElement) || outer).focus()
-      overlayStack.push(outer)
-      overlayZIndex++
-      instanceZIndex.value = overlayZIndex
-      outer.style.zIndex = overlayZIndex.toString()
       focused = true
     }
     const reparent = () => {
@@ -237,6 +244,7 @@ export const OfOverlay = defineComponent({
       if (activeOverlay) {
         nextTick(() => {
           reposition()
+          pushToStack()
           if (props.focus) focus()
         })
       }
