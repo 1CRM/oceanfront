@@ -727,7 +727,9 @@ export default defineComponent({
               (items.value as any)[0][fieldName]?.format ??
               (items.value as any)[0][fieldName]?.totalFormat ??
               {},
-            params: (items.value as any)[0][fieldName]?.params ?? {}
+            params: columns.value[col]?.currency
+              ? { symbol: columns.value[col].currency.symbol }
+              : {}
           }
         }
       })
