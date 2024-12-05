@@ -863,6 +863,10 @@ export default defineComponent({
     watch(
       rows,
       (newRows) => {
+        const selectedAll =
+          rowsRecord.value.value?.[RowsSelectorValues.All] ?? false
+        if (selectedAll) return
+
         for (const row of newRows) {
           checkItems(row)
         }
