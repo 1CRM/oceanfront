@@ -8,7 +8,11 @@ export default defineComponent({
   },
   render() {
     const formatMgr = useFormats()
-    const numberFormat = formatMgr.getTextFormatter('number')
+    const numberFormat = formatMgr.getTextFormatter('number', {
+      maximumFractionDigits: 2,
+      minimumFractionDigits: 2,
+      style: 'decimal'
+    })
     const result = numberFormat?.format(this.$props.value.value)
     const symbol = this.$props.value?.params?.symbol || '$'
     if (result?.value) {
