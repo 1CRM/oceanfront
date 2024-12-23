@@ -258,8 +258,9 @@ export const OfSelectField = defineComponent({
               ],
               id: inputId.value,
               ref: elt,
-              tabindex: fieldCtx.mode === 'fixed' ? -1 : undefined,
-              ariaLabel: fieldCtx.ariaLabel ?? props.label,
+              tabindex: fieldCtx.mode === 'fixed' ? -1 : 0,
+              ariaLabel:
+                fieldCtx.ariaLabel ?? props.label ?? stateValue.value ?? ' ',
               ...hooks
             },
             labels
