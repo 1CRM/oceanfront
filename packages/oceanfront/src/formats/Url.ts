@@ -68,6 +68,6 @@ export class UrlFormatter implements TextFormatter {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   formatFixed(modelValue: any): Renderable | undefined {
     const url = this.fixUrl(modelValue as string)
-    return h('a', { href: url, target: '_blank' }, url)
+    return url === '' ? '' : h('a', { href: url, target: '_blank' }, url)
   }
 }
