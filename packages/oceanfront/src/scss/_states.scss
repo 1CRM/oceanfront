@@ -1,4 +1,4 @@
-@use "sass:color";
+@use 'sass:color';
 
 @mixin state-mixin($color, $bg, $border) {
   // box-shadow: none;
@@ -44,7 +44,11 @@
 @mixin state-mixin-grad($color, $bg, $border) {
   @include state-mixin(
     $color,
-    linear-gradient(to bottom, color.adjust($bg, $lightness: 2%) 15%, color.adjust($bg, $lightness: -2%) 85%),
+    linear-gradient(
+      to bottom,
+      color.adjust($bg, $lightness: 2%) 15%,
+      color.adjust($bg, $lightness: -2%) 85%
+    ),
     $border
   );
 }
@@ -92,7 +96,11 @@
 }
 
 .state-info {
-  @include state-mixin-grad(#469, #cfeaff, color.adjust(#cfeaff, $lightness: -16%));
+  @include state-mixin-grad(
+    #469,
+    #cfeaff,
+    color.adjust(#cfeaff, $lightness: -16%)
+  );
 }
 
 .state-draft {
@@ -108,7 +116,11 @@
 }
 
 .state-special {
-  @include state-mixin-grad(#fff6ff, #a7a, color.adjust(#a7a, $lightness: -12%));
+  @include state-mixin-grad(
+    #fff6ff,
+    #a7a,
+    color.adjust(#a7a, $lightness: -12%)
+  );
   @include state-event-mixin(#806633, #fff0d1, #c92);
 }
 
@@ -143,12 +155,12 @@
 
 .state-primary {
   @include state-mixin(var(--of-primary-tint), '', var(--of-primary-tint));
-  @include state-event-mixin(#687580, #e3f3ff, #7dc6ff);
+  @include state-event-mixin(#636f79, #e3f3ff, #7dc6ff);
 }
 
 .state-ignore {
   @include state-mixin-grad(#8a8987, rgba(246, 245, 244, 1), #c7c6c6);
-  @include state-event-mixin(#8a8987, #f6f5f4, #c7c6c6);
+  @include state-event-mixin(#6f6f6d, #f6f5f4, #c7c6c6);
 }
 
 .state-active {
