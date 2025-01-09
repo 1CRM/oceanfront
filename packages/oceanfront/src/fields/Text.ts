@@ -517,8 +517,8 @@ export const OfTextField = defineComponent({
                   optionListFocused.value = false
                   if (!props.capture) closeItemsPopup(true)
                 },
-                onClick: (val) =>
-                  props.setItem ? props.setItem(val) : setItem(val)
+                onClick: (val, item) =>
+                  props.setItem ? props.setItem(val, item) : setItem(val)
               })
             : undefined,
         visible: itemsOpened,
