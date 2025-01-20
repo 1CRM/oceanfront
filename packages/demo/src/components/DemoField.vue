@@ -57,7 +57,7 @@
             ...props,
             inputType: customProps.switch ? 'switch' : null,
             inputLabel: !params.block ? 'Off' : 'On',
-            labelPosition: 'top',
+            labelPosition: 'top'
           }"
         />
       </div>
@@ -78,7 +78,7 @@
             ...props,
             inputType: customProps.switch ? 'switch' : null,
             inputLabel: !params.required ? 'Off' : 'On',
-            labelPosition: 'top',
+            labelPosition: 'top'
           }"
         />
       </div>
@@ -87,11 +87,11 @@
 </template>
 
 <script lang="ts">
-import { computed, reactive, defineComponent, ref } from 'vue'
+import { computed, reactive, defineComponent } from 'vue'
 
 export default defineComponent({
   props: {
-    allowInputLabelPosition: Boolean,
+    allowInputLabelPosition: Boolean
   },
   setup(props) {
     const params = reactive({
@@ -104,7 +104,7 @@ export default defineComponent({
       width: '100%',
       containerTint: 'default',
       required: false,
-      block: false,
+      block: false
     })
 
     const densityOptions = ['default', '0', '1', '2', '3']
@@ -119,14 +119,14 @@ export default defineComponent({
       'left',
       'right',
       'top',
-      ...(props.allowInputLabelPosition ? ['input'] : []),
+      ...(props.allowInputLabelPosition ? ['input'] : [])
     ]
     const modeOptions = ['editable', 'locked', 'readonly', 'disabled', 'fixed']
     const variantOptions = ['default', 'outlined', 'filled', 'compare']
     const containerClass = computed(() => [
       'content',
       'of--tinted',
-      `of--tint-${params.containerTint}`,
+      `of--tint-${params.containerTint}`
     ])
     const allParams = computed(() => {
       let p: any = { ...params }
@@ -134,7 +134,7 @@ export default defineComponent({
       if (p.variant === 'compare') {
         return [
           { ...p, variant: 'outlined' },
-          { ...p, variant: 'filled' },
+          { ...p, variant: 'filled' }
         ]
       } else {
         return [p]
@@ -155,9 +155,9 @@ export default defineComponent({
       props,
       customProps,
       scaleOptions,
-      widthOptions,
+      widthOptions
     }
-  },
+  }
 })
 </script>
 
@@ -175,7 +175,6 @@ export default defineComponent({
     flex: auto;
     flex-flow: column wrap;
     justify-content: center;
-    overflow: hidden;
     padding: 0.25em 0.5em;
     .field {
       box-sizing: border-box;

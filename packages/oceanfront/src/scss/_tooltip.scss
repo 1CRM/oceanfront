@@ -1,0 +1,64 @@
+.of-tooltip {
+  --tt-bg-color: #151713;
+  --tt-icon-bg-color: var(--of-field-border-color);
+  font-size: 0.8em;
+
+  .of-tooltip-main {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+
+    .of-icon svg {
+      fill: var(--tt-icon-bg-color);
+    }
+    .of-tooltip-text {
+      display: none;
+      position: absolute;
+      width: fit-content;
+      background-color: var(--tt-bg-color);
+      padding: 4px 8px;
+      border-radius: 3px;
+      width: max-content;
+      color: #fff;
+      line-height: 1.3em;
+      z-index: 1;
+      opacity: 0;
+      transition:
+        opacity 0.2s,
+        display 0.2s allow-discrete;
+      .triangle {
+        position: absolute;
+        top: calc(50% - 3px);
+        line-height: 0;
+
+        svg {
+          fill: var(--tt-bg-color);
+        }
+      }
+
+      &.left {
+        right: calc(var(--tt-icon-width) + 3px);
+
+        .triangle {
+          left: calc(100% - 1px);
+
+          svg {
+            transform: rotate(180deg);
+          }
+        }
+      }
+      &.right {
+        left: calc(var(--tt-icon-width) + 3px);
+
+        .triangle {
+          left: -2px;
+        }
+      }
+
+      &.open {
+        display: block;
+        opacity: 1;
+      }
+    }
+  }
+}

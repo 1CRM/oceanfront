@@ -129,6 +129,7 @@ export const OfFieldBase = defineComponent({
     const recordMgr = useRecords()
     const themeOptions = useThemeOptions()
     const OfIcon = resolveComponent('of-icon')
+    const OfTooltip = resolveComponent('of-tooltip')
 
     const record = computed(() => {
       return props.record || recordMgr.getCurrentRecord() || undefined
@@ -326,11 +327,22 @@ export const OfFieldBase = defineComponent({
             overlay
           )
         }
+
+        const tooltip = h(OfTooltip, { text: props.tooltip })
+        const labelNode = computed(() =>
+          label || required.value ? label : undefined
+        )
+        const tooltipNode = computed(() =>
+          props.tooltip ?? '' !== '' ? tooltip : undefined
+        )
+
         const children = [
-          (label || required.value) &&
-          labelPosition.value !== 'frame' &&
-          labelPosition.value !== 'input'
-            ? h('div', { class: 'of-field-main-label' }, label)
+          (labelNode.value || tooltipNode.value) &&
+          !['frame', 'input'].includes(labelPosition.value ?? '')
+            ? h('div', { class: 'of-field-main-label' }, [
+                labelNode.value,
+                tooltipNode.value
+              ])
             : undefined,
           h(
             'div',
@@ -347,8 +359,13 @@ export const OfFieldBase = defineComponent({
                 {
                   class: 'of-field-header'
                 },
-                label && labelPosition.value === 'frame'
-                  ? h('div', { class: 'of-field-header-label' }, label)
+                labelPosition.value === 'frame'
+                  ? [
+                      label
+                        ? h('div', { class: 'of-field-header-label' }, label)
+                        : undefined,
+                      tooltipNode.value
+                    ]
                   : undefined
               ),
               h('div', { class: 'of-field-body' }, inner)

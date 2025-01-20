@@ -326,6 +326,10 @@
     &.of--inline {
       display: inline-grid;
     }
+
+    .of-tooltip {
+      padding: 0 1em;
+    }
   }
   &.of--label-left {
     grid-template-areas: 'label main' 'label caption';
@@ -355,6 +359,14 @@
     margin: 0 var(--field-border-width) 2px 0;
     padding: var(--field-v-pad) var(--field-h-pad);
     resize: vertical;
+  }
+
+  .of-tooltip {
+    float: right;
+  }
+
+  &.of--label-none .of-tooltip {
+    margin-bottom: 0.62em;
   }
 }
 
@@ -551,6 +563,15 @@
           transition: border-color 120ms;
         }
 
+        .of-tooltip {
+          position: absolute;
+          right: calc(var(--field-size-append) * 1.2);
+          top: -0.675em;
+          z-index: 2;
+          background-color: var(--of-color-background);
+          padding: 0 2px;
+        }
+
         .of-field-header-label {
           max-width: calc(100% - 2 * var(--field-h-pad));
           padding: 0 0.25em;
@@ -724,6 +745,12 @@
           .of-field-label {
             font-size: 0.666em;
           }
+        }
+        .of-tooltip {
+          position: absolute;
+          right: calc(var(--field-size-append) * 1.2);
+          top: var(--field-v-pad);
+          z-index: 2;
         }
       }
 

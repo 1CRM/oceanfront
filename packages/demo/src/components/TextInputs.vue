@@ -10,7 +10,10 @@
           help="field help"
           label="Text input"
           v-model="textValue"
-          v-bind="{ ...props, ...customProps }"
+          v-bind="{
+            ...props,
+            ...customProps
+          }"
         />
       </template>
       <template #options>
@@ -19,6 +22,12 @@
           label="Multi-line"
           label-position="input"
           v-model="customProps.multiline"
+        />
+        <of-field
+          type="toggle"
+          label="Tooltip"
+          label-position="input"
+          v-model="showTooltip"
         />
       </template>
     </of-demo-field>
@@ -120,11 +129,12 @@
 </template>
 
 <script lang="ts">
-import { reactive, ref, defineComponent } from 'vue'
+import { reactive, ref, defineComponent, computed } from 'vue'
 
 export default defineComponent({
   setup() {
     const textValue = ref('sample value')
+    const showTooltip = ref(false)
     const change = () => {
       textValue.value = new Date().getTime().toString()
     }
@@ -137,12 +147,18 @@ export default defineComponent({
     const items = [
       { text: 'Items', value: 'Items' },
       { text: 'Items2', value: 'Items2' },
-      { text: 'Items3', value: 'Items3' },
+      { text: 'Items3', value: 'Items3' }
     ]
     const withItemsVal = ref('Items')
     const upd = (v: any) => (withItemsVal.value = v)
 
-    const customProps = reactive({ multiline: false })
+    const tooltip = computed(() =>
+      showTooltip.value ? 'Text Input Tooltip' : ''
+    )
+    const customProps = reactive({
+      multiline: false,
+      tooltip
+    })
 
     return {
       change,
@@ -151,9 +167,10 @@ export default defineComponent({
       textValue,
       items,
       withItemsVal,
-      upd,
+      showTooltip,
+      upd
     }
-  },
+  }
 })
 </script>
 
