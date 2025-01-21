@@ -23,12 +23,6 @@
           label-position="input"
           v-model="customProps.multiline"
         />
-        <of-field
-          type="toggle"
-          label="Tooltip"
-          label-position="input"
-          v-model="showTooltip"
-        />
       </template>
     </of-demo-field>
 
@@ -129,12 +123,11 @@
 </template>
 
 <script lang="ts">
-import { reactive, ref, defineComponent, computed } from 'vue'
+import { reactive, ref, defineComponent } from 'vue'
 
 export default defineComponent({
   setup() {
     const textValue = ref('sample value')
-    const showTooltip = ref(false)
     const change = () => {
       textValue.value = new Date().getTime().toString()
     }
@@ -152,12 +145,8 @@ export default defineComponent({
     const withItemsVal = ref('Items')
     const upd = (v: any) => (withItemsVal.value = v)
 
-    const tooltip = computed(() =>
-      showTooltip.value ? 'Text Input Tooltip' : ''
-    )
     const customProps = reactive({
-      multiline: false,
-      tooltip
+      multiline: false
     })
 
     return {
@@ -167,7 +156,6 @@ export default defineComponent({
       textValue,
       items,
       withItemsVal,
-      showTooltip,
       upd
     }
   }

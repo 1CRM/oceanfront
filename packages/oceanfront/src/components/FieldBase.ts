@@ -229,6 +229,8 @@ export const OfFieldBase = defineComponent({
           labelText = ' '
         }
 
+        const tooltip = h(OfTooltip, { text: props.tooltip })
+
         const label = ctx.slots.label
           ? ctx.slots.label()
           : (labelPosition.value !== 'none' || required.value) &&
@@ -261,7 +263,8 @@ export const OfFieldBase = defineComponent({
             'of--loading': fieldRender.loading,
             'of--rounded': props.rounded,
             'of--undecorated': !!fieldRender.undecorated,
-            'of--updated': fieldRender.updated
+            'of--updated': fieldRender.updated,
+            'of--tooltip': tooltip
           },
           'of--cursor-' + (fieldRender.cursor || 'default'),
           'of--density-' + density.value,
@@ -328,17 +331,24 @@ export const OfFieldBase = defineComponent({
           )
         }
 
-        const tooltip = h(OfTooltip, { text: props.tooltip })
-        const labelNode = computed(() =>
-          label || required.value ? label : undefined
-        )
         const tooltipNode = computed(() =>
           props.tooltip ?? '' !== '' ? tooltip : undefined
         )
 
-        const children = [
-          (labelNode.value || tooltipNode.value) &&
+        const labelNode = computed(() =>
+          (label || required.value) &&
           !['frame', 'input'].includes(labelPosition.value ?? '')
+            ? label
+            : tooltipNode.value
+              ? h('label', {
+                  class: 'of-field-label',
+                  innerHTML: '&nbsp;'
+                })
+              : undefined
+        )
+
+        const children = [
+          labelNode.value || tooltipNode.value
             ? h('div', { class: 'of-field-main-label' }, [
                 labelNode.value,
                 tooltipNode.value
@@ -359,13 +369,8 @@ export const OfFieldBase = defineComponent({
                 {
                   class: 'of-field-header'
                 },
-                labelPosition.value === 'frame'
-                  ? [
-                      label
-                        ? h('div', { class: 'of-field-header-label' }, label)
-                        : undefined,
-                      tooltipNode.value
-                    ]
+                label && labelPosition.value === 'frame'
+                  ? h('div', { class: 'of-field-header-label' }, label)
                   : undefined
               ),
               h('div', { class: 'of-field-body' }, inner)

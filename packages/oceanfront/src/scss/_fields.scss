@@ -337,7 +337,8 @@
   &.of--label-right {
     grid-template-areas: 'main label' 'caption label';
   }
-  &.of--label-top > .of-field-main-label {
+  &.of--label-top > .of-field-main-label,
+  &.of--tooltip > .of-field-main-label {
     margin-bottom: 0.25em;
     padding-left: var(--field-h-pad);
   }
@@ -363,10 +364,6 @@
 
   .of-tooltip {
     float: right;
-  }
-
-  &.of--label-none .of-tooltip {
-    margin-bottom: 0.62em;
   }
 }
 
@@ -563,15 +560,6 @@
           transition: border-color 120ms;
         }
 
-        .of-tooltip {
-          position: absolute;
-          right: calc(var(--field-size-append) * 1.2);
-          top: -0.675em;
-          z-index: 2;
-          background-color: var(--of-color-background);
-          padding: 0 2px;
-        }
-
         .of-field-header-label {
           max-width: calc(100% - 2 * var(--field-h-pad));
           padding: 0 0.25em;
@@ -745,12 +733,6 @@
           .of-field-label {
             font-size: 0.666em;
           }
-        }
-        .of-tooltip {
-          position: absolute;
-          right: calc(var(--field-size-append) * 1.2);
-          top: var(--field-v-pad);
-          z-index: 2;
         }
       }
 

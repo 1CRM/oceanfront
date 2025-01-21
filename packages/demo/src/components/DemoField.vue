@@ -81,6 +81,14 @@
             labelPosition: 'top'
           }"
         />
+        <of-field
+          type="toggle"
+          label="Tooltip"
+          v-model="customProps.showTooltip"
+          v-bind="{
+            inputLabel: !customProps.showTooltip ? 'Off' : 'On'
+          }"
+        />
       </div>
     </div>
   </div>
@@ -104,7 +112,8 @@ export default defineComponent({
       width: '100%',
       containerTint: 'default',
       required: false,
-      block: false
+      block: false,
+      tooltip: ''
     })
 
     const densityOptions = ['default', '0', '1', '2', '3']
@@ -130,6 +139,7 @@ export default defineComponent({
     ])
     const allParams = computed(() => {
       let p: any = { ...params }
+      p.tooltip = customProps.showTooltip ? 'Demo Field Tooltip' : ''
       if (p.variant === 'default') delete p.variant
       if (p.variant === 'compare') {
         return [
@@ -141,7 +151,7 @@ export default defineComponent({
       }
     })
 
-    const customProps = reactive({ switch: false })
+    const customProps = reactive({ switch: false, showTooltip: false })
 
     return {
       allParams,
