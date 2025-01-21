@@ -334,21 +334,29 @@ export const OfFieldBase = defineComponent({
         const tooltipNode = computed(() =>
           props.tooltip ?? '' !== '' ? tooltip : undefined
         )
-
+        const emptyFieldLabelNode = h('label', {
+          class: 'of-field-label',
+          innerHTML: '&nbsp;'
+        })
         const labelNode = computed(() =>
-          (label || required.value) &&
-          !['frame', 'input'].includes(labelPosition.value ?? '')
-            ? label
+          label || required.value
+            ? !['frame', 'input'].includes(labelPosition.value ?? '')
+              ? label
+              : emptyFieldLabelNode
             : tooltipNode.value
-              ? h('label', {
-                  class: 'of-field-label',
-                  innerHTML: '&nbsp;'
-                })
+              ? emptyFieldLabelNode
               : undefined
         )
 
+        const showMainLabel = computed(
+          () =>
+            (labelNode.value || tooltipNode.value) &&
+            (!['frame', 'input'].includes(labelPosition.value ?? '') ||
+              props.type !== 'toggle')
+        )
+
         const children = [
-          labelNode.value || tooltipNode.value
+          showMainLabel.value
             ? h('div', { class: 'of-field-main-label' }, [
                 labelNode.value,
                 tooltipNode.value
@@ -369,8 +377,15 @@ export const OfFieldBase = defineComponent({
                 {
                   class: 'of-field-header'
                 },
-                label && labelPosition.value === 'frame'
-                  ? h('div', { class: 'of-field-header-label' }, label)
+                (label || tooltipNode.value) && labelPosition.value === 'frame'
+                  ? h(
+                      'div',
+                      { class: 'of-field-header-label' },
+                      h('div', { class: 'of-field-frame-label' }, [
+                        label,
+                        props.type === 'toggle' ? tooltipNode.value : undefined
+                      ])
+                    )
                   : undefined
               ),
               h('div', { class: 'of-field-body' }, inner)

@@ -312,6 +312,33 @@
     width: var(--field-size);
   }
 
+  .of-field-main-label,
+  &.of-toggle-field.of--label-frame .of-field-frame-label {
+    display: flex;
+  }
+
+  &.of-toggle-field.of--label-frame.of--variant-outlined
+    .of-field-frame-label
+    .of-tooltip {
+    font-size: 0.59em;
+    z-index: 2;
+    padding-left: 1em;
+    position: relative;
+    bottom: 3px;
+    .of-tooltip-text {
+      font-size: 1.2em;
+    }
+  }
+
+  &:not(.of-toggle-field) .of-field-label,
+  &.of-radio-field .of-field-label {
+    flex: 1;
+  }
+
+  &.of-toggle-field .of-field-main-label .of-field-label {
+    padding-right: 1em;
+  }
+
   &.of--label-left,
   &.of--label-right {
     display: grid;
@@ -326,7 +353,9 @@
     &.of--inline {
       display: inline-grid;
     }
-
+    .of-field-label {
+      flex: 0;
+    }
     .of-tooltip {
       padding: 0 1em;
     }
@@ -360,10 +389,6 @@
     margin: 0 var(--field-border-width) 2px 0;
     padding: var(--field-v-pad) var(--field-h-pad);
     resize: vertical;
-  }
-
-  .of-tooltip {
-    float: right;
   }
 }
 
@@ -724,13 +749,22 @@
         margin: calc(0px - var(--field-border-width));
 
         .of-field-header-label {
+          display: flex;
           box-sizing: border-box;
           line-height: 1;
           padding: calc(var(--field-v-pad))
             calc(var(--field-size-append) + var(--field-h-pad)) 0
             calc(var(--field-size-prepend) + var(--field-h-pad));
 
+          .of-tooltip {
+            font-size: 0.59em;
+            z-index: 2;
+            .of-tooltip-text {
+              font-size: 1.2em;
+            }
+          }
           .of-field-label {
+            padding-right: 1em;
             font-size: 0.666em;
           }
         }
@@ -758,7 +792,10 @@
 
 .of-field.of--required {
   .of--icon-required {
-    vertical-align: top;
+    position: relative;
+    top: -4px;
+    padding-left: 2px;
+    font-size: 1.8em;
 
     svg {
       fill: #c10015;
