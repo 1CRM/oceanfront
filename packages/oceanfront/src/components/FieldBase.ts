@@ -129,6 +129,7 @@ export const OfFieldBase = defineComponent({
     const recordMgr = useRecords()
     const themeOptions = useThemeOptions()
     const OfIcon = resolveComponent('of-icon')
+    const OfTooltip = resolveComponent('of-tooltip')
 
     const record = computed(() => {
       return props.record || recordMgr.getCurrentRecord() || undefined
@@ -228,6 +229,8 @@ export const OfFieldBase = defineComponent({
           labelText = ' '
         }
 
+        const tooltip = h(OfTooltip, { text: props.tooltip })
+
         const label = ctx.slots.label
           ? ctx.slots.label()
           : (labelPosition.value !== 'none' || required.value) &&
@@ -260,7 +263,8 @@ export const OfFieldBase = defineComponent({
             'of--loading': fieldRender.loading,
             'of--rounded': props.rounded,
             'of--undecorated': !!fieldRender.undecorated,
-            'of--updated': fieldRender.updated
+            'of--updated': fieldRender.updated,
+            'of--tooltip': tooltip
           },
           'of--cursor-' + (fieldRender.cursor || 'default'),
           'of--density-' + density.value,
@@ -326,11 +330,37 @@ export const OfFieldBase = defineComponent({
             overlay
           )
         }
+
+        const tooltipNode = computed(() =>
+          props.tooltip ?? '' !== '' ? tooltip : undefined
+        )
+        const emptyFieldLabelNode = h('label', {
+          class: 'of-field-label',
+          innerHTML: '&nbsp;'
+        })
+        const labelNode = computed(() =>
+          label || required.value
+            ? !['frame', 'input'].includes(labelPosition.value ?? '')
+              ? label
+              : emptyFieldLabelNode
+            : tooltipNode.value
+              ? emptyFieldLabelNode
+              : undefined
+        )
+
+        const showMainLabel = computed(
+          () =>
+            (labelNode.value || tooltipNode.value) &&
+            (!['frame', 'input'].includes(labelPosition.value ?? '') ||
+              props.type !== 'toggle')
+        )
+
         const children = [
-          (label || required.value) &&
-          labelPosition.value !== 'frame' &&
-          labelPosition.value !== 'input'
-            ? h('div', { class: 'of-field-main-label' }, label)
+          showMainLabel.value
+            ? h('div', { class: 'of-field-main-label' }, [
+                labelNode.value,
+                tooltipNode.value
+              ])
             : undefined,
           h(
             'div',
@@ -347,8 +377,15 @@ export const OfFieldBase = defineComponent({
                 {
                   class: 'of-field-header'
                 },
-                label && labelPosition.value === 'frame'
-                  ? h('div', { class: 'of-field-header-label' }, label)
+                (label || tooltipNode.value) && labelPosition.value === 'frame'
+                  ? h(
+                      'div',
+                      { class: 'of-field-header-label' },
+                      h('div', { class: 'of-field-frame-label' }, [
+                        label,
+                        props.type === 'toggle' ? tooltipNode.value : undefined
+                      ])
+                    )
                   : undefined
               ),
               h('div', { class: 'of-field-body' }, inner)
