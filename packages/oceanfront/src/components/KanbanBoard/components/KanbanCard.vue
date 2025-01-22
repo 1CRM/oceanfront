@@ -42,19 +42,17 @@
 
 <script lang="ts">
 import { defineComponent, type PropType } from 'vue'
-import { OfIcon } from '../../../Icon'
-import type { KanbanCard } from '../types'
+import { OfIcon } from '../../Icon'
+import type { IKanbanCard } from '../types'
 
 export default defineComponent({
   name: 'OfKanbanCard',
-
   components: {
     OfIcon
   },
-
   props: {
     card: {
-      type: Object as PropType<KanbanCard>,
+      type: Object as PropType<IKanbanCard>,
       required: true
     },
     isDragging: {
@@ -105,62 +103,77 @@ export default defineComponent({
 
 <style lang="scss">
 .of-kanban-card {
-  background: var(--of-surface);
-  border-radius: var(--of-border-radius-md);
-  padding: var(--of-space-md);
+  background: #ffffff;
+  border-radius: 3px;
+  padding: 12px;
   cursor: grab;
   user-select: none;
-  box-shadow: var(--of-shadow-sm);
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
+  box-shadow: 0px 1px 4px rgba(0, 0, 0, 0.06);
 
   &:hover {
-    box-shadow: var(--of-shadow-md);
+    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.12);
   }
 
   &.of--is-dragging {
     opacity: 0.5;
-    transform: scale(1.05);
   }
 
   &.of--is-selected {
-    outline: 2px solid var(--of-primary);
+    outline: 2px solid #0052cc;
   }
 
   .of-kanban-card-header {
-    margin-bottom: var(--of-space-sm);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .of-kanban-card-project {
+      color: #151713;
+      font-size: 13px;
+      font-family: Roboto;
+      font-weight: 500;
+      line-height: 18.2px;
+    }
   }
 
   .of-kanban-card-labels {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--of-space-xs);
+    gap: 4px;
   }
 
   .of-kanban-label {
-    padding: 2px var(--of-space-xs);
-    border-radius: var(--of-border-radius-sm);
-    font-size: var(--of-font-size-xs);
-    color: var(--of-on-primary);
+    padding: 2px 4px;
+    border-radius: 4.4px;
+    font-size: 13px;
+    font-family: Roboto;
+    font-weight: 400;
+    line-height: 18.2px;
+    color: #151713;
+    border: 1px solid #dddddd;
+    background: white;
   }
 
   .of-kanban-card-content {
     h4 {
-      margin: 0 0 var(--of-space-xs);
-      font-size: var(--of-font-size-md);
-      font-weight: var(--of-font-weight-medium);
+      margin: 0 0 4px;
+      font-size: 16px;
+      font-family: Roboto;
+      font-weight: 500;
+      line-height: 19.2px;
+      color: black;
     }
 
     p {
       margin: 0;
-      font-size: var(--of-font-size-sm);
-      color: var(--of-text-secondary);
+      font-size: 13px;
+      color: #6b778c;
     }
   }
 
   .of-kanban-card-footer {
-    margin-top: var(--of-space-sm);
+    margin-top: 8px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -169,9 +182,26 @@ export default defineComponent({
   .of-kanban-card-meta {
     display: flex;
     align-items: center;
-    gap: var(--of-space-xs);
-    font-size: var(--of-font-size-sm);
-    color: var(--of-text-secondary);
+    gap: 4px;
+    font-size: 13px;
+    color: #6b778c;
+  }
+
+  .of-kanban-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 1000px;
+    background: #246874;
+    padding: 1px;
+    box-shadow: 0px 0px 0px 1px white;
+    color: white;
+    font-size: 11px;
+    font-family: Roboto;
+    font-weight: 300;
+    line-height: 12.1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 }
 </style>

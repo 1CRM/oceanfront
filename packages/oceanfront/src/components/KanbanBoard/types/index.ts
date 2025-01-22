@@ -1,30 +1,29 @@
-export interface KanbanLabel {
+export interface IKanbanTag {
   id: string
   name: string
   color: string
 }
 
-export interface KanbanAssignee {
+export interface IKanbanAssignee {
   id: string
   name: string
   avatar?: string
 }
 
-export interface KanbanCard {
+export interface IKanbanCard {
   id: string
   title: string
   description?: string
   order: number
-  labels?: KanbanLabel[]
-  assignees?: KanbanAssignee[]
-  dueDate?: string | Date
+  assignees?: IKanbanAssignee[]
+  tags?: IKanbanTag[]
   [key: string]: any
 }
 
-export interface KanbanColumn {
+export interface IKanbanColumn {
   id: string
   title: string
-  cards?: KanbanCard[]
+  cards?: IKanbanCard[]
   limit?: number
 }
 

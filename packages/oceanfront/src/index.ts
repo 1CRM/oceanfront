@@ -54,6 +54,7 @@ import {
 import './scss/index.scss'
 import { materialIconSet } from '../icons/material'
 import { OfFileField } from './fields/File'
+import OfKanbanBoard from './components/KanbanBoard/KanbanBoard.vue'
 
 export const components: Record<string, Component> = {
   OfConfig,
@@ -90,7 +91,8 @@ export const components: Record<string, Component> = {
   OfDataType,
   OfBadge,
   OfOptionList,
-  OfFileField
+  OfFileField,
+  OfKanbanBoard
 }
 
 export const fieldTypes: Record<string, Component> = {
@@ -151,6 +153,7 @@ export type { CalendarEvent, InternalEvent } from './lib/calendar'
 export { extendConfig, useConfig } from './lib/config'
 export type { Config, ConfigFunction } from './lib/config'
 export { addDays, addMonths, addMinutes, addYears } from './lib/datetime'
+
 export {
   defineFieldType,
   extendFieldFormat,
@@ -220,3 +223,8 @@ export type {
   RecordMetadata
 } from './lib/records'
 export type { Tab } from './lib/tab'
+export type {
+  IKanbanCard,
+  IKanbanColumn,
+  CardMovedEvent
+} from './components/KanbanBoard/types'

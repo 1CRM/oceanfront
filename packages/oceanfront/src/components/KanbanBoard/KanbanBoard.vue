@@ -17,18 +17,16 @@
 <script lang="ts">
 import { defineComponent, type PropType, ref } from 'vue'
 import KanbanColumn from './components/KanbanColumn.vue'
-import type { KanbanColumn, CardMovedEvent } from './types'
+import type { IKanbanColumn, CardMovedEvent } from './types'
 
 export default defineComponent({
   name: 'OfKanbanBoard',
-
   components: {
     KanbanColumn
   },
-
   props: {
     columns: {
-      type: Array as PropType<KanbanColumn[]>,
+      type: Array as PropType<IKanbanColumn[]>,
       required: true
     }
   },
@@ -88,11 +86,11 @@ export default defineComponent({
   width: 100%;
   height: 100%;
   overflow: auto;
-  padding: var(--of-space-md);
+  padding: 16px;
 
   .of-kanban-columns {
     display: flex;
-    gap: var(--of-space-lg);
+    gap: 16px;
     height: 100%;
     min-height: 200px;
   }

@@ -50,12 +50,9 @@
 
 <script lang="ts">
 import { computed, defineComponent, type PropType, ref } from 'vue'
-import { OfButton } from '../../../Button'
+import { OfButton } from '../../Button'
 import KanbanCard from './KanbanCard.vue'
-import type {
-  KanbanCard as IKanbanCard,
-  KanbanColumn as IKanbanColumn
-} from '../types'
+import type { IKanbanCard, IKanbanColumn } from '../types'
 
 export default defineComponent({
   name: 'OfKanbanColumn',
@@ -74,13 +71,14 @@ export default defineComponent({
 
   emits: {
     'add-card': null,
-    'card-click': (card: IKanbanCard) => true,
-    'card-moved': (event: {
+    'card-click': (_card: IKanbanCard) => true,
+    'card-moved': (_event: {
       cardId: string
       fromColumn: string
       toColumn: string
     }) => true,
-    'column-menu': (event: { column: IKanbanColumn; event: MouseEvent }) => true
+    'column-menu': (_event: { column: IKanbanColumn; event: MouseEvent }) =>
+      true
   },
 
   setup(props, { emit }) {
@@ -123,7 +121,7 @@ export default defineComponent({
       })
     }
 
-    const handleCardDragStart = (card: IKanbanCard) => {
+    const handleCardDragStart = (_card: IKanbanCard) => {
       isDragging.value = true
     }
 
@@ -159,57 +157,66 @@ export default defineComponent({
 .of-kanban-column {
   flex: 1;
   min-width: 280px;
-  background: var(--of-surface-variant);
-  border-radius: var(--of-border-radius-lg);
+  background: #f4f5f7;
+  border-radius: 3px;
   display: flex;
   flex-direction: column;
 
   .of-kanban-column-header {
-    padding: var(--of-space-md);
+    padding: 12px;
+    padding-left: 16px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid var(--of-border-color);
+    border-bottom: 1px solid #dfe1e6;
 
     .of-kanban-column-title {
       display: flex;
       align-items: center;
-      gap: var(--of-space-sm);
+      gap: 8px;
 
       h3 {
         margin: 0;
-        font-size: var(--of-font-size-md);
-        font-weight: var(--of-font-weight-medium);
+        font-size: 20px;
+        font-family: Roboto;
+        font-weight: 500;
+        line-height: 24px;
+        color: #151713;
+      }
+
+      .of-kanban-column-count {
+        color: #6b778c;
+        font-size: 12px;
       }
     }
 
     .of-kanban-column-actions {
       display: flex;
-      gap: var(--of-space-xs);
+      gap: 4px;
     }
   }
 
   .of-kanban-column-content {
     flex: 1;
-    padding: var(--of-space-md);
+    padding: 12px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: var(--of-space-md);
+    gap: 12px;
     position: relative;
 
     &.is-drop-target {
-      background: var(--of-surface-variant-hover);
+      background: #ebecf0;
     }
   }
 
   .of-kanban-drop-indicator {
     position: absolute;
-    left: var(--of-space-md);
-    right: var(--of-space-md);
-    bottom: var(--of-space-md);
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
     height: 2px;
-    background: var(--of-primary);
+    background: #0052cc;
   }
 }
 </style>
