@@ -11,13 +11,6 @@
       <div class="of-kanban-column-actions">
         <of-button
           variant="text"
-          icon="add"
-          size="sm"
-          @click="$emit('add-card')"
-          :disabled="isAtLimit"
-        />
-        <of-button
-          variant="text"
           icon="more"
           size="sm"
           @click="showColumnMenu"
@@ -47,7 +40,13 @@
     </div>
 
     <div class="of-kanban-column-footer">
-      <button class="create-issue-button">Create Issue</button>
+      <of-button
+        class="create-issue-button"
+        @click="$emit('add-card')"
+        :disabled="isAtLimit"
+      >
+        Create Issue
+      </of-button>
     </div>
   </div>
 </template>

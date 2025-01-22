@@ -10,31 +10,22 @@
     @dragend="handleDragEnd"
     @click="$emit('click', card)"
   >
-    <div class="of-kanban-card-header">
-      <div class="of-kanban-card-labels" v-if="card.labels?.length">
-        <span
-          v-for="label in card.labels"
-          :key="label.id"
-          class="of-kanban-label"
-          :style="{ backgroundColor: label.color }"
-        >
-          {{ label.name }}
-        </span>
+    <div class="card-content">
+      <div class="of-kanban-card-header">
+        <div class="project-container">
+          <div class="project-icon">
+            <of-icon name="mobile" size="sm" />
+          </div>
+          <div class="project-name">
+            <div class="project-text">{{ card.project }}</div>
+          </div>
+        </div>
+        <div class="of-kanban-avatar" v-if="card.assignee">
+          <div class="avatar-text">{{ card.assignee.initials }}</div>
+        </div>
       </div>
-    </div>
-
-    <div class="of-kanban-card-content">
-      <h4>{{ card.title }}</h4>
-      <p v-if="card.description">{{ card.description }}</p>
-    </div>
-
-    <div class="of-kanban-card-footer">
-      <div class="of-kanban-card-meta">
-        <of-icon v-if="card.dueDate" name="calendar" size="sm" />
-        <span v-if="card.dueDate">{{ formatDate(card.dueDate) }}</span>
-      </div>
-      <div class="of-kanban-card-assignees" v-if="card.assignees?.length">
-        <!-- We can add assignee avatars here later -->
+      <div class="title-container">
+        <div class="title-text">{{ card.title }}</div>
       </div>
     </div>
   </div>
@@ -110,7 +101,6 @@ export default defineComponent({
   user-select: none;
   box-shadow: 0px 1px 4px rgba(0, 0, 0, 0.06);
   display: flex;
-  flex-direction: column;
   gap: 12px;
 
   &:hover {
@@ -125,104 +115,96 @@ export default defineComponent({
     outline: 2px solid #0052cc;
   }
 
-  .of-kanban-card-header {
+  .card-content {
+    flex: 1 1 0;
     display: flex;
-    align-items: center;
-    gap: 8px;
-    justify-content: space-between;
+    flex-direction: column;
+    gap: 12px;
 
-    .of-kanban-card-project {
-      display: flex;
+    .of-kanban-card-header {
+      align-self: stretch;
+      justify-content: flex-start;
       align-items: center;
+      gap: 8px;
+      display: inline-flex;
+
+      .project-container {
+        flex: 1 1 0;
+        height: 18px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+
+        .project-icon {
+          width: 16px;
+          height: 16px;
+          padding: 1.33px 2.67px 1.37px 2.7px;
+          justify-content: center;
+          align-items: center;
+          display: flex;
+        }
+
+        .project-name {
+          flex: 1 1 0;
+          height: 18px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+
+          .project-text {
+            color: #151713;
+            font-size: 13px;
+            font-family: Roboto;
+            font-weight: 500;
+            line-height: 18.2px;
+            word-wrap: break-word;
+          }
+        }
+      }
+
+      .of-kanban-avatar {
+        width: 24px;
+        height: 24px;
+        padding: 1px;
+        background: #246874;
+        border-radius: 1000px;
+        box-shadow: 0px 0px 0px 1px white;
+        overflow: hidden;
+        display: inline-flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+
+        .avatar-text {
+          align-self: stretch;
+          text-align: center;
+          color: white;
+          font-size: 11px;
+          font-family: Roboto;
+          font-weight: 300;
+          line-height: 12.1px;
+          word-wrap: break-word;
+        }
+      }
+    }
+
+    .title-container {
+      align-self: stretch;
+      justify-content: flex-start;
+      align-items: flex-start;
       gap: 4px;
-      color: #151713;
-      font-size: 13px;
-      font-family: Roboto;
-      font-weight: 500;
-      line-height: 18.2px;
-    }
+      display: inline-flex;
 
-    .of-kanban-avatar {
-      width: 24px;
-      height: 24px;
-      padding: 1px;
-      background: #246874;
-      border-radius: 1000px;
-      box-shadow: 0px 0px 0px 1px white;
-      color: white;
-      font-size: 11px;
-      font-family: Roboto;
-      font-weight: 300;
-      line-height: 12.1px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-  }
-
-  .of-kanban-card-labels {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-
-    .of-kanban-label {
-      padding: 2px 8px;
-      border-radius: 4.4px;
-      border: 1px solid #dddddd;
-      background: white;
-      color: #151713;
-      font-size: 13px;
-      font-family: Roboto;
-      font-weight: 400;
-      line-height: 18.2px;
-    }
-  }
-
-  .of-kanban-card-content {
-    h4 {
-      margin: 0 0 4px;
-      color: black;
-      font-size: 16px;
-      font-family: Roboto;
-      font-weight: 500;
-      line-height: 19.2px;
-    }
-
-    p {
-      margin: 0;
-      font-size: 13px;
-      color: #6b778c;
-    }
-  }
-
-  .of-kanban-card-footer {
-    margin-top: 8px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .of-kanban-card-meta {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 13px;
-    color: #6b778c;
-  }
-
-  .priority-indicator {
-    width: 184px;
-    height: 0px;
-    transform: rotate(90deg);
-    transform-origin: 0 0;
-    border: 2px solid;
-
-    &.high {
-      border-color: #f55b5b;
-    }
-
-    &.medium {
-      border-color: #246874;
+      .title-text {
+        flex: 1 1 0;
+        color: black;
+        font-size: 16px;
+        font-family: Roboto;
+        font-weight: 500;
+        line-height: 19.2px;
+        word-wrap: break-word;
+      }
     }
   }
 }

@@ -11,13 +11,14 @@ export interface IKanbanAssignee {
 }
 
 export interface IKanbanCard {
-  id: string
+  id: string | number
   title: string
-  description?: string
   order: number
-  assignees?: IKanbanAssignee[]
-  tags?: IKanbanTag[]
-  [key: string]: any
+  project?: string
+  priority?: 'high' | 'medium' | 'low'
+  assignee?: {
+    initials: string
+  }
 }
 
 export interface IKanbanColumn {

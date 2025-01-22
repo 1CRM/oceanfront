@@ -28,17 +28,20 @@ export default defineComponent({
           {
             id: 'card-1',
             title: 'Implement Drag and Drop',
-            description: 'Add drag and drop functionality to cards',
+            project: 'Project 1',
             order: 0,
-            assignees: [
-              { id: 'user1', name: 'John Doe', avatar: '/avatars/john.jpg' }
-            ]
+            assignee: {
+              initials: 'AI'
+            }
           },
           {
             id: 'card-2',
             title: 'Add Card Details Modal',
-            description: 'Create a modal for viewing and editing card details',
-            order: 1
+            project: 'Project 2',
+            order: 1,
+            assignee: {
+              initials: 'AB'
+            }
           }
         ]
       },
@@ -50,11 +53,11 @@ export default defineComponent({
           {
             id: 'card-3',
             title: 'Style Improvements',
-            description: 'Update card and column styling',
+            project: 'Project 3',
             order: 0,
-            assignees: [
-              { id: 'user2', name: 'Jane Smith', avatar: '/avatars/jane.jpg' }
-            ]
+            assignee: {
+              initials: 'AC'
+            }
           }
         ]
       },
@@ -65,8 +68,11 @@ export default defineComponent({
           {
             id: 'card-4',
             title: 'Basic Component Setup',
-            description: 'Initial setup of Kanban components',
-            order: 0
+            project: 'Project 4',
+            order: 0,
+            assignee: {
+              initials: 'AD'
+            }
           }
         ]
       }
