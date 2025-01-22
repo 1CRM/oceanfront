@@ -57,7 +57,7 @@
             ...props,
             inputType: customProps.switch ? 'switch' : null,
             inputLabel: !params.block ? 'Off' : 'On',
-            labelPosition: 'top',
+            labelPosition: 'top'
           }"
         />
       </div>
@@ -78,7 +78,15 @@
             ...props,
             inputType: customProps.switch ? 'switch' : null,
             inputLabel: !params.required ? 'Off' : 'On',
-            labelPosition: 'top',
+            labelPosition: 'top'
+          }"
+        />
+        <of-field
+          type="toggle"
+          label="Tooltip"
+          v-model="customProps.showTooltip"
+          v-bind="{
+            inputLabel: !customProps.showTooltip ? 'Off' : 'On'
           }"
         />
       </div>
@@ -87,11 +95,11 @@
 </template>
 
 <script lang="ts">
-import { computed, reactive, defineComponent, ref } from 'vue'
+import { computed, reactive, defineComponent } from 'vue'
 
 export default defineComponent({
   props: {
-    allowInputLabelPosition: Boolean,
+    allowInputLabelPosition: Boolean
   },
   setup(props) {
     const params = reactive({
@@ -105,6 +113,7 @@ export default defineComponent({
       containerTint: 'default',
       required: false,
       block: false,
+      tooltip: ''
     })
 
     const densityOptions = ['default', '0', '1', '2', '3']
@@ -119,29 +128,30 @@ export default defineComponent({
       'left',
       'right',
       'top',
-      ...(props.allowInputLabelPosition ? ['input'] : []),
+      ...(props.allowInputLabelPosition ? ['input'] : [])
     ]
     const modeOptions = ['editable', 'locked', 'readonly', 'disabled', 'fixed']
     const variantOptions = ['default', 'outlined', 'filled', 'compare']
     const containerClass = computed(() => [
       'content',
       'of--tinted',
-      `of--tint-${params.containerTint}`,
+      `of--tint-${params.containerTint}`
     ])
     const allParams = computed(() => {
       let p: any = { ...params }
+      p.tooltip = customProps.showTooltip ? 'Demo Field Tooltip' : ''
       if (p.variant === 'default') delete p.variant
       if (p.variant === 'compare') {
         return [
           { ...p, variant: 'outlined' },
-          { ...p, variant: 'filled' },
+          { ...p, variant: 'filled' }
         ]
       } else {
         return [p]
       }
     })
 
-    const customProps = reactive({ switch: false })
+    const customProps = reactive({ switch: false, showTooltip: false })
 
     return {
       allParams,
@@ -155,9 +165,9 @@ export default defineComponent({
       props,
       customProps,
       scaleOptions,
-      widthOptions,
+      widthOptions
     }
-  },
+  }
 })
 </script>
 
@@ -175,7 +185,6 @@ export default defineComponent({
     flex: auto;
     flex-flow: column wrap;
     justify-content: center;
-    overflow: hidden;
     padding: 0.25em 0.5em;
     .field {
       box-sizing: border-box;

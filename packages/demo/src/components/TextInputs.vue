@@ -10,7 +10,10 @@
           help="field help"
           label="Text input"
           v-model="textValue"
-          v-bind="{ ...props, ...customProps }"
+          v-bind="{
+            ...props,
+            ...customProps
+          }"
         />
       </template>
       <template #options>
@@ -137,12 +140,14 @@ export default defineComponent({
     const items = [
       { text: 'Items', value: 'Items' },
       { text: 'Items2', value: 'Items2' },
-      { text: 'Items3', value: 'Items3' },
+      { text: 'Items3', value: 'Items3' }
     ]
     const withItemsVal = ref('Items')
     const upd = (v: any) => (withItemsVal.value = v)
 
-    const customProps = reactive({ multiline: false })
+    const customProps = reactive({
+      multiline: false
+    })
 
     return {
       change,
@@ -151,9 +156,9 @@ export default defineComponent({
       textValue,
       items,
       withItemsVal,
-      upd,
+      upd
     }
-  },
+  }
 })
 </script>
 

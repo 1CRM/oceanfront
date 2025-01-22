@@ -177,6 +177,7 @@ export const BaseFieldProps = {
   items: [String, Array, Object] as PropType<string | any[] | ItemList>,
   label: String,
   ariaLabel: String,
+  tooltip: String,
   autocomplete: String,
   autocapitalize: String,
   autocorrect: String,

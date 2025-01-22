@@ -141,10 +141,13 @@ export const OfRadioField = defineComponent({
       active: true, // always show content
       blank: computed(() => !stateValue.value),
       class: computed(() => {
-        return {
-          'of-toggle-field': true,
-          'of--checked': !!stateValue.value
-        }
+        return [
+          'of-toggle-field',
+          'of-radio-field',
+          {
+            'of--checked': !!stateValue.value
+          }
+        ]
       }),
       cursor: computed(() => (fieldCtx.editable ? 'pointer' : null)),
       focus,

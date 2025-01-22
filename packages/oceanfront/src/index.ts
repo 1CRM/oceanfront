@@ -14,6 +14,7 @@ import { OfField } from './components/Field'
 import OfFocusGroup from './components/FocusGroup.vue'
 import { OfFormat } from './components/Format'
 import { OfIcon } from './components/Icon'
+import { OfTooltip } from './components/Tooltip'
 import { OfLink } from './components/Link'
 import OfListGroup from './components/ListGroup.vue'
 import { OfListItem } from './components/ListItem'
@@ -64,6 +65,7 @@ export const components: Record<string, Component> = {
   OfDialog,
   OfField,
   OfIcon,
+  OfTooltip,
   OfFocusGroup,
   OfFormat,
   OfLink,
