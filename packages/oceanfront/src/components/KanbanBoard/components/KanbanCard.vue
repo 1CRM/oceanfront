@@ -103,12 +103,15 @@ export default defineComponent({
 
 <style lang="scss">
 .of-kanban-card {
-  background: #ffffff;
+  background: white;
   border-radius: 3px;
   padding: 12px;
   cursor: grab;
   user-select: none;
   box-shadow: 0px 1px 4px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 
   &:hover {
     box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.12);
@@ -123,17 +126,37 @@ export default defineComponent({
   }
 
   .of-kanban-card-header {
-    margin-bottom: 8px;
     display: flex;
     align-items: center;
     gap: 8px;
+    justify-content: space-between;
 
     .of-kanban-card-project {
+      display: flex;
+      align-items: center;
+      gap: 4px;
       color: #151713;
       font-size: 13px;
       font-family: Roboto;
       font-weight: 500;
       line-height: 18.2px;
+    }
+
+    .of-kanban-avatar {
+      width: 24px;
+      height: 24px;
+      padding: 1px;
+      background: #246874;
+      border-radius: 1000px;
+      box-shadow: 0px 0px 0px 1px white;
+      color: white;
+      font-size: 11px;
+      font-family: Roboto;
+      font-weight: 300;
+      line-height: 12.1px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
   }
 
@@ -141,28 +164,28 @@ export default defineComponent({
     display: flex;
     flex-wrap: wrap;
     gap: 4px;
-  }
 
-  .of-kanban-label {
-    padding: 2px 4px;
-    border-radius: 4.4px;
-    font-size: 13px;
-    font-family: Roboto;
-    font-weight: 400;
-    line-height: 18.2px;
-    color: #151713;
-    border: 1px solid #dddddd;
-    background: white;
+    .of-kanban-label {
+      padding: 2px 8px;
+      border-radius: 4.4px;
+      border: 1px solid #dddddd;
+      background: white;
+      color: #151713;
+      font-size: 13px;
+      font-family: Roboto;
+      font-weight: 400;
+      line-height: 18.2px;
+    }
   }
 
   .of-kanban-card-content {
     h4 {
       margin: 0 0 4px;
+      color: black;
       font-size: 16px;
       font-family: Roboto;
       font-weight: 500;
       line-height: 19.2px;
-      color: black;
     }
 
     p {
@@ -187,21 +210,20 @@ export default defineComponent({
     color: #6b778c;
   }
 
-  .of-kanban-avatar {
-    width: 24px;
-    height: 24px;
-    border-radius: 1000px;
-    background: #246874;
-    padding: 1px;
-    box-shadow: 0px 0px 0px 1px white;
-    color: white;
-    font-size: 11px;
-    font-family: Roboto;
-    font-weight: 300;
-    line-height: 12.1px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  .priority-indicator {
+    width: 184px;
+    height: 0px;
+    transform: rotate(90deg);
+    transform-origin: 0 0;
+    border: 2px solid;
+
+    &.high {
+      border-color: #f55b5b;
+    }
+
+    &.medium {
+      border-color: #246874;
+    }
   }
 }
 </style>

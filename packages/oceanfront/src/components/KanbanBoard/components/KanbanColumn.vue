@@ -45,6 +45,10 @@
 
       <div v-if="isDropTarget" class="of-kanban-drop-indicator" />
     </div>
+
+    <div class="of-kanban-column-footer">
+      <button class="create-issue-button">Create Issue</button>
+    </div>
   </div>
 </template>
 
@@ -157,18 +161,16 @@ export default defineComponent({
 .of-kanban-column {
   flex: 1;
   min-width: 280px;
-  background: #f4f5f7;
+  background: #f0f1ee;
   border-radius: 3px;
   display: flex;
   flex-direction: column;
 
   .of-kanban-column-header {
-    padding: 12px;
-    padding-left: 16px;
+    padding: 8px 4px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid #dfe1e6;
 
     .of-kanban-column-title {
       display: flex;
@@ -177,11 +179,11 @@ export default defineComponent({
 
       h3 {
         margin: 0;
+        color: #151713;
         font-size: 20px;
         font-family: Roboto;
         font-weight: 500;
         line-height: 24px;
-        color: #151713;
       }
 
       .of-kanban-column-count {
@@ -191,8 +193,12 @@ export default defineComponent({
     }
 
     .of-kanban-column-actions {
+      padding: 2px;
+      border-radius: 3px;
       display: flex;
-      gap: 4px;
+      gap: 12px;
+      justify-content: center;
+      align-items: center;
     }
   }
 
@@ -203,10 +209,27 @@ export default defineComponent({
     display: flex;
     flex-direction: column;
     gap: 12px;
-    position: relative;
+  }
 
-    &.is-drop-target {
-      background: #ebecf0;
+  .of-kanban-column-footer {
+    padding: 12px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+
+    .create-issue-button {
+      display: flex;
+      padding: 2px 12px;
+      align-items: center;
+      gap: 12px;
+      border-radius: 3px;
+      background: #f0f1ee;
+      box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.18);
+      color: #246874;
+      font-size: 14px;
+      font-family: Roboto;
+      font-weight: 400;
+      line-height: 17px;
     }
   }
 
