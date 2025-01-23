@@ -5,8 +5,10 @@
   width: 100%;
   height: 100%;
   overflow: auto;
-  padding: 16px;
   background: var(--of-color-background);
+
+  display: flex;
+  flex-direction: column;
 
   .of-kanban-columns {
     display: flex;
@@ -151,6 +153,7 @@
                 gap: 10px;
 
                 .project-text {
+                  cursor: pointer;
                   color: var(--of-color-on-background);
                   font-size: 16px;
                   font-family: Roboto;
@@ -174,6 +177,12 @@
               justify-content: center;
               align-items: center;
               gap: 10px;
+              cursor: pointer;
+              .avatar-image {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+              }
 
               .avatar-text {
                 align-self: stretch;
@@ -203,6 +212,7 @@
               font-weight: 500;
               line-height: 19.2px;
               word-wrap: break-word;
+              cursor: pointer;
             }
           }
         }

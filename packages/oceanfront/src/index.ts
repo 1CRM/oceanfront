@@ -226,5 +226,8 @@ export type { Tab } from './lib/tab'
 export type {
   IKanbanCard,
   IKanbanColumn,
+  IKanbanProject,
+  IKanbanAssignee,
+  IKanbanTag,
   CardMovedEvent
 } from './components/KanbanBoard/types'

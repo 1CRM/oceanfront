@@ -33,9 +33,10 @@
         :is-dragging="isDragging"
         @drag-start="handleCardDragStart"
         @drag-end="handleCardDragEnd"
-        @click="$emit('card-click', card)"
+        @card-click="$emit('card-click', $event)"
+        @project-click="$emit('project-click', $event)"
+        @assignee-click="$emit('assignee-click', $event)"
       />
-
       <div v-if="isDropTarget" class="of-kanban-drop-indicator" />
     </div>
 
@@ -58,7 +59,12 @@
 import { computed, defineComponent, type PropType, ref } from 'vue'
 import { OfButton } from '../../Button'
 import KanbanCard from './KanbanCard.vue'
-import type { IKanbanCard, IKanbanColumn } from '../types'
+import type {
+  IKanbanAssignee,
+  IKanbanCard,
+  IKanbanColumn,
+  IKanbanProject
+} from '../types'
 
 export default defineComponent({
   name: 'OfKanbanColumn',
@@ -79,10 +85,13 @@ export default defineComponent({
   emits: {
     'add-card': null,
     'card-click': (_card: IKanbanCard) => true,
+    'project-click': (_project: IKanbanProject | undefined) => true,
+    'assignee-click': (_assignee: IKanbanAssignee | undefined) => true,
     'card-moved': (_event: {
       cardId: string
       fromColumn: string
       toColumn: string
+      newOrder?: number
     }) => true,
     'column-menu': (_event: { column: IKanbanColumn; event: MouseEvent }) =>
       true

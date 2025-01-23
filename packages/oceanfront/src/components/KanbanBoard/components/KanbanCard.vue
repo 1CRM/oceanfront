@@ -8,33 +8,37 @@
     draggable="true"
     @dragstart="handleDragStart"
     @dragend="handleDragEnd"
-    @click="$emit('click', card)"
   >
     <div class="card-content">
       <div class="of-kanban-card-header">
         <div class="project-container">
           <div class="project-icon">
-            <of-icon name="mobile" size="16px" />
+            <of-icon :name="card.project?.icon ?? 'mobile'" />
           </div>
           <div class="project-name">
-            <div class="project-text">{{ card.project }}</div>
+            <div class="project-text" @click="$emit('project-click', card.project)">{{ card.project?.name }}</div>
           </div>
         </div>
-        <div class="of-kanban-avatar" v-if="card.assignee">
-          <div class="avatar-text">{{ card.assignee.initials }}</div>
+        <div class="of-kanban-avatar" v-if="card.assignee" @click="$emit('assignee-click', card.assignee)">
+          <img 
+            v-if="card.assignee.avatar" 
+            :src="card.assignee.avatar" 
+            :alt="card.assignee.name"
+            class="avatar-image"
+          >
+          <div v-else class="avatar-text">{{ assigneeInitials }}</div>
         </div>
       </div>
       <div class="title-container">
-        <div class="title-text">{{ card.title }}</div>
+        <div class="title-text" @click="$emit('card-click', card)">{{ card.title }}</div>
       </div>
     </div>
   </div>
 </template>
-
 <script lang="ts">
-import { defineComponent, type PropType } from 'vue'
+import { computed, defineComponent, type PropType } from 'vue'
 import { OfIcon } from '../../Icon'
-import type { IKanbanCard } from '../types'
+import type { IKanbanAssignee, IKanbanCard } from '../types'
 
 export default defineComponent({
   name: 'OfKanbanCard',
@@ -55,9 +59,7 @@ export default defineComponent({
       default: false
     }
   },
-
-  emits: ['click', 'drag-start', 'drag-end'],
-
+  emits: ['drag-start', 'drag-end', 'project-click', 'assignee-click', 'card-click'],
   setup(props, { emit }) {
     const handleDragStart = (event: DragEvent) => {
       if (!event.dataTransfer) return
@@ -78,15 +80,24 @@ export default defineComponent({
       emit('drag-end')
     }
 
-    const formatDate = (date: string | Date) => {
-      // We can add proper date formatting later
-      return new Date(date).toLocaleDateString()
-    }
+    const assigneeInitials = computed<string>(() => {
+      const name = props.card.assignee?.name
+      if (!name) return ''
+
+      return (
+        name.includes(' ')
+          ? name
+              .split(' ')
+              .map((word) => word[0])
+              .join('')
+          : name.slice(0, 2)
+      ).toUpperCase()
+    })
 
     return {
       handleDragStart,
       handleDragEnd,
-      formatDate
+      assigneeInitials
     }
   }
 })

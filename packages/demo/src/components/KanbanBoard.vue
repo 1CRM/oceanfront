@@ -8,6 +8,8 @@
       @card-moved="onCardMoved"
       @add-card="onAddCard"
       @card-click="onCardClick"
+      @project-click="onProjectClick"
+      @assignee-click="onAssigneeClick"
       @column-menu="onColumnMenu"
     />
   </div>
@@ -15,7 +17,13 @@
 
 <script lang="ts">
 import { defineComponent, ref } from 'vue'
-import type { IKanbanCard, IKanbanColumn, CardMovedEvent } from 'oceanfront'
+import type {
+  IKanbanCard,
+  IKanbanColumn,
+  CardMovedEvent,
+  IKanbanProject,
+  IKanbanAssignee
+} from 'oceanfront'
 
 export default defineComponent({
   setup() {
@@ -27,20 +35,32 @@ export default defineComponent({
         cards: [
           {
             id: 'card-1',
-            title: 'Implement Drag and Drop',
-            project: 'Project 1',
+            title:
+              'Kanban Board: Create components hierarchy and create base component',
+            project: {
+              id: 'project-1',
+              name: 'Project 1',
+              icon: 'mobile'
+            },
             order: 0,
             assignee: {
-              initials: 'AI'
+              id: 'assignee-1',
+              name: 'Michael Whitehead',
+              avatar: 'https://1crm9-demo.1crmcloud.com/files/images/directory/1/MichaelWhitehead.png'
             }
           },
           {
             id: 'card-2',
-            title: 'Add Card Details Modal',
-            project: 'Project 2',
+            title: 'Kanban Board: Create KanbanColumn component',
+            project: {
+              id: 'project-2',
+              name: 'Project 2',
+              icon: 'email'
+            },
             order: 1,
             assignee: {
-              initials: 'AB'
+              id: 'assignee-2',
+              name: 'Bob Smith'
             }
           }
         ]
@@ -53,10 +73,15 @@ export default defineComponent({
           {
             id: 'card-3',
             title: 'Style Improvements',
-            project: 'Project 3',
+            project: {
+              id: 'project-3',
+              name: 'Project 3',
+              icon: 'mobile'
+            },
             order: 0,
             assignee: {
-              initials: 'AC'
+              id: 'assignee-3',
+              name: 'Charlie Brown'
             }
           }
         ]
@@ -68,10 +93,15 @@ export default defineComponent({
           {
             id: 'card-4',
             title: 'Basic Component Setup',
-            project: 'Project 4',
+            project: {
+              id: 'project-4',
+              name: 'Project 4',
+              icon: 'mobile'
+            },
             order: 0,
             assignee: {
-              initials: 'AD'
+              id: 'assignee-4',
+              name: 'David Lee'
             }
           }
         ]
@@ -84,6 +114,8 @@ export default defineComponent({
   @card-moved="onCardMoved"
   @add-card="onAddCard"
   @card-click="onCardClick"
+  @project-click="onProjectClick"
+  @assignee-click="onAssigneeClick"
   @column-menu="onColumnMenu"
 />
 `
@@ -100,6 +132,14 @@ export default defineComponent({
       console.log('Card clicked:', card)
     }
 
+    const onProjectClick = (project: IKanbanProject) => {
+      console.log('Project clicked:', project)
+    }
+
+    const onAssigneeClick = (assignee: IKanbanAssignee) => {
+      console.log('Assignee clicked:', assignee)
+    }
+
     const onColumnMenu = (event: {
       column: IKanbanColumn
       event: MouseEvent
@@ -113,7 +153,9 @@ export default defineComponent({
       onCardMoved,
       onAddCard,
       onCardClick,
-      onColumnMenu
+      onColumnMenu,
+      onProjectClick,
+      onAssigneeClick
     }
   }
 })
@@ -121,10 +163,11 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 .container {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  height: 80vh;
+
+  .of-kanban-board {
+    padding: 16px 0;
+  }
 
   h1 {
     margin: 0;

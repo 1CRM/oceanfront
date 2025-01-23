@@ -5,10 +5,12 @@
         v-for="column in columns"
         :key="column.id"
         :column="column"
+        @column-menu="$emit('column-menu', $event)"
         @card-moved="handleCardMove"
         @add-card="$emit('add-card', column.id)"
         @card-click="$emit('card-click', $event)"
-        @column-menu="$emit('column-menu', $event)"
+        @project-click="$emit('project-click', $event)"
+        @assignee-click="$emit('assignee-click', $event)"
       >
         <template #create-button>{{ createButtonText }}</template>
       </kanban-column>
@@ -39,10 +41,12 @@ export default defineComponent({
 
   emits: [
     'update:columns',
+    'column-menu',
     'card-moved',
     'add-card',
     'card-click',
-    'column-menu'
+    'project-click',
+    'assignee-click'
   ] as const,
 
   setup(props, { emit }) {
