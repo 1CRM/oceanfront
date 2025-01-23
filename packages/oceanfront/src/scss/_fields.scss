@@ -367,7 +367,7 @@
     grid-template-areas: 'main label' 'caption label';
   }
   &.of--label-top > .of-field-main-label,
-  &.of--tooltip.of--label-top > .of-field-main-label {
+  &.of--tooltip > .of-field-main-label {
     margin-bottom: 0.25em;
     padding-left: var(--field-h-pad);
   }

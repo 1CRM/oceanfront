@@ -1,6 +1,6 @@
 .of-tooltip {
   --tt-bg-color: #151713;
-  --tt-icon-bg-color: var(--of-field-border-color);
+  --tt-icon-bg-color: var(--of-primary-tint);
   font-size: 0.8em;
 
   .of-tooltip-main {
@@ -21,7 +21,7 @@
       width: max-content;
       color: #fff;
       line-height: 1.3em;
-      z-index: 1;
+      z-index: 99999;
       opacity: 0;
       transition:
         opacity 0.2s,
@@ -37,7 +37,7 @@
       }
 
       &.left {
-        right: calc(var(--tt-icon-width) + 3px);
+        right: var(--tt-text-offset);
 
         .triangle {
           left: calc(100% - 1px);
@@ -48,7 +48,7 @@
         }
       }
       &.right {
-        left: calc(var(--tt-icon-width) + 3px);
+        left: var(--tt-text-offset);
 
         .triangle {
           left: -2px;
