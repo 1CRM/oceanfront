@@ -9,7 +9,9 @@
         @add-card="$emit('add-card', column.id)"
         @card-click="$emit('card-click', $event)"
         @column-menu="$emit('column-menu', $event)"
-      />
+      >
+        <template #create-button>{{ createButtonText }}</template>
+      </kanban-column>
     </div>
   </div>
 </template>
@@ -28,6 +30,10 @@ export default defineComponent({
     columns: {
       type: Array as PropType<IKanbanColumn[]>,
       required: true
+    },
+    createButtonText: {
+      type: String,
+      default: 'Create Issue'
     }
   },
 
@@ -80,19 +86,3 @@ export default defineComponent({
   }
 })
 </script>
-
-<style lang="scss">
-.of-kanban-board {
-  width: 100%;
-  height: 100%;
-  overflow: auto;
-  padding: 16px;
-
-  .of-kanban-columns {
-    display: flex;
-    gap: 16px;
-    height: 100%;
-    min-height: 200px;
-  }
-}
-</style>

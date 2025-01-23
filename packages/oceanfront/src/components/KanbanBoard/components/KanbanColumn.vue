@@ -44,8 +44,11 @@
         class="create-issue-button"
         @click="$emit('add-card')"
         :disabled="isAtLimit"
+        variant="elevated"
+        tint="primary"
+        icon="plus"
       >
-        Create Issue
+        <slot name="create-button">Create Issue</slot>
       </of-button>
     </div>
   </div>
@@ -59,19 +62,20 @@ import type { IKanbanCard, IKanbanColumn } from '../types'
 
 export default defineComponent({
   name: 'OfKanbanColumn',
-
   components: {
     OfButton,
     KanbanCard
   },
-
   props: {
     column: {
       type: Object as PropType<IKanbanColumn>,
       required: true
+    },
+    createButtonText: {
+      type: String,
+      default: 'Create Issue'
     }
   },
-
   emits: {
     'add-card': null,
     'card-click': (_card: IKanbanCard) => true,
@@ -155,90 +159,3 @@ export default defineComponent({
   }
 })
 </script>
-
-<style lang="scss">
-.of-kanban-column {
-  flex: 1;
-  min-width: 280px;
-  background: #f0f1ee;
-  border-radius: 3px;
-  display: flex;
-  flex-direction: column;
-
-  .of-kanban-column-header {
-    padding: 8px 4px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    .of-kanban-column-title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-
-      h3 {
-        margin: 0;
-        color: #151713;
-        font-size: 20px;
-        font-family: Roboto;
-        font-weight: 500;
-        line-height: 24px;
-      }
-
-      .of-kanban-column-count {
-        color: #6b778c;
-        font-size: 12px;
-      }
-    }
-
-    .of-kanban-column-actions {
-      padding: 2px;
-      border-radius: 3px;
-      display: flex;
-      gap: 12px;
-      justify-content: center;
-      align-items: center;
-    }
-  }
-
-  .of-kanban-column-content {
-    flex: 1;
-    padding: 12px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .of-kanban-column-footer {
-    padding: 12px;
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-
-    .create-issue-button {
-      display: flex;
-      padding: 2px 12px;
-      align-items: center;
-      gap: 12px;
-      border-radius: 3px;
-      background: #f0f1ee;
-      box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.18);
-      color: #246874;
-      font-size: 14px;
-      font-family: Roboto;
-      font-weight: 400;
-      line-height: 17px;
-    }
-  }
-
-  .of-kanban-drop-indicator {
-    position: absolute;
-    left: 12px;
-    right: 12px;
-    bottom: 12px;
-    height: 2px;
-    background: #0052cc;
-  }
-}
-</style>

@@ -88,7 +88,7 @@
             class="of-buttonset"
             :class="{
               'of-buttonset--rounded': params.rounded,
-              'of--elevated': variant == 'elevated',
+              'of--elevated': variant == 'elevated'
             }"
           >
             <of-button v-bind="params" :variant="variant" icon="accept"
@@ -118,7 +118,7 @@
             class="of-buttonset"
             :class="{
               'of-buttonset--rounded': params.rounded,
-              'of--elevated': variant == 'elevated',
+              'of--elevated': variant == 'elevated'
             }"
           >
             <of-button v-bind="params" :variant="variant">1</of-button>
@@ -175,9 +175,9 @@ export default defineComponent({
       {
         text: 'Option 1',
         value: selectMenu1,
-        attrs: { 'data-test': 'my-btn' },
+        attrs: { 'data-test': 'my-btn' }
       },
-      { text: 'Option 2', value: selectMenu2 },
+      { text: 'Option 2', value: selectMenu2 }
     ]
 
     const densityOptions = ['default', '0', '1', '2', '3']
@@ -187,7 +187,7 @@ export default defineComponent({
       density: 'default',
       rounded: false,
       tint: 'default',
-      scale: 'nm',
+      scale: 'nm'
     })
     return {
       sampleCode,
@@ -197,9 +197,9 @@ export default defineComponent({
       scaleOptions,
       params,
       menuClick,
-      variants,
+      variants
     }
-  },
+  }
 })
 </script>
 

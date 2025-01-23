@@ -56,7 +56,7 @@ export default defineComponent({
           'more alt': 'more alt',
           'theme settings': 'theme settings',
           'theme light': 'light mode',
-          'theme dark': 'dark mode',
+          'theme dark': 'dark mode'
         },
         {
           required: 'required',
@@ -72,7 +72,7 @@ export default defineComponent({
           search: 'search',
           date: 'date',
           time: 'time',
-          hourglass: 'hourglass',
+          hourglass: 'hourglass'
         },
         {
           checkbox: 'checkbox off',
@@ -80,31 +80,31 @@ export default defineComponent({
           radio: 'radio off',
           'radio checked': 'radio on',
           star: 'star off',
-          'star checked': 'star on',
+          'star checked': 'star on'
         },
         {
           'arrow up': 'up arrow',
           'arrow down': 'down arrow',
           'arrow left': 'left arrow',
-          'arrow right': 'right arrow',
+          'arrow right': 'right arrow'
         },
         {
           'page first': 'page first',
           'page previous': 'page previous',
           'page next': 'page next',
-          'page last': 'page last',
+          'page last': 'page last'
         },
         {
           'bullet up': 'bullet up',
           'bullet down': 'bullet down',
           'bullet left': 'bullet left',
-          'bullet right': 'bullet right',
+          'bullet right': 'bullet right'
         },
         {
           'expand up': 'expand up',
           'expand down': 'expand down',
           'expand open': 'expand',
-          'expand close': 'expand close',
+          'expand close': 'expand close'
         },
         {
           // ellipsis circle
@@ -115,7 +115,7 @@ export default defineComponent({
           'error circle': 'error circle',
           'plus circle': 'plus circle',
           'minus circle': 'minus circle',
-          'help circle': 'help circle',
+          'help circle': 'help circle'
           // split circle
           // refresh circle
         },
@@ -126,11 +126,11 @@ export default defineComponent({
           'led yellow': 'yellow led',
           'led violet': 'violet led',
           'led blue': 'blue led',
-          'led orange': 'orange led',
-        },
-      ],
+          'led orange': 'orange led'
+        }
+      ]
     }
-  },
+  }
 })
 </script>
 
