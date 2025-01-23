@@ -14,32 +14,38 @@ export const OfTooltip = defineComponent({
     const opened = ref(false)
 
     const show = (e: MouseEvent) => {
-      const clientWidth = document.documentElement.clientWidth
       const tooltipIconEl = e.target as HTMLElement
 
       const tooltipIconElRect = tooltipIconEl?.getBoundingClientRect()
       let tooltipTextElRect = tooltipTextEl.value.getBoundingClientRect()
 
+      const textOffset = 4
+      const edgeMargin = 5
+      const maxRight = document.body.clientWidth - textOffset - edgeMargin
+      const rightTooltipOffset = Math.round(
+        tooltipIconElRect.width + textOffset
+      )
+
       textPosition.value =
         props.position === 'right'
-          ? tooltipTextElRect.right > clientWidth &&
-            tooltipIconElRect.left > clientWidth - tooltipIconElRect.right
+          ? tooltipTextElRect.right + rightTooltipOffset > maxRight &&
+            tooltipIconElRect.left - textOffset >
+              maxRight - (tooltipIconElRect.left + textOffset)
             ? 'left'
             : 'right'
-          : tooltipTextElRect.width > tooltipIconElRect.left &&
-              clientWidth - tooltipIconElRect.right > tooltipIconElRect.left
+          : tooltipTextElRect.width + textOffset > tooltipIconElRect.left &&
+              maxRight - tooltipIconElRect.right > tooltipIconElRect.left
             ? 'right'
             : 'left'
 
       const maxWidth =
         (textPosition.value === 'left'
-          ? tooltipIconElRect.left
-          : clientWidth - tooltipIconElRect.right) -
-        (tooltipIconElRect.width + 25)
+          ? tooltipIconElRect.left - textOffset
+          : maxRight - tooltipIconElRect.right) - edgeMargin
 
       tooltipStyle.value = {
-        '--tt-icon-width': Math.round(tooltipIconElRect.width) + 'px',
-        'max-width': Math.round(maxWidth) + 'px',
+        '--tt-text-offset': textOffset + tooltipIconElRect.width + 'px',
+        'max-width': Math.round(maxWidth - 16) + 'px',
         bottom: ''
       }
 

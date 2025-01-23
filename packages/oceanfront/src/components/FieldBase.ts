@@ -264,7 +264,7 @@ export const OfFieldBase = defineComponent({
             'of--rounded': props.rounded,
             'of--undecorated': !!fieldRender.undecorated,
             'of--updated': fieldRender.updated,
-            'of--tooltip': tooltip
+            'of--tooltip': !!props.tooltip
           },
           'of--cursor-' + (fieldRender.cursor || 'default'),
           'of--density-' + density.value,
