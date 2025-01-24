@@ -5,9 +5,13 @@
       'of--is-dragging': isDragging,
       'of--is-selected': isSelected
     }"
+    :data-order="card.order"
     draggable="true"
     @dragstart="handleDragStart"
     @dragend="handleDragEnd"
+    @click="$emit('card-click', card)"
+    @blur="$emit('blur')"
+    tabindex="0"
   >
     <div class="card-content">
       <div class="of-kanban-card-header">
@@ -16,21 +20,32 @@
             <of-icon :name="card.project?.icon ?? 'mobile'" />
           </div>
           <div class="project-name">
-            <div class="project-text" @click="$emit('project-click', card.project)">{{ card.project?.name }}</div>
+            <div
+              class="project-text"
+              @click="$emit('project-click', card.project)"
+            >
+              {{ card.project?.name }}
+            </div>
           </div>
         </div>
-        <div class="of-kanban-avatar" v-if="card.assignee" @click="$emit('assignee-click', card.assignee)">
-          <img 
-            v-if="card.assignee.avatar" 
-            :src="card.assignee.avatar" 
+        <div
+          class="of-kanban-avatar"
+          v-if="card.assignee"
+          @click="$emit('assignee-click', card.assignee)"
+        >
+          <img
+            v-if="card.assignee.avatar"
+            :src="card.assignee.avatar"
             :alt="card.assignee.name"
             class="avatar-image"
-          >
+          />
           <div v-else class="avatar-text">{{ assigneeInitials }}</div>
         </div>
       </div>
       <div class="title-container">
-        <div class="title-text" @click="$emit('card-click', card)">{{ card.title }}</div>
+        <div class="title-text">
+          {{ card.title }}
+        </div>
       </div>
     </div>
   </div>
@@ -59,11 +74,19 @@ export default defineComponent({
       default: false
     }
   },
-  emits: ['drag-start', 'drag-end', 'project-click', 'assignee-click', 'card-click'],
+  emits: [
+    'drag-start',
+    'drag-end',
+    'project-click',
+    'assignee-click',
+    'card-click',
+    'blur'
+  ],
   setup(props, { emit }) {
     const handleDragStart = (event: DragEvent) => {
       if (!event.dataTransfer) return
 
+      emit('card-click', props.card)
       emit('drag-start', props.card)
 
       event.dataTransfer.effectAllowed = 'move'

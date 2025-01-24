@@ -31,7 +31,7 @@ export default defineComponent({
       {
         id: 'todo',
         title: 'To Do',
-        limit: 5,
+        limit: 7,
         cards: [
           {
             id: 'card-1',
@@ -158,7 +158,7 @@ export default defineComponent({
       },
             {
         id: 'test',
-        title: 'test',
+        title: 'Reviewe & Test',
         cards: [
           {
             id: 'card-5',
