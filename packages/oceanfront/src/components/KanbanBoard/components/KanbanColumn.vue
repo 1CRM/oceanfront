@@ -130,17 +130,28 @@ export default defineComponent({
         container.querySelectorAll('.of-kanban-card')
       ) as HTMLElement[]
 
-      // If no cards, position at the top
-      if (cards.length === 0) {
-        dropPosition.value = 12 // padding top
-        isDropTarget.value = true
-        return
-      }
-
       const mouseY = event.clientY - containerRect.top + scrollTop
       const draggingCard = container.querySelector(
         '.of-kanban-card.of--is-dragging'
       ) as HTMLElement
+
+      // If mouse is near the top of the container, position at the top
+      if (mouseY < 24) {
+        // 24px threshold from the top
+        dropPosition.value = 12
+        isDropTarget.value = true
+        return
+      }
+
+      // If no cards or only the dragged card, position at the top
+      if (
+        cards.length === 0 ||
+        (cards.length === 1 && cards[0] === draggingCard)
+      ) {
+        dropPosition.value = 12
+        isDropTarget.value = true
+        return
+      }
 
       // Find the card we're dragging over
       for (let i = 0; i < cards.length; i++) {
