@@ -205,37 +205,81 @@ export default defineComponent({
         const data = JSON.parse(event.dataTransfer.getData('text/plain'))
         if (!data.cardId || !data.sourceColumnId) return
 
-        // Calculate new order based on drop position
+        const container = event.currentTarget as HTMLElement
         const cards = Array.from(
-          (event.currentTarget as HTMLElement).querySelectorAll(
-            '.of-kanban-card:not(.of--is-dragging)'
-          )
+          container.querySelectorAll('.of-kanban-card:not(.of--is-dragging)')
         ) as HTMLElement[]
 
-        let newOrder = 0
-        let prevOrder = 0
-        let nextOrder = cards.length * 2 // Default large gap
+        // Get mouse position relative to container
+        const containerRect = container.getBoundingClientRect()
+        const mouseY = event.clientY - containerRect.top + container.scrollTop
 
-        for (let i = 0; i < cards.length; i++) {
-          const card = cards[i]
-          const cardRect = card.getBoundingClientRect()
-          const cardMiddle = cardRect.top + cardRect.height / 2
-
-          if (event.clientY < cardMiddle) {
-            nextOrder = parseFloat(card.getAttribute('data-order') || '0')
-            break
-          }
-
-          prevOrder = parseFloat(card.getAttribute('data-order') || '0')
+        // Handle empty column or drop at the beginning
+        if (
+          cards.length === 0 ||
+          mouseY < cards[0]?.getBoundingClientRect().top
+        ) {
+          emit('card-moved', {
+            cardId: data.cardId,
+            fromColumn: data.sourceColumnId,
+            toColumn: props.column.id,
+            newOrder: 0
+          })
+          return
         }
 
-        newOrder = Math.ceil(prevOrder + (nextOrder - prevOrder) / 2)
+        // Handle drop at the end
+        const lastCard = cards[cards.length - 1]
+        if (mouseY > lastCard.getBoundingClientRect().bottom) {
+          const lastOrder = parseFloat(
+            lastCard.getAttribute('data-order') || '0'
+          )
+          emit('card-moved', {
+            cardId: data.cardId,
+            fromColumn: data.sourceColumnId,
+            toColumn: props.column.id,
+            newOrder: lastOrder + 1
+          })
+          return
+        }
 
+        // Find position between two cards
+        for (let i = 0; i < cards.length - 1; i++) {
+          const currentCard = cards[i]
+          const nextCard = cards[i + 1]
+          const currentRect = currentCard.getBoundingClientRect()
+          const nextRect = nextCard.getBoundingClientRect()
+
+          if (mouseY >= currentRect.top && mouseY <= nextRect.top) {
+            const currentOrder = parseFloat(
+              currentCard.getAttribute('data-order') || '0'
+            )
+            const nextOrder = parseFloat(
+              nextCard.getAttribute('data-order') || '0'
+            )
+
+            // Calculate the order between the two cards
+            const newOrder = Math.floor(currentOrder + 1)
+
+            emit('card-moved', {
+              cardId: data.cardId,
+              fromColumn: data.sourceColumnId,
+              toColumn: props.column.id,
+              newOrder
+            })
+            return
+          }
+        }
+
+        // Fallback: append to the end
+        const lastOrder = parseFloat(
+          cards[cards.length - 1].getAttribute('data-order') || '0'
+        )
         emit('card-moved', {
           cardId: data.cardId,
           fromColumn: data.sourceColumnId,
           toColumn: props.column.id,
-          newOrder
+          newOrder: lastOrder + 1
         })
       } catch (error) {
         console.error('Error handling drop:', error)
