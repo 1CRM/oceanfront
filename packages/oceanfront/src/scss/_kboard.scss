@@ -88,15 +88,6 @@
         }
       }
 
-      .of-kanban-drop-indicator {
-        position: absolute;
-        left: 12px;
-        right: 12px;
-        bottom: 12px;
-        height: 2px;
-        background: var(--of-kanban-board-drop-indicator-bg);
-      }
-
       .of-kanban-card {
         background: var(--of-color-background);
         border-radius: 3px;
@@ -182,6 +173,7 @@
               align-items: center;
               gap: 10px;
               cursor: pointer;
+              
               .avatar-image {
                 width: 100%;
                 height: 100%;

@@ -119,19 +119,18 @@ export default defineComponent({
       if (!event.dataTransfer) return
       event.dataTransfer.dropEffect = 'move'
 
-      // Always prevent default to allow drop
       event.preventDefault()
 
-      // Get the scroll container and its scroll position
       const container = event.currentTarget as HTMLElement
       const scrollTop = container.scrollTop
       const containerRect = container.getBoundingClientRect()
 
+      // Get all cards, including the dragged one
       const cards = Array.from(
-        container.querySelectorAll('.of-kanban-card:not(.of--is-dragging)')
+        container.querySelectorAll('.of-kanban-card')
       ) as HTMLElement[]
 
-      // If no cards or only the dragged card, position at the top
+      // If no cards, position at the top
       if (cards.length === 0) {
         dropPosition.value = 12 // padding top
         isDropTarget.value = true
@@ -139,10 +138,16 @@ export default defineComponent({
       }
 
       const mouseY = event.clientY - containerRect.top + scrollTop
+      const draggingCard = container.querySelector(
+        '.of-kanban-card.of--is-dragging'
+      ) as HTMLElement
 
       // Find the card we're dragging over
       for (let i = 0; i < cards.length; i++) {
         const card = cards[i]
+        // Skip the card being dragged
+        if (card === draggingCard) continue
+
         const cardRect = card.getBoundingClientRect()
         const cardTop = cardRect.top - containerRect.top + scrollTop
         const cardBottom = cardTop + cardRect.height
@@ -155,8 +160,8 @@ export default defineComponent({
           return
         }
 
-        // If this is the last card and we're below its middle
-        if (i === cards.length - 1) {
+        // If this is the last non-dragging card and we're below its middle
+        if (i === cards.length - 1 || cards[i + 1] === draggingCard) {
           dropPosition.value = cardBottom + 12
           isDropTarget.value = true
           return
