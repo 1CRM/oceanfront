@@ -29,6 +29,7 @@
         v-for="card in sortedCards"
         :key="card.id"
         :card="card"
+        :column-id="column.id"
         :is-dragging="isDragging"
         :is-selected="selectedCardId === card.id"
         @drag-start="handleCardDragStart"
@@ -118,99 +119,109 @@ export default defineComponent({
       if (!event.dataTransfer) return
       event.dataTransfer.dropEffect = 'move'
 
-      try {
-        // Check if we're dragging a card
-        const data = JSON.parse(event.dataTransfer.getData('text/plain'))
-        if (!data.cardId) return
-      } catch {
-        return
-      }
+      // Always prevent default to allow drop
+      event.preventDefault()
 
-      const containerRect = (
-        event.currentTarget as HTMLElement
-      ).getBoundingClientRect()
+      // Get the scroll container and its scroll position
+      const container = event.currentTarget as HTMLElement
+      const scrollTop = container.scrollTop
+      const containerRect = container.getBoundingClientRect()
+
       const cards = Array.from(
-        (event.currentTarget as HTMLElement).querySelectorAll('.of-kanban-card')
+        container.querySelectorAll('.of-kanban-card:not(.of--is-dragging)')
       ) as HTMLElement[]
 
-      // If no cards, position at the top
+      // If no cards or only the dragged card, position at the top
       if (cards.length === 0) {
         dropPosition.value = 12 // padding top
+        isDropTarget.value = true
         return
       }
+
+      const mouseY = event.clientY - containerRect.top + scrollTop
 
       // Find the card we're dragging over
       for (let i = 0; i < cards.length; i++) {
         const card = cards[i]
-        // Skip the card being dragged
-        if (card.classList.contains('of--is-dragging')) continue
-
         const cardRect = card.getBoundingClientRect()
-        const cardMiddle = cardRect.top + cardRect.height / 2
+        const cardTop = cardRect.top - containerRect.top + scrollTop
+        const cardBottom = cardTop + cardRect.height
+        const cardMiddle = cardTop + cardRect.height / 2
 
-        if (event.clientY < cardMiddle) {
+        if (mouseY < cardMiddle) {
           // Position above current card
-          dropPosition.value =
-            i === 0
-              ? 12 // If first card, position at top padding
-              : cardRect.top - containerRect.top
+          dropPosition.value = cardTop
+          isDropTarget.value = true
+          return
+        }
+
+        // If this is the last card and we're below its middle
+        if (i === cards.length - 1) {
+          dropPosition.value = cardBottom + 12
+          isDropTarget.value = true
           return
         }
       }
-
-      // If we're below all cards, position at the bottom
-      const lastCard = cards[cards.length - 1]
-      if (lastCard && !lastCard.classList.contains('of--is-dragging')) {
-        const lastCardRect = lastCard.getBoundingClientRect()
-        dropPosition.value = lastCardRect.bottom - containerRect.top + 12
-      }
     }
 
-    const handleDragEnter = () => {
+    const handleDragEnter = (event: DragEvent) => {
+      event.preventDefault()
       isDropTarget.value = true
     }
 
-    const handleDragLeave = () => {
-      isDropTarget.value = false
+    const handleDragLeave = (event: DragEvent) => {
+      // Only hide indicator if we're leaving the column content area
+      const relatedTarget = event.relatedTarget as HTMLElement
+      const currentColumn = event.currentTarget as HTMLElement
+      if (!relatedTarget || !currentColumn.contains(relatedTarget)) {
+        isDropTarget.value = false
+      }
     }
 
     const handleDrop = (event: DragEvent) => {
+      event.preventDefault()
       isDropTarget.value = false
       if (!event.dataTransfer) return
 
-      const data = JSON.parse(event.dataTransfer.getData('text/plain'))
-      // Calculate new order based on drop position
-      const cards = Array.from(
-        (event.currentTarget as HTMLElement).querySelectorAll('.of-kanban-card')
-      ) as HTMLElement[]
+      try {
+        const data = JSON.parse(event.dataTransfer.getData('text/plain'))
+        if (!data.cardId || !data.sourceColumnId) return
 
-      let newOrder = 0
-      let prevOrder = 0
-      let nextOrder = cards.length * 2 // Default large gap
+        // Calculate new order based on drop position
+        const cards = Array.from(
+          (event.currentTarget as HTMLElement).querySelectorAll(
+            '.of-kanban-card:not(.of--is-dragging)'
+          )
+        ) as HTMLElement[]
 
-      for (let i = 0; i < cards.length; i++) {
-        const card = cards[i]
-        if (card.classList.contains('of--is-dragging')) continue
+        let newOrder = 0
+        let prevOrder = 0
+        let nextOrder = cards.length * 2 // Default large gap
 
-        const cardRect = card.getBoundingClientRect()
-        const cardMiddle = cardRect.top + cardRect.height / 2
+        for (let i = 0; i < cards.length; i++) {
+          const card = cards[i]
+          const cardRect = card.getBoundingClientRect()
+          const cardMiddle = cardRect.top + cardRect.height / 2
 
-        if (event.clientY < cardMiddle) {
-          nextOrder = parseFloat(card.getAttribute('data-order') || '0')
-          break
+          if (event.clientY < cardMiddle) {
+            nextOrder = parseFloat(card.getAttribute('data-order') || '0')
+            break
+          }
+
+          prevOrder = parseFloat(card.getAttribute('data-order') || '0')
         }
 
-        prevOrder = parseFloat(card.getAttribute('data-order') || '0')
+        newOrder = prevOrder + (nextOrder - prevOrder) / 2
+
+        emit('card-moved', {
+          cardId: data.cardId,
+          fromColumn: data.sourceColumnId,
+          toColumn: props.column.id,
+          newOrder
+        })
+      } catch (error) {
+        console.error('Error handling drop:', error)
       }
-
-      newOrder = prevOrder + (nextOrder - prevOrder) / 2
-
-      emit('card-moved', {
-        cardId: data.cardId,
-        fromColumn: data.sourceColumnId,
-        toColumn: props.column.id,
-        newOrder
-      })
     }
 
     const handleCardDragStart = (card: IKanbanCard) => {
@@ -253,7 +264,8 @@ export default defineComponent({
       right: '12px',
       height: '2px',
       background: 'var(--of-kanban-board-drop-indicator-bg)',
-      pointerEvents: 'none' as const
+      pointerEvents: 'none' as const,
+      zIndex: 1
     }))
 
     return {

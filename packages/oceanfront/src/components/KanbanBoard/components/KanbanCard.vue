@@ -65,6 +65,10 @@ export default defineComponent({
       type: Object as PropType<IKanbanCard>,
       required: true
     },
+    columnId: {
+      type: [String, Number],
+      required: true
+    },
     isDragging: {
       type: Boolean,
       default: false
@@ -94,6 +98,7 @@ export default defineComponent({
         'text/plain',
         JSON.stringify({
           cardId: props.card.id,
+          sourceColumnId: props.columnId,
           order: props.card.order
         })
       )
