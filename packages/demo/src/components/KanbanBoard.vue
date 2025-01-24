@@ -10,6 +10,7 @@
       @card-click="onCardClick"
       @project-click="onProjectClick"
       @assignee-click="onAssigneeClick"
+      @card-title-click="onCardTitleClick"
       @column-menu="onColumnMenu"
     />
   </div>
@@ -206,6 +207,7 @@ export default defineComponent({
   @card-click="onCardClick"
   @project-click="onProjectClick"
   @assignee-click="onAssigneeClick"
+  @card-title-click="onCardTitleClick"
   @column-menu="onColumnMenu"
 />
 `
@@ -230,6 +232,10 @@ export default defineComponent({
       console.log('Assignee clicked:', assignee)
     }
 
+    const onCardTitleClick = (card: IKanbanCard) => {
+      console.log('Card title clicked:', card)
+    }
+
     const onColumnMenu = (event: {
       column: IKanbanColumn
       event: MouseEvent
@@ -245,7 +251,8 @@ export default defineComponent({
       onCardClick,
       onColumnMenu,
       onProjectClick,
-      onAssigneeClick
+      onAssigneeClick,
+      onCardTitleClick
     }
   }
 })

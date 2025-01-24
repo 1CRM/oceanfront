@@ -11,6 +11,7 @@
         @card-click="$emit('card-click', $event)"
         @project-click="$emit('project-click', $event)"
         @assignee-click="$emit('assignee-click', $event)"
+        @card-title-click="$emit('card-title-click', $event)"
       >
         <template #create-button>{{ createButtonText }}</template>
       </kanban-column>
@@ -46,7 +47,8 @@ export default defineComponent({
     'add-card',
     'card-click',
     'project-click',
-    'assignee-click'
+    'assignee-click',
+    'card-title-click'
   ] as const,
 
   setup(props, { emit }) {
@@ -55,7 +57,8 @@ export default defineComponent({
     const handleCardMove = ({
       cardId,
       fromColumn,
-      toColumn
+      toColumn,
+      newOrder
     }: CardMovedEvent) => {
       const updatedColumns = props.columns.map((column) => {
         if (column.id === fromColumn) {
@@ -70,17 +73,25 @@ export default defineComponent({
             ?.cards?.find((card) => card.id === cardId)
 
           if (movedCard) {
+            const reorderedCards = [...(column.cards || [])]
+            reorderedCards.splice(newOrder, 0, movedCard)
+
             return {
               ...column,
-              cards: [...(column.cards || []), movedCard]
+              cards: reorderedCards.map((card, index) => ({
+                ...card,
+                order: index + 1
+              }))
             }
           }
         }
         return column
       })
 
+      console.log('updatedColumns', updatedColumns)
+
       emit('update:columns', updatedColumns)
-      emit('card-moved', { cardId, fromColumn, toColumn })
+      emit('card-moved', { cardId, fromColumn, toColumn, newOrder })
     }
 
     return {

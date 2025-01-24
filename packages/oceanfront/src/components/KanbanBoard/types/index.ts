@@ -38,5 +38,5 @@ export interface CardMovedEvent {
   cardId: string
   fromColumn: string
   toColumn: string
-  newOrder?: number
+  newOrder: number
 }

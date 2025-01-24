@@ -43,7 +43,7 @@
         </div>
       </div>
       <div class="title-container">
-        <div class="title-text">
+        <div class="title-text" @click="$emit('card-title-click', card)">
           {{ card.title }}
         </div>
       </div>
@@ -83,6 +83,7 @@ export default defineComponent({
     'drag-end',
     'project-click',
     'assignee-click',
+    'card-title-click',
     'card-click',
     'blur'
   ],

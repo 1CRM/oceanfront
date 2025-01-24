@@ -37,6 +37,7 @@
         @card-click="handleCardClick"
         @project-click="$emit('project-click', $event)"
         @assignee-click="$emit('assignee-click', $event)"
+        @card-title-click="$emit('card-title-click', $event)"
         @blur="handleCardBlur"
       />
       <div v-if="isDropTarget" :style="dropIndicatorStyle" />
@@ -90,6 +91,7 @@ export default defineComponent({
     'card-click': (_card: IKanbanCard) => true,
     'project-click': (_project: IKanbanProject | undefined) => true,
     'assignee-click': (_assignee: IKanbanAssignee | undefined) => true,
+    'card-title-click': (_card: IKanbanCard) => true,
     'card-moved': (_event: {
       cardId: string
       fromColumn: string
@@ -227,7 +229,7 @@ export default defineComponent({
           prevOrder = parseFloat(card.getAttribute('data-order') || '0')
         }
 
-        newOrder = prevOrder + (nextOrder - prevOrder) / 2
+        newOrder = Math.ceil(prevOrder + (nextOrder - prevOrder) / 2)
 
         emit('card-moved', {
           cardId: data.cardId,
@@ -257,12 +259,6 @@ export default defineComponent({
     }
 
     const handleCardClick = (card: IKanbanCard) => {
-      console.log(
-        'Card clicked, current:',
-        selectedCardId.value,
-        'new:',
-        card.id
-      )
       selectedCardId.value = selectedCardId.value === card.id ? null : card.id
       emit('card-click', card)
     }
@@ -274,7 +270,7 @@ export default defineComponent({
     }
 
     const dropIndicatorStyle = computed<CSSProperties>(() => ({
-      top: `${dropPosition.value}px`,
+      top: `${dropPosition.value - 6}px`,
       position: 'absolute',
       left: '12px',
       right: '12px',
