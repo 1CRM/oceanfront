@@ -7,7 +7,7 @@ export const OfTooltip = defineComponent({
     text: String,
     position: { type: String as PropType<'left' | 'right'>, default: 'right' }
   },
-  setup(props) {
+  setup(props, ctx) {
     const tooltipStyle: Ref<any> = ref({})
     const tooltipTextEl = ref()
     const textPosition = ref()
@@ -19,7 +19,7 @@ export const OfTooltip = defineComponent({
       const tooltipIconElRect = tooltipIconEl?.getBoundingClientRect()
       let tooltipTextElRect = tooltipTextEl.value.getBoundingClientRect()
 
-      const textOffset = 4
+      const textOffset = 6
       const edgeMargin = 5
       const maxRight = document.body.clientWidth - textOffset - edgeMargin
       const rightTooltipOffset = Math.round(
@@ -69,25 +69,23 @@ export const OfTooltip = defineComponent({
         h(
           'div',
           {
-            class: ['of-tooltip-main']
+            class: ['of-tooltip-main'],
+            onMouseenter: (e: MouseEvent) => {
+              tooltipStyle.value = {}
+              opened.value = true
+              nextTick(() => show(e))
+            },
+            onMouseleave: () => {
+              opened.value = false
+            }
           },
           [
-            h(OfIcon, {
-              name: 'help circle',
-              scale: 1.71,
-              onMouseenter: (e: MouseEvent) => {
-                tooltipStyle.value = {}
-                opened.value = true
-                nextTick(() => show(e))
-              },
-              onMouseleave: () => {
-                opened.value = false
-              },
-              onClick: (e: MouseEvent) => {
-                e.stopPropagation()
-                e.preventDefault()
-              }
-            }),
+            ctx.slots.default
+              ? h('div', {}, ctx.slots.default())
+              : h(OfIcon, {
+                  name: 'help circle',
+                  scale: 1.71
+                }),
             (props.text ?? '') !== ''
               ? h(
                   'div',
