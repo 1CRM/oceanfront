@@ -1,5 +1,5 @@
 <template>
-  <div class="of-kanban-column">
+  <div class="of-kanban-column" @dragend="handleDragEnd">
     <div class="of-kanban-column-header">
       <div class="of-kanban-column-title">
         <h3>{{ column.title }}</h3>
@@ -30,15 +30,14 @@
         :key="card.id"
         :card="card"
         :column-id="column.id"
-        :is-dragging="isDragging"
         :is-selected="selectedCardId === card.id"
-        @drag-start="handleCardDragStart"
-        @drag-end="handleCardDragEnd"
+        :dragged-card-id="draggedCardId"
         @card-click="handleCardClick"
+        @drag-start="handleCardDragStart"
         @project-click="$emit('project-click', $event)"
         @assignee-click="$emit('assignee-click', $event)"
         @card-title-click="$emit('card-title-click', $event)"
-        @blur="handleCardBlur"
+        @card-blur="$emit('card-blur', $event)"
       />
       <div v-if="isDropTarget" :style="dropIndicatorStyle" />
     </div>
@@ -81,9 +80,13 @@ export default defineComponent({
       type: Object as PropType<IKanbanColumn>,
       required: true
     },
-    createButtonText: {
-      type: String,
-      default: 'Create Issue'
+    draggedCardId: {
+      type: [String, Number] as PropType<string | number | undefined>,
+      default: undefined
+    },
+    selectedCardId: {
+      type: [String, Number] as PropType<string | number | undefined>,
+      default: undefined
     }
   },
   emits: {
@@ -92,21 +95,22 @@ export default defineComponent({
     'project-click': (_project: IKanbanProject | undefined) => true,
     'assignee-click': (_assignee: IKanbanAssignee | undefined) => true,
     'card-title-click': (_card: IKanbanCard) => true,
+    'card-blur': (_card: IKanbanCard) => true,
     'card-moved': (_event: {
       cardId: string
       fromColumn: string
       toColumn: string
-      newOrder?: number
+      newOrder: number
     }) => true,
+    'card-drag-start': (_card: IKanbanCard) => true,
     'column-menu': (_event: { column: IKanbanColumn; event: MouseEvent }) =>
       true
   },
 
   setup(props, { emit }) {
-    const isDragging = ref(false)
     const isDropTarget = ref(false)
     const dropPosition = ref(0)
-    const selectedCardId = ref<string | number | null>(null)
+    const draggedCardColumnId = ref<string | null>(null)
 
     const sortedCards = computed(() => {
       return [...(props.column.cards || [])].sort((a, b) => a.order - b.order)
@@ -119,8 +123,21 @@ export default defineComponent({
 
     const handleDragOver = (event: DragEvent) => {
       if (!event.dataTransfer) return
-      event.dataTransfer.dropEffect = 'move'
 
+      // Check if dropping would exceed limit
+      if (props.column.limit !== undefined) {
+        const currentCount = props.column.cards?.length || 0
+        // Only block if card is from different column and would exceed limit
+        if (
+          draggedCardColumnId.value !== props.column.id &&
+          currentCount >= props.column.limit
+        ) {
+          event.dataTransfer.dropEffect = 'none'
+          return
+        }
+      }
+
+      event.dataTransfer.dropEffect = 'move'
       event.preventDefault()
 
       const container = event.currentTarget as HTMLElement
@@ -183,6 +200,26 @@ export default defineComponent({
     }
 
     const handleDragEnter = (event: DragEvent) => {
+      if (!event.dataTransfer) return
+
+      // Check if dropping would exceed limit
+      if (props.column.limit !== undefined) {
+        const currentCount = props.column.cards?.length || 0
+        const dragData = event.dataTransfer.getData('text/plain')
+        try {
+          const { sourceColumnId } = JSON.parse(dragData)
+          if (
+            sourceColumnId !== props.column.id &&
+            currentCount >= props.column.limit
+          ) {
+            return
+          }
+        } catch (error) {
+          console.error('Error parsing drag data:', error)
+          return
+        }
+      }
+
       event.preventDefault()
       isDropTarget.value = true
     }
@@ -204,6 +241,19 @@ export default defineComponent({
       try {
         const data = JSON.parse(event.dataTransfer.getData('text/plain'))
         if (!data.cardId || !data.sourceColumnId) return
+
+        // Check column limit before processing the drop
+        if (props.column.limit !== undefined) {
+          const currentCount = props.column.cards?.length || 0
+          // Only count as new card if it's coming from a different column
+          if (
+            data.sourceColumnId !== props.column.id &&
+            currentCount >= props.column.limit
+          ) {
+            return
+          }
+        }
+
         let newOrder = 0
 
         const container = event.currentTarget as HTMLElement
@@ -256,7 +306,7 @@ export default defineComponent({
           }
         })
 
-        let currIndex = 0;
+        let currIndex = 0
 
         for (let i = 0; i < cards.length; i++) {
           const card = cards[i]
@@ -264,14 +314,15 @@ export default defineComponent({
           if (card === draggingCard) continue
 
           const cardRect = card.getBoundingClientRect()
-          const cardTop = cardRect.top - containerRect.top + scrollTop          
-          const cardMiddle = cardTop + cardRect.height / 2
+          const cardTop = cardRect.top - containerRect.top + scrollTop
           const cardBottom = cardTop + cardRect.height
-          dropPosition.value
 
-          if (Math.abs(cardTop - dropPosition.value) < 10 && isDraggingCardInThisColumn) {
+          if (
+            Math.abs(cardTop - dropPosition.value) < 10 &&
+            isDraggingCardInThisColumn
+          ) {
             // Drop position is near the top of this card
-            nearCard = cards[i-1]
+            nearCard = cards[i - 1]
             currIndex = i
             break
           } else if (Math.abs(cardBottom - (dropPosition.value - 12)) < 10) {
@@ -302,12 +353,8 @@ export default defineComponent({
     }
 
     const handleCardDragStart = (card: IKanbanCard) => {
-      isDragging.value = true
-      selectedCardId.value = card.id
-    }
-
-    const handleCardDragEnd = () => {
-      isDragging.value = false
+      draggedCardColumnId.value = props.column.id
+      emit('card-drag-start', card)
     }
 
     const showColumnMenu = (event: MouseEvent) => {
@@ -318,14 +365,7 @@ export default defineComponent({
     }
 
     const handleCardClick = (card: IKanbanCard) => {
-      selectedCardId.value = selectedCardId.value === card.id ? null : card.id
       emit('card-click', card)
-    }
-
-    const handleCardBlur = () => {
-      if (!isDragging.value) {
-        selectedCardId.value = null
-      }
     }
 
     const dropIndicatorStyle = computed<CSSProperties>(() => ({
@@ -339,22 +379,23 @@ export default defineComponent({
       zIndex: 1
     }))
 
+    const handleDragEnd = () => {
+      draggedCardColumnId.value = null
+    }
+
     return {
-      isDragging,
       isDropTarget,
       isAtLimit,
       sortedCards,
-      selectedCardId,
+      dropIndicatorStyle,
       handleDragOver,
       handleDragEnter,
       handleDragLeave,
       handleDrop,
       handleCardDragStart,
-      handleCardDragEnd,
       showColumnMenu,
       handleCardClick,
-      handleCardBlur,
-      dropIndicatorStyle
+      handleDragEnd
     }
   }
 })

@@ -5,10 +5,14 @@
         v-for="column in columns"
         :key="column.id"
         :column="column"
+        :dragged-card-id="draggedCardId"
+        :selected-card-id="selectedCardId"
         @column-menu="$emit('column-menu', $event)"
+        @card-blur="handleCardBlur"
         @card-moved="handleCardMove"
+        @card-drag-start="handleCardDragStart"
+        @card-click="handleCardClick"
         @add-card="$emit('add-card', column.id)"
-        @card-click="$emit('card-click', $event)"
         @project-click="$emit('project-click', $event)"
         @assignee-click="$emit('assignee-click', $event)"
         @card-title-click="$emit('card-title-click', $event)"
@@ -22,7 +26,7 @@
 <script lang="ts">
 import { defineComponent, type PropType, ref } from 'vue'
 import KanbanColumn from './components/KanbanColumn.vue'
-import type { IKanbanColumn, CardMovedEvent } from './types'
+import type { IKanbanColumn, CardMovedEvent, IKanbanCard } from './types'
 
 export default defineComponent({
   name: 'OfKanbanBoard',
@@ -39,7 +43,6 @@ export default defineComponent({
       default: 'Create Issue'
     }
   },
-
   emits: [
     'update:columns',
     'column-menu',
@@ -50,9 +53,26 @@ export default defineComponent({
     'assignee-click',
     'card-title-click'
   ] as const,
-
   setup(props, { emit }) {
     const boardRef = ref<HTMLElement>()
+    const draggedCardId = ref<string | number | undefined>(undefined)
+    const selectedCardId = ref<string | number | undefined>(undefined)
+
+    const handleCardDragStart = (card: IKanbanCard) => {
+      draggedCardId.value = card.id
+      selectedCardId.value = card.id
+    }
+
+    const handleCardBlur = (card: IKanbanCard) => {
+      if (selectedCardId.value === card.id) {
+        selectedCardId.value = undefined
+      }
+    }
+
+    const handleCardClick = (card: IKanbanCard) => {
+      selectedCardId.value = card.id
+      emit('card-click', card)
+    }
 
     const handleCardMove = ({
       cardId,
@@ -60,43 +80,59 @@ export default defineComponent({
       toColumn,
       newOrder
     }: CardMovedEvent) => {
-      const updatedColumns = props.columns.map((column) => {
-        if (column.id === fromColumn) {
-          return {
-            ...column,
-            cards: column.cards?.filter((card) => card.id !== cardId)
-          }
-        }
-        if (column.id === toColumn) {
-          const movedCard = props.columns
-            .find((col) => col.id === fromColumn)
-            ?.cards?.find((card) => card.id === cardId)
+      // Create a new columns array, but only clone the affected columns
+      const updatedColumns = [...props.columns]
+      const fromColumnIndex = updatedColumns.findIndex(
+        (col) => col.id === fromColumn
+      )
+      const toColumnIndex = updatedColumns.findIndex(
+        (col) => col.id === toColumn
+      )
 
-          if (movedCard) {
-            const reorderedCards = [...(column.cards || [])]
-            reorderedCards.splice(newOrder, 0, movedCard)
+      // Get the moved card before modifying the from column
+      const movedCard = updatedColumns[fromColumnIndex].cards?.find(
+        (card) => card.id === cardId
+      )
 
-            return {
-              ...column,
-              cards: reorderedCards.map((card, index) => ({
-                ...card,
-                order: index + 1
-              }))
-            }
-          }
-        }
-        return column
-      })
+      if (!movedCard) return
 
-      console.log('updatedColumns', updatedColumns)
+      // Update the from column
+      updatedColumns[fromColumnIndex] = {
+        ...updatedColumns[fromColumnIndex],
+        cards: updatedColumns[fromColumnIndex].cards?.filter(
+          (card) => card.id !== cardId
+        )
+      }
 
+      // Update the to column
+      const targetColumn = updatedColumns[toColumnIndex]
+      if (!targetColumn.cards) {
+        targetColumn.cards = []
+      }
+      const reorderedCards = [...targetColumn.cards]
+      reorderedCards.splice(newOrder, 0, movedCard)
+
+      updatedColumns[toColumnIndex] = {
+        ...targetColumn,
+        cards: reorderedCards.map((card, index) => ({
+          ...card,
+          order: index
+        }))
+      }
+
+      draggedCardId.value = undefined
       emit('update:columns', updatedColumns)
       emit('card-moved', { cardId, fromColumn, toColumn, newOrder })
     }
 
     return {
       boardRef,
-      handleCardMove
+      draggedCardId,
+      selectedCardId,
+      handleCardMove,
+      handleCardDragStart,
+      handleCardBlur,
+      handleCardClick
     }
   }
 })

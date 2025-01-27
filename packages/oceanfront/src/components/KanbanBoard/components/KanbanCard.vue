@@ -2,15 +2,14 @@
   <div
     class="of-kanban-card of--elevated-1"
     :class="{
-      'of--is-dragging': isDragging,
+      'of--is-dragging': isCardDragging,
       'of--is-selected': isSelected
     }"
     :data-order="card.order"
     draggable="true"
     @dragstart="handleDragStart"
-    @dragend="handleDragEnd"
-    @click="$emit('card-click', card)"
-    @blur="$emit('blur')"
+    @click="handleCardClick"
+    @blur="handleBlur"
     tabindex="0"
   >
     <div class="card-content">
@@ -53,7 +52,7 @@
 <script lang="ts">
 import { computed, defineComponent, type PropType } from 'vue'
 import { OfIcon } from '../../Icon'
-import type { IKanbanAssignee, IKanbanCard } from '../types'
+import type { IKanbanCard } from '../types'
 
 export default defineComponent({
   name: 'OfKanbanCard',
@@ -66,52 +65,58 @@ export default defineComponent({
       required: true
     },
     columnId: {
-      type: [String, Number],
+      type: String,
       required: true
-    },
-    isDragging: {
-      type: Boolean,
-      default: false
     },
     isSelected: {
       type: Boolean,
       default: false
+    },
+    draggedCardId: {
+      type: [String, Number] as PropType<string | number | undefined>,
+      default: undefined
     }
   },
   emits: [
     'drag-start',
-    'drag-end',
     'project-click',
     'assignee-click',
     'card-title-click',
     'card-click',
-    'blur'
+    'card-blur'
   ],
   setup(props, { emit }) {
+    const isCardDragging = computed<boolean>(
+      () => props.draggedCardId === props.card.id
+    )
+
     const handleDragStart = (event: DragEvent) => {
       if (!event.dataTransfer) return
-
-      emit('card-click', props.card)
-      emit('drag-start', props.card)
 
       event.dataTransfer.effectAllowed = 'move'
       event.dataTransfer.setData(
         'text/plain',
         JSON.stringify({
           cardId: props.card.id,
-          sourceColumnId: props.columnId,
-          order: props.card.order
+          sourceColumnId: props.columnId
         })
       )
+
+      emit('drag-start', props.card)
     }
 
-    const handleDragEnd = () => {
-      emit('drag-end')
+    const handleBlur = () => {
+      emit('card-blur', props.card)
+    }
+
+    const handleCardClick = () => {
+      emit('card-click', props.card)
     }
 
     const assigneeInitials = computed<string>(() => {
       const name = props.card.assignee?.name
-      if (!name) return ''
+      //Anonimus
+      if (!name) return 'AN'
 
       return (
         name.includes(' ')
@@ -124,9 +129,11 @@ export default defineComponent({
     })
 
     return {
+      isCardDragging,
       handleDragStart,
-      handleDragEnd,
-      assigneeInitials
+      assigneeInitials,
+      handleBlur,
+      handleCardClick
     }
   }
 })

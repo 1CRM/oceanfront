@@ -4,10 +4,10 @@
     <of-highlight lang="html" :value="sampleCode" />
 
     <of-kanban-board
-      :columns="columns"
-      @card-moved="onCardMoved"
-      @add-card="onAddCard"
-      @card-click="onCardClick"
+      v-model:columns="columns"
+      @card-moved="handleCardMoved"
+      @add-card="handleAddCard"
+      @card-click="handleCardClick"
       @project-click="onProjectClick"
       @assignee-click="onAssigneeClick"
       @card-title-click="onCardTitleClick"
@@ -47,7 +47,8 @@ export default defineComponent({
             assignee: {
               id: 'assignee-1',
               name: 'Michael Whitehead',
-              avatar: 'https://1crm9-demo.1crmcloud.com/files/images/directory/1/MichaelWhitehead.png'
+              avatar:
+                'https://1crm9-demo.1crmcloud.com/files/images/directory/1/MichaelWhitehead.png'
             }
           },
           {
@@ -157,7 +158,7 @@ export default defineComponent({
           }
         ]
       },
-            {
+      {
         id: 'test',
         title: 'Reviewe & Test',
         cards: [
@@ -198,35 +199,25 @@ export default defineComponent({
         ]
       },
       {
-        id: 'test',
-        title: 'Test',
+        id: 'empty',
+        title: 'Empty',
         cards: []
       }
     ])
 
-    const sampleCode = `
-<of-kanban-board
-  :columns="columns"
-  @card-moved="onCardMoved"
-  @add-card="onAddCard"
-  @card-click="onCardClick"
-  @project-click="onProjectClick"
-  @assignee-click="onAssigneeClick"
-  @card-title-click="onCardTitleClick"
-  @column-menu="onColumnMenu"
-/>
-`
-
-    const onCardMoved = (event: CardMovedEvent) => {
+    const handleCardMoved = (event: CardMovedEvent) => {
       console.log('Card moved:', event)
+      // Your backend update logic here if needed
     }
 
-    const onAddCard = (columnId: string) => {
+    const handleAddCard = (columnId: string) => {
       console.log('Add card to column:', columnId)
+      // Add your card creation logic here
     }
 
-    const onCardClick = (card: IKanbanCard) => {
+    const handleCardClick = (card: IKanbanCard) => {
       console.log('Card clicked:', card)
+      // Add your card click handling logic here
     }
 
     const onProjectClick = (project: IKanbanProject) => {
@@ -248,12 +239,25 @@ export default defineComponent({
       console.log('Column menu:', event)
     }
 
+    const sampleCode = `
+<of-kanban-board
+  v-model:columns="columns"
+  @card-moved="handleCardMoved"
+  @add-card="handleAddCard"
+  @card-click="handleCardClick"
+  @project-click="onProjectClick"
+  @assignee-click="onAssigneeClick"
+  @card-title-click="onCardTitleClick"
+  @column-menu="onColumnMenu"
+/>
+`
+
     return {
       columns,
       sampleCode,
-      onCardMoved,
-      onAddCard,
-      onCardClick,
+      handleCardMoved,
+      handleAddCard,
+      handleCardClick,
       onColumnMenu,
       onProjectClick,
       onAssigneeClick,
