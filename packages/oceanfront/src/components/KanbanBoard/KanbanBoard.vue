@@ -169,12 +169,18 @@ export default defineComponent({
       }
     }
 
+    const handleWindowDragEnd = () => {
+      draggedCardId.value = undefined
+    }
+
     onMounted(() => {
       window.addEventListener('click', handleWindowClick)
+      window.addEventListener('dragend', handleWindowDragEnd)
     })
 
     onUnmounted(() => {
       window.removeEventListener('click', handleWindowClick)
+      window.removeEventListener('dragend', handleWindowDragEnd)
     })
 
     return {
