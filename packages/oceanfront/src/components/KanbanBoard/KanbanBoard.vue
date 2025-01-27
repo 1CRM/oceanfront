@@ -1,6 +1,12 @@
 <template>
-  <div class="of-kanban-board">
-    <div class="of-kanban-columns" ref="boardRef">
+  <div
+    class="of-kanban-board"
+    @blur="handleBlur"
+    tabindex="-1"
+    ref="boardRef"
+    @click="handleBoardClick"
+  >
+    <div class="of-kanban-columns">
       <kanban-column
         v-for="column in columns"
         :key="column.id"
@@ -8,6 +14,7 @@
         :dragged-card-id="draggedCardId"
         :selected-card-id="selectedCardId"
         @column-menu="$emit('column-menu', $event)"
+        @column-click="handleColumnClick"
         @card-blur="handleCardBlur"
         @card-moved="handleCardMove"
         @card-drag-start="handleCardDragStart"
@@ -24,7 +31,13 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, type PropType, ref } from 'vue'
+import {
+  defineComponent,
+  type PropType,
+  ref,
+  onMounted,
+  onUnmounted
+} from 'vue'
 import KanbanColumn from './components/KanbanColumn.vue'
 import type { IKanbanColumn, CardMovedEvent, IKanbanCard } from './types'
 
@@ -72,6 +85,14 @@ export default defineComponent({
     const handleCardClick = (card: IKanbanCard) => {
       selectedCardId.value = card.id
       emit('card-click', card)
+    }
+
+    const handleColumnClick = (_column: IKanbanColumn) => {
+      selectedCardId.value = undefined
+    }
+
+    const handleBlur = () => {
+      selectedCardId.value = undefined
     }
 
     const handleCardMove = ({
@@ -125,6 +146,37 @@ export default defineComponent({
       emit('card-moved', { cardId, fromColumn, toColumn, newOrder })
     }
 
+    const handleBoardClick = (event: MouseEvent) => {
+      const target = event.target as HTMLElement
+
+      // Check if click was on a card, column, or any interactive elements
+      if (
+        target.closest('.of-kanban-card') ||
+        target.closest('.of-kanban-column') ||
+        target.closest('button')
+      ) {
+        return
+      }
+
+      // If we get here, the click was on the board background
+      selectedCardId.value = undefined
+    }
+
+    const handleWindowClick = (event: MouseEvent) => {
+      // Check if click is outside the kanban board
+      if (boardRef.value && !boardRef.value.contains(event.target as Node)) {
+        selectedCardId.value = undefined
+      }
+    }
+
+    onMounted(() => {
+      window.addEventListener('click', handleWindowClick)
+    })
+
+    onUnmounted(() => {
+      window.removeEventListener('click', handleWindowClick)
+    })
+
     return {
       boardRef,
       draggedCardId,
@@ -132,7 +184,10 @@ export default defineComponent({
       handleCardMove,
       handleCardDragStart,
       handleCardBlur,
-      handleCardClick
+      handleCardClick,
+      handleColumnClick,
+      handleBlur,
+      handleBoardClick
     }
   }
 })

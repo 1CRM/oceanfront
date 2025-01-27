@@ -1,5 +1,9 @@
 <template>
-  <div class="of-kanban-column" @dragend="handleDragEnd">
+  <div
+    class="of-kanban-column"
+    @dragend="handleDragEnd"
+    @click="handleColumnClick"
+  >
     <div class="of-kanban-column-header">
       <div class="of-kanban-column-title">
         <h3>{{ column.title }}</h3>
@@ -104,7 +108,8 @@ export default defineComponent({
     }) => true,
     'card-drag-start': (_card: IKanbanCard) => true,
     'column-menu': (_event: { column: IKanbanColumn; event: MouseEvent }) =>
-      true
+      true,
+    'column-click': (_column: IKanbanColumn) => true
   },
 
   setup(props, { emit }) {
@@ -368,6 +373,20 @@ export default defineComponent({
       emit('card-click', card)
     }
 
+    const handleDragEnd = () => {
+      draggedCardColumnId.value = null
+    }
+
+    const handleColumnClick = (event: MouseEvent) => {
+      const target = event.target as HTMLElement
+
+      if (target.closest('.of-kanban-card')) {
+        return
+      }
+
+      emit('column-click', props.column)
+    }
+
     const dropIndicatorStyle = computed<CSSProperties>(() => ({
       top: `${dropPosition.value - 6}px`,
       position: 'absolute',
@@ -378,10 +397,6 @@ export default defineComponent({
       pointerEvents: 'none' as const,
       zIndex: 1
     }))
-
-    const handleDragEnd = () => {
-      draggedCardColumnId.value = null
-    }
 
     return {
       isDropTarget,
@@ -395,7 +410,8 @@ export default defineComponent({
       handleCardDragStart,
       showColumnMenu,
       handleCardClick,
-      handleDragEnd
+      handleDragEnd,
+      handleColumnClick
     }
   }
 })
