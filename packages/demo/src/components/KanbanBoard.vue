@@ -128,7 +128,7 @@ export default defineComponent({
               name: 'Project 3',
               icon: 'email'
             },
-            order: 7,
+            order: 6,
             assignee: {
               id: 'assignee-4',
               name: 'Alex Johnson'
@@ -196,6 +196,11 @@ export default defineComponent({
             }
           }
         ]
+      },
+      {
+        id: 'test',
+        title: 'Test',
+        cards: []
       }
     ])
 

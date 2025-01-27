@@ -204,82 +204,97 @@ export default defineComponent({
       try {
         const data = JSON.parse(event.dataTransfer.getData('text/plain'))
         if (!data.cardId || !data.sourceColumnId) return
+        let newOrder = 0
 
         const container = event.currentTarget as HTMLElement
+        const scrollTop = container.scrollTop
+        const containerRect = container.getBoundingClientRect()
+
+        // Get all cards, including the dragged one
         const cards = Array.from(
-          container.querySelectorAll('.of-kanban-card:not(.of--is-dragging)')
+          container.querySelectorAll('.of-kanban-card')
         ) as HTMLElement[]
 
-        // Get mouse position relative to container
-        const containerRect = container.getBoundingClientRect()
-        const mouseY = event.clientY - containerRect.top + container.scrollTop
+        const mouseY = event.clientY - containerRect.top + scrollTop
+        const draggingCard = container.querySelector(
+          '.of-kanban-card.of--is-dragging'
+        ) as HTMLElement
 
-        // Handle empty column or drop at the beginning
+        // If mouse is near the top of the container, position at the top
+        if (mouseY < 44) {
+          newOrder = 0
+          emit('card-moved', {
+            cardId: data.cardId,
+            fromColumn: data.sourceColumnId,
+            toColumn: props.column.id,
+            newOrder: newOrder
+          })
+          return
+        }
+
+        // If no cards or only the dragged card, position at the top
         if (
           cards.length === 0 ||
-          mouseY < cards[0]?.getBoundingClientRect().top
+          (cards.length === 1 && cards[0] === draggingCard)
         ) {
+          newOrder = 0
           emit('card-moved', {
             cardId: data.cardId,
             fromColumn: data.sourceColumnId,
             toColumn: props.column.id,
-            newOrder: 0
+            newOrder: newOrder
           })
           return
         }
 
-        // Handle drop at the end
-        const lastCard = cards[cards.length - 1]
-        if (mouseY > lastCard.getBoundingClientRect().bottom) {
-          const lastOrder = parseFloat(
-            lastCard.getAttribute('data-order') || '0'
-          )
-          emit('card-moved', {
-            cardId: data.cardId,
-            fromColumn: data.sourceColumnId,
-            toColumn: props.column.id,
-            newOrder: lastOrder + 1
-          })
-          return
-        }
+        let nearCard = null
+        let isDraggingCardInThisColumn = false
+        cards.some((card) => {
+          if (card === draggingCard) {
+            isDraggingCardInThisColumn = true
+            return true
+          }
+        })
 
-        // Find position between two cards
-        for (let i = 0; i < cards.length - 1; i++) {
-          const currentCard = cards[i]
-          const nextCard = cards[i + 1]
-          const currentRect = currentCard.getBoundingClientRect()
-          const nextRect = nextCard.getBoundingClientRect()
+        let currIndex = 0;
 
-          if (mouseY >= currentRect.top && mouseY <= nextRect.top) {
-            const currentOrder = parseFloat(
-              currentCard.getAttribute('data-order') || '0'
-            )
-            const nextOrder = parseFloat(
-              nextCard.getAttribute('data-order') || '0'
-            )
+        for (let i = 0; i < cards.length; i++) {
+          const card = cards[i]
+          // Skip the card being dragged
+          if (card === draggingCard) continue
 
-            // Calculate the order between the two cards
-            const newOrder = Math.floor(currentOrder + 1)
+          const cardRect = card.getBoundingClientRect()
+          const cardTop = cardRect.top - containerRect.top + scrollTop          
+          const cardMiddle = cardTop + cardRect.height / 2
+          const cardBottom = cardTop + cardRect.height
+          dropPosition.value
 
-            emit('card-moved', {
-              cardId: data.cardId,
-              fromColumn: data.sourceColumnId,
-              toColumn: props.column.id,
-              newOrder
-            })
-            return
+          if (Math.abs(cardTop - dropPosition.value) < 10 && isDraggingCardInThisColumn) {
+            // Drop position is near the top of this card
+            nearCard = cards[i-1]
+            currIndex = i
+            break
+          } else if (Math.abs(cardBottom - (dropPosition.value - 12)) < 10) {
+            // Drop position is near the bottom of this card
+            nearCard = card
+            currIndex = i
+            break
           }
         }
 
-        // Fallback: append to the end
-        const lastOrder = parseFloat(
-          cards[cards.length - 1].getAttribute('data-order') || '0'
-        )
+        if (nearCard) {
+          let nearOrder = nearCard.getAttribute('data-order') ?? currIndex
+          if (typeof nearOrder === 'string') {
+            nearOrder = parseFloat(nearOrder)
+          }
+          newOrder = nearOrder + 1
+        }
+
         emit('card-moved', {
           cardId: data.cardId,
           fromColumn: data.sourceColumnId,
           toColumn: props.column.id,
-          newOrder: lastOrder + 1
+          newOrder: newOrder
         })
       } catch (error) {
         console.error('Error handling drop:', error)
