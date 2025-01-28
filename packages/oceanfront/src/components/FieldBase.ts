@@ -264,12 +264,12 @@ export const OfFieldBase = defineComponent({
             'of--rounded': props.rounded,
             'of--undecorated': !!fieldRender.undecorated,
             'of--updated': fieldRender.updated,
-            'of--tooltip': !!props.tooltip
+            'of--tooltip': !!props.tooltip,
+            'of--label-empty': !ctx.slots.label && (props.label ?? '') === ''
           },
           'of--cursor-' + (fieldRender.cursor || 'default'),
           'of--density-' + density.value,
-          'of--label-' +
-            (asteriskLabel ? 'right' : label ? labelPosition.value : 'none'),
+          'of--label-' + (asteriskLabel ? 'right' : labelPosition.value),
           'of--mode-' + mode.value,
           'of--variant-' + variant.value,
           'of--tint-' + tint.value,
@@ -335,8 +335,7 @@ export const OfFieldBase = defineComponent({
           props.tooltip ?? '' !== '' ? tooltip : undefined
         )
         const emptyFieldLabelNode = h('label', {
-          class: 'of-field-label',
-          innerHTML: '&nbsp;'
+          class: 'of-field-label'
         })
         const labelNode = computed(() =>
           label || required.value
@@ -350,7 +349,7 @@ export const OfFieldBase = defineComponent({
 
         const showMainLabel = computed(
           () =>
-            (labelNode.value || tooltipNode.value) &&
+            labelNode.value &&
             (!['frame', 'input'].includes(labelPosition.value ?? '') ||
               props.type !== 'toggle')
         )
@@ -361,7 +360,9 @@ export const OfFieldBase = defineComponent({
                 labelNode.value,
                 tooltipNode.value
               ])
-            : undefined,
+            : props.type === 'toggle'
+              ? undefined
+              : tooltipNode.value,
           h(
             'div',
             {
