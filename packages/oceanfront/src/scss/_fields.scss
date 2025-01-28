@@ -366,10 +366,18 @@
   &.of--label-right {
     grid-template-areas: 'main label' 'caption label';
   }
-  &.of--label-top > .of-field-main-label,
-  &.of--tooltip > .of-field-main-label {
+  &.of--label-top:not(.of--label-empty) > .of-field-main-label {
     margin-bottom: 0.25em;
     padding-left: var(--field-h-pad);
+  }
+
+  &.of--label-frame:not(.of-toggle-field),
+  &.of--label-top.of--label-empty,
+  &.of--label-none {
+    .of-tooltip {
+      position: relative;
+      bottom: calc(0.25em + 1px);
+    }
   }
 
   &.of--rounded {
