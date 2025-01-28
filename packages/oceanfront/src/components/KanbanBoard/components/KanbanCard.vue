@@ -8,6 +8,9 @@
     :data-order="card.order"
     draggable="true"
     @dragstart="handleDragStart"
+    @touchstart="handleTouchStart"
+    @touchmove="handleTouchMove"
+    @touchend="handleTouchEnd"
     @click="handleCardClick"
     @blur="handleBlur"
     tabindex="0"
@@ -128,12 +131,153 @@ export default defineComponent({
       ).toUpperCase()
     })
 
+    let touchTimeout: number | null = null
+    let isDragging = false
+    let initialTouchY = 0
+    let initialTouchX = 0
+    let cardElement: HTMLElement | null = null
+    let initialCardRect: DOMRect | null = null
+
+    const handleTouchStart = (event: TouchEvent) => {
+      cardElement = event.currentTarget as HTMLElement
+      const touch = event.touches[0]
+      initialTouchY = touch.clientY
+      initialTouchX = touch.clientX
+      // Store the initial card position and size
+      initialCardRect = cardElement.getBoundingClientRect()
+
+      touchTimeout = window.setTimeout(() => {
+        isDragging = true
+        cardElement?.classList.add('of--is-dragging')
+
+        // Create and store drag data
+        const dragData = {
+          cardId: props.card.id,
+          cardOrder: props.card.order,
+          sourceColumnId: props.columnId,
+          cardRect: {
+            top: initialCardRect?.top,
+            left: initialCardRect?.left,
+            width: initialCardRect?.width,
+            height: initialCardRect?.height
+          }
+        }
+
+        // Store the drag data in the element
+        cardElement?.setAttribute('data-drag-data', JSON.stringify(dragData))
+
+        emit('drag-start', props.card)
+      }, 200)
+    }
+
+    const handleTouchMove = (event: TouchEvent) => {
+      if (!isDragging || !cardElement || !initialCardRect) {
+        if (touchTimeout) {
+          clearTimeout(touchTimeout)
+          touchTimeout = null
+        }
+        return
+      }
+
+      event.preventDefault()
+      const touch = event.touches[0]
+      const moveX = touch.clientX - initialTouchX
+      const moveY = touch.clientY - initialTouchY
+
+      // Set the initial position before applying transform
+      cardElement.style.position = 'fixed'
+      cardElement.style.top = `${initialCardRect.top}px`
+      cardElement.style.left = `${initialCardRect.left}px`
+      cardElement.style.width = `${initialCardRect.width}px`
+      cardElement.style.zIndex = '1000'
+      cardElement.style.transform = `translate(${moveX}px, ${moveY}px)`
+
+      // Get the element under the touch point
+      const elementUnderTouch = document.elementFromPoint(
+        touch.clientX,
+        touch.clientY
+      )
+
+      // Find the closest column content
+      const columnContent = elementUnderTouch?.closest(
+        '.of-kanban-column-content'
+      )
+      if (columnContent) {
+        // Dispatch custom event to handle column interaction
+        columnContent.dispatchEvent(
+          new CustomEvent('card-touch-hover', {
+            detail: {
+              clientX: touch.clientX,
+              clientY: touch.clientY,
+              dragData: cardElement.getAttribute('data-drag-data'),
+              cardRect: initialCardRect
+            },
+            bubbles: true
+          })
+        )
+      }
+    }
+
+    const handleTouchEnd = (event: TouchEvent) => {
+      if (touchTimeout) {
+        clearTimeout(touchTimeout)
+        touchTimeout = null
+      }
+
+      if (!isDragging || !cardElement || !initialCardRect) return
+
+      event.preventDefault()
+      isDragging = false
+
+      // Reset card styles
+      cardElement.style.position = ''
+      cardElement.style.top = ''
+      cardElement.style.left = ''
+      cardElement.style.width = ''
+      cardElement.style.zIndex = ''
+      cardElement.style.transform = ''
+      cardElement.classList.remove('of--is-dragging')
+
+      // Get the element under the touch point
+      const touch = event.changedTouches[0]
+      const elementUnderTouch = document.elementFromPoint(
+        touch.clientX,
+        touch.clientY
+      )
+
+      // Find the closest column content
+      const columnContent = elementUnderTouch?.closest(
+        '.of-kanban-column-content'
+      )
+      if (columnContent) {
+        // Dispatch drop event
+        columnContent.dispatchEvent(
+          new CustomEvent('card-touch-drop', {
+            detail: {
+              clientX: touch.clientX,
+              clientY: touch.clientY,
+              dragData: cardElement.getAttribute('data-drag-data'),
+              cardRect: initialCardRect
+            },
+            bubbles: true
+          })
+        )
+      }
+
+      cardElement.removeAttribute('data-drag-data')
+      cardElement = null
+      initialCardRect = null
+    }
+
     return {
       isCardDragging,
       handleDragStart,
       assigneeInitials,
       handleBlur,
-      handleCardClick
+      handleCardClick,
+      handleTouchStart,
+      handleTouchMove,
+      handleTouchEnd
     }
   }
 })

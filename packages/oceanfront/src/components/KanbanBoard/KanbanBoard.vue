@@ -120,9 +120,12 @@ export default defineComponent({
       // Update the from column
       updatedColumns[fromColumnIndex] = {
         ...updatedColumns[fromColumnIndex],
-        cards: updatedColumns[fromColumnIndex].cards?.filter(
-          (card) => card.id !== cardId
-        )
+        cards: updatedColumns[fromColumnIndex].cards
+          ?.filter((card) => card.id !== cardId)
+          .map((card, index) => ({
+            ...card,
+            order: index
+          }))
       }
 
       // Update the to column
