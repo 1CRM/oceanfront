@@ -26,7 +26,6 @@ export interface IKanbanTag {
   color: string
 }
 
-
 export interface IKanbanColumn {
   id: string
   title: string
