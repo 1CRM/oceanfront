@@ -121,7 +121,7 @@ export default defineComponent({
   },
   emits: {
     'add-card': null,
-    'menu-item-click': (_item: string | number, columnId: string) => true,
+    'menu-item-click': (_item: string | number, _columnId: string) => true,
     'card-click': (_card: IKanbanCard) => true,
     'project-click': (_project: IKanbanProject | undefined) => true,
     'assignee-click': (_assignee: IKanbanAssignee | undefined) => true,
