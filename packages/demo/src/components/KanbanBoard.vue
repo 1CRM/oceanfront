@@ -15,7 +15,7 @@
     >
       <template #card-title="{ card }">
         <div class="custom-title" @click="onCardTitleClick(card)">
-          {{ card.title }} Bbieg
+          {{ card.title }}
         </div>
       </template>
       <template #project="{ card }">
