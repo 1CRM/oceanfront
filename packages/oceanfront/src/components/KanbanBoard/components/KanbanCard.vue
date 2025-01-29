@@ -18,36 +18,42 @@
     <div class="card-content">
       <div class="of-kanban-card-header">
         <div class="project-container">
-          <div class="project-icon">
-            <of-icon :name="card.project?.icon ?? 'mobile'" />
-          </div>
-          <div class="project-name">
-            <div
-              class="project-text"
-              @click="$emit('project-click', card.project)"
-            >
-              {{ card.project?.name }}
+          <slot name="project" :card="card">
+            <div class="project-icon">
+              <of-icon :name="card.project?.icon ?? 'mobile'" />
             </div>
+            <div class="project-name">
+              <div
+                class="project-text"
+                @click="$emit('project-click', card.project)"
+              >
+                {{ card.project?.name }}
+              </div>
+            </div>
+          </slot>
+        </div>
+        <slot name="avatar" :card="card">
+          <div
+            class="of-kanban-avatar"
+            v-if="card.assignee"
+            @click="$emit('assignee-click', card.assignee)"
+          >
+            <img
+              v-if="card.assignee.avatar"
+              :src="card.assignee.avatar"
+              :alt="card.assignee.name"
+              class="avatar-image"
+            />
+            <div v-else class="avatar-text">{{ assigneeInitials }}</div>
           </div>
-        </div>
-        <div
-          class="of-kanban-avatar"
-          v-if="card.assignee"
-          @click="$emit('assignee-click', card.assignee)"
-        >
-          <img
-            v-if="card.assignee.avatar"
-            :src="card.assignee.avatar"
-            :alt="card.assignee.name"
-            class="avatar-image"
-          />
-          <div v-else class="avatar-text">{{ assigneeInitials }}</div>
-        </div>
+        </slot>
       </div>
       <div class="title-container">
-        <div class="title-text" @click="$emit('card-title-click', card)">
-          {{ card.title }}
-        </div>
+        <slot name="title" :card="card">
+          <div class="title-text" @click="$emit('card-title-click', card)">
+            {{ card.title }}
+          </div>
+        </slot>
       </div>
     </div>
   </div>

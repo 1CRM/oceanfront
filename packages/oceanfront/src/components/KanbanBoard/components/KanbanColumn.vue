@@ -45,7 +45,17 @@
         @assignee-click="$emit('assignee-click', $event)"
         @card-title-click="$emit('card-title-click', $event)"
         @card-blur="$emit('card-blur', $event)"
-      />
+      >
+        <template #title="slotProps">
+          <slot name="card-title" :card="slotProps.card" />
+        </template>
+        <template #project="slotProps">
+          <slot name="project" :card="slotProps.card" />
+        </template>
+        <template #avatar="slotProps">
+          <slot name="avatar" :card="slotProps.card" />
+        </template>
+      </kanban-card>
       <div v-if="isDropTarget" :style="dropIndicatorStyle" />
     </div>
 

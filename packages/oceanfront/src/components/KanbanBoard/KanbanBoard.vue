@@ -24,6 +24,15 @@
         @assignee-click="$emit('assignee-click', $event)"
         @card-title-click="$emit('card-title-click', $event)"
       >
+        <template #card-title="slotProps">
+          <slot name="card-title" :card="slotProps.card" />
+        </template>
+        <template #project="slotProps">
+          <slot name="project" :card="slotProps.card" />
+        </template>
+        <template #avatar="slotProps">
+          <slot name="avatar" :card="slotProps.card" />
+        </template>
         <template #create-button>{{ createButtonText }}</template>
       </kanban-column>
     </div>

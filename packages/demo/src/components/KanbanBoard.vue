@@ -12,7 +12,24 @@
       @assignee-click="onAssigneeClick"
       @card-title-click="onCardTitleClick"
       @column-menu="onColumnMenu"
-    />
+    >
+      <template #card-title="{ card }">
+        <div class="custom-title" @click="onCardTitleClick(card)">
+          {{ card.title }} Bbieg
+        </div>
+      </template>
+      <template #project="{ card }">
+        <div class="project-icon">
+          <of-icon :name="card.project?.icon ?? 'mobile'" />
+        </div>
+        <div class="project-name">
+          <div class="project-text" @click="onProjectClick(card.project)">
+            {{ card.project?.name }}
+          </div>
+        </div>
+      </template>
+      <template #avatar=""></template>
+    </of-kanban-board>
   </div>
 </template>
 
@@ -102,34 +119,6 @@ export default defineComponent({
               icon: 'email'
             },
             order: 4,
-            assignee: {
-              id: 'assignee-4',
-              name: 'Alex Johnson'
-            }
-          },
-          {
-            id: 'card-36',
-            title: 'Test card 4',
-            project: {
-              id: 'project-4',
-              name: 'Project 3',
-              icon: 'email'
-            },
-            order: 5,
-            assignee: {
-              id: 'assignee-4',
-              name: 'Alex Johnson'
-            }
-          },
-          {
-            id: 'card-37',
-            title: 'Test card 5',
-            project: {
-              id: 'project-4',
-              name: 'Project 3',
-              icon: 'email'
-            },
-            order: 6,
             assignee: {
               id: 'assignee-4',
               name: 'Alex Johnson'
@@ -249,7 +238,14 @@ export default defineComponent({
   @assignee-click="onAssigneeClick"
   @card-title-click="onCardTitleClick"
   @column-menu="onColumnMenu"
-/>
+>
+  <template #card-title="{ card }">
+    <div class="custom-title" @click="onCardTitleClick(card)">
+      {{ card.title }}
+      <!-- Add any custom title content here -->
+    </div>
+  </template>
+</of-kanban-board>
 `
 
     return {
