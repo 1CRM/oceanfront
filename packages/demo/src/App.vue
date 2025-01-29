@@ -104,6 +104,7 @@
           <of-list-item to="/tabs">Tabs</of-list-item>
           <of-list-item to="/popups">Popups and Dialogs</of-list-item>
           <of-list-item to="/badges">Badges</of-list-item>
+          <of-list-item to="/kanban">Kanban Board</of-list-item>
         </of-nav-group>
       </of-sidebar>
       <main class="app-main">
@@ -126,7 +127,7 @@ import {
   nextTick,
   onErrorCaptured,
   ref,
-  watch,
+  watch
 } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -162,7 +163,7 @@ export default defineComponent({
       set(val: boolean) {
         ;(isMobile.value ? sidebarMobileActive : sidebarDesktopActive).value =
           val
-      },
+      }
     })
     watch(baseFontSize, (size) => {
       nextTick(() => {
@@ -206,7 +207,7 @@ export default defineComponent({
     const tintParams = computed(() =>
       tints.map((t) => ({
         name: t,
-        icon: t == tint.value ? 'accept circle' : 'radio checked',
+        icon: t == tint.value ? 'accept circle' : 'radio checked'
       }))
     )
     return {
@@ -219,9 +220,9 @@ export default defineComponent({
       toggleSidebar,
       dark,
       tint,
-      tintParams,
+      tintParams
     }
-  },
+  }
 })
 </script>
 

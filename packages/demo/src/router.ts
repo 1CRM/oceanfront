@@ -22,6 +22,7 @@ import Pagination from './components/Pagination.vue'
 import Calendar from './components/Calendar.vue'
 import Popups from './components/Popups.vue'
 import Badges from './components/Badges.vue'
+import KanbanBoard from './components/KanbanBoard.vue'
 import ElevationDemo from './components/ElevationDemo.vue'
 import HtmlEditor from './components/HtmlEditor.vue'
 import ColorScheme from './components/ColorScheme.vue'
@@ -51,8 +52,9 @@ export const router = createRouter({
     { path: '/calendar', component: Calendar },
     { path: '/popups', component: Popups },
     { path: '/badges', component: Badges },
+    { path: '/kanban', component: KanbanBoard },
     { path: '/color-scheme', component: ColorScheme },
     { path: '/elevation', component: ElevationDemo },
-    { path: '/html-editor', component: HtmlEditor },
-  ],
+    { path: '/html-editor', component: HtmlEditor }
+  ]
 })
