@@ -95,11 +95,10 @@
         cursor: grab;
         user-select: none;
         -webkit-user-select: none;
-        box-shadow: 0px 1px 4px rgba(0, 0, 0, 0.06);
         display: flex;
         gap: 12px;
 
-        touch-action: none;
+        touch-action: pan-y;
         position: relative;
         transition: transform 0.1s ease;
         will-change: transform;
