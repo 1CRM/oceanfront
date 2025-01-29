@@ -60,6 +60,9 @@
           gap: 12px;
           justify-content: center;
           align-items: center;
+          .of-button-expand {
+            display: none;
+          }
         }
       }
 

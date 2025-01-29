@@ -5,13 +5,14 @@
 
     <of-kanban-board
       v-model:columns="columns"
+      :column-menu-items="columnMenuItems"
+      @column-menu-item-click="handleColumnMenuItemClick"
       @card-moved="handleCardMoved"
       @add-card="handleAddCard"
       @card-click="handleCardClick"
       @project-click="onProjectClick"
       @assignee-click="onAssigneeClick"
       @card-title-click="onCardTitleClick"
-      @column-menu="onColumnMenu"
     >
       <template #card-title="{ card }">
         <div class="custom-title" @click="onCardTitleClick(card)">
@@ -45,6 +46,25 @@ import type {
 
 export default defineComponent({
   setup() {
+    const sampleCode = `
+<of-kanban-board
+  v-model:columns="columns"
+  @card-moved="handleCardMoved"
+  @add-card="handleAddCard"
+  @card-click="handleCardClick"
+  @project-click="onProjectClick"
+  @assignee-click="onAssigneeClick"
+  @card-title-click="onCardTitleClick"
+  @column-menu="onColumnMenu"
+>
+  <template #card-title="{ card }">
+    <div class="custom-title" @click="onCardTitleClick(card)">
+      {{ card.title }}
+      <!-- Add any custom title content here -->
+    </div>
+  </template>
+</of-kanban-board>
+`
     const columns = ref<IKanbanColumn[]>([
       {
         id: 'todo',
@@ -221,40 +241,35 @@ export default defineComponent({
       console.log('Card title clicked:', card)
     }
 
-    const onColumnMenu = (event: {
-      column: IKanbanColumn
-      event: MouseEvent
-    }) => {
-      console.log('Column menu:', event)
+    const handleColumnMenuItemClick = (
+      item: string | number,
+      columnId: string
+    ) => {
+      console.log('Column menu item clicked:', item, columnId)
     }
 
-    const sampleCode = `
-<of-kanban-board
-  v-model:columns="columns"
-  @card-moved="handleCardMoved"
-  @add-card="handleAddCard"
-  @card-click="handleCardClick"
-  @project-click="onProjectClick"
-  @assignee-click="onAssigneeClick"
-  @card-title-click="onCardTitleClick"
-  @column-menu="onColumnMenu"
->
-  <template #card-title="{ card }">
-    <div class="custom-title" @click="onCardTitleClick(card)">
-      {{ card.title }}
-      <!-- Add any custom title content here -->
-    </div>
-  </template>
-</of-kanban-board>
-`
+    const columnMenuItems = [
+      {
+        text: 'Option 1',
+        value: 'option-1',
+        attrs: { 'data-test': 'my-btn' }
+      },
+      {
+        text: 'Option 2',
+        value: (columnId: string) => {
+          console.log('Option 2 custom handler', columnId)
+        }
+      }
+    ]
 
     return {
       columns,
       sampleCode,
+      columnMenuItems,
+      handleColumnMenuItemClick,
       handleCardMoved,
       handleAddCard,
       handleCardClick,
-      onColumnMenu,
       onProjectClick,
       onAssigneeClick,
       onCardTitleClick

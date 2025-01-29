@@ -13,12 +13,15 @@
           <template v-if="column.limit"> / {{ column.limit }} </template>
         </span>
       </div>
-      <div class="of-kanban-column-actions">
+      <div
+        class="of-kanban-column-actions"
+        v-if="compactedMenuItems.length > 0"
+      >
         <of-button
           variant="text"
           icon="more"
           size="sm"
-          @click="showColumnMenu"
+          :items="compactedMenuItems"
         />
       </div>
     </div>
@@ -75,7 +78,13 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, type PropType, ref } from 'vue'
+import {
+  computed,
+  defineComponent,
+  type PropType,
+  ref,
+  CSSProperties
+} from 'vue'
 import { OfButton } from '../../Button'
 import KanbanCard from './KanbanCard.vue'
 import type {
@@ -84,7 +93,7 @@ import type {
   IKanbanColumn,
   IKanbanProject
 } from '../types'
-import type { CSSProperties } from 'vue'
+import { Item } from '../../../lib/items_list'
 
 export default defineComponent({
   name: 'OfKanbanColumn',
@@ -97,6 +106,10 @@ export default defineComponent({
       type: Object as PropType<IKanbanColumn>,
       required: true
     },
+    menuItems: {
+      type: Array as PropType<Item[]>,
+      default: () => []
+    },
     draggedCardId: {
       type: [String, Number] as PropType<string | number | undefined>,
       default: undefined
@@ -108,6 +121,7 @@ export default defineComponent({
   },
   emits: {
     'add-card': null,
+    'menu-item-click': (_item: string | number, columnId: string) => true,
     'card-click': (_card: IKanbanCard) => true,
     'project-click': (_project: IKanbanProject | undefined) => true,
     'assignee-click': (_assignee: IKanbanAssignee | undefined) => true,
@@ -120,8 +134,6 @@ export default defineComponent({
       newOrder: number
     }) => true,
     'card-drag-start': (_card: IKanbanCard) => true,
-    'column-menu': (_event: { column: IKanbanColumn; event: MouseEvent }) =>
-      true,
     'column-click': (_column: IKanbanColumn) => true
   },
 
@@ -386,13 +398,6 @@ export default defineComponent({
       emit('card-drag-start', card)
     }
 
-    const showColumnMenu = (event: MouseEvent) => {
-      emit('column-menu', {
-        column: props.column,
-        event
-      })
-    }
-
     const handleCardClick = (card: IKanbanCard) => {
       emit('card-click', card)
     }
@@ -539,6 +544,22 @@ export default defineComponent({
       isDropTarget.value = false
     }
 
+    const handleMenuItemClick = (item: string | number) => {
+      emit('menu-item-click', item, props.column.id)
+    }
+
+    const compactedMenuItems = computed(() => {
+      return props.menuItems?.map((item) => {
+        return {
+          text: item.text,
+          value:
+            typeof item.value === 'function'
+              ? () => (item.value as Function)(props.column.id)
+              : () => handleMenuItemClick(item.value as string | number)
+        }
+      })
+    })
+
     const dropIndicatorStyle = computed<CSSProperties>(() => ({
       top: `${dropPosition.value - 6}px`,
       position: 'absolute',
@@ -555,12 +576,12 @@ export default defineComponent({
       isAtLimit,
       sortedCards,
       dropIndicatorStyle,
+      compactedMenuItems,
       handleDragOver,
       handleDragEnter,
       handleDragLeave,
       handleDrop,
       handleCardDragStart,
-      showColumnMenu,
       handleCardClick,
       handleDragEnd,
       handleColumnClick,

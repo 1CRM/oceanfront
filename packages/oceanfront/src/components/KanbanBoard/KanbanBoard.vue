@@ -11,9 +11,10 @@
         v-for="column in columns"
         :key="column.id"
         :column="column"
+        :menu-items="columnMenuItems"
         :dragged-card-id="draggedCardId"
         :selected-card-id="selectedCardId"
-        @column-menu="$emit('column-menu', $event)"
+        @menu-item-click="handleColumnMenuItemClick"
         @column-click="handleColumnClick"
         @card-blur="handleCardBlur"
         @card-moved="handleCardMove"
@@ -49,6 +50,7 @@ import {
 } from 'vue'
 import KanbanColumn from './components/KanbanColumn.vue'
 import type { IKanbanColumn, CardMovedEvent, IKanbanCard } from './types'
+import { Item } from '../../lib/items_list'
 
 export default defineComponent({
   name: 'OfKanbanBoard',
@@ -60,6 +62,10 @@ export default defineComponent({
       type: Array as PropType<IKanbanColumn[]>,
       required: true
     },
+    columnMenuItems: {
+      type: Array as PropType<Item[]>,
+      default: () => []
+    },
     createButtonText: {
       type: String,
       default: 'Create Issue'
@@ -67,8 +73,8 @@ export default defineComponent({
   },
   emits: [
     'update:columns',
-    'column-menu',
     'card-moved',
+    'column-menu-item-click',
     'add-card',
     'card-click',
     'project-click',
@@ -185,6 +191,13 @@ export default defineComponent({
       draggedCardId.value = undefined
     }
 
+    const handleColumnMenuItemClick = (
+      item: string | number,
+      columnId: string
+    ) => {
+      emit('column-menu-item-click', item, columnId)
+    }
+
     onMounted(() => {
       window.addEventListener('click', handleWindowClick)
       window.addEventListener('dragend', handleWindowDragEnd)
@@ -205,7 +218,8 @@ export default defineComponent({
       handleCardClick,
       handleColumnClick,
       handleBlur,
-      handleBoardClick
+      handleBoardClick,
+      handleColumnMenuItemClick
     }
   }
 })
