@@ -6,9 +6,22 @@
     ref="boardRef"
     @click="handleBoardClick"
   >
+    <kanban-filters
+      :assignees="assignees"
+      :search-input-placeholder="searchInputPlaceholder"
+      @filter-change="handleFilterChange"
+      @clear-filters="handleClearFilters"
+    >
+      <template #custom-filters>
+        <slot name="filters" />
+      </template>
+      <template #clear-filters>
+        <slot name="clear-filters" />
+      </template>
+    </kanban-filters>
     <div class="of-kanban-columns">
       <kanban-column
-        v-for="column in columns"
+        v-for="column in filteredColumns"
         :key="column.id"
         :column="column"
         :menu-items="columnMenuItems"
@@ -34,7 +47,7 @@
         <template #avatar="slotProps">
           <slot name="avatar" :card="slotProps.card" />
         </template>
-        <template #create-button>{{ createButtonText }}</template>
+        <template #create-button><slot name="create-button" /></template>
       </kanban-column>
     </div>
   </div>
@@ -46,16 +59,24 @@ import {
   type PropType,
   ref,
   onMounted,
-  onUnmounted
+  onUnmounted,
+  computed
 } from 'vue'
 import KanbanColumn from './components/KanbanColumn.vue'
-import type { IKanbanColumn, CardMovedEvent, IKanbanCard } from './types'
+import KanbanFilters from './components/KanbanFilters.vue'
+import type {
+  IKanbanColumn,
+  CardMovedEvent,
+  IKanbanCard,
+  IKanbanCardAssignee
+} from './types'
 import { Item } from '../../lib/items_list'
 
 export default defineComponent({
   name: 'OfKanbanBoard',
   components: {
-    KanbanColumn
+    KanbanColumn,
+    KanbanFilters
   },
   props: {
     columns: {
@@ -66,9 +87,9 @@ export default defineComponent({
       type: Array as PropType<Item[]>,
       default: () => []
     },
-    createButtonText: {
+    searchInputPlaceholder: {
       type: String,
-      default: 'Create Issue'
+      default: 'Search by keyword...'
     }
   },
   emits: [
@@ -79,12 +100,59 @@ export default defineComponent({
     'card-click',
     'project-click',
     'assignee-click',
-    'card-title-click'
+    'card-title-click',
+    'filter-change'
   ] as const,
   setup(props, { emit }) {
     const boardRef = ref<HTMLElement>()
     const draggedCardId = ref<string | number | undefined>(undefined)
     const selectedCardId = ref<string | number | undefined>(undefined)
+    const currentFilters = ref({
+      keyword: '',
+      assignees: [] as (string | number)[]
+    })
+
+    const assignees = computed(() => {
+      const assigneeMap = new Map<string | number, IKanbanCardAssignee>()
+
+      props.columns.forEach((column) => {
+        column.cards?.forEach((card) => {
+          if (card.assignee) {
+            assigneeMap.set(card.assignee.id, card.assignee)
+          }
+        })
+      })
+
+      return Array.from(assigneeMap.values())
+    })
+
+    const filteredColumns = computed(() => {
+      return props.columns.map((column) => {
+        if (!column.cards) return column
+
+        const filteredCards = column.cards.filter((card) => {
+          // Filter by keyword
+          const matchesKeyword = currentFilters.value.keyword
+            ? card.title
+                .toLowerCase()
+                .includes(currentFilters.value.keyword.toLowerCase())
+            : true
+
+          // Filter by assignees
+          const matchesAssignee = currentFilters.value.assignees.length
+            ? card.assignee &&
+              currentFilters.value.assignees.includes(card.assignee.id)
+            : true
+
+          return matchesKeyword && matchesAssignee
+        })
+
+        return {
+          ...column,
+          cards: filteredCards
+        }
+      })
+    })
 
     const handleCardDragStart = (card: IKanbanCard) => {
       draggedCardId.value = card.id
@@ -198,6 +266,22 @@ export default defineComponent({
       emit('column-menu-item-click', item, columnId)
     }
 
+    const handleFilterChange = (filters: {
+      keyword: string
+      assignees: (string | number)[]
+    }) => {
+      currentFilters.value = filters
+      emit('filter-change', filters)
+    }
+
+    const handleClearFilters = (filters: {
+      keyword: string
+      assignees: (string | number)[]
+    }) => {
+      currentFilters.value = filters
+      emit('filter-change', filters)
+    }
+
     onMounted(() => {
       window.addEventListener('click', handleWindowClick)
       window.addEventListener('dragend', handleWindowDragEnd)
@@ -212,6 +296,8 @@ export default defineComponent({
       boardRef,
       draggedCardId,
       selectedCardId,
+      assignees,
+      filteredColumns,
       handleCardMove,
       handleCardDragStart,
       handleCardBlur,
@@ -219,7 +305,9 @@ export default defineComponent({
       handleColumnClick,
       handleBlur,
       handleBoardClick,
-      handleColumnMenuItemClick
+      handleColumnMenuItemClick,
+      handleFilterChange,
+      handleClearFilters
     }
   }
 })

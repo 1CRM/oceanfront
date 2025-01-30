@@ -6,6 +6,7 @@
     <of-kanban-board
       v-model:columns="columns"
       :column-menu-items="columnMenuItems"
+      search-input-placeholder="Search by keyword..."
       @column-menu-item-click="handleColumnMenuItemClick"
       @card-moved="handleCardMoved"
       @add-card="handleAddCard"
@@ -13,7 +14,11 @@
       @project-click="onProjectClick"
       @assignee-click="onAssigneeClick"
       @card-title-click="onCardTitleClick"
+      @filter-change="handleFilterChange"
     >
+      <template #clear-filters>Clear Filters</template>
+      <template #create-button>Create Issue</template>
+      <template #filters></template>
       <template #card-title="{ card }">
         <div class="custom-title" @click="onCardTitleClick(card)">
           {{ card.title }}
@@ -33,7 +38,6 @@
     </of-kanban-board>
   </div>
 </template>
-
 <script lang="ts">
 import { defineComponent, ref } from 'vue'
 import type {
@@ -49,21 +53,16 @@ export default defineComponent({
     const sampleCode = `
 <of-kanban-board
   v-model:columns="columns"
+  :column-menu-items="columnMenuItems"
+  search-input-placeholder="Search by keyword..."
+  @column-menu-item-click="handleColumnMenuItemClick"
   @card-moved="handleCardMoved"
   @add-card="handleAddCard"
   @card-click="handleCardClick"
   @project-click="onProjectClick"
   @assignee-click="onAssigneeClick"
   @card-title-click="onCardTitleClick"
-  @column-menu="onColumnMenu"
->
-  <template #card-title="{ card }">
-    <div class="custom-title" @click="onCardTitleClick(card)">
-      {{ card.title }}
-      <!-- Add any custom title content here -->
-    </div>
-  </template>
-</of-kanban-board>
+/>
 `
     const columns = ref<IKanbanColumn[]>([
       {
@@ -126,8 +125,10 @@ export default defineComponent({
             },
             order: 3,
             assignee: {
-              id: 'assignee-4',
-              name: 'Alex Johnson'
+              id: 'assignee-1',
+              name: 'Michael Whitehead',
+              avatar:
+                'https://1crm9-demo.1crmcloud.com/files/images/directory/1/MichaelWhitehead.png'
             }
           },
           {
@@ -221,12 +222,10 @@ export default defineComponent({
 
     const handleAddCard = (columnId: string) => {
       console.log('Add card to column:', columnId)
-      // Add your card creation logic here
     }
 
     const handleCardClick = (card: IKanbanCard) => {
       console.log('Card clicked:', card)
-      // Add your card click handling logic here
     }
 
     const onProjectClick = (project: IKanbanProject) => {
@@ -246,6 +245,13 @@ export default defineComponent({
       columnId: string
     ) => {
       console.log('Column menu item clicked:', item, columnId)
+    }
+
+    const handleFilterChange = (filters: {
+      keyword: string
+      assignees: (string | number)[]
+    }) => {
+      console.log('Filter changed:', filters)
     }
 
     const columnMenuItems = [
@@ -270,6 +276,7 @@ export default defineComponent({
       handleCardMoved,
       handleAddCard,
       handleCardClick,
+      handleFilterChange,
       onProjectClick,
       onAssigneeClick,
       onCardTitleClick

@@ -88,8 +88,8 @@ import {
 import { OfButton } from '../../Button'
 import KanbanCard from './KanbanCard.vue'
 import type {
-  IKanbanAssignee,
   IKanbanCard,
+  IKanbanCardAssignee,
   IKanbanColumn,
   IKanbanProject
 } from '../types'
@@ -124,7 +124,7 @@ export default defineComponent({
     'menu-item-click': (_item: string | number, _columnId: string) => true,
     'card-click': (_card: IKanbanCard) => true,
     'project-click': (_project: IKanbanProject | undefined) => true,
-    'assignee-click': (_assignee: IKanbanAssignee | undefined) => true,
+    'assignee-click': (_assignee: IKanbanCardAssignee | undefined) => true,
     'card-title-click': (_card: IKanbanCard) => true,
     'card-blur': (_card: IKanbanCard) => true,
     'card-moved': (_event: {

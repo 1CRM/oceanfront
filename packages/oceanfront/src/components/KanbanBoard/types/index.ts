@@ -3,14 +3,7 @@ export interface IKanbanCard {
   title: string
   order: number
   project?: IKanbanProject
-  assignee?: IKanbanAssignee
-}
-
-export interface IKanbanAssignee {
-  id: string
-  name: string
-  avatar?: string
-  module?: string
+  assignee?: IKanbanCardAssignee
 }
 
 export interface IKanbanProject {
@@ -38,4 +31,11 @@ export interface CardMovedEvent {
   fromColumn: string
   toColumn: string
   newOrder: number
+}
+
+export interface IKanbanCardAssignee {
+  id: string | number
+  name: string
+  avatar?: string
+  module?: string
 }

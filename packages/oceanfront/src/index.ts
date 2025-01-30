@@ -227,7 +227,7 @@ export type {
   IKanbanCard,
   IKanbanColumn,
   IKanbanProject,
-  IKanbanAssignee,
+  IKanbanCardAssignee,
   IKanbanTag,
   CardMovedEvent
 } from './components/KanbanBoard/types'
