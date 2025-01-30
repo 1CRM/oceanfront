@@ -46,9 +46,8 @@
     </div>
   </div>
 </template>
-
 <script lang="ts">
-import { defineComponent, PropType, ref } from 'vue'
+import { defineComponent, PropType, ref, onUnmounted } from 'vue'
 import { IKanbanCardAssignee } from '../types'
 
 export default defineComponent({
@@ -62,14 +61,19 @@ export default defineComponent({
     searchInputPlaceholder: {
       type: String,
       default: 'Search by keyword...'
+    },
+    debounceTime: {
+      type: Number,
+      default: 300
     }
   },
 
   emits: ['filter-change', 'clear-filters'],
 
-  setup(_props, { emit }) {
+  setup(props, { emit }) {
     const keyword = ref('')
     const selectedAssignees = ref<(string | number)[]>([])
+    let debounceTimeout: ReturnType<typeof setTimeout>
 
     const getInitials = (name: string) => {
       return name
@@ -78,6 +82,22 @@ export default defineComponent({
         .join('')
         .toUpperCase()
         .slice(0, 2)
+    }
+
+    const emitFilterChange = () => {
+      emit('filter-change', {
+        keyword: keyword.value,
+        assignees: selectedAssignees.value
+      })
+    }
+
+    const handleKeywordChange = (_input: never, value: string) => {
+      keyword.value = value.trim()
+      clearTimeout(debounceTimeout)
+
+      debounceTimeout = setTimeout(() => {
+        emitFilterChange()
+      }, props.debounceTime)
     }
 
     const toggleAssignee = (assigneeId: string | number) => {
@@ -90,23 +110,16 @@ export default defineComponent({
       emitFilterChange()
     }
 
-    const emitFilterChange = () => {
-      emit('filter-change', {
-        keyword: keyword.value,
-        assignees: selectedAssignees.value
-      })
-    }
-
-    const handleKeywordChange = (_input: never, value: string) => {
-      keyword.value = value.trim()
-      emitFilterChange()
-    }
-
     const handleClearFilters = () => {
       keyword.value = ''
       selectedAssignees.value = []
+      clearTimeout(debounceTimeout)
       emit('clear-filters', { keyword: '', assignees: [] })
     }
+
+    onUnmounted(() => {
+      clearTimeout(debounceTimeout)
+    })
 
     return {
       keyword,

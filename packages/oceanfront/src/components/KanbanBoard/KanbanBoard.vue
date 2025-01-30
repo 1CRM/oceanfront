@@ -21,7 +21,7 @@
     </kanban-filters>
     <div class="of-kanban-columns">
       <kanban-column
-        v-for="column in columns"
+        v-for="column in filteredColumns"
         :key="column.id"
         :column="column"
         :menu-items="columnMenuItems"
@@ -107,6 +107,10 @@ export default defineComponent({
     const boardRef = ref<HTMLElement>()
     const draggedCardId = ref<string | number | undefined>(undefined)
     const selectedCardId = ref<string | number | undefined>(undefined)
+    const currentFilters = ref({
+      keyword: '',
+      assignees: [] as (string | number)[]
+    })
 
     const assignees = computed(() => {
       const assigneeMap = new Map<string | number, IKanbanCardAssignee>()
@@ -120,6 +124,34 @@ export default defineComponent({
       })
 
       return Array.from(assigneeMap.values())
+    })
+
+    const filteredColumns = computed(() => {
+      return props.columns.map((column) => {
+        if (!column.cards) return column
+
+        const filteredCards = column.cards.filter((card) => {
+          // Filter by keyword
+          const matchesKeyword = currentFilters.value.keyword
+            ? card.title
+                .toLowerCase()
+                .includes(currentFilters.value.keyword.toLowerCase())
+            : true
+
+          // Filter by assignees
+          const matchesAssignee = currentFilters.value.assignees.length
+            ? card.assignee &&
+              currentFilters.value.assignees.includes(card.assignee.id)
+            : true
+
+          return matchesKeyword && matchesAssignee
+        })
+
+        return {
+          ...column,
+          cards: filteredCards
+        }
+      })
     })
 
     const handleCardDragStart = (card: IKanbanCard) => {
@@ -238,7 +270,7 @@ export default defineComponent({
       keyword: string
       assignees: (string | number)[]
     }) => {
-      console.log('filters', filters)
+      currentFilters.value = filters
       emit('filter-change', filters)
     }
 
@@ -246,7 +278,7 @@ export default defineComponent({
       keyword: string
       assignees: (string | number)[]
     }) => {
-      console.log('Clear filters', filters)
+      currentFilters.value = filters
       emit('filter-change', filters)
     }
 
@@ -265,6 +297,7 @@ export default defineComponent({
       draggedCardId,
       selectedCardId,
       assignees,
+      filteredColumns,
       handleCardMove,
       handleCardDragStart,
       handleCardBlur,

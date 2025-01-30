@@ -14,6 +14,7 @@
       @project-click="onProjectClick"
       @assignee-click="onAssigneeClick"
       @card-title-click="onCardTitleClick"
+      @filter-change="handleFilterChange"
     >
       <template #clear-filters>Clear Filters</template>
       <template #create-button>Create Issue</template>
@@ -124,8 +125,10 @@ export default defineComponent({
             },
             order: 3,
             assignee: {
-              id: 'assignee-4',
-              name: 'Alex Johnson'
+              id: 'assignee-1',
+              name: 'Michael Whitehead',
+              avatar:
+                'https://1crm9-demo.1crmcloud.com/files/images/directory/1/MichaelWhitehead.png'
             }
           },
           {
@@ -244,6 +247,13 @@ export default defineComponent({
       console.log('Column menu item clicked:', item, columnId)
     }
 
+    const handleFilterChange = (filters: {
+      keyword: string
+      assignees: (string | number)[]
+    }) => {
+      console.log('Filter changed:', filters)
+    }
+
     const columnMenuItems = [
       {
         text: 'Option 1',
@@ -266,6 +276,7 @@ export default defineComponent({
       handleCardMoved,
       handleAddCard,
       handleCardClick,
+      handleFilterChange,
       onProjectClick,
       onAssigneeClick,
       onCardTitleClick
