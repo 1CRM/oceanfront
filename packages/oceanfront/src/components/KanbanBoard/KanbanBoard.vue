@@ -6,6 +6,19 @@
     ref="boardRef"
     @click="handleBoardClick"
   >
+    <kanban-filters
+      :assignees="assignees"
+      :search-input-placeholder="searchInputPlaceholder"
+      @filter-change="handleFilterChange"
+      @clear-filters="handleClearFilters"
+    >
+      <template #custom-filters>
+        <slot name="filters" />
+      </template>
+      <template #clear-filters>
+        <slot name="clear-filters" />
+      </template>
+    </kanban-filters>
     <div class="of-kanban-columns">
       <kanban-column
         v-for="column in columns"
@@ -34,7 +47,7 @@
         <template #avatar="slotProps">
           <slot name="avatar" :card="slotProps.card" />
         </template>
-        <template #create-button>{{ createButtonText }}</template>
+        <template #create-button><slot name="create-button" /></template>
       </kanban-column>
     </div>
   </div>
@@ -46,16 +59,24 @@ import {
   type PropType,
   ref,
   onMounted,
-  onUnmounted
+  onUnmounted,
+  computed
 } from 'vue'
 import KanbanColumn from './components/KanbanColumn.vue'
-import type { IKanbanColumn, CardMovedEvent, IKanbanCard } from './types'
+import KanbanFilters from './components/KanbanFilters.vue'
+import type {
+  IKanbanColumn,
+  CardMovedEvent,
+  IKanbanCard,
+  IKanbanCardAssignee
+} from './types'
 import { Item } from '../../lib/items_list'
 
 export default defineComponent({
   name: 'OfKanbanBoard',
   components: {
-    KanbanColumn
+    KanbanColumn,
+    KanbanFilters
   },
   props: {
     columns: {
@@ -66,9 +87,9 @@ export default defineComponent({
       type: Array as PropType<Item[]>,
       default: () => []
     },
-    createButtonText: {
+    searchInputPlaceholder: {
       type: String,
-      default: 'Create Issue'
+      default: 'Search by keyword...'
     }
   },
   emits: [
@@ -79,12 +100,27 @@ export default defineComponent({
     'card-click',
     'project-click',
     'assignee-click',
-    'card-title-click'
+    'card-title-click',
+    'filter-change'
   ] as const,
   setup(props, { emit }) {
     const boardRef = ref<HTMLElement>()
     const draggedCardId = ref<string | number | undefined>(undefined)
     const selectedCardId = ref<string | number | undefined>(undefined)
+
+    const assignees = computed(() => {
+      const assigneeMap = new Map<string | number, IKanbanCardAssignee>()
+
+      props.columns.forEach((column) => {
+        column.cards?.forEach((card) => {
+          if (card.assignee) {
+            assigneeMap.set(card.assignee.id, card.assignee)
+          }
+        })
+      })
+
+      return Array.from(assigneeMap.values())
+    })
 
     const handleCardDragStart = (card: IKanbanCard) => {
       draggedCardId.value = card.id
@@ -198,6 +234,22 @@ export default defineComponent({
       emit('column-menu-item-click', item, columnId)
     }
 
+    const handleFilterChange = (filters: {
+      keyword: string
+      assignees: (string | number)[]
+    }) => {
+      console.log('filters', filters)
+      emit('filter-change', filters)
+    }
+
+    const handleClearFilters = (filters: {
+      keyword: string
+      assignees: (string | number)[]
+    }) => {
+      console.log('Clear filters', filters)
+      emit('filter-change', filters)
+    }
+
     onMounted(() => {
       window.addEventListener('click', handleWindowClick)
       window.addEventListener('dragend', handleWindowDragEnd)
@@ -212,6 +264,7 @@ export default defineComponent({
       boardRef,
       draggedCardId,
       selectedCardId,
+      assignees,
       handleCardMove,
       handleCardDragStart,
       handleCardBlur,
@@ -219,7 +272,9 @@ export default defineComponent({
       handleColumnClick,
       handleBlur,
       handleBoardClick,
-      handleColumnMenuItemClick
+      handleColumnMenuItemClick,
+      handleFilterChange,
+      handleClearFilters
     }
   }
 })

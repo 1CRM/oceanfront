@@ -6,6 +6,7 @@
     <of-kanban-board
       v-model:columns="columns"
       :column-menu-items="columnMenuItems"
+      search-input-placeholder="Search by keyword..."
       @column-menu-item-click="handleColumnMenuItemClick"
       @card-moved="handleCardMoved"
       @add-card="handleAddCard"
@@ -14,6 +15,9 @@
       @assignee-click="onAssigneeClick"
       @card-title-click="onCardTitleClick"
     >
+      <template #clear-filters>Clear Filters</template>
+      <template #create-button>Create Issue</template>
+      <template #filters></template>
       <template #card-title="{ card }">
         <div class="custom-title" @click="onCardTitleClick(card)">
           {{ card.title }}
@@ -33,7 +37,6 @@
     </of-kanban-board>
   </div>
 </template>
-
 <script lang="ts">
 import { defineComponent, ref } from 'vue'
 import type {
@@ -49,21 +52,16 @@ export default defineComponent({
     const sampleCode = `
 <of-kanban-board
   v-model:columns="columns"
+  :column-menu-items="columnMenuItems"
+  search-input-placeholder="Search by keyword..."
+  @column-menu-item-click="handleColumnMenuItemClick"
   @card-moved="handleCardMoved"
   @add-card="handleAddCard"
   @card-click="handleCardClick"
   @project-click="onProjectClick"
   @assignee-click="onAssigneeClick"
   @card-title-click="onCardTitleClick"
-  @column-menu="onColumnMenu"
->
-  <template #card-title="{ card }">
-    <div class="custom-title" @click="onCardTitleClick(card)">
-      {{ card.title }}
-      <!-- Add any custom title content here -->
-    </div>
-  </template>
-</of-kanban-board>
+/>
 `
     const columns = ref<IKanbanColumn[]>([
       {
@@ -221,12 +219,10 @@ export default defineComponent({
 
     const handleAddCard = (columnId: string) => {
       console.log('Add card to column:', columnId)
-      // Add your card creation logic here
     }
 
     const handleCardClick = (card: IKanbanCard) => {
       console.log('Card clicked:', card)
-      // Add your card click handling logic here
     }
 
     const onProjectClick = (project: IKanbanProject) => {
