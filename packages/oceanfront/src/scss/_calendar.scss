@@ -341,7 +341,7 @@ div.of-date-picker-cur-year {
   box-sizing: border-box;
   padding-left: 2px;
   padding-right: 2px;
-  max-width: 250px;
+  min-width: 30px;
   &.conflict {
     border-left: solid 2px var(--of-calendar-conflict-color, red);
   }
