@@ -361,7 +361,6 @@ export default OfEditableField
   }
   .editable-field-value:not(.input-mode-editable),
   .editable-field-value-handler:not(.input-mode-editable) {
-    &:hover,
     &:focus-visible {
       color: var(--of-primary-tint);
       cursor: pointer;
