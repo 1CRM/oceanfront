@@ -213,7 +213,7 @@ div.of-date-picker-cur-year {
     display: grid;
     justify-content: center;
     border: solid 1px var(--calendar-grid-color);
-    grid-template-columns:  40px 1fr;
+    grid-template-columns: 40px 1fr;
     width: 100%;
     height: max-content;
     text-align: center;
@@ -229,14 +229,14 @@ div.of-date-picker-cur-year {
       cursor: pointer;
       font-size: 20px;
     }
-    & .day-of-month.today,  {
-        background-color: var(--calendar-today-background);
-        color: var(--calendar-today-color);
+    & .day-of-month.today {
+      background-color: var(--calendar-today-background);
+      color: var(--calendar-today-color);
     }
     & > div {
       border-bottom: solid 1px var(--calendar-grid-color);
     }
-    .month-name{
+    .month-name {
       font-size: 16px;
     }
   }
@@ -341,6 +341,7 @@ div.of-date-picker-cur-year {
   box-sizing: border-box;
   padding-left: 2px;
   padding-right: 2px;
+  min-width: 30px;
   &.conflict {
     border-left: solid 2px var(--of-calendar-conflict-color, red);
   }
@@ -350,6 +351,7 @@ div.of-date-picker-cur-year {
     outline-offset: 0;
   }
   &:hover {
+    z-index: 9999 !important;
     min-height: calc(var(--of-event-height, 20px) - 2px);
     min-width: fit-content;
     &.two-lines {

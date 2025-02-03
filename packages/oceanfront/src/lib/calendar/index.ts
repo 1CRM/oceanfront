@@ -234,6 +234,7 @@ export function getGroups(
     width: 0,
     left: 0,
     columns: 1,
+    columnNum: 0,
     offset: 0,
     zIndex: 0,
     columnAdjust: 0,
@@ -388,6 +389,7 @@ export type CalendarEventPlacement = {
   left: number
   columns: number
   columnAdjust: number
+  columnNum: number
   offset: number
   zIndex: number
   conflict: boolean

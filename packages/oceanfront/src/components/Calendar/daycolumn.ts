@@ -94,6 +94,8 @@ export default defineComponent({
       selectionStart: 0,
       selectionEnd: 0,
       selectionCategory: '',
+      dayEl: undefined as HTMLElement | undefined,
+      eventMaxWidth: 250,
       allDayPopups: {
         active: {},
         closeTimerId: {},
@@ -203,6 +205,9 @@ export default defineComponent({
       return [start, end]
     }
   },
+  mounted: function () {
+    this.$data.dayEl = this.$refs.dayEl as HTMLElement | undefined
+  },
   methods: {
     intervals() {
       const [start, end] = this.hoursInterval
@@ -309,7 +314,8 @@ export default defineComponent({
             style: {
               'background-color': finalColor,
               width: 'calc(' + (e.daysSpan || 1) * 100 + '% - 4px)',
-              top: '' + e.top * eventHeight + 'px'
+              top: '' + e.top * eventHeight + 'px',
+              'max-width': this.$data.eventMaxWidth + 'px'
             },
             tabindex: '0',
             onClick: (event: any) => {
@@ -660,6 +666,24 @@ export default defineComponent({
           this.$props.eventClass?.(e.event) ??
           (e.event.class ? { [e.event.class]: true } : {})
         const finalEvent = { ...e.event, color: finalColor }
+
+        const eventsGap = 3
+        const dayWidth =
+          this.$data.dayEl?.getBoundingClientRect().width ??
+          this.$data.eventMaxWidth
+        const columnsNum = 1 / e.width
+        const maxWidth = columnsNum * this.$data.eventMaxWidth < dayWidth
+        const left = maxWidth
+          ? this.$data.eventMaxWidth * e.columnNum +
+            e.columnNum * eventsGap +
+            'px'
+          : this.$props.layout === 'stack'
+            ? e.left * 100 + '%'
+            : 'calc(' + e.left * 100 + '% + ' + eventsGap + 'px)'
+        const width = maxWidth
+          ? this.$data.eventMaxWidth - eventsGap + 'px'
+          : 'calc(' + (e.width * 100 + '% - ' + eventsGap) + 'px)'
+
         return h(
           'div',
           {
@@ -670,10 +694,11 @@ export default defineComponent({
               'two-lines': brk
             },
             style: {
+              'max-width': this.$data.eventMaxWidth + 'px',
               'background-color': finalColor,
               'z-index': e.zIndex,
-              left: e.left * 100 + '%',
-              width: 'calc(' + e.width * 100 + '% - 4px)',
+              left,
+              width,
               top: 'calc(' + e.top + '% + 1px)',
               height: 'calc(' + e.height + '% - 3px)',
               'min-height': 'calc(' + e.height + '% - 3px)'
@@ -738,7 +763,8 @@ export default defineComponent({
         'div',
         {
           class: ['of-calendar-day', weekDayCls],
-          ...this.intervalSelectionHandlers(cat)
+          ...this.intervalSelectionHandlers(cat),
+          ref: 'dayEl'
         },
         [...intervals, ...events]
       )

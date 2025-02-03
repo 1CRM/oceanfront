@@ -44,11 +44,14 @@ export default function layout(
   })
   const colWidth = 1.0 / columns.length
   let left = 0
+  let i = 0
   for (const c of columns) {
     for (const p of c.placements) {
       p.left = left
       p.width = colWidth * p.columns
+      p.columnNum = i
     }
     left += colWidth
+    i++
   }
 }
