@@ -87,7 +87,8 @@ import {
   defineComponent,
   type PropType,
   ref,
-  CSSProperties
+  CSSProperties,
+  onUnmounted
 } from 'vue'
 import { OfButton } from '../../Button'
 import KanbanCard from './KanbanCard.vue'
@@ -127,6 +128,10 @@ export default defineComponent({
     selectedCardId: {
       type: [String, Number] as PropType<string | number | undefined>,
       default: undefined
+    },
+    activeColumnId: {
+      type: String as PropType<string | null | undefined>,
+      default: undefined
     }
   },
   emits: {
@@ -144,13 +149,17 @@ export default defineComponent({
       newOrder: number
     }) => true,
     'card-drag-start': (_card: IKanbanCard) => true,
-    'column-click': (_column: IKanbanColumn) => true
+    'column-click': (_column: IKanbanColumn) => true,
+    'set-active-column': (_columnId: string | null) => true
   },
 
   setup(props, { emit }) {
-    const isDropTarget = ref(false)
+    const isDropTarget = computed(
+      () => props.activeColumnId === props.column.id
+    )
     const dropPosition = ref(0)
     const draggedCardColumnId = ref<string | null>(null)
+    const clearDropTargetTimeout = ref<number | null>(null)
 
     const sortedCards = computed(() => {
       return [...(props.column.cards || [])].sort((a, b) => a.order - b.order)
@@ -195,7 +204,7 @@ export default defineComponent({
         mouseY,
         draggingCard
       )
-      isDropTarget.value = true
+      emit('set-active-column', props.column.id)
     }
 
     const handleDragEnter = (event: DragEvent) => {
@@ -220,7 +229,7 @@ export default defineComponent({
       }
 
       event.preventDefault()
-      isDropTarget.value = true
+      emit('set-active-column', props.column.id)
     }
 
     const handleDragLeave = (event: DragEvent) => {
@@ -228,13 +237,13 @@ export default defineComponent({
       const relatedTarget = event.relatedTarget as HTMLElement
       const currentColumn = event.currentTarget as HTMLElement
       if (!relatedTarget || !currentColumn.contains(relatedTarget)) {
-        isDropTarget.value = false
+        emit('set-active-column', null)
       }
     }
 
     const handleDrop = (event: DragEvent) => {
       event.preventDefault()
-      isDropTarget.value = false
+      emit('set-active-column', null)
 
       if (!event.dataTransfer) return
       const data = getDragData(event)
@@ -283,13 +292,18 @@ export default defineComponent({
     const handleDragEnd = () => {
       dropPosition.value = 0
       draggedCardColumnId.value = null
-      isDropTarget.value = false
+      emit('set-active-column', null)
     }
 
     const handleCardTouchHover = (event: CustomEvent) => {
-      const { _, clientY } = event.detail
+      const { clientY } = event.detail
       const container = event.currentTarget as HTMLElement
       if (!container) return
+
+      if (clearDropTargetTimeout.value) {
+        clearTimeout(clearDropTargetTimeout.value)
+        clearDropTargetTimeout.value = null
+      }
 
       if (
         isOverTheLimit(
@@ -299,22 +313,37 @@ export default defineComponent({
           props.column.id
         )
       ) {
+        emit('set-active-column', null)
         return
       }
 
-      const mouseY =
-        clientY -
-        container.getBoundingClientRect().top +
-        (container.scrollTop || 0)
-
-      dropPosition.value = calculateDropPosition(container, mouseY)
-      isDropTarget.value = true
+      const columnRect = container.getBoundingClientRect()
+      // Add a buffer zone of 20px around the column
+      const buffer = 20
+      if (
+        clientY >= columnRect.top - buffer &&
+        clientY <= columnRect.bottom + buffer &&
+        event.detail.clientX >= columnRect.left - buffer &&
+        event.detail.clientX <= columnRect.right + buffer
+      ) {
+        const mouseY = clientY - columnRect.top + (container.scrollTop || 0)
+        dropPosition.value = calculateDropPosition(container, mouseY)
+        emit('set-active-column', props.column.id)
+      } else {
+        // Set a timeout before clearing the drop target
+        clearDropTargetTimeout.value = window.setTimeout(() => {
+          emit('set-active-column', null)
+        }, 150) // 150ms delay
+      }
     }
 
     const handleCardTouchDrop = (event: CustomEvent) => {
       const data = getDragData(event)
       if (!data) return
-      if (!data.cardId || !data.sourceColumnId) return
+      if (!data.cardId || !data.sourceColumnId) {
+        emit('set-active-column', null)
+        return
+      }
 
       if (
         isOverTheLimit(
@@ -324,14 +353,29 @@ export default defineComponent({
           props.column.id
         )
       ) {
+        emit('set-active-column', null)
         return
       }
 
       const columnContent = event.currentTarget as HTMLElement
-      if (!columnContent) return
+      if (!columnContent) {
+        emit('set-active-column', null)
+        return
+      }
 
       const containerRect = columnContent.getBoundingClientRect()
       const scrollTop = columnContent.scrollTop || 0
+
+      // Verify we're actually dropping in this column
+      if (
+        event.detail.clientY < containerRect.top ||
+        event.detail.clientY > containerRect.bottom ||
+        event.detail.clientX < containerRect.left ||
+        event.detail.clientX > containerRect.right
+      ) {
+        emit('set-active-column', null)
+        return
+      }
 
       // Get all visible cards (excluding the dragging one)
       const cards = Array.from(
@@ -371,7 +415,7 @@ export default defineComponent({
         newOrder: newOrder
       })
 
-      isDropTarget.value = false
+      emit('set-active-column', null)
     }
 
     const handleCardClick = (card: IKanbanCard) => {
@@ -408,6 +452,12 @@ export default defineComponent({
     const dropIndicatorStyle = computed<CSSProperties>(() => ({
       top: `${dropPosition.value - 6}px`
     }))
+
+    onUnmounted(() => {
+      if (clearDropTargetTimeout.value) {
+        clearTimeout(clearDropTargetTimeout.value)
+      }
+    })
 
     return {
       isDropTarget,
