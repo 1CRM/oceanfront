@@ -10,7 +10,7 @@
       :assignees="assignees"
       :search-input-placeholder="searchInputPlaceholder"
       @filter-change="handleFilterChange"
-      @clear-filters="handleClearFilters"
+      @clear-filters="handleFilterChange"
     >
       <template #custom-filters>
         <slot name="filters" />
@@ -274,14 +274,6 @@ export default defineComponent({
       emit('filter-change', filters)
     }
 
-    const handleClearFilters = (filters: {
-      keyword: string
-      assignees: (string | number)[]
-    }) => {
-      currentFilters.value = filters
-      emit('filter-change', filters)
-    }
-
     onMounted(() => {
       window.addEventListener('click', handleWindowClick)
       window.addEventListener('dragend', handleWindowDragEnd)
@@ -306,8 +298,7 @@ export default defineComponent({
       handleBlur,
       handleBoardClick,
       handleColumnMenuItemClick,
-      handleFilterChange,
-      handleClearFilters
+      handleFilterChange
     }
   }
 })

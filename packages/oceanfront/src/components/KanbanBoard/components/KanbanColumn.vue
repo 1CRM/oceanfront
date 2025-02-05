@@ -94,6 +94,7 @@ import type {
   IKanbanProject
 } from '../types'
 import { Item } from '../../../lib/items_list'
+import { getDragData, isOverTheLimit } from '../utils'
 
 export default defineComponent({
   name: 'OfKanbanColumn',
@@ -155,16 +156,18 @@ export default defineComponent({
       if (!event.dataTransfer) return
 
       // Check if dropping would exceed limit
-      if (props.column.limit !== undefined) {
-        const currentCount = props.column.cards?.length || 0
-        // Only block if card is from different column and would exceed limit
-        if (
-          draggedCardColumnId.value !== props.column.id &&
-          currentCount >= props.column.limit
-        ) {
-          event.dataTransfer.dropEffect = 'none'
-          return
-        }
+      const currentCount = props.column.cards?.length || 0
+
+      if (
+        isOverTheLimit(
+          currentCount,
+          props.column.limit,
+          draggedCardColumnId.value ?? '',
+          props.column.id
+        )
+      ) {
+        event.dataTransfer.dropEffect = 'none'
+        return
       }
 
       event.dataTransfer.dropEffect = 'move'
@@ -235,17 +238,17 @@ export default defineComponent({
       // Check if dropping would exceed limit
       if (props.column.limit !== undefined) {
         const currentCount = props.column.cards?.length || 0
-        const dragData = event.dataTransfer.getData('text/plain')
-        try {
-          const { sourceColumnId } = JSON.parse(dragData || '{}')
-          if (
-            sourceColumnId !== props.column.id &&
-            currentCount >= props.column.limit
-          ) {
-            return
-          }
-        } catch (error) {
-          console.error('Error parsing drag data:', error)
+        const data = getDragData(event)
+        if (!data) return
+
+        if (
+          isOverTheLimit(
+            currentCount,
+            props.column.limit,
+            data.sourceColumnId ?? '',
+            props.column.id
+          )
+        ) {
           return
         }
       }
@@ -263,134 +266,125 @@ export default defineComponent({
       }
     }
 
+    const calculateNewOrder = (
+      container: HTMLElement,
+      mouseY: number,
+      data: any,
+      dropPosition: number
+    ) => {
+      const cards = Array.from(
+        container.querySelectorAll('.of-kanban-card')
+      ) as HTMLElement[]
+      const draggingCard = container.querySelector(
+        '.of-kanban-card.of--is-dragging'
+      ) as HTMLElement
+
+      // Handle empty or dragging-only cases
+      if (
+        cards.length === 0 ||
+        (cards.length === 1 && cards[0] === draggingCard)
+      ) {
+        return 0
+      }
+
+      // Handle top of container drop
+      if (mouseY < 44) {
+        return 0
+      }
+
+      const draggingCardOrder = parseFloat(
+        draggingCard?.getAttribute('data-order') ?? '0'
+      )
+      const isDraggingCardInThisColumn = data.sourceColumnId === props.column.id
+
+      // Find nearest card and calculate order
+      const { nearCard, currIndex } = findNearestCard(
+        cards,
+        draggingCard,
+        container,
+        dropPosition
+      )
+
+      if (nearCard) {
+        const nearOrder = parseFloat(
+          nearCard.getAttribute('data-order') ?? String(currIndex)
+        )
+        const increasingOrder = draggingCardOrder < nearOrder
+        return increasingOrder && isDraggingCardInThisColumn
+          ? nearOrder
+          : nearOrder + 1
+      }
+
+      return 0
+    }
+
+    const findNearestCard = (
+      cards: HTMLElement[],
+      draggingCard: HTMLElement,
+      container: HTMLElement,
+      dropPosition: number
+    ) => {
+      const containerRect = container.getBoundingClientRect()
+      const scrollTop = container.scrollTop
+
+      for (let i = 0; i < cards.length; i++) {
+        const card = cards[i]
+        if (card === draggingCard) continue
+
+        const cardRect = card.getBoundingClientRect()
+        const cardTop = cardRect.top - containerRect.top + scrollTop
+        const cardBottom = cardTop + cardRect.height
+
+        if (Math.abs(cardTop - dropPosition) < 10) {
+          return { nearCard: cards[i - 1] ?? null, currIndex: i }
+        } else if (Math.abs(cardBottom - (dropPosition - 12)) < 10) {
+          return { nearCard: card, currIndex: i }
+        }
+      }
+
+      return { nearCard: null, currIndex: 0 }
+    }
+
     const handleDrop = (event: DragEvent) => {
       event.preventDefault()
       isDropTarget.value = false
 
       if (!event.dataTransfer) return
+      const data = getDragData(event)
+      if (!data?.cardId || !data?.sourceColumnId) return
 
-      try {
-        const data = JSON.parse(event.dataTransfer.getData('text/plain'))
-        if (!data.cardId || !data.sourceColumnId) return
-
-        // Check column limit before processing the drop
-        if (props.column.limit !== undefined) {
-          const currentCount = props.column.cards?.length || 0
-          // Only count as new card if it's coming from a different column
-          if (
-            data.sourceColumnId !== props.column.id &&
-            currentCount >= props.column.limit
-          ) {
-            return
-          }
-        }
-
-        let newOrder = 0
-
-        const container = event.currentTarget as HTMLElement
-        const scrollTop = container.scrollTop
-        const containerRect = container.getBoundingClientRect()
-
-        // Get all cards, including the dragged one
-        const cards = Array.from(
-          container.querySelectorAll('.of-kanban-card')
-        ) as HTMLElement[]
-
-        const mouseY = event.clientY - containerRect.top + scrollTop
-        const draggingCard = container.querySelector(
-          '.of-kanban-card.of--is-dragging'
-        ) as HTMLElement
-
-        let draggingCardOrder: string | number =
-          draggingCard?.getAttribute('data-order') ?? 0
-        if (typeof draggingCardOrder === 'string') {
-          draggingCardOrder = parseFloat(draggingCardOrder)
-        }
-
-        // If mouse is near the top of the container, position at the top
-        if (mouseY < 44) {
-          newOrder = 0
-          emit('card-moved', {
-            cardId: data.cardId,
-            fromColumn: data.sourceColumnId,
-            toColumn: props.column.id,
-            newOrder: newOrder
-          })
-          return
-        }
-
-        // If no cards or only the dragged card, position at the top
-        if (
-          cards.length === 0 ||
-          (cards.length === 1 && cards[0] === draggingCard)
-        ) {
-          newOrder = 0
-          emit('card-moved', {
-            cardId: data.cardId,
-            fromColumn: data.sourceColumnId,
-            toColumn: props.column.id,
-            newOrder: newOrder
-          })
-          return
-        }
-
-        let nearCard = null
-        let isDraggingCardInThisColumn = false
-        cards.some((card) => {
-          if (card === draggingCard) {
-            isDraggingCardInThisColumn = true
-            return true
-          }
-        })
-
-        let currIndex = 0
-
-        for (let i = 0; i < cards.length; i++) {
-          const card = cards[i]
-          // Skip the card being dragged
-          if (card === draggingCard) continue
-
-          const cardRect = card.getBoundingClientRect()
-          const cardTop = cardRect.top - containerRect.top + scrollTop
-          const cardBottom = cardTop + cardRect.height
-
-          if (
-            Math.abs(cardTop - dropPosition.value) < 10 &&
-            isDraggingCardInThisColumn
-          ) {
-            // Drop position is near the top of this card
-            nearCard = cards[i - 1]
-            currIndex = i
-            break
-          } else if (Math.abs(cardBottom - (dropPosition.value - 12)) < 10) {
-            // Drop position is near the bottom of this card
-            nearCard = card
-            currIndex = i
-            break
-          }
-        }
-
-        if (nearCard) {
-          let nearOrder = nearCard.getAttribute('data-order') ?? currIndex
-          if (typeof nearOrder === 'string') {
-            nearOrder = parseFloat(nearOrder)
-          }
-          const incresingOrder = draggingCardOrder < nearOrder
-          newOrder =
-            incresingOrder && isDraggingCardInThisColumn
-              ? nearOrder
-              : nearOrder + 1
-        }
-
-        emit('card-moved', {
-          cardId: data.cardId,
-          fromColumn: data.sourceColumnId,
-          toColumn: props.column.id,
-          newOrder: newOrder
-        })
-      } catch (error) {
-        console.error('Error handling drop:', error)
+      // Check column limits
+      const currentCount = props.column.cards?.length || 0
+      if (
+        isOverTheLimit(
+          currentCount,
+          props.column.limit,
+          data.sourceColumnId,
+          props.column.id
+        )
+      ) {
+        return
       }
+
+      const container = event.currentTarget as HTMLElement
+      const mouseY =
+        event.clientY -
+        container.getBoundingClientRect().top +
+        container.scrollTop
+
+      const newOrder = calculateNewOrder(
+        container,
+        mouseY,
+        data,
+        dropPosition.value
+      )
+
+      emit('card-moved', {
+        cardId: data.cardId,
+        fromColumn: data.sourceColumnId,
+        toColumn: props.column.id,
+        newOrder
+      })
     }
 
     const handleCardDragStart = (card: IKanbanCard) => {
@@ -398,24 +392,10 @@ export default defineComponent({
       emit('card-drag-start', card)
     }
 
-    const handleCardClick = (card: IKanbanCard) => {
-      emit('card-click', card)
-    }
-
     const handleDragEnd = () => {
       dropPosition.value = 0
       draggedCardColumnId.value = null
       isDropTarget.value = false
-    }
-
-    const handleColumnClick = (event: MouseEvent) => {
-      const target = event.target as HTMLElement
-
-      if (target.closest('.of-kanban-card')) {
-        return
-      }
-
-      emit('column-click', props.column)
     }
 
     const handleCardTouchHover = (event: CustomEvent) => {
@@ -542,6 +522,21 @@ export default defineComponent({
       }
 
       isDropTarget.value = false
+    }
+
+    const handleCardClick = (card: IKanbanCard) => {
+      emit('card-click', card)
+    }
+
+    const handleColumnClick = (event: MouseEvent) => {
+      const target = event.target as HTMLElement
+
+      // If the click is on a card, do nothing
+      if (target.closest('.of-kanban-card')) {
+        return
+      }
+
+      emit('column-click', props.column)
     }
 
     const handleMenuItemClick = (item: string | number) => {

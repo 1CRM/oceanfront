@@ -62,6 +62,7 @@
 import { computed, defineComponent, type PropType } from 'vue'
 import { OfIcon } from '../../Icon'
 import type { IKanbanCard } from '../types'
+import { getInitials } from '../utils'
 
 export default defineComponent({
   name: 'OfKanbanCard',
@@ -127,14 +128,7 @@ export default defineComponent({
       //Anonimus
       if (!name) return 'AN'
 
-      return (
-        name.includes(' ')
-          ? name
-              .split(' ')
-              .map((word) => word[0])
-              .join('')
-          : name.slice(0, 2)
-      ).toUpperCase()
+      return getInitials(name)
     })
 
     let touchTimeout: number | null = null
