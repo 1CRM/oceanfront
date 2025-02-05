@@ -100,21 +100,6 @@ export default defineComponent({
       () => props.draggedCardId === props.card.id
     )
 
-    const handleDragStart = (event: DragEvent) => {
-      if (!event.dataTransfer) return
-
-      event.dataTransfer.effectAllowed = 'move'
-      event.dataTransfer.setData(
-        'text/plain',
-        JSON.stringify({
-          cardId: props.card.id,
-          sourceColumnId: props.columnId
-        })
-      )
-
-      emit('drag-start', props.card)
-    }
-
     const handleBlur = () => {
       emit('card-blur', props.card)
     }
@@ -131,6 +116,21 @@ export default defineComponent({
       return getInitials(name)
     })
 
+    const handleDragStart = (event: DragEvent) => {
+      if (!event.dataTransfer) return
+
+      event.dataTransfer.effectAllowed = 'move'
+      event.dataTransfer.setData(
+        'text/plain',
+        JSON.stringify({
+          cardId: props.card.id,
+          sourceColumnId: props.columnId
+        })
+      )
+
+      emit('drag-start', props.card)
+    }
+
     let touchTimeout: number | null = null
     let isDragging = false
     let initialTouchY = 0
@@ -143,7 +143,6 @@ export default defineComponent({
       const touch = event.touches[0]
       initialTouchY = touch.clientY
       initialTouchX = touch.clientX
-      // Store the initial card position and size
       initialCardRect = cardElement.getBoundingClientRect()
 
       touchTimeout = window.setTimeout(() => {
@@ -203,7 +202,6 @@ export default defineComponent({
         '.of-kanban-column-content'
       )
       if (columnContent) {
-        // Dispatch custom event to handle column interaction
         columnContent.dispatchEvent(
           new CustomEvent('card-touch-hover', {
             detail: {
@@ -250,7 +248,6 @@ export default defineComponent({
         '.of-kanban-column-content'
       )
       if (columnContent) {
-        // Dispatch drop event
         columnContent.dispatchEvent(
           new CustomEvent('card-touch-drop', {
             detail: {
