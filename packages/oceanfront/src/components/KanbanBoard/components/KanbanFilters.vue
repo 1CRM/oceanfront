@@ -26,7 +26,7 @@
                   class="avatar-image"
                 />
                 <div v-else class="avatar-text">
-                  {{ getInitials(assignee.name) }}
+                  {{ getAssigneeInitials(assignee.name) }}
                 </div>
               </div>
             </template>
@@ -49,9 +49,10 @@
 <script lang="ts">
 import { defineComponent, PropType, ref, onUnmounted } from 'vue'
 import { IKanbanCardAssignee } from '../types'
+import { getInitials } from '../utils'
 
 export default defineComponent({
-  name: 'KanbanFilters',
+  name: 'OfKanbanFilters',
 
   props: {
     assignees: {
@@ -75,13 +76,10 @@ export default defineComponent({
     const selectedAssignees = ref<(string | number)[]>([])
     let debounceTimeout: ReturnType<typeof setTimeout>
 
-    const getInitials = (name: string) => {
-      return name
-        .split(' ')
-        .map((part) => part[0])
-        .join('')
-        .toUpperCase()
-        .slice(0, 2)
+    const getAssigneeInitials = (name: string) => {
+      //Anonimus
+      if (!name) return 'AN'
+      return getInitials(name)
     }
 
     const emitFilterChange = () => {
@@ -127,7 +125,7 @@ export default defineComponent({
       handleKeywordChange,
       handleClearFilters,
       toggleAssignee,
-      getInitials
+      getAssigneeInitials
     }
   }
 })

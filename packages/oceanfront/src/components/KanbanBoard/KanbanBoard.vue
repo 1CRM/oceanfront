@@ -10,7 +10,7 @@
       :assignees="assignees"
       :search-input-placeholder="searchInputPlaceholder"
       @filter-change="handleFilterChange"
-      @clear-filters="handleClearFilters"
+      @clear-filters="handleFilterChange"
     >
       <template #custom-filters>
         <slot name="filters" />
@@ -27,6 +27,7 @@
         :menu-items="columnMenuItems"
         :dragged-card-id="draggedCardId"
         :selected-card-id="selectedCardId"
+        :active-column-id="activeColumnId"
         @menu-item-click="handleColumnMenuItemClick"
         @column-click="handleColumnClick"
         @card-blur="handleCardBlur"
@@ -37,6 +38,7 @@
         @project-click="$emit('project-click', $event)"
         @assignee-click="$emit('assignee-click', $event)"
         @card-title-click="$emit('card-title-click', $event)"
+        @set-active-column="setActiveColumn"
       >
         <template #card-title="slotProps">
           <slot name="card-title" :card="slotProps.card" />
@@ -111,6 +113,7 @@ export default defineComponent({
       keyword: '',
       assignees: [] as (string | number)[]
     })
+    const activeColumnId = ref<string | null>(null)
 
     const assignees = computed(() => {
       const assigneeMap = new Map<string | number, IKanbanCardAssignee>()
@@ -274,12 +277,8 @@ export default defineComponent({
       emit('filter-change', filters)
     }
 
-    const handleClearFilters = (filters: {
-      keyword: string
-      assignees: (string | number)[]
-    }) => {
-      currentFilters.value = filters
-      emit('filter-change', filters)
+    const setActiveColumn = (columnId: string | null) => {
+      activeColumnId.value = columnId
     }
 
     onMounted(() => {
@@ -298,6 +297,7 @@ export default defineComponent({
       selectedCardId,
       assignees,
       filteredColumns,
+      activeColumnId,
       handleCardMove,
       handleCardDragStart,
       handleCardBlur,
@@ -307,7 +307,7 @@ export default defineComponent({
       handleBoardClick,
       handleColumnMenuItemClick,
       handleFilterChange,
-      handleClearFilters
+      setActiveColumn
     }
   }
 })

@@ -59,7 +59,11 @@
           <slot name="avatar" :card="slotProps.card" />
         </template>
       </kanban-card>
-      <div v-if="isDropTarget" :style="dropIndicatorStyle" />
+      <div
+        v-if="isDropTarget"
+        :style="dropIndicatorStyle"
+        class="of-kanban-column-drop-indicator"
+      />
     </div>
 
     <div class="of-kanban-column-footer">
@@ -83,7 +87,8 @@ import {
   defineComponent,
   type PropType,
   ref,
-  CSSProperties
+  CSSProperties,
+  onUnmounted
 } from 'vue'
 import { OfButton } from '../../Button'
 import KanbanCard from './KanbanCard.vue'
@@ -94,6 +99,12 @@ import type {
   IKanbanProject
 } from '../types'
 import { Item } from '../../../lib/items_list'
+import {
+  calculateDropPosition,
+  calculateNewOrder,
+  getDragData,
+  isOverTheLimit
+} from '../utils'
 
 export default defineComponent({
   name: 'OfKanbanColumn',
@@ -117,6 +128,10 @@ export default defineComponent({
     selectedCardId: {
       type: [String, Number] as PropType<string | number | undefined>,
       default: undefined
+    },
+    activeColumnId: {
+      type: String as PropType<string | null | undefined>,
+      default: undefined
     }
   },
   emits: {
@@ -134,13 +149,17 @@ export default defineComponent({
       newOrder: number
     }) => true,
     'card-drag-start': (_card: IKanbanCard) => true,
-    'column-click': (_column: IKanbanColumn) => true
+    'column-click': (_column: IKanbanColumn) => true,
+    'set-active-column': (_columnId: string | null) => true
   },
 
   setup(props, { emit }) {
-    const isDropTarget = ref(false)
+    const isDropTarget = computed(
+      () => props.activeColumnId === props.column.id
+    )
     const dropPosition = ref(0)
     const draggedCardColumnId = ref<string | null>(null)
+    const clearDropTargetTimeout = ref<number | null>(null)
 
     const sortedCards = computed(() => {
       return [...(props.column.cards || [])].sort((a, b) => a.order - b.order)
@@ -155,78 +174,37 @@ export default defineComponent({
       if (!event.dataTransfer) return
 
       // Check if dropping would exceed limit
-      if (props.column.limit !== undefined) {
-        const currentCount = props.column.cards?.length || 0
-        // Only block if card is from different column and would exceed limit
-        if (
-          draggedCardColumnId.value !== props.column.id &&
-          currentCount >= props.column.limit
-        ) {
-          event.dataTransfer.dropEffect = 'none'
-          return
-        }
+      const currentCount = props.column.cards?.length || 0
+      if (
+        isOverTheLimit(
+          currentCount,
+          props.column.limit,
+          draggedCardColumnId.value ?? '',
+          props.column.id
+        )
+      ) {
+        event.dataTransfer.dropEffect = 'none'
+        return
       }
 
       event.dataTransfer.dropEffect = 'move'
       event.preventDefault()
 
       const container = event.currentTarget as HTMLElement
-      const scrollTop = container.scrollTop
-      const containerRect = container.getBoundingClientRect()
-
-      // Get all cards, including the dragged one
-      const cards = Array.from(
-        container.querySelectorAll('.of-kanban-card')
-      ) as HTMLElement[]
-
-      const mouseY = event.clientY - containerRect.top + scrollTop
+      const mouseY =
+        event.clientY -
+        container.getBoundingClientRect().top +
+        container.scrollTop
       const draggingCard = container.querySelector(
         '.of-kanban-card.of--is-dragging'
       ) as HTMLElement
 
-      // If mouse is near the top of the container, position at the top
-      if (mouseY < 24) {
-        // 24px threshold from the top
-        dropPosition.value = 12
-        isDropTarget.value = true
-        return
-      }
-
-      // If no cards or only the dragged card, position at the top
-      if (
-        cards.length === 0 ||
-        (cards.length === 1 && cards[0] === draggingCard)
-      ) {
-        dropPosition.value = 12
-        isDropTarget.value = true
-        return
-      }
-
-      // Find the card we're dragging over
-      for (let i = 0; i < cards.length; i++) {
-        const card = cards[i]
-        // Skip the card being dragged
-        if (card === draggingCard) continue
-
-        const cardRect = card.getBoundingClientRect()
-        const cardTop = cardRect.top - containerRect.top + scrollTop
-        const cardBottom = cardTop + cardRect.height
-        const cardMiddle = cardTop + cardRect.height / 2
-
-        if (mouseY < cardMiddle) {
-          // Position above current card
-          dropPosition.value = cardTop
-          isDropTarget.value = true
-          return
-        }
-
-        // If this is the last non-dragging card and we're below its middle
-        if (i === cards.length - 1) {
-          dropPosition.value = cardBottom + 12
-          isDropTarget.value = true
-          return
-        }
-      }
+      dropPosition.value = calculateDropPosition(
+        container,
+        mouseY,
+        draggingCard
+      )
+      emit('set-active-column', props.column.id)
     }
 
     const handleDragEnter = (event: DragEvent) => {
@@ -235,23 +213,23 @@ export default defineComponent({
       // Check if dropping would exceed limit
       if (props.column.limit !== undefined) {
         const currentCount = props.column.cards?.length || 0
-        const dragData = event.dataTransfer.getData('text/plain')
-        try {
-          const { sourceColumnId } = JSON.parse(dragData || '{}')
-          if (
-            sourceColumnId !== props.column.id &&
-            currentCount >= props.column.limit
-          ) {
-            return
-          }
-        } catch (error) {
-          console.error('Error parsing drag data:', error)
+        const data = getDragData(event)
+        if (!data) return
+
+        if (
+          isOverTheLimit(
+            currentCount,
+            props.column.limit,
+            data.sourceColumnId ?? '',
+            props.column.id
+          )
+        ) {
           return
         }
       }
 
       event.preventDefault()
-      isDropTarget.value = true
+      emit('set-active-column', props.column.id)
     }
 
     const handleDragLeave = (event: DragEvent) => {
@@ -259,138 +237,51 @@ export default defineComponent({
       const relatedTarget = event.relatedTarget as HTMLElement
       const currentColumn = event.currentTarget as HTMLElement
       if (!relatedTarget || !currentColumn.contains(relatedTarget)) {
-        isDropTarget.value = false
+        emit('set-active-column', null)
       }
     }
 
     const handleDrop = (event: DragEvent) => {
       event.preventDefault()
-      isDropTarget.value = false
+      emit('set-active-column', null)
 
       if (!event.dataTransfer) return
+      const data = getDragData(event)
+      if (!data?.cardId || !data?.sourceColumnId) return
 
-      try {
-        const data = JSON.parse(event.dataTransfer.getData('text/plain'))
-        if (!data.cardId || !data.sourceColumnId) return
-
-        // Check column limit before processing the drop
-        if (props.column.limit !== undefined) {
-          const currentCount = props.column.cards?.length || 0
-          // Only count as new card if it's coming from a different column
-          if (
-            data.sourceColumnId !== props.column.id &&
-            currentCount >= props.column.limit
-          ) {
-            return
-          }
-        }
-
-        let newOrder = 0
-
-        const container = event.currentTarget as HTMLElement
-        const scrollTop = container.scrollTop
-        const containerRect = container.getBoundingClientRect()
-
-        // Get all cards, including the dragged one
-        const cards = Array.from(
-          container.querySelectorAll('.of-kanban-card')
-        ) as HTMLElement[]
-
-        const mouseY = event.clientY - containerRect.top + scrollTop
-        const draggingCard = container.querySelector(
-          '.of-kanban-card.of--is-dragging'
-        ) as HTMLElement
-
-        let draggingCardOrder: string | number =
-          draggingCard?.getAttribute('data-order') ?? 0
-        if (typeof draggingCardOrder === 'string') {
-          draggingCardOrder = parseFloat(draggingCardOrder)
-        }
-
-        // If mouse is near the top of the container, position at the top
-        if (mouseY < 44) {
-          newOrder = 0
-          emit('card-moved', {
-            cardId: data.cardId,
-            fromColumn: data.sourceColumnId,
-            toColumn: props.column.id,
-            newOrder: newOrder
-          })
-          return
-        }
-
-        // If no cards or only the dragged card, position at the top
-        if (
-          cards.length === 0 ||
-          (cards.length === 1 && cards[0] === draggingCard)
-        ) {
-          newOrder = 0
-          emit('card-moved', {
-            cardId: data.cardId,
-            fromColumn: data.sourceColumnId,
-            toColumn: props.column.id,
-            newOrder: newOrder
-          })
-          return
-        }
-
-        let nearCard = null
-        let isDraggingCardInThisColumn = false
-        cards.some((card) => {
-          if (card === draggingCard) {
-            isDraggingCardInThisColumn = true
-            return true
-          }
-        })
-
-        let currIndex = 0
-
-        for (let i = 0; i < cards.length; i++) {
-          const card = cards[i]
-          // Skip the card being dragged
-          if (card === draggingCard) continue
-
-          const cardRect = card.getBoundingClientRect()
-          const cardTop = cardRect.top - containerRect.top + scrollTop
-          const cardBottom = cardTop + cardRect.height
-
-          if (
-            Math.abs(cardTop - dropPosition.value) < 10 &&
-            isDraggingCardInThisColumn
-          ) {
-            // Drop position is near the top of this card
-            nearCard = cards[i - 1]
-            currIndex = i
-            break
-          } else if (Math.abs(cardBottom - (dropPosition.value - 12)) < 10) {
-            // Drop position is near the bottom of this card
-            nearCard = card
-            currIndex = i
-            break
-          }
-        }
-
-        if (nearCard) {
-          let nearOrder = nearCard.getAttribute('data-order') ?? currIndex
-          if (typeof nearOrder === 'string') {
-            nearOrder = parseFloat(nearOrder)
-          }
-          const incresingOrder = draggingCardOrder < nearOrder
-          newOrder =
-            incresingOrder && isDraggingCardInThisColumn
-              ? nearOrder
-              : nearOrder + 1
-        }
-
-        emit('card-moved', {
-          cardId: data.cardId,
-          fromColumn: data.sourceColumnId,
-          toColumn: props.column.id,
-          newOrder: newOrder
-        })
-      } catch (error) {
-        console.error('Error handling drop:', error)
+      // Check column limits
+      const currentCount = props.column.cards?.length || 0
+      if (
+        isOverTheLimit(
+          currentCount,
+          props.column.limit,
+          data.sourceColumnId,
+          props.column.id
+        )
+      ) {
+        return
       }
+
+      const container = event.currentTarget as HTMLElement
+      const mouseY =
+        event.clientY -
+        container.getBoundingClientRect().top +
+        container.scrollTop
+
+      const newOrder = calculateNewOrder(
+        container,
+        mouseY,
+        data,
+        dropPosition.value,
+        props.column.id
+      )
+
+      emit('card-moved', {
+        cardId: data.cardId,
+        fromColumn: data.sourceColumnId,
+        toColumn: props.column.id,
+        newOrder
+      })
     }
 
     const handleCardDragStart = (card: IKanbanCard) => {
@@ -398,150 +289,148 @@ export default defineComponent({
       emit('card-drag-start', card)
     }
 
-    const handleCardClick = (card: IKanbanCard) => {
-      emit('card-click', card)
-    }
-
     const handleDragEnd = () => {
       dropPosition.value = 0
       draggedCardColumnId.value = null
-      isDropTarget.value = false
+      emit('set-active-column', null)
+    }
+
+    const handleCardTouchHover = (event: CustomEvent) => {
+      const { clientY } = event.detail
+      const container = event.currentTarget as HTMLElement
+      if (!container) return
+
+      if (clearDropTargetTimeout.value) {
+        clearTimeout(clearDropTargetTimeout.value)
+        clearDropTargetTimeout.value = null
+      }
+
+      if (
+        isOverTheLimit(
+          props.column.cards?.length || 0,
+          props.column.limit,
+          draggedCardColumnId.value ?? '',
+          props.column.id
+        )
+      ) {
+        emit('set-active-column', null)
+        return
+      }
+
+      const columnRect = container.getBoundingClientRect()
+      // Add a buffer zone of 20px around the column
+      const buffer = 20
+      if (
+        clientY >= columnRect.top - buffer &&
+        clientY <= columnRect.bottom + buffer &&
+        event.detail.clientX >= columnRect.left - buffer &&
+        event.detail.clientX <= columnRect.right + buffer
+      ) {
+        const mouseY = clientY - columnRect.top + (container.scrollTop || 0)
+        dropPosition.value = calculateDropPosition(container, mouseY)
+        emit('set-active-column', props.column.id)
+      } else {
+        // Set a timeout before clearing the drop target
+        clearDropTargetTimeout.value = window.setTimeout(() => {
+          emit('set-active-column', null)
+        }, 150) // 150ms delay
+      }
+    }
+
+    const handleCardTouchDrop = (event: CustomEvent) => {
+      const data = getDragData(event)
+      if (!data) return
+      if (!data.cardId || !data.sourceColumnId) {
+        emit('set-active-column', null)
+        return
+      }
+
+      if (
+        isOverTheLimit(
+          props.column.cards?.length || 0,
+          props.column.limit,
+          data.sourceColumnId,
+          props.column.id
+        )
+      ) {
+        emit('set-active-column', null)
+        return
+      }
+
+      const columnContent = event.currentTarget as HTMLElement
+      if (!columnContent) {
+        emit('set-active-column', null)
+        return
+      }
+
+      const containerRect = columnContent.getBoundingClientRect()
+      const scrollTop = columnContent.scrollTop || 0
+
+      // Verify we're actually dropping in this column
+      if (
+        event.detail.clientY < containerRect.top ||
+        event.detail.clientY > containerRect.bottom ||
+        event.detail.clientX < containerRect.left ||
+        event.detail.clientX > containerRect.right
+      ) {
+        emit('set-active-column', null)
+        return
+      }
+
+      // Get all visible cards (excluding the dragging one)
+      const cards = Array.from(
+        columnContent.querySelectorAll('.of-kanban-card:not(.of--is-selected)')
+      ) as HTMLElement[]
+
+      // Calculate new order based on drop position
+      let newOrder = 0
+
+      if (cards.length === 0) {
+        // If no cards, place at the beginning
+        newOrder = 0
+      } else {
+        // Find the insertion point
+        let currIndex = 0
+        for (const card of cards) {
+          const cardRect = card.getBoundingClientRect()
+          const cardTop = cardRect.top - containerRect.top + scrollTop
+          const cardMiddle = cardTop + cardRect.height / 2
+
+          if (dropPosition.value - 12 <= cardMiddle) {
+            break
+          }
+          currIndex++
+        }
+        newOrder = currIndex
+      }
+
+      const incresingOrder = data.cardOrder <= newOrder
+      const isDraggingCardInThisColumn = data.sourceColumnId === props.column.id
+      if (incresingOrder && isDraggingCardInThisColumn) newOrder++
+
+      emit('card-moved', {
+        cardId: data.cardId,
+        fromColumn: data.sourceColumnId,
+        toColumn: props.column.id,
+        newOrder: newOrder
+      })
+
+      emit('set-active-column', null)
+    }
+
+    const handleCardClick = (card: IKanbanCard) => {
+      emit('card-click', card)
     }
 
     const handleColumnClick = (event: MouseEvent) => {
       const target = event.target as HTMLElement
 
+      // If the click is on a card, do nothing
       if (target.closest('.of-kanban-card')) {
         return
       }
 
       emit('column-click', props.column)
-    }
-
-    const handleCardTouchHover = (event: CustomEvent) => {
-      const { _, clientY } = event.detail
-      const columnContent = event.currentTarget as HTMLElement
-      if (!columnContent) return
-
-      const containerRect = columnContent.getBoundingClientRect()
-      const scrollTop = columnContent.scrollTop || 0
-
-      // Get all cards in this column
-      const cards = Array.from(
-        columnContent.querySelectorAll('.of-kanban-card')
-      ) as HTMLElement[]
-
-      const mouseY = clientY - containerRect.top + scrollTop
-
-      // If mouse is near the top of the container
-      if (mouseY < 24) {
-        dropPosition.value = 12
-        isDropTarget.value = true
-        return
-      }
-
-      // If no cards, position at the top
-      if (cards.length === 0) {
-        dropPosition.value = 12
-        isDropTarget.value = true
-        return
-      }
-
-      // Find the card we're hovering over
-      for (let i = 0; i < cards.length; i++) {
-        const card = cards[i]
-        if (card.classList.contains('of--is-dragging')) continue
-
-        const cardRect = card.getBoundingClientRect()
-        const cardTop = cardRect.top - containerRect.top + scrollTop
-        const cardMiddle = cardTop + cardRect.height / 2
-
-        if (mouseY < cardMiddle) {
-          // Position above current card
-          dropPosition.value = cardTop
-          isDropTarget.value = true
-          return
-        }
-
-        // If this is the last card and we're below its middle
-        if (i === cards.length - 1) {
-          dropPosition.value = cardTop + cardRect.height + 12
-          isDropTarget.value = true
-          return
-        }
-      }
-    }
-
-    const handleCardTouchDrop = (event: CustomEvent) => {
-      const { dragData } = event.detail
-      if (!dragData) return
-
-      try {
-        const data = JSON.parse(dragData)
-        if (!data.cardId || !data.sourceColumnId) return
-
-        // Check column limit before processing the drop
-        if (props.column.limit !== undefined) {
-          const currentCount = props.column.cards?.length || 0
-          if (
-            data.sourceColumnId !== props.column.id &&
-            currentCount >= props.column.limit
-          ) {
-            return
-          }
-        }
-
-        const columnContent = event.currentTarget as HTMLElement
-        if (!columnContent) return
-
-        const containerRect = columnContent.getBoundingClientRect()
-        const scrollTop = columnContent.scrollTop || 0
-
-        // Get all visible cards (excluding the dragging one)
-        const cards = Array.from(
-          columnContent.querySelectorAll(
-            '.of-kanban-card:not(.of--is-selected)'
-          )
-        ) as HTMLElement[]
-
-        // Calculate new order based on drop position
-        let newOrder = 0
-
-        if (cards.length === 0) {
-          // If no cards, place at the beginning
-          newOrder = 0
-        } else {
-          // Find the insertion point
-          let currIndex = 0
-          for (const card of cards) {
-            const cardRect = card.getBoundingClientRect()
-            const cardTop = cardRect.top - containerRect.top + scrollTop
-            const cardMiddle = cardTop + cardRect.height / 2
-
-            if (dropPosition.value - 12 <= cardMiddle) {
-              break
-            }
-            currIndex++
-          }
-          newOrder = currIndex
-        }
-
-        const incresingOrder = data.cardOrder <= newOrder
-        const isDraggingCardInThisColumn =
-          data.sourceColumnId === props.column.id
-        if (incresingOrder && isDraggingCardInThisColumn) newOrder++
-
-        emit('card-moved', {
-          cardId: data.cardId,
-          fromColumn: data.sourceColumnId,
-          toColumn: props.column.id,
-          newOrder: newOrder
-        })
-      } catch (error) {
-        console.error('Error handling drop:', error)
-      }
-
-      isDropTarget.value = false
     }
 
     const handleMenuItemClick = (item: string | number) => {
@@ -561,15 +450,14 @@ export default defineComponent({
     })
 
     const dropIndicatorStyle = computed<CSSProperties>(() => ({
-      top: `${dropPosition.value - 6}px`,
-      position: 'absolute',
-      left: '12px',
-      right: '12px',
-      height: '2px',
-      background: 'var(--of-kanban-board-drop-indicator-bg)',
-      pointerEvents: 'none' as const,
-      zIndex: 1
+      top: `${dropPosition.value - 6}px`
     }))
+
+    onUnmounted(() => {
+      if (clearDropTargetTimeout.value) {
+        clearTimeout(clearDropTargetTimeout.value)
+      }
+    })
 
     return {
       isDropTarget,

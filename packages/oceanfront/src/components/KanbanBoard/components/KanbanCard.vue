@@ -62,6 +62,7 @@
 import { computed, defineComponent, type PropType } from 'vue'
 import { OfIcon } from '../../Icon'
 import type { IKanbanCard } from '../types'
+import { getInitials } from '../utils'
 
 export default defineComponent({
   name: 'OfKanbanCard',
@@ -99,6 +100,22 @@ export default defineComponent({
       () => props.draggedCardId === props.card.id
     )
 
+    const handleBlur = () => {
+      emit('card-blur', props.card)
+    }
+
+    const handleCardClick = () => {
+      emit('card-click', props.card)
+    }
+
+    const assigneeInitials = computed<string>(() => {
+      const name = props.card.assignee?.name
+      //Anonimus
+      if (!name) return 'AN'
+
+      return getInitials(name)
+    })
+
     const handleDragStart = (event: DragEvent) => {
       if (!event.dataTransfer) return
 
@@ -114,29 +131,6 @@ export default defineComponent({
       emit('drag-start', props.card)
     }
 
-    const handleBlur = () => {
-      emit('card-blur', props.card)
-    }
-
-    const handleCardClick = () => {
-      emit('card-click', props.card)
-    }
-
-    const assigneeInitials = computed<string>(() => {
-      const name = props.card.assignee?.name
-      //Anonimus
-      if (!name) return 'AN'
-
-      return (
-        name.includes(' ')
-          ? name
-              .split(' ')
-              .map((word) => word[0])
-              .join('')
-          : name.slice(0, 2)
-      ).toUpperCase()
-    })
-
     let touchTimeout: number | null = null
     let isDragging = false
     let initialTouchY = 0
@@ -149,7 +143,6 @@ export default defineComponent({
       const touch = event.touches[0]
       initialTouchY = touch.clientY
       initialTouchX = touch.clientX
-      // Store the initial card position and size
       initialCardRect = cardElement.getBoundingClientRect()
 
       touchTimeout = window.setTimeout(() => {
@@ -209,7 +202,6 @@ export default defineComponent({
         '.of-kanban-column-content'
       )
       if (columnContent) {
-        // Dispatch custom event to handle column interaction
         columnContent.dispatchEvent(
           new CustomEvent('card-touch-hover', {
             detail: {
@@ -256,7 +248,6 @@ export default defineComponent({
         '.of-kanban-column-content'
       )
       if (columnContent) {
-        // Dispatch drop event
         columnContent.dispatchEvent(
           new CustomEvent('card-touch-drop', {
             detail: {
