@@ -45,7 +45,7 @@ import type {
   IKanbanColumn,
   CardMovedEvent,
   IKanbanProject,
-  IKanbanAssignee
+  IKanbanCardAssignee
 } from 'oceanfront'
 
 export default defineComponent({
@@ -232,7 +232,7 @@ export default defineComponent({
       console.log('Project clicked:', project)
     }
 
-    const onAssigneeClick = (assignee: IKanbanAssignee) => {
+    const onAssigneeClick = (assignee: IKanbanCardAssignee) => {
       console.log('Assignee clicked:', assignee)
     }
 
