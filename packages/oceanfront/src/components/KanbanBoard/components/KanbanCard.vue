@@ -19,10 +19,10 @@
       <div class="of-kanban-card-header">
         <div class="project-container">
           <slot name="project" :card="card">
-            <div class="project-icon">
+            <div class="project-icon" v-if="card.project?.name">
               <of-icon :name="card.project?.icon ?? 'mobile'" />
             </div>
-            <div class="project-name">
+            <div class="project-name" v-if="card.project?.name">
               <div
                 class="project-text"
                 @click="$emit('project-click', card.project)"
