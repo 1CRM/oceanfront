@@ -18,6 +18,7 @@
                   'of--selected': selectedAssignees.includes(assignee.id)
                 }"
                 @click="toggleAssignee(assignee.id)"
+                :title="assignee.name"
               >
                 <img
                   v-if="assignee.avatar"

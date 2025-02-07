@@ -37,6 +37,7 @@
             class="of-kanban-avatar"
             v-if="card.assignee"
             @click="$emit('assignee-click', card.assignee)"
+            :title="card.assignee.name"
           >
             <img
               v-if="card.assignee.avatar"
