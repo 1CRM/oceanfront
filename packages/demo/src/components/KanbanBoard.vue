@@ -98,7 +98,7 @@ export default defineComponent({
             order: 1,
             assignee: {
               id: 'assignee-2',
-              name: 'Bob Smith'
+              name: 'admin'
             }
           },
           {
