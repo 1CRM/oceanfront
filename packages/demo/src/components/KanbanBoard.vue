@@ -54,6 +54,7 @@ export default defineComponent({
 <of-kanban-board
   v-model:columns="columns"
   :column-menu-items="columnMenuItems"
+  :has-more-cards="columnHasMore"
   search-input-placeholder="Search by keyword..."
   @column-menu-item-click="handleColumnMenuItemClick"
   @card-moved="handleCardMoved"
@@ -62,6 +63,7 @@ export default defineComponent({
   @project-click="onProjectClick"
   @assignee-click="onAssigneeClick"
   @card-title-click="onCardTitleClick"
+  @load-more="handleLoadMore"
 />
 `
     const columns = ref<IKanbanColumn[]>([
