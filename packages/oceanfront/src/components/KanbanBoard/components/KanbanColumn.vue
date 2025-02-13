@@ -474,8 +474,8 @@ export default defineComponent({
       }
     }
 
-    // Debounce the scroll handler with 250ms delay
-    const debouncedHandleScroll = debounce(handleScroll, 250)
+    // Debounce the scroll handler with 50ms delay
+    const debouncedHandleScroll = debounce(handleScroll, 50)
 
     onUnmounted(() => {
       if (clearDropTargetTimeout.value) {
