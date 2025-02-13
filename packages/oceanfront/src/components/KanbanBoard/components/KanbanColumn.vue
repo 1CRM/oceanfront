@@ -9,7 +9,7 @@
       <div class="of-kanban-column-title">
         <h3>{{ column.title }}</h3>
         <span class="of-kanban-column-count">
-          {{ column.cards?.length || 0 }}
+          {{ column.total || column.cards?.length || 0 }}
           <template v-if="column.limit"> / {{ column.limit }} </template>
         </span>
       </div>
@@ -34,6 +34,8 @@
       @dragleave.prevent="handleDragLeave"
       @card-touch-hover="handleCardTouchHover"
       @card-touch-drop="handleCardTouchDrop"
+      @scroll="debouncedHandleScroll"
+      ref="columnContentRef"
     >
       <kanban-card
         v-for="card in sortedCards"
@@ -103,7 +105,8 @@ import {
   calculateDropPosition,
   calculateNewOrder,
   getDragData,
-  isOverTheLimit
+  isOverTheLimit,
+  debounce
 } from '../utils'
 
 export default defineComponent({
@@ -132,6 +135,10 @@ export default defineComponent({
     activeColumnId: {
       type: String as PropType<string | null | undefined>,
       default: undefined
+    },
+    hasMore: {
+      type: Boolean,
+      default: false
     }
   },
   emits: {
@@ -150,7 +157,8 @@ export default defineComponent({
     }) => true,
     'card-drag-start': (_card: IKanbanCard) => true,
     'column-click': (_column: IKanbanColumn) => true,
-    'set-active-column': (_columnId: string | null) => true
+    'set-active-column': (_columnId: string | null) => true,
+    'load-more': null
   },
 
   setup(props, { emit }) {
@@ -453,6 +461,22 @@ export default defineComponent({
       top: `${dropPosition.value - 6}px`
     }))
 
+    const columnContentRef = ref<HTMLElement | null>(null)
+    const SCROLL_THRESHOLD = 50 // pixels before bottom to trigger load more
+
+    const handleScroll = () => {
+      if (!columnContentRef.value || !props.hasMore) return
+
+      const { scrollTop, scrollHeight, clientHeight } = columnContentRef.value
+
+      if (scrollHeight - scrollTop - clientHeight < SCROLL_THRESHOLD) {
+        emit('load-more', props.column.id)
+      }
+    }
+
+    // Debounce the scroll handler with 50ms delay
+    const debouncedHandleScroll = debounce(handleScroll, 50)
+
     onUnmounted(() => {
       if (clearDropTargetTimeout.value) {
         clearTimeout(clearDropTargetTimeout.value)
@@ -465,6 +489,7 @@ export default defineComponent({
       sortedCards,
       dropIndicatorStyle,
       compactedMenuItems,
+      columnContentRef,
       handleDragOver,
       handleDragEnter,
       handleDragLeave,
@@ -474,7 +499,8 @@ export default defineComponent({
       handleDragEnd,
       handleColumnClick,
       handleCardTouchHover,
-      handleCardTouchDrop
+      handleCardTouchDrop,
+      debouncedHandleScroll
     }
   }
 })

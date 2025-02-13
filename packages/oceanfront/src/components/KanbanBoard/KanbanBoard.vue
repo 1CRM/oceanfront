@@ -28,6 +28,7 @@
         :dragged-card-id="draggedCardId"
         :selected-card-id="selectedCardId"
         :active-column-id="activeColumnId"
+        :has-more="hasMoreCards[column.id]"
         @menu-item-click="handleColumnMenuItemClick"
         @column-click="handleColumnClick"
         @card-blur="handleCardBlur"
@@ -39,6 +40,7 @@
         @assignee-click="$emit('assignee-click', $event)"
         @card-title-click="$emit('card-title-click', $event)"
         @set-active-column="setActiveColumn"
+        @load-more="handleLoadMore"
       >
         <template #card-title="slotProps">
           <slot name="card-title" :card="slotProps.card" />
@@ -92,6 +94,10 @@ export default defineComponent({
     searchInputPlaceholder: {
       type: String,
       default: 'Search by keyword...'
+    },
+    hasMoreCards: {
+      type: Object as PropType<Record<string, boolean>>,
+      default: () => ({})
     }
   },
   emits: [
@@ -103,7 +109,8 @@ export default defineComponent({
     'project-click',
     'assignee-click',
     'card-title-click',
-    'filter-change'
+    'filter-change',
+    'load-more'
   ] as const,
   setup(props, { emit }) {
     const boardRef = ref<HTMLElement>()
@@ -281,6 +288,10 @@ export default defineComponent({
       activeColumnId.value = columnId
     }
 
+    const handleLoadMore = (columnId: string) => {
+      return emit('load-more', columnId)
+    }
+
     onMounted(() => {
       window.addEventListener('click', handleWindowClick)
       window.addEventListener('dragend', handleWindowDragEnd)
@@ -307,7 +318,8 @@ export default defineComponent({
       handleBoardClick,
       handleColumnMenuItemClick,
       handleFilterChange,
-      setActiveColumn
+      setActiveColumn,
+      handleLoadMore
     }
   }
 })

@@ -22,6 +22,7 @@ export interface IKanbanTag {
 export interface IKanbanColumn {
   id: string
   title: string
+  total?: number
   cards?: IKanbanCard[]
   limit?: number
 }
