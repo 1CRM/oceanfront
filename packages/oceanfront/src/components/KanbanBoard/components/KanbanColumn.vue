@@ -462,7 +462,7 @@ export default defineComponent({
     }))
 
     const columnContentRef = ref<HTMLElement | null>(null)
-    const SCROLL_THRESHOLD = 50 // pixels before bottom to trigger load more
+    const SCROLL_THRESHOLD = 100 // pixels before bottom to trigger load more
 
     const handleScroll = () => {
       if (!columnContentRef.value || !props.hasMore) return
@@ -474,8 +474,8 @@ export default defineComponent({
       }
     }
 
-    // Debounce the scroll handler with 50ms delay
-    const debouncedHandleScroll = debounce(handleScroll, 50)
+    // Debounce the scroll handler with 10ms delay
+    const debouncedHandleScroll = debounce(handleScroll, 10)
 
     onUnmounted(() => {
       if (clearDropTargetTimeout.value) {
