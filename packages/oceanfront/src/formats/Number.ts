@@ -71,7 +71,10 @@ export class NumberFormatter implements TextFormatter {
     const opts = this.options
     return {
       // minimumIntegerDigits: this.minimumIntegerDigits, // requires extra leading zero handling
-      maximumFractionDigits: opts.maximumFractionDigits || 3, // editing ? 5 : opts.maximumFractionDigits,
+      maximumFractionDigits: Math.max(
+        opts.minimumFractionDigits ?? 0,
+        opts.maximumFractionDigits ?? 3
+      ),
       minimumFractionDigits: opts.minimumFractionDigits,
       maximumSignificantDigits: editing
         ? undefined
