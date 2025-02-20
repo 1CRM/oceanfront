@@ -59,25 +59,26 @@ export function makeItems(
         text: items
       }
     ]
-  }
-  if (Array.isArray(items)) {
+  } else if (Array.isArray(items) || typeof items === 'object') {
     const newItems: Item[] = []
-    items.forEach((item) => {
-      if (typeof item === 'string' || typeof item === 'number') {
+
+    items.forEach(function (item: any) {
+      if(typeof item === 'object')
         newItems.push({
-          value: item,
-          text: item
+          value: item.value,
+          text: item.text
         })
-      } else {
-        if (!((item as Item).value && (item as Item).text)) {
-          throw 'Object properties is wrong'
-        }
-        newItems.push(item as Item)
-      }
-    })
+      if (typeof item === 'string' || typeof item === 'number') {
+         newItems.push({
+          value: item,
+          text: item,
+         })
+       }
+    });
     return newItems
+  } else {
+    throw('Error loading items')
   }
-  return []
 }
 
 export interface ItemsState {

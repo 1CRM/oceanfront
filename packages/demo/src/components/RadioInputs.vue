@@ -7,7 +7,7 @@
       <template #default="props">
         <of-radio-field
           label="Radio Field"
-          :items="['value1', 'value2', 'value3']"
+          :items="[{text: 'Value1', value: 'value1'}, {text: 'Value2', value: 'value2'}, {text: 'Value3', value: 'value3'}]"
           v-model="checkedValue"
           v-bind="{
             ...props,
@@ -35,7 +35,7 @@ export default defineComponent({
     const sampleCode = `
 <of-radio-field
   label="Field Label"
-  :items="['value1', 'value2', 'value3']"
+  :items="['value1', 'value2', 'value3'] or [{text: 'Value1', value: 'value1'}, {text: 'Value2', value: 'value2'}, {text: 'Value3', value: 'value3'}]"
   v-model="selectedValue"
 />`
     const customProps = reactive({ grid: 'column' })
