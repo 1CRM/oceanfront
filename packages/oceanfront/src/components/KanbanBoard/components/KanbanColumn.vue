@@ -1,6 +1,7 @@
 <template>
   <div
     class="of-kanban-column"
+    :class="{ 'of-is-collapsed': isCollapsed }"
     @dragend="handleDragEnd"
     @touchend="handleDragEnd"
     @click="handleColumnClick"
@@ -13,11 +14,16 @@
           <template v-if="column.limit"> / {{ column.limit }} </template>
         </span>
       </div>
-      <div
-        class="of-kanban-column-actions"
-        v-if="compactedMenuItems.length > 0"
-      >
+      <div class="of-kanban-column-actions">
         <of-button
+          variant="text"
+          class="of-kanban-column-collapse-button"
+          :icon="isCollapsed ? 'expand open' : 'expand close'"
+          size="sm"
+          @click.stop="$emit('collapse-toggle', column.id)"
+        />
+        <of-button
+          v-if="compactedMenuItems.length > 0 && !isCollapsed"
           variant="text"
           icon="more"
           size="sm"
@@ -139,6 +145,10 @@ export default defineComponent({
     hasMore: {
       type: Boolean,
       default: false
+    },
+    isCollapsed: {
+      type: Boolean,
+      default: false
     }
   },
   emits: {
@@ -158,7 +168,8 @@ export default defineComponent({
     'card-drag-start': (_card: IKanbanCard) => true,
     'column-click': (_column: IKanbanColumn) => true,
     'set-active-column': (_columnId: string | null) => true,
-    'load-more': null
+    'load-more': null,
+    'collapse-toggle': (_columnId: string) => true
   },
 
   setup(props, { emit }) {

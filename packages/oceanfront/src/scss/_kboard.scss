@@ -24,6 +24,58 @@
       border-radius: 3px;
       display: flex;
       flex-direction: column;
+      transition: all 0.3s ease;
+
+      &.of-is-collapsed {
+        min-width: 48px;
+        max-width: 48px;
+        flex: 0 0 48px;
+        height: 250px;
+        align-self: flex-start;
+
+        .of-kanban-column-content,
+        .of-kanban-column-footer {
+          display: none;
+        }
+
+        .of-kanban-column-header {
+          height: 100%;
+          width: 100%;
+          padding: 12px 4px;
+          flex-direction: column;
+          align-items: center;
+          justify-content: space-between;
+
+          .of-kanban-column-title {
+            width: 100%;
+            flex: 1;
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+            margin-bottom: 0.1em;
+            text-align: center;
+
+            h3 {
+              font-size: 16px;
+              line-height: 20px;
+              margin: 0 auto;
+            }
+
+            .of-kanban-column-count {
+              writing-mode: horizontal-tb;
+              transform: rotate(180deg);
+              margin-top: auto;
+              margin-left: auto;
+              margin-right: auto;
+            }
+          }
+
+          .of-kanban-column-actions {
+            padding: 4px;
+            padding-right: 1em;
+            margin-top: auto;
+          }
+        }
+      }
 
       .of-kanban-column-header {
         padding: 8px 4px;
@@ -62,6 +114,11 @@
           align-items: center;
           .of-button-expand {
             display: none;
+          }
+          .of-kanban-column-collapse-button {
+            i {
+              transform: rotate(90deg);
+            }
           }
         }
       }
