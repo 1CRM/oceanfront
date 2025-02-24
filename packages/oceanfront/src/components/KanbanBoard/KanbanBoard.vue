@@ -29,6 +29,7 @@
         :selected-card-id="selectedCardId"
         :active-column-id="activeColumnId"
         :has-more="hasMoreCards[column.id]"
+        :is-collapsed="collapsedColumns.includes(column.id)"
         @menu-item-click="handleColumnMenuItemClick"
         @column-click="handleColumnClick"
         @card-blur="handleCardBlur"
@@ -41,6 +42,7 @@
         @card-title-click="$emit('card-title-click', $event)"
         @set-active-column="setActiveColumn"
         @load-more="handleLoadMore"
+        @collapse-toggle="handleColumnCollapse"
       >
         <template #card-title="slotProps">
           <slot name="card-title" :card="slotProps.card" />
@@ -116,6 +118,7 @@ export default defineComponent({
     const boardRef = ref<HTMLElement>()
     const draggedCardId = ref<string | number | undefined>(undefined)
     const selectedCardId = ref<string | number | undefined>(undefined)
+    const collapsedColumns = ref<string[]>([])
     const currentFilters = ref({
       keyword: '',
       assignees: [] as (string | number)[]
@@ -292,6 +295,15 @@ export default defineComponent({
       return emit('load-more', columnId)
     }
 
+    const handleColumnCollapse = (columnId: string) => {
+      const index = collapsedColumns.value.indexOf(columnId)
+      if (index === -1) {
+        collapsedColumns.value.push(columnId)
+      } else {
+        collapsedColumns.value.splice(index, 1)
+      }
+    }
+
     onMounted(() => {
       window.addEventListener('click', handleWindowClick)
       window.addEventListener('dragend', handleWindowDragEnd)
@@ -309,6 +321,7 @@ export default defineComponent({
       assignees,
       filteredColumns,
       activeColumnId,
+      collapsedColumns,
       handleCardMove,
       handleCardDragStart,
       handleCardBlur,
@@ -319,7 +332,8 @@ export default defineComponent({
       handleColumnMenuItemClick,
       handleFilterChange,
       setActiveColumn,
-      handleLoadMore
+      handleLoadMore,
+      handleColumnCollapse
     }
   }
 })
