@@ -724,6 +724,7 @@ export default defineComponent({
           row[fieldName] = {
             value: value || '',
             format:
+              columns.value[col]?.total_format ??
               (items.value as any)[0][fieldName]?.format ??
               (items.value as any)[0][fieldName]?.totalFormat ??
               {},
