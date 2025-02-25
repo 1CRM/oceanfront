@@ -65,8 +65,9 @@ import {
   type PropType,
   ref,
   onMounted,
-  onUnmounted,
-  computed
+  computed,
+  watch,
+  onUnmounted
 } from 'vue'
 import KanbanColumn from './components/KanbanColumn.vue'
 import KanbanFilters from './components/KanbanFilters.vue'
@@ -77,6 +78,7 @@ import type {
   IKanbanCardAssignee
 } from './types'
 import { Item } from '../../lib/items_list'
+import { getCollapsedColumns, saveCollapsedState } from './utils'
 
 export default defineComponent({
   name: 'OfKanbanBoard',
@@ -100,6 +102,10 @@ export default defineComponent({
     hasMoreCards: {
       type: Object as PropType<Record<string, boolean>>,
       default: () => ({})
+    },
+    id: {
+      type: String,
+      default: 'default'
     }
   },
   emits: [
@@ -124,6 +130,14 @@ export default defineComponent({
       assignees: [] as (string | number)[]
     })
     const activeColumnId = ref<string | null>(null)
+
+    const storageKey = computed<string>(
+      () => `kanban-collapsed-columns-${props.id}`
+    )
+
+    watch(collapsedColumns, (newValue) => {
+      saveCollapsedState(storageKey.value, newValue)
+    })
 
     const assignees = computed(() => {
       const assigneeMap = new Map<string | number, IKanbanCardAssignee>()
@@ -298,13 +312,16 @@ export default defineComponent({
     const handleColumnCollapse = (columnId: string) => {
       const index = collapsedColumns.value.indexOf(columnId)
       if (index === -1) {
-        collapsedColumns.value.push(columnId)
+        collapsedColumns.value = [...collapsedColumns.value, columnId]
       } else {
-        collapsedColumns.value.splice(index, 1)
+        collapsedColumns.value = collapsedColumns.value.filter(
+          (id) => id !== columnId
+        )
       }
     }
 
     onMounted(() => {
+      collapsedColumns.value = getCollapsedColumns(storageKey.value)
       window.addEventListener('click', handleWindowClick)
       window.addEventListener('dragend', handleWindowDragEnd)
     })

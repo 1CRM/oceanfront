@@ -173,3 +173,21 @@ export function debounce<T extends (...args: any[]) => void>(
     timeoutId = window.setTimeout(() => fn.apply(this, args), delay)
   }
 }
+
+export const getCollapsedColumns = (storageKey: string): string[] => {
+  const stored = localStorage.getItem(storageKey)
+  if (stored) {
+    try {
+      return JSON.parse(stored)
+    } catch {
+      return []
+    }
+  }
+  return []
+}
+
+export const saveCollapsedState = (storageKey: string, columns: string[]) => {
+  try {
+    localStorage.setItem(storageKey, JSON.stringify(columns))
+  } catch {}
+}
