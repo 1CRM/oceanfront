@@ -23,7 +23,13 @@ const gridClass = (grid: string | undefined) => {
 }
 export const OfRadioField = defineComponent({
   name: 'OfRadioField',
-  props: { ...BaseFieldProps, grid: String },
+  props: {
+    ...BaseFieldProps,
+    grid: String,
+    inputType: String,
+    switch: Boolean,
+    outside: { type: Boolean, default: true }
+  },
   setup(props, ctx) {
     const fieldCtx = provideFieldContext(props, ctx)
     const initialValue = computed(() => {
@@ -169,13 +175,7 @@ export const OfRadioField = defineComponent({
       active: true, // always show content
       blank: computed(() => !stateValue.value),
       class: computed(() => {
-        return [
-          'of-toggle-field',
-          'of-radio-field',
-          {
-            'of--checked': !!stateValue.value
-          }
-        ]
+        return { 'of-toggle-field': true, 'of--checked': !!stateValue.value }
       }),
       cursor: computed(() => (fieldCtx.editable ? 'pointer' : null)),
       focus,

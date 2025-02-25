@@ -151,7 +151,8 @@ const supportedTypes = [
   'time',
   'datetime',
   'text',
-  'number'
+  'number',
+  'radio'
 ]
 const OfEditableField = defineComponent({
   name: 'OfEditableField',

@@ -351,7 +351,7 @@ export const OfFieldBase = defineComponent({
           () =>
             labelNode.value &&
             (!['frame', 'input'].includes(labelPosition.value ?? '') ||
-              props.type !== 'toggle')
+              (props.type !== 'toggle' && props.type !== 'radio'))
         )
 
         const children = [
@@ -360,7 +360,7 @@ export const OfFieldBase = defineComponent({
                 labelNode.value,
                 tooltipNode.value
               ])
-            : props.type === 'toggle'
+            : props.type === 'toggle' || props.type === 'radio'
               ? undefined
               : tooltipNode.value,
           h(
@@ -384,7 +384,9 @@ export const OfFieldBase = defineComponent({
                       { class: 'of-field-header-label' },
                       h('div', { class: 'of-field-frame-label' }, [
                         label,
-                        props.type === 'toggle' ? tooltipNode.value : undefined
+                        props.type === 'toggle' || props.type === 'radio'
+                          ? tooltipNode.value
+                          : undefined
                       ])
                     )
                   : undefined
