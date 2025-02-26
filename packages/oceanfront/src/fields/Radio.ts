@@ -121,7 +121,13 @@ export const OfRadioField = defineComponent({
       }
       return res
     }
-    const selectedItemText = () => itemText(stateValue.value)
+    const selectedItemText = computed(() => {
+      let res
+      for (const item of items.value) {
+        if (item.value === stateValue.value) res = item.text
+      }
+      return res
+    })
     const slots = {
       interactiveContent: () => {
         if (props.mode === 'fixed')
@@ -141,7 +147,7 @@ export const OfRadioField = defineComponent({
                   fieldCtx.ariaLabel ?? props.label ?? stateValue.value ?? ' ',
                 ...hooks
               },
-              selectedItemText()
+              selectedItemText.value
             )
           ]
         return h('div', { class: ['radio-group', gridClass(props.grid)] }, [
