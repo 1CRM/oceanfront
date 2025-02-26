@@ -23,7 +23,13 @@ const gridClass = (grid: string | undefined) => {
 }
 export const OfRadioField = defineComponent({
   name: 'OfRadioField',
-  props: { ...BaseFieldProps, grid: String },
+  props: {
+    ...BaseFieldProps,
+    grid: String,
+    inputType: String,
+    switch: Boolean,
+    outside: { type: Boolean, default: true }
+  },
   setup(props, ctx) {
     const fieldCtx = provideFieldContext(props, ctx)
     const initialValue = computed(() => {
@@ -108,8 +114,42 @@ export const OfRadioField = defineComponent({
         if (fieldCtx.onUpdate) fieldCtx.onUpdate(stateValue.value)
       }
     }
+    const itemText = (value: any) => {
+      let res
+      for (const item of items.value) {
+        if (item.value === value) res = item.text
+      }
+      return res
+    }
+    const selectedItemText = computed(() => {
+      let res
+      for (const item of items.value) {
+        if (item.value === stateValue.value) res = item.text
+      }
+      return res
+    })
     const slots = {
       interactiveContent: () => {
+        if (props.mode === 'fixed')
+          return [
+            h(
+              'div',
+              {
+                role: 'textbox',
+                class: [
+                  'of-field-content-text',
+                  'of--align-' + (props.align || 'start')
+                ],
+                id: inputId.value,
+                ref: elt,
+                tabindex: fieldCtx.mode === 'fixed' ? -1 : 0,
+                ariaLabel:
+                  fieldCtx.ariaLabel ?? props.label ?? stateValue.value ?? ' ',
+                ...hooks
+              },
+              selectedItemText.value
+            )
+          ]
         return h('div', { class: ['radio-group', gridClass(props.grid)] }, [
           items.value.map((item: any, index: number) =>
             h(
@@ -141,13 +181,7 @@ export const OfRadioField = defineComponent({
       active: true, // always show content
       blank: computed(() => !stateValue.value),
       class: computed(() => {
-        return [
-          'of-toggle-field',
-          'of-radio-field',
-          {
-            'of--checked': !!stateValue.value
-          }
-        ]
+        return { 'of-toggle-field': true, 'of--checked': !!stateValue.value }
       }),
       cursor: computed(() => (fieldCtx.editable ? 'pointer' : null)),
       focus,

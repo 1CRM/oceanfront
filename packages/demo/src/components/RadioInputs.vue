@@ -6,12 +6,17 @@
     <of-demo-field allow-input-label-position>
       <template #default="props">
         <of-radio-field
+          type="radio"
           label="Radio Field"
-          :items="['value1', 'value2', 'value3']"
+          :items="[
+            { text: 'Value1', value: 'value1' },
+            { text: 'Value2', value: 'value2' },
+            { text: 'Value3', value: 'value3' }
+          ]"
           v-model="checkedValue"
           v-bind="{
             ...props,
-            grid: customProps.grid,
+            grid: customProps.grid
           }"
         />
       </template>
@@ -34,14 +39,14 @@ export default defineComponent({
   setup() {
     const sampleCode = `
 <of-radio-field
-  label="Field Label"
-  :items="['value1', 'value2', 'value3']"
-  v-model="selectedValue"
+	label="Field Label"
+	:items="['value1', 'value2', 'value3'] or [{text: 'Value1', value: 'value1'}, {text: 'Value2', value: 'value2'}, {text: 'Value3', value: 'value3'}]"
+	v-model="selectedValue"
 />`
     const customProps = reactive({ grid: 'column' })
     const gridOptions = ['column', 'row']
     const checkedValue = ref('')
     return { checkedValue, customProps, sampleCode, gridOptions }
-  },
+  }
 })
 </script>
