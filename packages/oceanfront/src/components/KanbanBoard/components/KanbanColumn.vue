@@ -50,6 +50,7 @@
         :column-id="column.id"
         :is-selected="selectedCardId === card.id"
         :dragged-card-id="draggedCardId"
+        :card-menu-items="cardMenuItems"
         @card-click="handleCardClick"
         @drag-start="handleCardDragStart"
         @project-click="$emit('project-click', $event)"
@@ -127,6 +128,10 @@ export default defineComponent({
       required: true
     },
     menuItems: {
+      type: Array as PropType<Item[]>,
+      default: () => []
+    },
+    cardMenuItems: {
       type: Array as PropType<Item[]>,
       default: () => []
     },

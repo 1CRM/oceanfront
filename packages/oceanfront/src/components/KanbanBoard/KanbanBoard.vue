@@ -25,6 +25,7 @@
         :key="column.id"
         :column="column"
         :menu-items="columnMenuItems"
+        :card-menu-items="cardMenuItems"
         :dragged-card-id="draggedCardId"
         :selected-card-id="selectedCardId"
         :active-column-id="activeColumnId"
@@ -92,6 +93,10 @@ export default defineComponent({
       required: true
     },
     columnMenuItems: {
+      type: Array as PropType<Item[]>,
+      default: () => []
+    },
+    cardMenuItems: {
       type: Array as PropType<Item[]>,
       default: () => []
     },

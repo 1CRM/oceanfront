@@ -6,6 +6,7 @@
     <of-kanban-board
       v-model:columns="columns"
       :column-menu-items="columnMenuItems"
+      :card-menu-items="cardMenuItems"
       search-input-placeholder="Search by keyword..."
       @column-menu-item-click="handleColumnMenuItemClick"
       @card-moved="handleCardMoved"
@@ -54,6 +55,7 @@ export default defineComponent({
 <of-kanban-board
   v-model:columns="columns"
   :column-menu-items="columnMenuItems"
+  :card-menu-items="cardMenuItems"
   :has-more-cards="columnHasMore"
   search-input-placeholder="Search by keyword..."
   @column-menu-item-click="handleColumnMenuItemClick"
@@ -78,7 +80,7 @@ export default defineComponent({
               'Kanban Board: Create components hierarchy and create base component',
             project: {
               id: 'project-1',
-              name: 'Project 1',
+              name: 'Project 1 sfgdsfgsds dfgsdfg 4 24r 34',
               icon: 'mobile'
             },
             order: 0,
@@ -270,10 +272,25 @@ export default defineComponent({
       }
     ]
 
+    const cardMenuItems = [
+      {
+        text: 'Card Option 1',
+        value: 'option-1',
+        attrs: { 'data-test': 'my-btn' }
+      },
+      {
+        text: 'Card Option 2',
+        value: (columnId: string) => {
+          console.log('Option 2 custom handler', columnId)
+        }
+      }
+    ]
+
     return {
       columns,
       sampleCode,
       columnMenuItems,
+      cardMenuItems,
       handleColumnMenuItemClick,
       handleCardMoved,
       handleAddCard,

@@ -235,8 +235,16 @@
                   overflow: hidden;
                   text-overflow: ellipsis;
                   white-space: nowrap;
-                  max-width: 250px;
+                  max-width: 190px;
                 }
+              }
+            }
+
+            .of-kanban-card-actions {
+              padding-right: 50%;
+              margin-top: 0em;
+              .of-button-expand {
+                display: none;
               }
             }
           }
