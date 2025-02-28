@@ -12,6 +12,8 @@
     @touchmove="handleTouchMove"
     @touchend="handleTouchEnd"
     @click="handleCardClick"
+    @mouseenter="handleMouseEnter"
+    @mouseleave="handleMouseLeave"
     @blur="handleBlur"
     tabindex="0"
   >
@@ -31,6 +33,15 @@
               </div>
             </div>
           </slot>
+          <div class="of-kanban-card-actions" v-if="isHovering">
+            <of-button
+              v-if="compactedMenuItems.length > 0"
+              variant="text"
+              icon="more"
+              size="sm"
+              :items="compactedMenuItems"
+            />
+          </div>
         </div>
         <slot name="avatar" :card="card">
           <div
@@ -60,10 +71,11 @@
   </div>
 </template>
 <script lang="ts">
-import { computed, defineComponent, type PropType } from 'vue'
+import { computed, defineComponent, ref, type PropType } from 'vue'
 import { OfIcon } from '../../Icon'
 import type { IKanbanCard } from '../types'
 import { getInitials } from '../utils'
+import { Item } from '../../../lib/items_list'
 
 export default defineComponent({
   name: 'OfKanbanCard',
@@ -86,16 +98,25 @@ export default defineComponent({
     draggedCardId: {
       type: [String, Number] as PropType<string | number | undefined>,
       default: undefined
+    },
+    cardMenuItems: {
+      type: Array as PropType<Item[]>,
+      default: () => []
+    },
+    hovering: {
+      type: Boolean,
+      default: false
     }
   },
-  emits: [
-    'drag-start',
-    'project-click',
-    'assignee-click',
-    'card-title-click',
-    'card-click',
-    'card-blur'
-  ],
+  emits: {
+    'drag-start': null,
+    'project-click': null,
+    'assignee-click': null,
+    'card-title-click': null,
+    'card-click': null,
+    'card-blur': null,
+    'card-menu-item-click': (_item: string | number, _card: IKanbanCard) => true
+  },
   setup(props, { emit }) {
     const isCardDragging = computed<boolean>(
       () => props.draggedCardId === props.card.id
@@ -108,6 +129,39 @@ export default defineComponent({
     const handleCardClick = () => {
       emit('card-click', props.card)
     }
+
+    const handleMenuItemClick = (item: string | number) => {
+      emit('card-menu-item-click', item.toString(), props.card)
+    }
+
+    const isHovering = ref(props.hovering)
+
+    const handleMouseEnter = (event: MouseEvent) => {
+      if ((event.target as HTMLElement).closest('.of-kanban-card')) {
+        isHovering.value = true
+      }
+    }
+
+    const handleMouseLeave = (event: MouseEvent) => {
+      if (
+        !(event.relatedTarget as HTMLElement)?.closest('.of-kanban-card') &&
+        !(event.relatedTarget as HTMLElement)?.closest('.of-list-item')
+      ) {
+        isHovering.value = false
+      }
+    }
+
+    const compactedMenuItems = computed(() => {
+      return props.cardMenuItems?.map((item) => {
+        return {
+          text: item.text,
+          value:
+            typeof item.value === 'function'
+              ? () => (item.value as Function)(props.card.id)
+              : () => handleMenuItemClick(item.value as string | number)
+        }
+      })
+    })
 
     const assigneeInitials = computed<string>(() => {
       const name = props.card.assignee?.name
@@ -275,7 +329,11 @@ export default defineComponent({
       handleCardClick,
       handleTouchStart,
       handleTouchMove,
-      handleTouchEnd
+      handleTouchEnd,
+      handleMouseEnter,
+      handleMouseLeave,
+      isHovering,
+      compactedMenuItems
     }
   }
 })

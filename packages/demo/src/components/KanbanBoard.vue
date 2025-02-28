@@ -6,6 +6,7 @@
     <of-kanban-board
       v-model:columns="columns"
       :column-menu-items="columnMenuItems"
+      :card-menu-items="cardMenuItems"
       search-input-placeholder="Search by keyword..."
       @column-menu-item-click="handleColumnMenuItemClick"
       @card-moved="handleCardMoved"
@@ -14,6 +15,7 @@
       @project-click="onProjectClick"
       @assignee-click="onAssigneeClick"
       @card-title-click="onCardTitleClick"
+      @card-menu-item-click="handleCardMenuItemClick"
       @filter-change="handleFilterChange"
     >
       <template #clear-filters>Clear Filters</template>
@@ -54,6 +56,7 @@ export default defineComponent({
 <of-kanban-board
   v-model:columns="columns"
   :column-menu-items="columnMenuItems"
+  :card-menu-items="cardMenuItems"
   :has-more-cards="columnHasMore"
   search-input-placeholder="Search by keyword..."
   @column-menu-item-click="handleColumnMenuItemClick"
@@ -63,6 +66,7 @@ export default defineComponent({
   @project-click="onProjectClick"
   @assignee-click="onAssigneeClick"
   @card-title-click="onCardTitleClick"
+  @card-menu-item-click="handleCardMenuItemClick"
   @load-more="handleLoadMore"
 />
 `
@@ -230,6 +234,13 @@ export default defineComponent({
       console.log('Card clicked:', card)
     }
 
+    const handleCardMenuItemClick = (
+      item: string | number,
+      card: IKanbanCard
+    ) => {
+      console.log('Card menu item clicked:', item, card)
+    }
+
     const onProjectClick = (project: IKanbanProject) => {
       console.log('Project clicked:', project)
     }
@@ -270,14 +281,30 @@ export default defineComponent({
       }
     ]
 
+    const cardMenuItems = [
+      {
+        text: 'Card Option 1',
+        value: 'option-1',
+        attrs: { 'data-test': 'my-btn' }
+      },
+      {
+        text: 'Card Option 2',
+        value: (columnId: string) => {
+          console.log('Option 2 custom handler', columnId)
+        }
+      }
+    ]
+
     return {
       columns,
       sampleCode,
       columnMenuItems,
+      cardMenuItems,
       handleColumnMenuItemClick,
       handleCardMoved,
       handleAddCard,
       handleCardClick,
+      handleCardMenuItemClick,
       handleFilterChange,
       onProjectClick,
       onAssigneeClick,

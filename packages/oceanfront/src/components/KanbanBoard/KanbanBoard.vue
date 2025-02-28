@@ -25,6 +25,7 @@
         :key="column.id"
         :column="column"
         :menu-items="columnMenuItems"
+        :card-menu-items="cardMenuItems"
         :dragged-card-id="draggedCardId"
         :selected-card-id="selectedCardId"
         :active-column-id="activeColumnId"
@@ -40,6 +41,9 @@
         @project-click="$emit('project-click', $event)"
         @assignee-click="$emit('assignee-click', $event)"
         @card-title-click="$emit('card-title-click', $event)"
+        @card-menu-item-click="
+          (item, card) => $emit('card-menu-item-click', item, card)
+        "
         @set-active-column="setActiveColumn"
         @load-more="handleLoadMore"
         @collapse-toggle="handleColumnCollapse"
@@ -95,6 +99,10 @@ export default defineComponent({
       type: Array as PropType<Item[]>,
       default: () => []
     },
+    cardMenuItems: {
+      type: Array as PropType<Item[]>,
+      default: () => []
+    },
     searchInputPlaceholder: {
       type: String,
       default: 'Search by keyword...'
@@ -117,6 +125,7 @@ export default defineComponent({
     'project-click',
     'assignee-click',
     'card-title-click',
+    'card-menu-item-click',
     'filter-change',
     'load-more'
   ] as const,

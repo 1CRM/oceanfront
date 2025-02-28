@@ -50,11 +50,13 @@
         :column-id="column.id"
         :is-selected="selectedCardId === card.id"
         :dragged-card-id="draggedCardId"
+        :card-menu-items="cardMenuItems"
         @card-click="handleCardClick"
         @drag-start="handleCardDragStart"
         @project-click="$emit('project-click', $event)"
         @assignee-click="$emit('assignee-click', $event)"
         @card-title-click="$emit('card-title-click', $event)"
+        @card-menu-item-click="$emit('card-menu-item-click', $event, card)"
         @card-blur="$emit('card-blur', $event)"
       >
         <template #title="slotProps">
@@ -130,6 +132,10 @@ export default defineComponent({
       type: Array as PropType<Item[]>,
       default: () => []
     },
+    cardMenuItems: {
+      type: Array as PropType<Item[]>,
+      default: () => []
+    },
     draggedCardId: {
       type: [String, Number] as PropType<string | number | undefined>,
       default: undefined
@@ -154,6 +160,8 @@ export default defineComponent({
   emits: {
     'add-card': null,
     'menu-item-click': (_item: string | number, _columnId: string) => true,
+    'card-menu-item-click': (_item: string | number, _card: IKanbanCard) =>
+      true,
     'card-click': (_card: IKanbanCard) => true,
     'project-click': (_project: IKanbanProject | undefined) => true,
     'assignee-click': (_assignee: IKanbanCardAssignee | undefined) => true,
