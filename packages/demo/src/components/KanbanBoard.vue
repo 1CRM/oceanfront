@@ -15,6 +15,7 @@
       @project-click="onProjectClick"
       @assignee-click="onAssigneeClick"
       @card-title-click="onCardTitleClick"
+      @card-menu-item-click="handleCardMenuItemClick"
       @filter-change="handleFilterChange"
     >
       <template #clear-filters>Clear Filters</template>
@@ -65,6 +66,7 @@ export default defineComponent({
   @project-click="onProjectClick"
   @assignee-click="onAssigneeClick"
   @card-title-click="onCardTitleClick"
+  @card-menu-item-click="handleCardMenuItemClick"
   @load-more="handleLoadMore"
 />
 `
@@ -80,7 +82,7 @@ export default defineComponent({
               'Kanban Board: Create components hierarchy and create base component',
             project: {
               id: 'project-1',
-              name: 'Project 1 sfgdsfgsds dfgsdfg 4 24r 34',
+              name: 'Project 1',
               icon: 'mobile'
             },
             order: 0,
@@ -232,6 +234,13 @@ export default defineComponent({
       console.log('Card clicked:', card)
     }
 
+    const handleCardMenuItemClick = (
+      item: string | number,
+      card: IKanbanCard
+    ) => {
+      console.log('Card menu item clicked:', item, card)
+    }
+
     const onProjectClick = (project: IKanbanProject) => {
       console.log('Project clicked:', project)
     }
@@ -295,6 +304,7 @@ export default defineComponent({
       handleCardMoved,
       handleAddCard,
       handleCardClick,
+      handleCardMenuItemClick,
       handleFilterChange,
       onProjectClick,
       onAssigneeClick,

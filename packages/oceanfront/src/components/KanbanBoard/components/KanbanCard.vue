@@ -115,7 +115,7 @@ export default defineComponent({
     'card-title-click': null,
     'card-click': null,
     'card-blur': null,
-    'menu-item-click': (_item: string | number, _cardId: string) => true
+    'card-menu-item-click': (_item: string | number, _card: IKanbanCard) => true
   },
   setup(props, { emit }) {
     const isCardDragging = computed<boolean>(
@@ -131,7 +131,7 @@ export default defineComponent({
     }
 
     const handleMenuItemClick = (item: string | number) => {
-      emit('menu-item-click', item.toString(), props.card.id?.toString())
+      emit('card-menu-item-click', item.toString(), props.card)
     }
 
     const isHovering = ref(props.hovering)
