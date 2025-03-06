@@ -41,6 +41,7 @@
         @project-click="$emit('project-click', $event)"
         @assignee-click="$emit('assignee-click', $event)"
         @card-title-click="$emit('card-title-click', $event)"
+        @card-tag-click="$emit('card-tag-click', $event)"
         @card-menu-item-click="
           (item, card) => $emit('card-menu-item-click', item, card)
         "
@@ -125,6 +126,7 @@ export default defineComponent({
     'project-click',
     'assignee-click',
     'card-title-click',
+    'card-tag-click',
     'card-menu-item-click',
     'filter-change',
     'load-more'

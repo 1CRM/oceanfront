@@ -67,6 +67,11 @@
           </div>
         </slot>
       </div>
+      <div class="tags-container">
+        <div class="card-tags" v-for="tag in card.tags">
+          <of-button variant="outlined" icon="" size="sm" @click="$emit('card-tag-click', tag)">{{ tag }}</of-button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -115,7 +120,8 @@ export default defineComponent({
     'card-title-click': null,
     'card-click': null,
     'card-blur': null,
-    'card-menu-item-click': (_item: string | number, _card: IKanbanCard) => true
+    'card-menu-item-click': (_item: string | number, _card: IKanbanCard) => true,
+    'card-tag-click': null,
   },
   setup(props, { emit }) {
     const isCardDragging = computed<boolean>(

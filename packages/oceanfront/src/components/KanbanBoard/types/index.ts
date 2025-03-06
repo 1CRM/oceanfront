@@ -3,7 +3,8 @@ export interface IKanbanCard {
   title: string
   order: number
   project?: IKanbanProject
-  assignee?: IKanbanCardAssignee
+  assignee?: IKanbanCardAssignee,
+  tags?: string[]
 }
 
 export interface IKanbanProject {

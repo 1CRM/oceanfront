@@ -15,6 +15,7 @@
       @project-click="onProjectClick"
       @assignee-click="onAssigneeClick"
       @card-title-click="onCardTitleClick"
+      @card-tag-click="onCardTagClick"
       @card-menu-item-click="handleCardMenuItemClick"
       @filter-change="handleFilterChange"
     >
@@ -91,7 +92,8 @@ export default defineComponent({
               name: 'Michael Whitehead',
               avatar:
                 'https://1crm9-demo.1crmcloud.com/files/images/directory/1/MichaelWhitehead.png'
-            }
+            },
+            tags: ['Bug', 'Feature']
           },
           {
             id: 'card-2',
@@ -105,7 +107,8 @@ export default defineComponent({
             assignee: {
               id: 'assignee-2',
               name: 'admin'
-            }
+            },
+            tags: ['Feature', '1CRM', 'Oceanfront']
           },
           {
             id: 'card-33',
@@ -253,6 +256,10 @@ export default defineComponent({
       console.log('Card title clicked:', card)
     }
 
+    const onCardTagClick = (tag: string | number) => {
+      console.log('Card tag clicked:', tag)
+    }
+
     const handleColumnMenuItemClick = (
       item: string | number,
       columnId: string
@@ -308,7 +315,8 @@ export default defineComponent({
       handleFilterChange,
       onProjectClick,
       onAssigneeClick,
-      onCardTitleClick
+      onCardTitleClick,
+      onCardTagClick
     }
   }
 })

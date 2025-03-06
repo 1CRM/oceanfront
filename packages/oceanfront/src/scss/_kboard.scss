@@ -174,7 +174,7 @@
         position: relative;
         transition: transform 0.1s ease;
         will-change: transform;
-        max-height: 120px;
+        max-height: 160px;
 
         &:hover {
           box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.12);
@@ -272,6 +272,32 @@
               -webkit-box-orient: vertical;
               overflow: hidden;
               text-overflow: ellipsis;
+            }
+          }
+
+          .tags-container {
+            align-self: stretch;
+            justify-content: flex-start;
+            align-items: flex-start;
+            gap: 4px;
+            display: flex;
+            flex-wrap: wrap;
+            overflow: scroll;
+
+            .card-tags {
+              color: var(--of-color-on-background);
+              word-wrap: break-word;
+              cursor: pointer;
+              display: -webkit-box;
+              -webkit-box-orient: vertical;
+              overflow: hidden;
+              display: flex;
+              text-overflow: ellipsis;
+              .of-button > button {
+                font-size: 12px;
+                font-weight: 400;
+                line-height: 1em;
+              }
             }
           }
         }

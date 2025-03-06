@@ -56,6 +56,7 @@
         @project-click="$emit('project-click', $event)"
         @assignee-click="$emit('assignee-click', $event)"
         @card-title-click="$emit('card-title-click', $event)"
+        @card-tag-click="$emit('card-tag-click', $event, card)"
         @card-menu-item-click="$emit('card-menu-item-click', $event, card)"
         @card-blur="$emit('card-blur', $event)"
       >
@@ -177,7 +178,8 @@ export default defineComponent({
     'column-click': (_column: IKanbanColumn) => true,
     'set-active-column': (_columnId: string | null) => true,
     'load-more': null,
-    'collapse-toggle': (_columnId: string) => true
+    'collapse-toggle': (_columnId: string) => true,
+    'card-tag-click': (_tag: string | number, _card: IKanbanCard) => true
   },
 
   setup(props, { emit }) {
