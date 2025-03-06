@@ -197,17 +197,19 @@
 
           .of-kanban-card-header {
             align-self: stretch;
-            justify-content: flex-start;
+            justify-content: space-between;
             align-items: center;
             gap: 8px;
-            display: inline-flex;
+            display: flex;
+            width: 100%;
 
             .project-container {
-              flex: 1 1 0;
+              flex: 1 1 auto;
               height: 18px;
               display: flex;
               align-items: center;
               gap: 4px;
+              min-width: 0;
 
               .project-icon {
                 justify-content: center;
@@ -241,8 +243,10 @@
             }
 
             .of-kanban-card-actions {
-              padding-right: 50%;
-              margin-top: 0em;
+              flex: 0 0 auto;
+              margin-left: auto;
+              padding-right: 0;
+
               .of-button-expand {
                 display: none;
               }
