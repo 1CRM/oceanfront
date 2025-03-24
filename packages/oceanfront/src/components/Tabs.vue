@@ -57,6 +57,7 @@
                 (tab.params as any)?.className
               ]"
               role="tab"
+              :id="tab.id"
               :aria-label="tab.ariaLabel"
               :aria-haspopup="showSubMenu"
               :aria-selected="selectedTabKey === tab.key"
@@ -64,11 +65,12 @@
               <div class="of--layer of--layer-bg" />
               <div class="of--layer of--layer-brd" />
               <div class="of--layer of--layer-outl" />
-              <div class="of-tab-text">
+              <div :class="['of-tab-text', { 'only-icon': !tab.text }]">
                 <of-icon v-if="tab.icon" :name="tab.icon" scale="1.1em" />
-                <span>{{ tab.text }}</span>
+                <span v-if="tab.text">{{ tab.text }}</span>
               </div>
               <div class="of--layer of--layer-state" />
+              <div v-if="tab.count" class="of-tab-count">{{ tab.count }}</div>
             </div>
           </template>
           <div class="of-tabs-line" ref="tabLine"></div>
@@ -104,6 +106,13 @@
             <template #option-icon="item"
               ><slot name="submenu-option-icon" v-bind="item"
             /></template>
+            <template
+              v-for="(item, index) in subMenuSlots"
+              :key="index"
+              #[index]
+            >
+              <component :is="item" />
+            </template>
           </of-option-list>
         </slot>
       </of-overlay>
@@ -173,7 +182,7 @@ const formatItems = (
     let subMenu = undefined
     text = item[params.textKey] ? item[params.textKey] : ''
 
-    if (text === '') continue
+    if (text === '' && !item[params.iconKey]) continue
 
     if (visible && item.visible === false) {
       continue
@@ -200,8 +209,11 @@ const formatItems = (
       params: item.params ?? undefined,
       attrs: item.attrs ?? undefined,
       subMenuItems: subMenu,
+      subMenuSlots: item.subMenuSlots,
       field: item.field,
-      class: item.class ?? undefined
+      class: item.class ?? undefined,
+      id: item.id,
+      count: item.count > 99 ? '99+' : item.count
     } as Tab)
   }
 
@@ -672,6 +684,7 @@ export default defineComponent({
     const subMenuTabsList: Ref<Tab[]> = ref([])
     const subMenuTimerId = ref()
     const submenuMinWidth = ref(0)
+    const subMenuSlots = ref()
 
     const openSubMenu = (
       key: number,
@@ -689,6 +702,7 @@ export default defineComponent({
           subMenuTimerId.value = window.setTimeout(
             () => {
               subMenuTabsList.value = tab.subMenuItems ?? []
+              subMenuSlots.value = tab.subMenuSlots ?? []
               subMenuOuter.value = elt
               subMenuActive.value = true
               openedMenuTabKey.value = key
@@ -924,6 +938,7 @@ export default defineComponent({
       overlayClassname,
       showSubMenu,
       subMenuTabsList,
+      subMenuSlots,
       subMenuActive,
       subMenuOuter,
       openSubMenu,
