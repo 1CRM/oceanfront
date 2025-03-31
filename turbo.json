@@ -1,33 +1,28 @@
 {
-  "pipeline": {
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
     "build": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", "lib/**"]
     },
     "build-dev": {
-      "dependsOn": ["^build-dev"]
+      "dependsOn": ["^build-dev"],
+      "outputs": ["dist/**", "lib/**"]
     },
     "package": {
       "cache": false,
       "dependsOn": ["build"]
     },
     "clean": {
-      "cache": false,
-      "outputs": []
+      "cache": false
     },
-    "coverage": {
-      "outputs": []
-    },
-    "test": {
-      "outputs": []
-    },
-    "lint": {
-      "outputs": []
-    },
+    "coverage": {},
+    "test": {},
+    "lint": {},
     "demo": {
       "cache": false,
       "persistent": true,
-      "dependsOn": ["build-dev"],
-      "outputs": []
+      "dependsOn": ["build-dev"]
     }
   }
 }
