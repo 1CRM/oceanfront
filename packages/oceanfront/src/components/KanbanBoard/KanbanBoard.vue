@@ -9,8 +9,9 @@
     <kanban-filters
       :assignees="assignees"
       :search-input-placeholder="searchInputPlaceholder"
+      :tags="currentFilters.tags"
       @filter-change="handleFilterChange"
-      @clear-filters="handleFilterChange"
+      @clear-filters="handleFilterChange($event, true)"
     >
       <template #custom-filters>
         <slot name="filters" />
@@ -41,7 +42,7 @@
         @project-click="$emit('project-click', $event)"
         @assignee-click="$emit('assignee-click', $event)"
         @card-title-click="$emit('card-title-click', $event)"
-        @card-tag-click="$emit('card-tag-click', $event)"
+        @card-tag-click="handleCardTagClick"
         @card-menu-item-click="
           (item, card) => $emit('card-menu-item-click', item, card)
         "
@@ -72,7 +73,8 @@ import {
   onMounted,
   computed,
   watch,
-  onUnmounted
+  onUnmounted,
+  reactive
 } from 'vue'
 import KanbanColumn from './components/KanbanColumn.vue'
 import KanbanFilters from './components/KanbanFilters.vue'
@@ -136,9 +138,10 @@ export default defineComponent({
     const draggedCardId = ref<string | number | undefined>(undefined)
     const selectedCardId = ref<string | number | undefined>(undefined)
     const collapsedColumns = ref<string[]>([])
-    const currentFilters = ref({
+    const currentFilters = reactive({
       keyword: '',
-      assignees: [] as (string | number)[]
+      assignees: [] as (string | number)[],
+      tags: new Set<string>()
     })
     const activeColumnId = ref<string | null>(null)
 
@@ -170,16 +173,16 @@ export default defineComponent({
 
         const filteredCards = column.cards.filter((card) => {
           // Filter by keyword
-          const matchesKeyword = currentFilters.value.keyword
+          const matchesKeyword = currentFilters.keyword
             ? card.title
                 .toLowerCase()
-                .includes(currentFilters.value.keyword.toLowerCase())
+                .includes(currentFilters.keyword.toLowerCase())
             : true
 
           // Filter by assignees
-          const matchesAssignee = currentFilters.value.assignees.length
+          const matchesAssignee = currentFilters.assignees.length
             ? card.assignee &&
-              currentFilters.value.assignees.includes(card.assignee.id)
+              currentFilters.assignees.includes(card.assignee.id)
             : true
 
           return matchesKeyword && matchesAssignee
@@ -206,6 +209,11 @@ export default defineComponent({
     const handleCardClick = (card: IKanbanCard) => {
       selectedCardId.value = card.id
       emit('card-click', card)
+    }
+
+    const handleCardTagClick = (tag: string) => {
+      currentFilters.tags.add(tag)
+      emit('card-tag-click', tag)
     }
 
     const handleColumnClick = (_column: IKanbanColumn) => {
@@ -304,12 +312,18 @@ export default defineComponent({
       emit('column-menu-item-click', item, columnId)
     }
 
-    const handleFilterChange = (filters: {
-      keyword: string
-      assignees: (string | number)[]
-    }) => {
-      currentFilters.value = filters
-      emit('filter-change', filters)
+    const handleFilterChange = (
+      filters: {
+        keyword: string
+        assignees: (string | number)[]
+      },
+      clearFilters = false
+    ) => {
+      currentFilters.keyword = filters.keyword
+      currentFilters.assignees = filters.assignees
+      if (clearFilters) currentFilters.tags.clear()
+
+      emit('filter-change', currentFilters)
     }
 
     const setActiveColumn = (columnId: string | null) => {
@@ -350,10 +364,12 @@ export default defineComponent({
       filteredColumns,
       activeColumnId,
       collapsedColumns,
+      currentFilters,
       handleCardMove,
       handleCardDragStart,
       handleCardBlur,
       handleCardClick,
+      handleCardTagClick,
       handleColumnClick,
       handleBlur,
       handleBoardClick,

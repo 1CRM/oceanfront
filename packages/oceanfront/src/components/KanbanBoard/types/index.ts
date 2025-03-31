@@ -3,7 +3,7 @@ export interface IKanbanCard {
   title: string
   order: number
   project?: IKanbanProject
-  assignee?: IKanbanCardAssignee,
+  assignee?: IKanbanCardAssignee
   tags?: string[]
 }
 
@@ -12,12 +12,6 @@ export interface IKanbanProject {
   name: string
   module?: string
   icon?: string
-}
-
-export interface IKanbanTag {
-  id: string
-  name: string
-  color: string
 }
 
 export interface IKanbanColumn {

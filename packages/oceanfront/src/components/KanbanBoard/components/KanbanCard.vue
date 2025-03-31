@@ -68,18 +68,12 @@
         </slot>
       </div>
       <div class="tags-container">
-        <div class="card-tags" v-for="tag in card.tags">
+        <div class="card-tags" v-for="tag in card.tags" :key="tag">
           <of-button
             variant="outlined"
             icon=""
             size="sm"
-            @click="
-              $emit('filter-change', {
-                keyword: tag,
-                assignees: [],
-              })
-              //$emit('card-tag-click', tag)
-            "
+            @click.stop="$emit('card-tag-click', tag)"
             >{{ tag }}</of-button
           >
         </div>
@@ -135,7 +129,7 @@ export default defineComponent({
     'card-menu-item-click': (_item: string | number, _card: IKanbanCard) =>
       true,
     'card-tag-click': null,
-    'filter-change': null,
+    'filter-change': null
   },
   setup(props, { emit }) {
     const isCardDragging = computed<boolean>(

@@ -48,7 +48,7 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, PropType, ref, onUnmounted } from 'vue'
+import { defineComponent, PropType, ref, onUnmounted, watch } from 'vue'
 import { IKanbanCardAssignee } from '../types'
 import { getInitials } from '../utils'
 
@@ -64,6 +64,10 @@ export default defineComponent({
       type: String,
       default: 'Search by keyword...'
     },
+    tags: {
+      type: Set as PropType<Set<string>>,
+      default: () => new Set<string>()
+    },
     debounceTime: {
       type: Number,
       default: 300
@@ -76,6 +80,10 @@ export default defineComponent({
     const keyword = ref('')
     const selectedAssignees = ref<(string | number)[]>([])
     let debounceTimeout: ReturnType<typeof setTimeout>
+
+    watch(props.tags, (newTags) => {
+      console.log('Tags changed:', newTags)
+    })
 
     const getAssigneeInitials = (name: string) => {
       //Anonimus
