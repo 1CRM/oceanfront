@@ -184,6 +184,8 @@ const formatItems = (
 
     if (text === '' && !item[params.iconKey]) continue
 
+    if (addOverflowButton && item.alwaysOverflow === true) item.visible = false
+
     if (visible && item.visible === false) {
       continue
     } else if (!visible && item.visible === true) {
@@ -220,9 +222,9 @@ const formatItems = (
   if (visible && addOverflowButton) {
     rows.push({
       disabled: false,
-      icon: '',
+      icon: 'more alt',
       overflowButton: true,
-      text: '...',
+      text: '',
       key: -1,
       parentKey: undefined
     } as Tab)
@@ -292,6 +294,9 @@ export default defineComponent({
       }
       return Math.max(0, Math.min(3, d || 0))
     })
+    const initialItems = computed(() =>
+      Array.isArray(props.items) ? [...props.items] : []
+    )
 
     watch(
       () => props.modelValue,
@@ -305,7 +310,7 @@ export default defineComponent({
     )
 
     watch(
-      () => [props.items, props.variant, props.withBorder],
+      () => [initialItems.value, props.variant, props.withBorder],
       () => {
         fillItems()
         init()
@@ -361,7 +366,7 @@ export default defineComponent({
         textKey: 'text',
         items: []
       }
-      Object.assign(itemList, itemMgr.getItemList(props.items))
+      Object.assign(itemList, itemMgr.getItemList(initialItems.value))
 
       for (const index in itemList.items) {
         let item: any = itemList.items[index]
@@ -534,22 +539,27 @@ export default defineComponent({
     const adjustTabsVisibility = function (tabsIndexes: Array<number>) {
       const outerWidth = elementWidth(ofTabsHeader.value)
       let tabsWidth = 0
+      let prevIndex = 0
       let hasInvisibleTabs = false
 
       //Make tabs visible until widths sum < main container's width
       for (const index of tabsIndexes) {
-        updateTabVisibility(index, true)
         tabsWidth = calcVisibleTabsWidth()
-        if (tabsWidth > outerWidth) {
+        if (tabsWidth < outerWidth) {
+          updateTabVisibility(index, true)
+        } else {
           hasInvisibleTabs = true
+          updateTabVisibility(prevIndex, false)
           updateTabVisibility(index, false)
           break
         }
+        prevIndex = index
       }
       for (const item of items.value.items) {
         if (item.disabled !== true && item.visible == true) {
           lastActiveTabIdx.value = item.key
         }
+        if (item.alwaysOverflow === true) hasInvisibleTabs = true
       }
 
       showOverflowButton.value = hasInvisibleTabs
@@ -575,7 +585,7 @@ export default defineComponent({
 
       for (const item of tabsList.value) {
         if (item['visible']) {
-          width += tabsWidth.value[item['key']]
+          width += tabsWidth.value[item['key']] ?? 0
         }
       }
 
