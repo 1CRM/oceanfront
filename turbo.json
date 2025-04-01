@@ -3,7 +3,8 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**", "lib/**"]
+      "outputs": ["dist/**", "lib/**"],
+      "env": ["OF_DEMO_ROOT_PATH"]
     },
     "build-dev": {
       "dependsOn": ["^build-dev"],
