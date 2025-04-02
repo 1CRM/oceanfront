@@ -310,7 +310,12 @@ export default defineComponent({
     )
 
     watch(
-      () => [initialItems.value, props.variant, props.withBorder],
+      () => [
+        initialItems.value,
+        props.variant,
+        props.withBorder,
+        props.overflowButton
+      ],
       () => {
         fillItems()
         init()
@@ -533,27 +538,28 @@ export default defineComponent({
         nextTick(() => {
           adjustTabsVisibility(tabsIndexes)
         })
+      } else {
+        showOverflowButton.value = false
+        items.value.items.forEach((_: any, index: number) => {
+          updateTabVisibility(index, true)
+        })
       }
     }
 
     const adjustTabsVisibility = function (tabsIndexes: Array<number>) {
       const outerWidth = elementWidth(ofTabsHeader.value)
       let tabsWidth = 0
-      let prevIndex = 0
       let hasInvisibleTabs = false
 
       //Make tabs visible until widths sum < main container's width
       for (const index of tabsIndexes) {
+        updateTabVisibility(index, true)
         tabsWidth = calcVisibleTabsWidth()
-        if (tabsWidth < outerWidth) {
-          updateTabVisibility(index, true)
-        } else {
+        if (tabsWidth > outerWidth) {
           hasInvisibleTabs = true
-          updateTabVisibility(prevIndex, false)
           updateTabVisibility(index, false)
           break
         }
-        prevIndex = index
       }
       for (const item of items.value.items) {
         if (item.disabled !== true && item.visible == true) {
