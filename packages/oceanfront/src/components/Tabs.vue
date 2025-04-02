@@ -499,7 +499,7 @@ export default defineComponent({
       if (overflowButtonEnabled.value && !showNavigation.value) {
         tabsWidth.value = []
 
-        for (let item of ofTabsHeader.value.childNodes) {
+        for (let item of ofTabsHeader.value?.childNodes ?? []) {
           const w = elementWidth(item)
           if (!w) continue
 
