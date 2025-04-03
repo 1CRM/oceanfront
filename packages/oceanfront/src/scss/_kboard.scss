@@ -389,9 +389,21 @@
 
     .of-filter-input {
       width: 100%;
+      max-width: 200px;
       background: var(--of-color-surface);
       color: var(--of-color-on-surface);
       line-height: 17px;
+    }
+
+    .selected-tags {
+      display: flex;
+      align-items: center;
+      gap: 2px; 
+
+      @media (max-width: 768px) {
+      flex-wrap: wrap;
+      justify-content: center;
+      }
     }
 
     .of-kanban-avatars {
@@ -418,6 +430,30 @@
 
     .of-clear-filters {
       padding: 2px 12px;
+    }
+
+    @media (max-width: 768px) {
+      .of-kanban-filters-content {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+
+        .of-kanban-filters-left,
+        .of-kanban-filters-right {
+          flex: 1 1 100%;
+          justify-content: center;
+        }
+
+        .of-default-filters {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .of-kanban-avatars {
+          justify-content: center;
+          flex-wrap: wrap; 
+        }
+      }
     }
   }
 }

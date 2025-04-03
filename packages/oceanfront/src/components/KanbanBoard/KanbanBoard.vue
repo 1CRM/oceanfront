@@ -16,10 +16,24 @@
       <template #custom-filters>
         <slot name="filters" />
       </template>
+      <template #tag-filters>
+        <div class="selected-tags">
+          <button
+            v-for="tag in getSelectedTags"
+            :key="tag"
+            class="tag-button"
+            @click="removeTag(tag)"
+          >
+            {{ tag }}
+            <span class="remove-icon">×</span>
+          </button>
+        </div>
+      </template>
       <template #clear-filters>
         <slot name="clear-filters" />
       </template>
     </kanban-filters>
+
     <div class="of-kanban-columns">
       <kanban-column
         v-for="column in filteredColumns"
@@ -149,6 +163,13 @@ export default defineComponent({
       () => `kanban-collapsed-columns-${props.id}`
     )
 
+    const getSelectedTags = computed({
+      get: () => Array.from(currentFilters.tags),
+      set: (tags: string[]) => {
+        currentFilters.tags = new Set(tags)
+      }
+    })
+
     watch(collapsedColumns, (newValue) => {
       saveCollapsedState(storageKey.value, newValue)
     })
@@ -165,6 +186,18 @@ export default defineComponent({
       })
 
       return Array.from(assigneeMap.values())
+    })
+
+    const tags = computed(() => {
+      const tagSet = new Set<string>()
+
+      props.columns.forEach((column) => {
+        column.cards?.forEach((card) => {
+          card.tags?.forEach((tag) => tagSet.add(tag))
+        })
+      })
+
+      return Array.from(tagSet)
     })
 
     const filteredColumns = computed(() => {
@@ -185,7 +218,12 @@ export default defineComponent({
               currentFilters.assignees.includes(card.assignee.id)
             : true
 
-          return matchesKeyword && matchesAssignee
+          // Filter by tags
+          const matchesTags = currentFilters.tags.size
+            ? card.tags?.some((tag) => currentFilters.tags.has(tag))
+            : true
+
+          return matchesKeyword && matchesAssignee && matchesTags
         })
 
         return {
@@ -194,6 +232,8 @@ export default defineComponent({
         }
       })
     })
+
+    const selectedTags = computed(() => Array.from(currentFilters.tags))
 
     const handleCardDragStart = (card: IKanbanCard) => {
       draggedCardId.value = card.id
@@ -212,7 +252,11 @@ export default defineComponent({
     }
 
     const handleCardTagClick = (tag: string) => {
-      currentFilters.tags.add(tag)
+      if (currentFilters.tags.has(tag)) {
+        currentFilters.tags.delete(tag)
+      } else {
+        currentFilters.tags.add(tag)
+      }
       emit('card-tag-click', tag)
     }
 
@@ -316,11 +360,13 @@ export default defineComponent({
       filters: {
         keyword: string
         assignees: (string | number)[]
+        tags: string[]
       },
       clearFilters = false
     ) => {
       currentFilters.keyword = filters.keyword
       currentFilters.assignees = filters.assignees
+      currentFilters.tags = new Set(filters.tags)
       if (clearFilters) currentFilters.tags.clear()
 
       emit('filter-change', currentFilters)
@@ -345,6 +391,11 @@ export default defineComponent({
       }
     }
 
+    const removeTag = (tag: string) => {
+      currentFilters.tags.delete(tag)
+      emit('filter-change', currentFilters)
+    }
+
     onMounted(() => {
       collapsedColumns.value = getCollapsedColumns(storageKey.value)
       window.addEventListener('click', handleWindowClick)
@@ -361,10 +412,13 @@ export default defineComponent({
       draggedCardId,
       selectedCardId,
       assignees,
+      tags,
       filteredColumns,
       activeColumnId,
       collapsedColumns,
       currentFilters,
+      selectedTags,
+      getSelectedTags,
       handleCardMove,
       handleCardDragStart,
       handleCardBlur,
@@ -377,8 +431,39 @@ export default defineComponent({
       handleFilterChange,
       setActiveColumn,
       handleLoadMore,
-      handleColumnCollapse
+      handleColumnCollapse,
+      removeTag
     }
   }
 })
 </script>
+
+<style scoped>
+.selected-tags {
+  display: flex;
+  gap: 8px;
+
+  .tag-button {
+    background-color: var(--of-color-primary);
+    color: white;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    .remove-icon {
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  }
+
+  .tag-button:hover {
+    background-color: var(--of-color-primary-dark);
+  }
+}
+</style>

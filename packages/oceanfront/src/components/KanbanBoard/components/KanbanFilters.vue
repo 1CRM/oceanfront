@@ -32,6 +32,7 @@
               </div>
             </template>
           </div>
+          <slot name="tag-filters" />
           <of-button
             class="of-clear-filters"
             @click="handleClearFilters"
