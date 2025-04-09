@@ -20,6 +20,7 @@
   width: 100%;
   display: grid;
   grid-template-columns: var(--of-table-columns);
+  overflow: auto;
 
   .of-data-table-rows-selector {
     padding: 0;
@@ -109,7 +110,7 @@
     &.selected > div {
       background-color: $base-color-highlight;
     }
-    &.total-amount > div{
+    &.total-amount > div {
       font-weight: 500;
       border-top: 3px double #ddd;
     }

@@ -829,7 +829,8 @@ export default defineComponent({
           '--of-calendar-iterval-height': `${hourHeight}px`,
           '--of-event-height': `${eventHeight}px`,
           '--of-calendar-conflict-color': conflictColor,
-          '--of-calendar-subinterval-height': subIntervalHeight
+          '--of-calendar-subinterval-height': subIntervalHeight,
+          '--of-categories-num': (this.$props.categoriesList?.length ?? 0) + 1
         },
         onselectstart(e: Event) {
           e.preventDefault()

@@ -3,40 +3,32 @@
     <h1>Buttons</h1>
     <of-highlight lang="html" :value="sampleCode" />
     <br />
-    <div class="row">
-      <div class="column spaced">
-        <of-field
-          v-model="params.density"
-          label="Density"
-          type="select"
-          :items="densityOptions"
-        />
-      </div>
-      <div class="column spaced" style="align-self: flex-end">
-        <of-field
-          v-model="params.rounded"
-          label="Rounded"
-          type="toggle"
-          label-position="input"
-          :items="densityOptions"
-        />
-      </div>
-      <div class="column spaced">
-        <of-field
-          v-model="params.tint"
-          label="Tint"
-          type="select"
-          :items="tintOptions"
-        />
-      </div>
-      <div class="column spaced">
-        <of-field
-          v-model="params.scale"
-          label="Scale"
-          type="select"
-          :items="scaleOptions"
-        />
-      </div>
+    <div class="header-options-fields">
+      <of-field
+        v-model="params.density"
+        label="Density"
+        type="select"
+        :items="densityOptions"
+      />
+      <of-field
+        v-model="params.rounded"
+        label="Rounded"
+        type="toggle"
+        label-position="input"
+        :items="densityOptions"
+      />
+      <of-field
+        v-model="params.tint"
+        label="Tint"
+        type="select"
+        :items="tintOptions"
+      />
+      <of-field
+        v-model="params.scale"
+        label="Scale"
+        type="select"
+        :items="scaleOptions"
+      />
     </div>
     <div class="demo-fields of--elevated-1">
       <div class="row" v-for="variant in variants" :key="variant">
@@ -203,11 +195,8 @@ export default defineComponent({
 })
 </script>
 
-<style lang="scss">
-.spaced {
-  > * {
-    margin-right: 1em;
-    margin-bottom: 0.5em;
-  }
+<style lang="scss" scoped>
+.container {
+  min-width: 32em;
 }
 </style>

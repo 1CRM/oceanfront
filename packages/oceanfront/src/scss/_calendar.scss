@@ -208,7 +208,8 @@ div.of-date-picker-cur-year {
 .of-calendar-year-grid {
   display: grid;
   grid-gap: 10px;
-  grid-template-columns: auto auto auto auto auto auto;
+  grid-template-columns: repeat(6, minmax(90px, auto));
+
   .of-calendar-month-titles {
     display: grid;
     justify-content: center;
@@ -251,11 +252,6 @@ div.of-date-picker-cur-year {
     }
   }
 }
-@media (max-width: 768px) {
-  .of-calendar-year-grid {
-    grid-template-columns: auto auto auto auto;
-  }
-}
 
 .of-calendar-allday-row,
 .of-calendar-day-row,
@@ -264,6 +260,8 @@ div.of-date-picker-cur-year {
   display: grid;
   grid-template-columns: 40px repeat(auto-fit, minmax(50px, 1fr));
   border-bottom: solid 1px var(--calendar-grid-color);
+  min-width: calc(50px * var(--of-categories-num));
+
   &:first-child {
     border-top: solid 1px var(--calendar-grid-color);
   }

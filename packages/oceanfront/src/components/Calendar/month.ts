@@ -286,7 +286,8 @@ export default defineComponent({
       {
         class: 'container of--calendar',
         style: {
-          '--of-event-height': `${this.eventHeightNumber}px`
+          '--of-event-height': `${this.eventHeightNumber}px`,
+          '--of-categories-num': 8
         },
         onSelectStart(e: Event) {
           e.preventDefault()

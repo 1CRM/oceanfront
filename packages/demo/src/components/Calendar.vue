@@ -38,7 +38,7 @@
           name="layout"
         ></of-select-field>
       </div>
-      <div class="of-group-row of--pad">
+      <div class="header-options-fields">
         <of-toggle-field name="useSlots" label="Use slots" :record="state" />
         <of-toggle-field
           name="hideOtherMonths"
@@ -308,14 +308,9 @@ export default defineComponent({
 })
 </script>
 
-<style>
+<style lang="scss">
+.all-day-label,
 .of-calendar-event {
-  font-size: 70%;
-}
-.of-calendar-event .of-icon {
-  margin-right: 1px;
-}
-.all-day-label {
   font-size: 70%;
 }
 </style>
