@@ -197,6 +197,6 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 .container {
-  min-width: 27em;
+  min-width: 32em;
 }
 </style>
