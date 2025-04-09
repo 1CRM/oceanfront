@@ -50,3 +50,15 @@ h4 {
   margin: 0.5rem;
   padding: 1rem;
 }
+
+.header-options-fields {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1em;
+
+  > div {
+    flex: 1 1 10em;
+    max-width: 10em;
+  }
+}

@@ -1,5 +1,5 @@
 <template>
-  <div class="of-demo-field of--elevated">
+  <div class="of-demo-field of--elevated-1">
     <div :class="containerClass">
       <div class="field" v-for="(opts, idx) in allParams" :key="idx">
         <slot v-bind="opts"></slot>
@@ -177,8 +177,11 @@ export default defineComponent({
   --elevation-level: 1;
   border-radius: 4px;
   display: flex;
-  flex-flow: row nowrap;
+  flex-wrap: wrap;
   margin: 1em 0;
+  > div {
+    min-width: 15em;
+  }
   .content {
     box-sizing: border-box;
     display: flex;

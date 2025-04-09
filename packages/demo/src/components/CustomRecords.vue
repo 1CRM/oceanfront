@@ -75,7 +75,7 @@ import {
   FormRecord,
   Lock,
   LockOptions,
-  RecordMetadata,
+  RecordMetadata
 } from 'oceanfront'
 import {
   computed,
@@ -85,7 +85,7 @@ import {
   ref,
   Ref,
   toRaw,
-  watchEffect,
+  watchEffect
 } from 'vue'
 
 class CustomRecord<T extends object = Record<string, any>>
@@ -147,7 +147,7 @@ class CustomRecord<T extends object = Record<string, any>>
     return {
       release: () => {
         this._state.value.locked = false
-      },
+      }
     }
   }
 
@@ -203,7 +203,7 @@ const data = {
   two: '2015-05-11',
   three: 'Text',
   four_hours: 1,
-  four_minutes: 15,
+  four_minutes: 15
 }
 
 const meta = reactive({
@@ -212,21 +212,21 @@ const meta = reactive({
     label: 'Select input (label from metadata)',
     items: [
       { value: 'optionA', text: 'A' },
-      { value: 'optionB', text: 'B' },
-    ],
+      { value: 'optionB', text: 'B' }
+    ]
   },
   two: {
     type: 'date',
-    label: 'Date',
+    label: 'Date'
   },
   three: {
     type: 'text',
-    label: 'Text',
+    label: 'Text'
   },
   four: {
     type: 'minutes',
-    label: 'Minutes',
-  },
+    label: 'Minutes'
+  }
 })
 
 const testRecord = createContext(data, meta)
@@ -250,15 +250,19 @@ export default defineComponent({
       formatValue,
       sampleBinding,
       testRecord,
-      textValue,
+      textValue
     }
-  },
+  }
 })
 </script>
 
 <style scoped>
 .content {
   margin-top: 1.5rem;
+
+  > div {
+    min-width: 20em;
+  }
 }
 .record-info {
   padding-left: 1em;

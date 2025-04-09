@@ -81,8 +81,6 @@
           model-value="password"
           frame="none"
         />
-      </div>
-      <div class="row demo-row">
         <of-text-field
           multiline
           class="of--small"
@@ -163,8 +161,13 @@ export default defineComponent({
 </script>
 
 <style lang="scss">
-.demo-row {
+.demo-fields .demo-row {
   grid-gap: 10px;
   margin: 10px 0;
+  flex-wrap: wrap;
+
+  > .of-field {
+    width: 6em;
+  }
 }
 </style>

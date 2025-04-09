@@ -103,16 +103,19 @@ export default defineComponent({
     const filled = ref(false)
     const fieldProps = computed(() => ({
       label: 'Test input',
-      variant: filled.value ? 'filled' : 'outlined',
+      variant: filled.value ? 'filled' : 'outlined'
     }))
     const fieldValue = ref('Field value')
 
     return { filled, fieldProps, fieldValue, sampleCode }
-  },
+  }
 })
 </script>
 
 <style lang="scss">
+.container {
+  min-width: 25em;
+}
 .attrs {
   border-radius: 4px;
   padding: 1em;
