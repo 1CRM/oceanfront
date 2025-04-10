@@ -36,7 +36,7 @@ export default defineConfig(({ command, mode }): any => {
         }
       },
       reportCompressedSize: !dev,
-      sourcemap: false
+      sourcemap: true
     },
     css: {
       preprocessorOptions: {
