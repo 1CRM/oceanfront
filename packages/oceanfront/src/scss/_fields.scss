@@ -556,7 +556,6 @@
         .of-field-inner {
           opacity: 0;
           transition: opacity 180ms;
-          will-change: opacity;
         }
       }
 
@@ -714,7 +713,6 @@
     transition:
       opacity 90ms,
       transform 150ms;
-    will-change: opacity, transform;
     z-index: 1;
   }
   &.of--interactive.of--invalid .of--layer-brd::after {

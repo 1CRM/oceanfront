@@ -19,7 +19,7 @@ export interface NumberFormatterOptions {
   minimumSignificantDigits?: number
   restrictPositive?: boolean
   signDisplay?: string // = 'exceptZero'
-  style?: string // = 'decimal' // currency, percent, unit
+  style?: 'decimal' | 'currency' | 'percent' | 'unit' // = 'decimal'
   useGrouping?: boolean
 }
 
