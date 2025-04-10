@@ -173,7 +173,6 @@
         touch-action: pan-y;
         position: relative;
         transition: transform 0.1s ease;
-        will-change: transform;
         max-height: 120px;
 
         &:hover {
