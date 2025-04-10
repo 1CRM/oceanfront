@@ -114,13 +114,7 @@ export const OfRadioField = defineComponent({
         if (fieldCtx.onUpdate) fieldCtx.onUpdate(stateValue.value)
       }
     }
-    const itemText = (value: any) => {
-      let res
-      for (const item of items.value) {
-        if (item.value === value) res = item.text
-      }
-      return res
-    }
+
     const selectedItemText = computed(() => {
       let res
       for (const item of items.value) {

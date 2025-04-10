@@ -723,3 +723,8 @@ export default defineComponent({
   }
 })
 </script>
+<style lang="scss">
+.of-data-table .of-field-body {
+  min-width: 5em;
+}
+</style>

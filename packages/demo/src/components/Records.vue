@@ -174,6 +174,10 @@ export default defineComponent({
 <style scoped>
 .content {
   margin-top: 1.5rem;
+
+  > div {
+    min-width: 20em;
+  }
 }
 .record-info {
   padding-left: 1em;

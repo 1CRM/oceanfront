@@ -2,55 +2,51 @@
   <div class="container" style="style">
     <h1>Color scheme editor</h1>
     <div class="row content">
-      <div class="column spaced" style="max-width: 15em">
-        <div style="padding: 0 1rem">
-          <h2>Source colors</h2>
-          <of-color-scheme-editor
-            :colors="colors"
-            :limits="limits"
-            @colorUpdated="colorUpdated"
-            @palletteUpdated="palletteUpdated"
-          />
-        </div>
+      <div class="column spaced">
+        <h2>Source colors</h2>
+        <of-color-scheme-editor
+          :colors="colors"
+          :limits="limits"
+          @color-updated="colorUpdated"
+          @pallette-updated="palletteUpdated"
+        />
       </div>
       <div class="column spaced">
-        <div style="padding: 0 1rem">
-          <h2>Application color palette</h2>
-          <div class="palette-grid of--elevated-2 styled" :style="styles">
-            <div class="primary">Primary</div>
-            <div class="on-primary">On Primary</div>
-            <div class="primary-container">Primary Container</div>
-            <div class="on-primary-container">On Primary Container</div>
-            <div class="secondary">Secondary</div>
-            <div class="on-secondary">On Secondary</div>
-            <div class="secondary-container">Secondary Container</div>
-            <div class="on-secondary-container">On Secondary Container</div>
-            <div class="tertiary">Tertiary</div>
-            <div class="on-tertiary">On Tertiary</div>
-            <div class="tertiary-container">Tertiary Container</div>
-            <div class="on-tertiary-container">On Tertiary Container</div>
-            <div class="error">Error</div>
-            <div class="on-error">On Error</div>
-            <div class="error-container">Error Container</div>
-            <div class="on-error-container">On Error Container</div>
-            <div class="background">Background</div>
-            <div class="on-background">On Background</div>
-            <div class="surface">Surface</div>
-            <div class="on-surface">On Surface</div>
-            <div class="surface-variant">Surface Variant</div>
-            <div class="on-surface-variant">On Surface Variant</div>
-            <div class="inverse-surface">Inverse Surface</div>
-            <div class="inverse-on-surface">Inverse On Surface</div>
-            <div class="outline">Outline</div>
-            <div class="shadow">Shadow</div>
-            <div class="inverse-primary">Inverse Primary</div>
-            <div class="inverse-secondary">Inverse Secondary</div>
-            <div class="inverse-tertiary">Inverse Tertiary</div>
-          </div>
-          <p>
-            <of-button variant="elevated" @click="applyScheme">Apply</of-button>
-          </p>
+        <h2>Application color palette</h2>
+        <div class="palette-grid of--elevated-2 styled" :style="styles">
+          <div class="primary">Primary</div>
+          <div class="on-primary">On Primary</div>
+          <div class="primary-container">Primary Container</div>
+          <div class="on-primary-container">On Primary Container</div>
+          <div class="secondary">Secondary</div>
+          <div class="on-secondary">On Secondary</div>
+          <div class="secondary-container">Secondary Container</div>
+          <div class="on-secondary-container">On Secondary Container</div>
+          <div class="tertiary">Tertiary</div>
+          <div class="on-tertiary">On Tertiary</div>
+          <div class="tertiary-container">Tertiary Container</div>
+          <div class="on-tertiary-container">On Tertiary Container</div>
+          <div class="error">Error</div>
+          <div class="on-error">On Error</div>
+          <div class="error-container">Error Container</div>
+          <div class="on-error-container">On Error Container</div>
+          <div class="background">Background</div>
+          <div class="on-background">On Background</div>
+          <div class="surface">Surface</div>
+          <div class="on-surface">On Surface</div>
+          <div class="surface-variant">Surface Variant</div>
+          <div class="on-surface-variant">On Surface Variant</div>
+          <div class="inverse-surface">Inverse Surface</div>
+          <div class="inverse-on-surface">Inverse On Surface</div>
+          <div class="outline">Outline</div>
+          <div class="shadow">Shadow</div>
+          <div class="inverse-primary">Inverse Primary</div>
+          <div class="inverse-secondary">Inverse Secondary</div>
+          <div class="inverse-tertiary">Inverse Tertiary</div>
         </div>
+        <p>
+          <of-button variant="elevated" @click="applyScheme">Apply</of-button>
+        </p>
       </div>
     </div>
   </div>
@@ -75,14 +71,14 @@ import {
   defaultBaseColors,
   defaultLimits,
   defaultStyles,
-  OfColorSchemeEditor,
+  OfColorSchemeEditor
 } from 'of-colorscheme-editor'
 
 const colors = reactive(defaultBaseColors())
 
 export default defineComponent({
   components: {
-    OfColorSchemeEditor,
+    OfColorSchemeEditor
   },
   setup() {
     const styles = ref('')
@@ -96,8 +92,9 @@ export default defineComponent({
       const styleEl = document.head.querySelector<HTMLStyleElement>(
         'style#colorscheme-preview'
       )
-      styleEl &&
-        (styleEl.innerText = `:root {${styles.value.replaceAll('\n', '')}}`)
+
+      if (styleEl)
+        styleEl.innerText = `:root {${styles.value.replaceAll('\n', '')}}`
     }
     return {
       colors,
@@ -105,7 +102,7 @@ export default defineComponent({
       colorUpdated,
       styles,
       applyScheme,
-      limits: defaultLimits,
+      limits: defaultLimits
     }
   },
   mounted() {
@@ -115,11 +112,25 @@ export default defineComponent({
       styleEl.setAttribute('id', 'colorscheme-preview')
       document.head.appendChild(styleEl)
     }
-  },
+  }
 })
 </script>
 
 <style lang="scss" scoped>
+.row.content {
+  > div {
+    padding: 0 1rem;
+
+    &:first-child {
+      max-width: 15em;
+      min-width: 15em;
+    }
+    &:last-child {
+      min-width: 20em;
+    }
+  }
+}
+
 .palette-grid {
   display: grid;
   font-size: 65%;

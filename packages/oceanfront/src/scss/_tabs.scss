@@ -24,7 +24,7 @@
     mat-bg,
     (transparent, 0%),
     (
-      hover: var(--of-primary-tint) 6%,
+      hover: var(--of-primary-tint) 6%
     )
   );
   @include define-color-opacity(
@@ -32,7 +32,7 @@
     (var(--of-color-on-background), 100%),
     (
       active: var(--of-primary-tint) 100%,
-      disabled: var(--of-color-on-background) 38%,
+      disabled: var(--of-color-on-background) 38%
     )
   );
   @include define-color-opacity(mat-st, (transparent, 0), ());
@@ -42,14 +42,14 @@
     (transparent, 0%),
     (
       hover: var(--of-primary-tint) 6%,
-      active: var(--of-color-surface) 100%,
+      active: var(--of-color-surface) 100%
     )
   );
   @include define-color-opacity(
     att-brd,
     (--of-primary-tint, 100%),
     (
-      active: var(--of-primary-tint) 100%,
+      active: var(--of-primary-tint) 100%
     )
   );
   @include define-color-opacity(
@@ -57,7 +57,7 @@
     (var(--of-color-on-background), 100%),
     (
       active: var(--of-primary-tint) 100%,
-      disabled: var(--of-color-on-background) 38%,
+      disabled: var(--of-color-on-background) 38%
     )
   );
   @include define-color-opacity(att-st, (transparent, 0), ());
@@ -67,7 +67,7 @@
     (transparent, 0%),
     (
       hover: var(--of-color-inverse-surface) 60%,
-      active: var(--of-color-inverse-surface) 60%,
+      active: var(--of-color-inverse-surface) 60%
     )
   );
   @include define-color-opacity(
@@ -76,13 +76,15 @@
     (
       hover: var(--of-color-inverse-on-surface) 100%,
       active: var(--of-color-inverse-on-surface) 100%,
-      disabled: var(--of-color-on-surface) 38%,
+      disabled: var(--of-color-on-surface) 38%
     )
   );
   @include define-color-opacity(osx-st, (transparent, 0), ());
 
   --of-tab-border-radius: 6px;
   --of-tab-osx-border-color: var(--of-color-outline);
+  --of-tab-count-background-color: #a21515;
+  --of-tab-count-color: #fff;
 }
 
 /** Styling */
@@ -218,12 +220,29 @@
         display: flex;
         align-items: center;
 
+        .of-tab-count {
+          background-color: var(--of-tab-count-background-color);
+          color: var(--of-tab-count-color);
+          font-weight: normal;
+          border-radius: 50%;
+          width: 17px;
+          height: 17px;
+          position: absolute;
+          top: -1px;
+          z-index: 2;
+          right: 0px;
+          font-size: 9px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
         .of-tab-text {
           z-index: 2;
           display: flex;
           color: var(--tab-color);
           opacity: var(--tab-opacity);
-          & > .of-icon {
+          &:not(.only-icon) > .of-icon {
             margin-right: 0.4em;
           }
         }

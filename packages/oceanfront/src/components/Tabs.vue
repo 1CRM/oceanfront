@@ -57,6 +57,7 @@
                 (tab.params as any)?.className
               ]"
               role="tab"
+              :id="tab.id"
               :aria-label="tab.ariaLabel"
               :aria-haspopup="showSubMenu"
               :aria-selected="selectedTabKey === tab.key"
@@ -64,11 +65,12 @@
               <div class="of--layer of--layer-bg" />
               <div class="of--layer of--layer-brd" />
               <div class="of--layer of--layer-outl" />
-              <div class="of-tab-text">
+              <div :class="['of-tab-text', { 'only-icon': !tab.text }]">
                 <of-icon v-if="tab.icon" :name="tab.icon" scale="1.1em" />
-                <span>{{ tab.text }}</span>
+                <span v-if="tab.text">{{ tab.text }}</span>
               </div>
               <div class="of--layer of--layer-state" />
+              <div v-if="tab.count" class="of-tab-count">{{ tab.count }}</div>
             </div>
           </template>
           <div class="of-tabs-line" ref="tabLine"></div>
@@ -104,6 +106,13 @@
             <template #option-icon="item"
               ><slot name="submenu-option-icon" v-bind="item"
             /></template>
+            <template
+              v-for="(item, index) in subMenuSlots"
+              :key="index"
+              #[index]
+            >
+              <component :is="item" />
+            </template>
           </of-option-list>
         </slot>
       </of-overlay>
@@ -173,7 +182,9 @@ const formatItems = (
     let subMenu = undefined
     text = item[params.textKey] ? item[params.textKey] : ''
 
-    if (text === '') continue
+    if (text === '' && !item[params.iconKey]) continue
+
+    if (addOverflowButton && item.alwaysOverflow === true) item.visible = false
 
     if (visible && item.visible === false) {
       continue
@@ -200,17 +211,20 @@ const formatItems = (
       params: item.params ?? undefined,
       attrs: item.attrs ?? undefined,
       subMenuItems: subMenu,
+      subMenuSlots: item.subMenuSlots,
       field: item.field,
-      class: item.class ?? undefined
+      class: item.class ?? undefined,
+      id: item.id,
+      count: item.count > 99 ? '99+' : item.count
     } as Tab)
   }
 
   if (visible && addOverflowButton) {
     rows.push({
       disabled: false,
-      icon: '',
+      icon: 'more alt',
       overflowButton: true,
-      text: '...',
+      text: '',
       key: -1,
       parentKey: undefined
     } as Tab)
@@ -280,6 +294,9 @@ export default defineComponent({
       }
       return Math.max(0, Math.min(3, d || 0))
     })
+    const initialItems = computed(() =>
+      Array.isArray(props.items) ? [...props.items] : []
+    )
 
     watch(
       () => props.modelValue,
@@ -293,7 +310,12 @@ export default defineComponent({
     )
 
     watch(
-      () => [props.items, props.variant, props.withBorder],
+      () => [
+        initialItems.value,
+        props.variant,
+        props.withBorder,
+        props.overflowButton
+      ],
       () => {
         fillItems()
         init()
@@ -349,7 +371,7 @@ export default defineComponent({
         textKey: 'text',
         items: []
       }
-      Object.assign(itemList, itemMgr.getItemList(props.items))
+      Object.assign(itemList, itemMgr.getItemList(initialItems.value))
 
       for (const index in itemList.items) {
         let item: any = itemList.items[index]
@@ -477,7 +499,7 @@ export default defineComponent({
       if (overflowButtonEnabled.value && !showNavigation.value) {
         tabsWidth.value = []
 
-        for (let item of ofTabsHeader.value.childNodes) {
+        for (let item of ofTabsHeader.value?.childNodes ?? []) {
           const w = elementWidth(item)
           if (!w) continue
 
@@ -516,6 +538,11 @@ export default defineComponent({
         nextTick(() => {
           adjustTabsVisibility(tabsIndexes)
         })
+      } else {
+        showOverflowButton.value = false
+        items.value.items.forEach((_: any, index: number) => {
+          updateTabVisibility(index, true)
+        })
       }
     }
 
@@ -538,6 +565,7 @@ export default defineComponent({
         if (item.disabled !== true && item.visible == true) {
           lastActiveTabIdx.value = item.key
         }
+        if (item.alwaysOverflow === true) hasInvisibleTabs = true
       }
 
       showOverflowButton.value = hasInvisibleTabs
@@ -563,7 +591,7 @@ export default defineComponent({
 
       for (const item of tabsList.value) {
         if (item['visible']) {
-          width += tabsWidth.value[item['key']]
+          width += tabsWidth.value[item['key']] ?? 0
         }
       }
 
@@ -672,6 +700,7 @@ export default defineComponent({
     const subMenuTabsList: Ref<Tab[]> = ref([])
     const subMenuTimerId = ref()
     const submenuMinWidth = ref(0)
+    const subMenuSlots = ref()
 
     const openSubMenu = (
       key: number,
@@ -689,6 +718,7 @@ export default defineComponent({
           subMenuTimerId.value = window.setTimeout(
             () => {
               subMenuTabsList.value = tab.subMenuItems ?? []
+              subMenuSlots.value = tab.subMenuSlots ?? []
               subMenuOuter.value = elt
               subMenuActive.value = true
               openedMenuTabKey.value = key
@@ -924,6 +954,7 @@ export default defineComponent({
       overlayClassname,
       showSubMenu,
       subMenuTabsList,
+      subMenuSlots,
       subMenuActive,
       subMenuOuter,
       openSubMenu,
