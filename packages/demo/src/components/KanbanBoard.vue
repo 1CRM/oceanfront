@@ -12,6 +12,7 @@
       @card-moved="handleCardMoved"
       @add-card="handleAddCard"
       @card-click="handleCardClick"
+      @card-tag-click="handleCardTagClick"
       @project-click="onProjectClick"
       @assignee-click="onAssigneeClick"
       @card-title-click="onCardTitleClick"
@@ -91,8 +92,9 @@ export default defineComponent({
               name: 'Michael Whitehead',
               avatar:
                 'https://1crm9-demo.1crmcloud.com/files/images/directory/1/MichaelWhitehead.png'
-            }
-          },
+            },
+            tags: ['Bug', 'Feature']
+          } as IKanbanCard,
           {
             id: 'card-2',
             title: 'Kanban Board: Create KanbanColumn component',
@@ -105,8 +107,9 @@ export default defineComponent({
             assignee: {
               id: 'assignee-2',
               name: 'admin'
-            }
-          },
+            },
+            tags: ['Feature', '1CRM', 'Oceanfront']
+          } as IKanbanCard,
           {
             id: 'card-33',
             title: 'Test card 1',
@@ -234,6 +237,10 @@ export default defineComponent({
       console.log('Card clicked:', card)
     }
 
+    const handleCardTagClick = (tag: string) => {
+      console.log('Card tag clicked:', tag)
+    }
+
     const handleCardMenuItemClick = (
       item: string | number,
       card: IKanbanCard
@@ -263,6 +270,7 @@ export default defineComponent({
     const handleFilterChange = (filters: {
       keyword: string
       assignees: (string | number)[]
+      tags: string[]
     }) => {
       console.log('Filter changed:', filters)
     }
@@ -306,6 +314,7 @@ export default defineComponent({
       handleCardClick,
       handleCardMenuItemClick,
       handleFilterChange,
+      handleCardTagClick,
       onProjectClick,
       onAssigneeClick,
       onCardTitleClick

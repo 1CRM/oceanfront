@@ -173,7 +173,8 @@
         touch-action: pan-y;
         position: relative;
         transition: transform 0.1s ease;
-        max-height: 120px;
+        will-change: transform;
+        max-height: 160px;
 
         &:hover {
           box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.12);
@@ -277,6 +278,32 @@
               text-overflow: ellipsis;
             }
           }
+
+          .tags-container {
+            align-self: stretch;
+            justify-content: flex-start;
+            align-items: flex-start;
+            gap: 4px;
+            display: flex;
+            flex-wrap: wrap;
+            overflow: scroll;
+
+            .card-tags {
+              color: var(--of-color-on-background);
+              word-wrap: break-word;
+              cursor: pointer;
+              display: -webkit-box;
+              -webkit-box-orient: vertical;
+              overflow: hidden;
+              display: flex;
+              text-overflow: ellipsis;
+              .of-button > button {
+                font-size: 12px;
+                font-weight: 400;
+                line-height: 1em;
+              }
+            }
+          }
         }
       }
 
@@ -350,6 +377,9 @@
           display: flex;
           align-items: center;
           gap: 12px;
+          flex-wrap: wrap;
+          align-content: center;
+          justify-content: center;
         }
       }
 
@@ -362,9 +392,46 @@
 
     .of-filter-input {
       width: 100%;
+      min-width: 300px;
+      max-width: 300px;
       background: var(--of-color-surface);
       color: var(--of-color-on-surface);
       line-height: 17px;
+    }
+
+    .selected-tags {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+
+      @media (max-width: 768px) {
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      .tag-button {
+        background-color: var(--of-color-primary);
+        color: white;
+        border: none;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+
+        .remove-icon {
+          font-size: 14px;
+          font-weight: bold;
+          cursor: pointer;
+        }
+
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+      }
     }
 
     .of-kanban-avatars {
@@ -391,6 +458,30 @@
 
     .of-clear-filters {
       padding: 2px 12px;
+    }
+
+    @media (max-width: 768px) {
+      .of-kanban-filters-content {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+
+        .of-kanban-filters-left,
+        .of-kanban-filters-right {
+          flex: 1 1 100%;
+          justify-content: center;
+        }
+
+        .of-default-filters {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .of-kanban-avatars {
+          justify-content: center;
+          flex-wrap: wrap;
+        }
+      }
     }
   }
 }

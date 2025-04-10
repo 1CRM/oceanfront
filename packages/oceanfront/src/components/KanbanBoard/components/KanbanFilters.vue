@@ -32,6 +32,7 @@
               </div>
             </template>
           </div>
+          <slot name="tag-filters" />
           <of-button
             class="of-clear-filters"
             @click="handleClearFilters"
@@ -64,6 +65,10 @@ export default defineComponent({
       type: String,
       default: 'Search by keyword...'
     },
+    tags: {
+      type: Set as PropType<Set<string>>,
+      default: () => new Set<string>()
+    },
     debounceTime: {
       type: Number,
       default: 300
@@ -86,7 +91,8 @@ export default defineComponent({
     const emitFilterChange = () => {
       emit('filter-change', {
         keyword: keyword.value,
-        assignees: selectedAssignees.value
+        assignees: selectedAssignees.value,
+        tags: Array.from(props.tags)
       })
     }
 

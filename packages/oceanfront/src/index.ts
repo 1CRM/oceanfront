@@ -228,6 +228,5 @@ export type {
   IKanbanColumn,
   IKanbanProject,
   IKanbanCardAssignee,
-  IKanbanTag,
   CardMovedEvent
 } from './components/KanbanBoard/types'

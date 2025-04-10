@@ -9,16 +9,31 @@
     <kanban-filters
       :assignees="assignees"
       :search-input-placeholder="searchInputPlaceholder"
+      :tags="currentFilters.tags"
       @filter-change="handleFilterChange"
-      @clear-filters="handleFilterChange"
+      @clear-filters="handleFilterChange($event, true)"
     >
       <template #custom-filters>
         <slot name="filters" />
+      </template>
+      <template #tag-filters>
+        <div class="selected-tags">
+          <button
+            v-for="tag in getSelectedTags"
+            :key="tag"
+            class="tag-button"
+            @click="removeTag(tag)"
+          >
+            {{ tag }}
+            <span class="remove-icon">×</span>
+          </button>
+        </div>
       </template>
       <template #clear-filters>
         <slot name="clear-filters" />
       </template>
     </kanban-filters>
+
     <div class="of-kanban-columns">
       <kanban-column
         v-for="column in filteredColumns"
@@ -41,8 +56,10 @@
         @project-click="$emit('project-click', $event)"
         @assignee-click="$emit('assignee-click', $event)"
         @card-title-click="$emit('card-title-click', $event)"
+        @card-tag-click="handleCardTagClick"
         @card-menu-item-click="
-          (item, card) => $emit('card-menu-item-click', item, card)
+          (item: string | number, card: IKanbanCard) =>
+            $emit('card-menu-item-click', item, card)
         "
         @set-active-column="setActiveColumn"
         @load-more="handleLoadMore"
@@ -71,7 +88,8 @@ import {
   onMounted,
   computed,
   watch,
-  onUnmounted
+  onUnmounted,
+  reactive
 } from 'vue'
 import KanbanColumn from './components/KanbanColumn.vue'
 import KanbanFilters from './components/KanbanFilters.vue'
@@ -125,6 +143,7 @@ export default defineComponent({
     'project-click',
     'assignee-click',
     'card-title-click',
+    'card-tag-click',
     'card-menu-item-click',
     'filter-change',
     'load-more'
@@ -134,15 +153,23 @@ export default defineComponent({
     const draggedCardId = ref<string | number | undefined>(undefined)
     const selectedCardId = ref<string | number | undefined>(undefined)
     const collapsedColumns = ref<string[]>([])
-    const currentFilters = ref({
+    const currentFilters = reactive({
       keyword: '',
-      assignees: [] as (string | number)[]
+      assignees: [] as (string | number)[],
+      tags: new Set<string>()
     })
     const activeColumnId = ref<string | null>(null)
 
     const storageKey = computed<string>(
       () => `kanban-collapsed-columns-${props.id}`
     )
+
+    const getSelectedTags = computed({
+      get: () => Array.from(currentFilters.tags),
+      set: (tags: string[]) => {
+        currentFilters.tags = new Set(tags)
+      }
+    })
 
     watch(collapsedColumns, (newValue) => {
       saveCollapsedState(storageKey.value, newValue)
@@ -162,25 +189,42 @@ export default defineComponent({
       return Array.from(assigneeMap.values())
     })
 
+    const tags = computed(() => {
+      const tagSet = new Set<string>()
+
+      props.columns.forEach((column) => {
+        column.cards?.forEach((card) => {
+          card.tags?.forEach((tag) => tagSet.add(tag))
+        })
+      })
+
+      return Array.from(tagSet)
+    })
+
     const filteredColumns = computed(() => {
       return props.columns.map((column) => {
         if (!column.cards) return column
 
         const filteredCards = column.cards.filter((card) => {
           // Filter by keyword
-          const matchesKeyword = currentFilters.value.keyword
+          const matchesKeyword = currentFilters.keyword
             ? card.title
                 .toLowerCase()
-                .includes(currentFilters.value.keyword.toLowerCase())
+                .includes(currentFilters.keyword.toLowerCase())
             : true
 
           // Filter by assignees
-          const matchesAssignee = currentFilters.value.assignees.length
+          const matchesAssignee = currentFilters.assignees.length
             ? card.assignee &&
-              currentFilters.value.assignees.includes(card.assignee.id)
+              currentFilters.assignees.includes(card.assignee.id)
             : true
 
-          return matchesKeyword && matchesAssignee
+          // Filter by tags
+          const matchesTags = currentFilters.tags.size
+            ? card.tags?.some((tag) => currentFilters.tags.has(tag))
+            : true
+
+          return matchesKeyword && matchesAssignee && matchesTags
         })
 
         return {
@@ -189,6 +233,8 @@ export default defineComponent({
         }
       })
     })
+
+    const selectedTags = computed(() => Array.from(currentFilters.tags))
 
     const handleCardDragStart = (card: IKanbanCard) => {
       draggedCardId.value = card.id
@@ -204,6 +250,15 @@ export default defineComponent({
     const handleCardClick = (card: IKanbanCard) => {
       selectedCardId.value = card.id
       emit('card-click', card)
+    }
+
+    const handleCardTagClick = (tag: string) => {
+      if (currentFilters.tags.has(tag)) {
+        currentFilters.tags.delete(tag)
+      } else {
+        currentFilters.tags.add(tag)
+      }
+      emit('card-tag-click', tag)
     }
 
     const handleColumnClick = (_column: IKanbanColumn) => {
@@ -302,12 +357,20 @@ export default defineComponent({
       emit('column-menu-item-click', item, columnId)
     }
 
-    const handleFilterChange = (filters: {
-      keyword: string
-      assignees: (string | number)[]
-    }) => {
-      currentFilters.value = filters
-      emit('filter-change', filters)
+    const handleFilterChange = (
+      filters: {
+        keyword: string
+        assignees: (string | number)[]
+        tags: string[]
+      },
+      clearFilters = false
+    ) => {
+      currentFilters.keyword = filters.keyword
+      currentFilters.assignees = filters.assignees
+      currentFilters.tags = new Set(filters.tags)
+      if (clearFilters) currentFilters.tags.clear()
+
+      emit('filter-change', currentFilters)
     }
 
     const setActiveColumn = (columnId: string | null) => {
@@ -329,6 +392,11 @@ export default defineComponent({
       }
     }
 
+    const removeTag = (tag: string) => {
+      currentFilters.tags.delete(tag)
+      emit('filter-change', currentFilters)
+    }
+
     onMounted(() => {
       collapsedColumns.value = getCollapsedColumns(storageKey.value)
       window.addEventListener('click', handleWindowClick)
@@ -345,13 +413,18 @@ export default defineComponent({
       draggedCardId,
       selectedCardId,
       assignees,
+      tags,
       filteredColumns,
       activeColumnId,
       collapsedColumns,
+      currentFilters,
+      selectedTags,
+      getSelectedTags,
       handleCardMove,
       handleCardDragStart,
       handleCardBlur,
       handleCardClick,
+      handleCardTagClick,
       handleColumnClick,
       handleBlur,
       handleBoardClick,
@@ -359,7 +432,8 @@ export default defineComponent({
       handleFilterChange,
       setActiveColumn,
       handleLoadMore,
-      handleColumnCollapse
+      handleColumnCollapse,
+      removeTag
     }
   }
 })
