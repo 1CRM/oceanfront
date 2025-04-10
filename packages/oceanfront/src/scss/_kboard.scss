@@ -390,6 +390,7 @@
     .of-filter-input {
       width: 100%;
       min-width: 300px;
+      max-width: 300px;
       background: var(--of-color-surface);
       color: var(--of-color-on-surface);
       line-height: 17px;
