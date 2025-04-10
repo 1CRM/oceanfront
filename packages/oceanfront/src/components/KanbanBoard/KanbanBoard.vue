@@ -58,7 +58,8 @@
         @card-title-click="$emit('card-title-click', $event)"
         @card-tag-click="handleCardTagClick"
         @card-menu-item-click="
-          (item, card) => $emit('card-menu-item-click', item, card)
+          (item: string | number, card: IKanbanCard) =>
+            $emit('card-menu-item-click', item, card)
         "
         @set-active-column="setActiveColumn"
         @load-more="handleLoadMore"
@@ -437,33 +438,3 @@ export default defineComponent({
   }
 })
 </script>
-
-<style scoped>
-.selected-tags {
-  display: flex;
-  gap: 8px;
-
-  .tag-button {
-    background-color: var(--of-color-primary);
-    color: white;
-    border: none;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 12px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-
-    .remove-icon {
-      font-size: 14px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-  }
-
-  .tag-button:hover {
-    background-color: var(--of-color-primary-dark);
-  }
-}
-</style>
