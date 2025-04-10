@@ -95,7 +95,8 @@ export default defineComponent({
     const emitFilterChange = () => {
       emit('filter-change', {
         keyword: keyword.value,
-        assignees: selectedAssignees.value
+        assignees: selectedAssignees.value,
+        tags: Array.from(props.tags)
       })
     }
 

@@ -398,11 +398,19 @@
     .selected-tags {
       display: flex;
       align-items: center;
-      gap: 2px; 
+      gap: 2px;
 
       @media (max-width: 768px) {
-      flex-wrap: wrap;
-      justify-content: center;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      .tag-button {
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+          background-color: var(--of-color-primary);
+        }
       }
     }
 
@@ -451,7 +459,7 @@
 
         .of-kanban-avatars {
           justify-content: center;
-          flex-wrap: wrap; 
+          flex-wrap: wrap;
         }
       }
     }
