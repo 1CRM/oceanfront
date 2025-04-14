@@ -31,15 +31,29 @@
           <template :key="tab.key" v-for="(tab, idx) in tabsList">
             <div class="overflow-separator" v-if="tab.overflowButton" />
             <div
-              @pointerup="(e) => tab.disabled || handleSelectTab(e, tab.key)"
-              @mouseover="
-                tab.disabled || onMouseoverTab(tab.key, $event.target)
+              @pointerup="
+                (e: PointerEvent) => tab.disabled || handleSelectTab(e, tab.key)
               "
-              @mouseleave="tab.disabled || subMenuLeave(tab.key)"
+              @mouseover="
+                (e: MouseEvent) => {
+                  if (!tab.disabled) {
+                    $emit('hover-tab', tab.key)
+                    onMouseoverTab(tab.key, e.target)
+                  }
+                }
+              "
+              @mouseleave="
+                () => {
+                  if (!tab.disabled) {
+                    $emit('leave-tab', tab.key)
+                    subMenuLeave(tab.key)
+                  }
+                }
+              "
               @focus="onFocusTab(tab.key)"
               @blur="onBlurTab(tab.key)"
               @keydown="navigate($event)"
-              :ref="(el) => (tabsRefs[idx] = el)"
+              :ref="(el: any) => (tabsRefs[idx] = el)"
               tabindex="0"
               :class="[
                 {
@@ -252,7 +266,9 @@ export default defineComponent({
   },
   emits: {
     'update:modelValue': null,
-    'select-tab': null
+    'select-tab': null,
+    'hover-tab': null,
+    'leave-tab': null
   },
   setup(props, context) {
     const themeOptions = useThemeOptions()
@@ -430,10 +446,10 @@ export default defineComponent({
 
     const init = function () {
       nextTick(() => {
-        setTabsWidth()
         hideOutsideTabs()
         repositionLine()
         repositionTabs()
+        setTabsWidth()
       })
     }
 
@@ -501,7 +517,7 @@ export default defineComponent({
 
         for (let item of ofTabsHeader.value?.childNodes ?? []) {
           const w = elementWidth(item)
-          if (!w) continue
+          if (!w || !item.classList.contains('of-tab-header-item')) continue
 
           tabsWidth.value.push(w)
         }
