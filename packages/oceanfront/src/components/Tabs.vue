@@ -266,6 +266,7 @@ export default defineComponent({
   },
   emits: {
     'update:modelValue': null,
+    'update:overflowOpened': null,
     'select-tab': null,
     'hover-tab': null,
     'leave-tab': null
@@ -396,7 +397,7 @@ export default defineComponent({
           item = { text: item, key: parseInt(index), visible: true }
         } else if (typeof item === 'object') {
           item.key = parseInt(index)
-          item.visible = item.hasOwnProperty('visible') ? item.visible : true
+          item.visible = undefined
 
           if (item.subMenuItems) {
             for (const subIndex in item.subMenuItems) {
@@ -703,6 +704,8 @@ export default defineComponent({
     const closeOverflowPopup = () => {
       outsideTabsOpened.value = false
     }
+
+    watch(outsideTabsOpened, (v) => context.emit('update:overflowOpened', v))
 
     //SubMenu
     const showSubMenu = computed(() => {
