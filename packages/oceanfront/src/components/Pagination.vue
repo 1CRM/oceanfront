@@ -150,7 +150,7 @@ export default defineComponent({
         return 1
       } else {
         let itemsBefore = 2
-        if (totalVisible.value <= itemsBefore) {
+        if (totalVisible.value <= itemsBefore + 1) {
           itemsBefore = 1
         }
         let startPage = page.value - itemsBefore
