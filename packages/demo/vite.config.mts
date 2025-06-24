@@ -14,14 +14,6 @@ const config: UserConfig = {
   build: {
     chunkSizeWarningLimit: 1600
   },
-  css: {
-    preprocessorOptions: {
-      scss: {
-        api: 'modern-compiler',
-        silenceDeprecations: ['legacy-js-api']
-      }
-    }
-  },
   plugins: [vue()]
 }
 
