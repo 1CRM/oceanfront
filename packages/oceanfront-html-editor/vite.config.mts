@@ -38,13 +38,6 @@ export default defineConfig(({ command, mode }): any => {
       reportCompressedSize: !dev,
       sourcemap: true
     },
-    css: {
-      preprocessorOptions: {
-        scss: {
-          api: 'modern-compiler'
-        }
-      }
-    },
     define: {
       __DEV__: JSON.stringify(dev),
       __VUE_OPTIONS_API__: 'true',

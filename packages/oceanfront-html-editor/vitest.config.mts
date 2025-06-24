@@ -6,13 +6,13 @@ export default defineConfig({
   plugins: [
     autoImport({
       imports: ['vitest'],
-      dts: false,
+      dts: false
     }),
-    vue(),
+    vue()
   ],
   test: {
     globals: true,
-    environment: 'jsdom',
+    environment: 'jsdom'
     // setupFiles: [resolve(__dirname, 'vitest.setup.js')],
-  },
+  }
 })
