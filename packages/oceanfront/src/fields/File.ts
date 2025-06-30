@@ -23,17 +23,18 @@ export const OfFileField = defineComponent({
       return initial ?? null
     })
     const stateValue = ref()
+    const elt = ref<HTMLInputElement | undefined>()
     watch(
       () => fieldCtx.value,
       (val) => {
         if (val === undefined || val === '') val = null
+        if (elt.value) elt.value.value = ''
         stateValue.value = val
       },
       {
         immediate: true
       }
     )
-    const elt = ref<HTMLInputElement | undefined>()
     const focused = ref(false)
     let defaultFieldId: string
     const inputId = computed(() => {
