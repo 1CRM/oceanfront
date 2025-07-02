@@ -317,13 +317,30 @@
   &.of-editor-popup {
     padding: 1em;
 
+    &.insert {
+      min-height: 50px;
+    }
+
+    .of-dialog-content {
+      display: flex;
+      flex-direction: column;
+
+      .dialog-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5em;
+        margin-top: auto;
+        padding-top: 0.8em;
+      }
+
+      .of-field:not(:first-child) {
+        padding-top: 0.8em;
+      }
+    }
+
     .of-button {
       margin-top: 0.5em;
       margin-right: 0.7em;
-    }
-
-    &.insert {
-      min-height: 50px;
     }
   }
 }

@@ -96,13 +96,17 @@
       <of-field v-bind="tableRowsFieldProps" />
       <of-field v-bind="tableColumnsFieldProps" />
       <of-field v-bind="tableHeaderFieldProps" />
-      <of-button @click="closeTableDialog">Cancel</of-button>
-      <of-button @click="addTable">Apply</of-button>
+      <div class="dialog-actions">
+        <of-button @click="closeTableDialog">Cancel</of-button>
+        <of-button @click="addTable">Apply</of-button>
+      </div>
     </of-dialog>
     <of-dialog class="of-editor-popup insert" v-model="linkDialogActive">
       <of-field v-bind="linkFieldProps" />
-      <of-button @click="closeLinkDialog">Cancel</of-button>
-      <of-button @click="addLink">Apply</of-button>
+      <div class="dialog-actions">
+        <of-button @click="closeLinkDialog">Cancel</of-button>
+        <of-button @click="addLink">Apply</of-button>
+      </div>
     </of-dialog>
     <of-dialog class="of-editor-popup insert" v-model="imageDialogActive">
       <of-file-field
@@ -110,8 +114,10 @@
         @update:model-value="onUpload"
       />
       <of-field v-bind="imageFieldProps" />
-      <of-button @click="closeImageDialog">Cancel</of-button>
-      <of-button @click="addImage">Apply</of-button>
+      <div class="dialog-actions">
+        <of-button @click="closeImageDialog">Cancel</of-button>
+        <of-button @click="addImage">Apply</of-button>
+      </div>
     </of-dialog>
   </slot>
 </template>
