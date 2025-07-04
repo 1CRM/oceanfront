@@ -297,7 +297,10 @@ class PositionObserverImpl implements PositionObserver {
     const elts = this._positions.value
     let changed = false
     for (const [target, pos] of elts) {
-      if (!document?.body?.contains(target)) {
+      if (
+        typeof document !== 'undefined' &&
+        !document?.body?.contains(target)
+      ) {
         elts.delete(target)
         changed = true
         continue
