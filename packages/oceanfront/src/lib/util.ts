@@ -331,7 +331,7 @@ class PositionObserverImpl implements PositionObserver {
       clearTimeout(this._polling)
     }
     if (this._positions.value.size > 0) {
-      this._polling = window.setTimeout(this._poll.bind(this), 0)
+      this._polling = window?.setTimeout(this._poll.bind(this), 0)
       return true
     } else {
       return false
