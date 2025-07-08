@@ -272,7 +272,7 @@ class PositionObserverImpl implements PositionObserver {
     if (typeof ResizeObserver !== 'undefined') {
       this._native = new ResizeObserver((entries) => {
         for (const entry of entries) {
-          const estyle = window.getComputedStyle(entry.target, null)
+          const estyle = window?.getComputedStyle(entry.target, null)
           pos.value.set(entry.target, {
             x: entry.contentRect.x,
             y: entry.contentRect.y,
@@ -320,7 +320,7 @@ class PositionObserverImpl implements PositionObserver {
       triggerRef(this._positions)
     }
     if (elts.size > 0 && !this._native) {
-      this._polling = window.setTimeout(this._poll.bind(this), 1000)
+      this._polling = window?.setTimeout(this._poll.bind(this), 1000)
     } else {
       this._polling = undefined
     }
@@ -331,7 +331,7 @@ class PositionObserverImpl implements PositionObserver {
       clearTimeout(this._polling)
     }
     if (this._positions.value.size > 0) {
-      this._polling = window.setTimeout(this._poll.bind(this), 0)
+      this._polling = window?.setTimeout(this._poll.bind(this), 0)
       return true
     } else {
       return false
@@ -358,7 +358,7 @@ class PositionObserverImpl implements PositionObserver {
         this._native.observe(target, { box: 'border-box' })
       } else if (!this._polling) {
         // first timeout is short to handle initial re-layout
-        this._polling = window.setTimeout(this._poll.bind(this), 50)
+        this._polling = window?.setTimeout(this._poll.bind(this), 50)
       }
       if (this._options.immediate) {
         triggerRef(this._positions)
