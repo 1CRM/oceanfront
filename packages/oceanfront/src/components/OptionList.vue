@@ -41,7 +41,7 @@
         </slot>
       </div>
       <template v-if="!isEmpty">
-        <div class="of-list-outer" ref="listOuter">
+        <div class="of-list-outer" role="menuitem" ref="listOuter">
           <template v-for="(item, idx) of filterItems" :key="idx">
             <div class="of-list-header" v-if="item.special === 'header'">
               {{ item.text }}
