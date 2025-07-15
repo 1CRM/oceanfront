@@ -23,14 +23,14 @@
     btn-elv-bg,
     (var(--of-color-surface), 50%),
     (
-      disabled: var(--of-color-on-surface) 12%,
+      disabled: var(--of-color-on-surface) 12%
     )
   );
   @include define-color-opacity(
     btn-elv-color,
     (var(--of-primary-tint), 100%),
     (
-      disabled: var(--of-color-on-surface) 38%,
+      disabled: var(--of-color-on-surface) 38%
     )
   );
   @include define-color-opacity(
@@ -39,7 +39,7 @@
     (
       hover: var(--of-primary-tint) 8%,
       focus: var(--of-primary-tint) 12%,
-      active: var(--of-primary-tint) 18%,
+      active: var(--of-primary-tint) 18%
     )
   );
 
@@ -48,14 +48,14 @@
     (var(--of-primary-tint), 100%),
     (
       disabled: var(--of-color-on-surface) 12%,
-      active: var(--of-primary-tint) 90%,
+      active: var(--of-primary-tint) 90%
     )
   );
   @include define-color-opacity(
     btn-fill-color,
     (var(--of-color-on-primary), 100%),
     (
-      disabled: var(--of-color-on-surface) 38%,
+      disabled: var(--of-color-on-surface) 38%
     )
   );
   @include define-color-opacity(
@@ -63,7 +63,7 @@
     (var(--of-primary-tint), 0%),
     (
       hover: var(--of-color-on-primary) 8%,
-      focus: var(--of-color-on-primary) 12%,
+      focus: var(--of-color-on-primary) 12%
     )
   );
 
@@ -71,14 +71,14 @@
     btn-tonal-bg,
     (var(--of-container-tint), 100%),
     (
-      disabled: var(--of-color-on-surface) 12%,
+      disabled: var(--of-color-on-surface) 12%
     )
   );
   @include define-color-opacity(
     btn-tonal-color,
     (var(--of-on-container-tint), 100%),
     (
-      disabled: var(--of-color-on-surface) 38%,
+      disabled: var(--of-color-on-surface) 38%
     )
   );
   @include define-color-opacity(
@@ -87,7 +87,7 @@
     (
       hover: var(--of-on-container-tint) 8%,
       focus: var(--of-on-container-tint) 12%,
-      active: var(--of-on-container-tint) 18%,
+      active: var(--of-on-container-tint) 18%
     )
   );
 
@@ -95,7 +95,7 @@
     btn-outl-bg,
     (var(--of-primary-tint), 100%),
     (
-      disabled: var(--of-color-on-surface) 12%,
+      disabled: var(--of-color-on-surface) 12%
     )
   );
   @include define-color-opacity(
@@ -103,14 +103,14 @@
     (var(--of-color-outline), 100%),
     (
       disabled: var(--of-color-on-surface) 12%,
-      active: var(--of-primary-tint) 100%,
+      active: var(--of-primary-tint) 100%
     )
   );
   @include define-color-opacity(
     btn-outl-color,
     (var(--of-on-container-tint), 100%),
     (
-      disabled: var(--of-color-on-surface) 38%,
+      disabled: var(--of-color-on-surface) 38%
     )
   );
   @include define-color-opacity(
@@ -118,7 +118,7 @@
     (var(--of-primary-tint), 0%),
     (
       hover: var(--of-on-container-tint) 8%,
-      focus: var(--of-on-container-tint) 12%,
+      focus: var(--of-on-container-tint) 12%
     )
   );
 
@@ -126,7 +126,7 @@
     btn-text-color,
     (var(--of-primary-tint), 100%),
     (
-      disabled: var(--of-color-on-surface) 38%,
+      disabled: var(--of-color-on-surface) 38%
     )
   );
   @include define-color-opacity(
@@ -134,7 +134,7 @@
     (var(--of-primary-tint), 0%),
     (
       hover: var(--of-primary-tint) 8%,
-      focus: var(--of-primary-tint) 12%,
+      focus: var(--of-primary-tint) 12%
     )
   );
 
@@ -145,14 +145,13 @@
       elv: var(--of-primary-tint) 100%,
       fill: var(--of-color-on-primary) 100%,
       tonal: var(--of-on-container-tint) 100%,
-      outl: var(--of-on-container-tint) 100%,
+      outl: var(--of-on-container-tint) 100%
     )
   );
 
   font-weight: bold;
   position: relative;
   --button-v-pad-base: 0.375em;
-
 
   .of--layer.of--layer-lining {
     background-color: var(--lining-color);
@@ -394,7 +393,7 @@
     border-left: solid 1px var(--button-split-color);
     opacity: var(--button-split-opacity);
   }
-  &:not(.of--mode-disabled) > button{
+  &:not(.of--mode-disabled) > button {
     cursor: pointer;
   }
 }
@@ -476,4 +475,10 @@
 
 .of-pagination-offset {
   width: 10rem;
+
+  @media (max-width: 768px) {
+    .of--text-numeric {
+      font-size: 16px;
+    }
+  }
 }
