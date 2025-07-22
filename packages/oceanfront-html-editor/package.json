@@ -59,7 +59,7 @@
     "eslint-plugin-prettier": "^5.1.3",
     "eslint-plugin-vitest": "0.3.25",
     "eslint-plugin-vue": "^9.22.0",
-    "jsdom": "~25.0.1",
+    "jsdom": "^26.1.0",
     "oceanfront": "*",
     "prettier": "~3.2.5",
     "tslib": "^2.6.2",
