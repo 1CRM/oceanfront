@@ -681,9 +681,10 @@ export default defineComponent({
     )
     const page = ref(0)
     const updateSumTotal = () => {
-      if (!sumTotalColumns.value.length || !items.value.length) return
+      if (!sumTotalColumns.value.length) return
       let label = ''
       const name = columns.value[0].value
+
       const row: any = {
         nested: null,
         draggable: false
@@ -725,8 +726,8 @@ export default defineComponent({
             value: value || '',
             format:
               columns.value[col]?.total_format ??
-              (items.value as any)[0][fieldName]?.format ??
-              (items.value as any)[0][fieldName]?.totalFormat ??
+              (items.value as any[])?.[0]?.[fieldName]?.format ??
+              (items.value as any[])?.[0]?.[fieldName]?.totalFormat ??
               {},
             params: columns.value[col]?.currency
               ? { symbol: columns.value[col].currency.symbol }
