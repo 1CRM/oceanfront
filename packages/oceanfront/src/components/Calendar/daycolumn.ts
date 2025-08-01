@@ -313,7 +313,7 @@ export default defineComponent({
             class: { ...eventClass, 'of-calendar-event': true },
             style: {
               'background-color': finalColor,
-              width: 'calc(' + (e.daysSpan || 1) * 100 + '% - 4px)',
+              width: 'calc(' + (e.daysSpan || 1) * 100 + '% - 10px)',
               top: '' + e.top * eventHeight + 'px',
               'max-width': this.$data.eventMaxWidth + 'px'
             },
@@ -667,22 +667,18 @@ export default defineComponent({
           (e.event.class ? { [e.event.class]: true } : {})
         const finalEvent = { ...e.event, color: finalColor }
 
-        const eventsGap = 3
+        const eventsGap = 5
         const dayWidth =
           this.$data.dayEl?.getBoundingClientRect().width ??
           this.$data.eventMaxWidth
         const columnsNum = 1 / e.width
         const maxWidth = columnsNum * this.$data.eventMaxWidth < dayWidth
         const left = maxWidth
-          ? this.$data.eventMaxWidth * e.columnNum +
-            e.columnNum * eventsGap +
-            'px'
-          : this.$props.layout === 'stack'
-            ? e.left * 100 + '%'
-            : 'calc(' + e.left * 100 + '% + ' + eventsGap + 'px)'
+          ? this.$data.eventMaxWidth * e.columnNum + eventsGap + 'px'
+          : 'calc(' + e.left * 100 + '% + ' + eventsGap + 'px)'
         const width = maxWidth
-          ? this.$data.eventMaxWidth - eventsGap + 'px'
-          : 'calc(' + (e.width * 100 + '% - ' + eventsGap) + 'px)'
+          ? this.$data.eventMaxWidth - eventsGap * 2 + 'px'
+          : 'calc(' + (e.width * 100 + '% - ' + eventsGap * 2) + 'px)'
 
         return h(
           'div',
