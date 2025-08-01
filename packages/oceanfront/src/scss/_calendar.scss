@@ -201,7 +201,7 @@ div.of-date-picker-cur-year {
   height: calc(var(--of-event-height, 20px) - 2px);
   min-height: calc(var(--of-event-height, 20px) - 2px);
   line-height: 1rem;
-  margin: 1px 2px;
+  margin: 1px 5px;
   z-index: 1;
 }
 
@@ -243,6 +243,7 @@ div.of-date-picker-cur-year {
   }
   .of-calendar-month-day {
     border-right: 0;
+    padding-top: 2px;
     &:hover {
       outline: none;
     }
@@ -299,9 +300,10 @@ div.of-date-picker-cur-year {
   }
   & .of-calendar-event {
     height: calc(var(--of-event-height, 20px) - 2px);
-    width: calc(100% - 4px);
+    width: calc(100% - 10px);
     line-height: 1rem;
     z-index: 1;
+    margin: 0 5px;
   }
   & .events {
     height: var(--of-month-day-heigth, auto);
@@ -311,13 +313,13 @@ div.of-date-picker-cur-year {
 
 .of-calendar-more {
   text-align: right;
-  width: calc(100% - 4px);
+  width: calc(100% - 10px);
   font-size: 75%;
   font-weight: bold;
   cursor: pointer;
   height: var(--of-event-height, auto);
   position: absolute;
-  margin: 0 2px;
+  margin: 0 5px;
   &:focus,
   &:focus-visible {
     outline: solid 1px var(--calendar-grid-color);
@@ -334,8 +336,8 @@ div.of-date-picker-cur-year {
   white-space: nowrap;
   overflow: hidden;
   border-radius: 4px;
-  margin-left: 2px;
-  margin-right: 2px;
+  margin-left: 0px;
+  margin-right: 0px;
   box-sizing: border-box;
   padding-left: 2px;
   padding-right: 2px;
