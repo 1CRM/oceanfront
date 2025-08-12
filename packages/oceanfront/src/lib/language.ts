@@ -4,7 +4,10 @@ const defaults = {
   selectFieldAddItems: 'Add Items',
   selectFieldRemoveItems: 'Remove Items',
   listNoItems: 'No Items',
-  remove: 'Remove Item'
+  remove: 'Remove Item',
+  startAt: 'Start At',
+  perPage: 'Per Page',
+  update: 'Update'
 }
 
 const userLanuage: Ref<{ [key: string]: string }> = ref({})
