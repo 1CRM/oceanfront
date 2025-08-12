@@ -81,9 +81,9 @@
               />
             </div>
             <div class="of-group-row of--pad">
-              <of-button icon="accept" @click="updateOffsetParams()"
-                >Update</of-button
-              >
+              <of-button icon="accept" @click="updateOffsetParams()">
+                {{ lang.update }}
+              </of-button>
             </div>
           </form>
         </div>
@@ -104,6 +104,7 @@ import {
 } from 'vue'
 import { OfOverlay } from './Overlay'
 import { Paginator } from '../lib/paginator'
+import { useLanguage } from '../lib/language'
 
 let sysPaginationIndex = 0
 
@@ -127,6 +128,7 @@ export default defineComponent({
   },
   emits: ['update:modelValue', 'select-page', 'update-offset'],
   setup(props, context) {
+    const lang = useLanguage()
     let page: Ref<number> = computed(() => props.modelValue || 1)
     const totalVisible: Ref<number> = computed(() => props.totalVisible || 5)
     const activeButton = ref<any>(null)
@@ -278,7 +280,7 @@ export default defineComponent({
 
     const startAtField = {
       hidden: false,
-      label: 'Start At',
+      label: lang.value.startAt,
       readOnly: false,
       class: 'of--small'
     }
@@ -286,7 +288,7 @@ export default defineComponent({
     //TODO: replace number text input with select for per page selection
     const perPageField = {
       hidden: false,
-      label: 'Per Page',
+      label: lang.value.perPage,
       readOnly: false,
       class: 'of--small'
     }
@@ -340,7 +342,8 @@ export default defineComponent({
       perPageField,
       perPageValue,
       pageItems,
-      updateOffsetParams
+      updateOffsetParams,
+      lang
     }
   }
 })
