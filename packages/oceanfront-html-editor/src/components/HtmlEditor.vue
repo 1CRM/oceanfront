@@ -142,19 +142,19 @@ import {
   FocusPosition,
   useEditor
 } from '@tiptap/vue-3'
-import StarterKit from '@tiptap/starter-kit'
-import TextAlign from '@tiptap/extension-text-align'
-import Image from '@tiptap/extension-image'
-import Link from '@tiptap/extension-link'
-import Underline from '@tiptap/extension-underline'
-import Highlight from '@tiptap/extension-highlight'
-import TextStyle from '@tiptap/extension-text-style'
-import FontFamily from '@tiptap/extension-font-family'
-import Color from '@tiptap/extension-color'
-import Table from '@tiptap/extension-table'
-import TableRow from '@tiptap/extension-table-row'
-import TableCell from '@tiptap/extension-table-cell'
-import TableHeader from '@tiptap/extension-table-header'
+import { StarterKit } from '@tiptap/starter-kit'
+import { TextAlign } from '@tiptap/extension-text-align'
+import { Image } from '@tiptap/extension-image'
+import { Highlight } from '@tiptap/extension-highlight'
+import { TextStyle } from '@tiptap/extension-text-style'
+import { FontFamily } from '@tiptap/extension-font-family'
+import { Color } from '@tiptap/extension-color'
+import {
+  Table,
+  TableRow,
+  TableCell,
+  TableHeader
+} from '@tiptap/extension-table'
 import { FontSize } from '../extensions/font_size'
 import {
   Span,
@@ -556,8 +556,6 @@ export default defineComponent({
       TextAlign.configure({
         types: ['heading', 'paragraph']
       }),
-      Link,
-      Underline,
       Highlight.configure({ multicolor: true }),
       TextStyle,
       FontFamily,
@@ -603,7 +601,7 @@ export default defineComponent({
       contentUpdated.value = true
       const isSame = editor.value.getHTML() === value
       if (isSame) return
-      editor.value.commands.setContent(value, emitUpdate)
+      editor.value.commands.setContent(value, { emitUpdate })
     }
 
     const updateData = (): void => {
