@@ -161,16 +161,13 @@ export const OfOverlay = defineComponent({
           parseInt(getComputedStyle(outer).paddingRight)
         const offsetWidth = Math.max(neededWidth - parentRect.width, 0)
         if (neededWidth > window.innerWidth) {
-          const rightOffset = parseInt(getComputedStyle(outer).paddingRight)
+          const marginLeft =
+            (window.innerWidth < targetRect.right + window.pageXOffset
+              ? window.innerWidth - outerRect.width
+              : targetRect.right - outerRect.width) + window.pageXOffset
           outer.style.setProperty(
             '--overlay-dyn-margin-left',
-            Math.max(
-              targetRect.right +
-                parentRect.left -
-                outerRect.width -
-                rightOffset,
-              0
-            ) + 'px'
+            marginLeft + 'px'
           )
           outer.style.setProperty('padding-right', '0')
         } else {
@@ -188,7 +185,7 @@ export const OfOverlay = defineComponent({
           )
           outer.style.setProperty('--overlay-dyn-pad-top', '0')
         } else {
-          let paddingTop = targetRect.bottom
+          let paddingTop = targetRect.bottom - outerRect.y
           const child = outer.firstElementChild
           const observer = new MutationObserver((mutationList, observer) => {
             for (const mutation of mutationList) {
