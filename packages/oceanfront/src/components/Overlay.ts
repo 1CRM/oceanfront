@@ -164,7 +164,8 @@ export const OfOverlay = defineComponent({
           const marginLeft =
             (window.innerWidth < targetRect.right + window.pageXOffset
               ? window.innerWidth - outerRect.width
-              : targetRect.right - outerRect.width) + window.pageXOffset
+              : Math.max(targetRect.right - outerRect.width, 0)) +
+            window.pageXOffset
           outer.style.setProperty(
             '--overlay-dyn-margin-left',
             marginLeft + 'px'
