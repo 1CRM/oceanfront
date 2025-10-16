@@ -21,13 +21,24 @@ const isHighDpi = window.matchMedia?.(
 ).matches
 
 function initEvents() {
+  let rafId: number | null = null
+
   function onScroll() {
-    windowRect.value = {
-      scrollX: window.scrollX,
-      scrollY: window.scrollY,
-      width: window.innerWidth,
-      height: window.innerHeight
+    // Cancel any pending animation frame
+    if (rafId !== null) {
+      cancelAnimationFrame(rafId)
     }
+
+    // Schedule update for next animation frame
+    rafId = requestAnimationFrame(() => {
+      windowRect.value = {
+        scrollX: window.scrollX,
+        scrollY: window.scrollY,
+        width: window.innerWidth,
+        height: window.innerHeight
+      }
+      rafId = null
+    })
   }
   window.addEventListener('resize', onScroll, { passive: true })
   window.addEventListener('scroll', onScroll, { passive: true })

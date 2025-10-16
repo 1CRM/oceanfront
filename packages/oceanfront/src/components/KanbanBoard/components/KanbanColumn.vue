@@ -40,7 +40,6 @@
       @dragleave.prevent="handleDragLeave"
       @card-touch-hover="handleCardTouchHover"
       @card-touch-drop="handleCardTouchDrop"
-      @scroll="debouncedHandleScroll"
       ref="columnContentRef"
     >
       <kanban-card
@@ -99,6 +98,7 @@ import {
   type PropType,
   ref,
   CSSProperties,
+  onMounted,
   onUnmounted
 } from 'vue'
 import { OfButton } from '../../Button'
@@ -498,9 +498,25 @@ export default defineComponent({
     // Debounce the scroll handler with 10ms delay
     const debouncedHandleScroll = debounce(handleScroll, 10)
 
+    onMounted(() => {
+      if (columnContentRef.value) {
+        columnContentRef.value.addEventListener(
+          'scroll',
+          debouncedHandleScroll,
+          { passive: true }
+        )
+      }
+    })
+
     onUnmounted(() => {
       if (clearDropTargetTimeout.value) {
         clearTimeout(clearDropTargetTimeout.value)
+      }
+      if (columnContentRef.value) {
+        columnContentRef.value.removeEventListener(
+          'scroll',
+          debouncedHandleScroll
+        )
       }
     })
 
@@ -520,8 +536,7 @@ export default defineComponent({
       handleDragEnd,
       handleColumnClick,
       handleCardTouchHover,
-      handleCardTouchDrop,
-      debouncedHandleScroll
+      handleCardTouchDrop
     }
   }
 })
