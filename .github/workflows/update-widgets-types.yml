@@ -1,0 +1,57 @@
+name: Update widgets type definitions
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  update-types:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: "22.x"
+
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Build oceanfront
+        env:
+          OF_DEMO_ROOT_PATH: "/oceanfront/"
+        run: yarn run build
+
+      - name: Checkout widgets repository
+        uses: actions/checkout@v3
+        with:
+          repository: 1CRM/1crm-app-js-widgets
+          ref: main
+          token: ${{ secrets.APPJS_FINE_GRAINED_TOKEN }}
+          path: widgets
+
+      - name: Copy oceanfront type definitions
+        run: |
+          cp packages/oceanfront/dist/index.d.ts widgets/src/oceanfront/index.d.ts
+
+      - name: Check for changes and commit
+        working-directory: widgets
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if ! git diff --quiet src/oceanfront/index.d.ts; then
+            git add src/oceanfront/index.d.ts
+            git commit -m "chore: update oceanfront type definitions from ${{ github.sha }}"
+            git push
+            echo "Oceanfront type definitions updated"
+          else
+            echo "No changes detected in oceanfront type definitions"
+          fi
+
