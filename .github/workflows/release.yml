@@ -32,6 +32,11 @@ jobs:
       - name: Run ESLint
         run: yarn run lint
 
+      - name: Build packages
+        env:
+          OF_DEMO_ROOT_PATH: "/oceanfront/"
+        run: yarn run build
+
       - name: Create packages
         env:
           OF_DEMO_ROOT_PATH: "/oceanfront/"
@@ -67,9 +72,44 @@ jobs:
           tag: ${{ env.RELEASE_TAG }}
           overwrite: true
 
-      - name: Ping app-js
+      - name: Checkout app-js repository
+        uses: actions/checkout@v3
+        with:
+          repository: 1CRM/app-js
+          ref: main
+          token: ${{ secrets.APPJS_PING_TOKEN }}
+          path: app-js
+
+      - name: Copy oceanfront build
         run: |
-          curl -X POST https://api.github.com/repos/1CRM/app-js/dispatches \
-          -H 'Accept: application/vnd.github.everest-preview+json' \
-          -u ${{ secrets.APPJS_PING_TOKEN }} \
-          --data '{"event_type": "update_oceanfront"}'
+          mkdir -p app-js/packages/app-js/src/oceanfront/dist
+          mkdir -p app-js/packages/1crm-app-js-lib/src/oceanfront
+          cp -r packages/oceanfront/dist/* app-js/packages/app-js/src/oceanfront/dist/
+          cp packages/oceanfront/package.json app-js/packages/app-js/src/oceanfront/package.json
+          cp packages/oceanfront/dist/index.d.ts app-js/packages/1crm-app-js-lib/src/oceanfront/index.d.ts
+
+      - name: Copy of-colorscheme-editor build
+        run: |
+          mkdir -p app-js/packages/app-js/src/of-colorscheme-editor/dist
+          cp -r packages/of-colorscheme-editor/dist/* app-js/packages/app-js/src/of-colorscheme-editor/dist/
+          cp packages/of-colorscheme-editor/package.json app-js/packages/app-js/src/of-colorscheme-editor/package.json
+
+      - name: Copy oceanfront-html-editor build
+        run: |
+          mkdir -p app-js/packages/app-js/src/oceanfront-html-editor/dist
+          cp -r packages/oceanfront-html-editor/dist/* app-js/packages/app-js/src/oceanfront-html-editor/dist/
+          cp packages/oceanfront-html-editor/package.json app-js/packages/app-js/src/oceanfront-html-editor/package.json
+
+      - name: Check for changes and commit
+        working-directory: app-js
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if ! git diff --quiet; then
+            git add packages/app-js/src/oceanfront packages/app-js/src/of-colorscheme-editor packages/app-js/src/oceanfront-html-editor packages/1crm-app-js-lib/src/oceanfront
+            git commit -m "chore: update oceanfront build from ${{ github.sha }}"
+            git push
+            echo "Changes committed and pushed to main branch"
+          else
+            echo "No changes detected, skipping commit"
+          fi
