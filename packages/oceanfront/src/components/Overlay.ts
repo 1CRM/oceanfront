@@ -149,7 +149,12 @@ export const OfOverlay = defineComponent({
         const targetElt = target.value
         const outer = elt.value
         if (!outer) return // or not in document
-        if (!targetElt) return // or make fixed/absolute
+        if (!targetElt) {
+          outer.style.setProperty('--overlay-dyn-margin-left', '0px')
+
+          // or make fixed/absolute
+          return
+        }
 
         const parentRect = relativeParentRect(outer)
         const outerRect = outer?.getBoundingClientRect()
