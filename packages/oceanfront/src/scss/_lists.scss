@@ -1,3 +1,5 @@
+@use 'variables' as *;
+
 .of-list-group {
   overflow: hidden;
   padding-left: 1em;
@@ -21,22 +23,31 @@
 }
 
 .of-list-item {
-  @include define-color-opacity(item-bg,
+  @include define-color-opacity(
+    item-bg,
     (transparent, 0%),
-    (active: var(--of-container-tint) 100%,
+    (
+      active: var(--of-container-tint) 100%,
       hover: var(--of-color-on-surface) 16%,
-      exp: var(--of-color-on-surface-variant) 12%,
-    ));
-  @include define-color-opacity(item-text,
+      exp: var(--of-color-on-surface-variant) 12%
+    )
+  );
+  @include define-color-opacity(
+    item-text,
     (var(--of-on-container-tint), 100%),
-    (hover: var(--of-color-on-surface) 100%,
+    (
+      hover: var(--of-color-on-surface) 100%,
       disabled: var(--of-color-on-surface) 38%,
-      exp: var(--of-color-on-surface-variant) 100%,
-    ));
-  @include define-color-opacity(item-border,
+      exp: var(--of-color-on-surface-variant) 100%
+    )
+  );
+  @include define-color-opacity(
+    item-border,
     (transparent, 0%),
-    (focus: var(--of-primary-tint) 50%,
-    ));
+    (
+      focus: var(--of-primary-tint) 50%
+    )
+  );
 
   --border-color: transparent;
   --border-opacity: 100%;
@@ -133,14 +144,20 @@
 }
 
 .of-list-header {
-  @include define-color-opacity(item-bg,
+  @include define-color-opacity(
+    item-bg,
     (transparent, 0%),
-    (header: var(--of-color-surface-variant) 100%,
-    ));
-  @include define-color-opacity(item-text,
+    (
+      header: var(--of-color-surface-variant) 100%
+    )
+  );
+  @include define-color-opacity(
+    item-text,
     (var(--of-on-container-tint), 100%),
-    (header: var(--of-color-on-surface-variant) 100%,
-    ));
+    (
+      header: var(--of-color-on-surface-variant) 100%
+    )
+  );
 
   z-index: 2;
   cursor: default;

@@ -1,5 +1,7 @@
 <template>
-  <div class="of-badge" :class="badgeClass"><slot></slot></div>
+  <div class="of-badge" :class="badgeClass">
+    <slot></slot>
+  </div>
 </template>
 
 <script lang="ts">

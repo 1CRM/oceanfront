@@ -189,8 +189,7 @@ export function rgb_to_hsv_a(
   b?: number
 ): ThreeNumbers {
   ;[r, g, b] = rgb_to_array(r, g, b)
-  // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-  ;(r = r / 255), (g = g / 255), (b = b / 255)
+  ;((r = r / 255), (g = g / 255), (b = b / 255))
 
   const max = Math.max(r, g, b)
   const min = Math.min(r, g, b)
@@ -301,6 +300,7 @@ export function linear_srgb_to_oklab_a(
   g: number,
   b: number
 ): ThreeNumbers
+
 export function linear_srgb_to_oklab_a(
   r: number | ThreeNumbers | RGB,
   g?: number,

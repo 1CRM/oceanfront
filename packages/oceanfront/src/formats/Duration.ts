@@ -36,7 +36,6 @@ export class DurationFormatter implements TextFormatter {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   loadValue(modelValue: any): number | null {
     // bigint?
     if (typeof modelValue === 'number') return modelValue
@@ -49,7 +48,6 @@ export class DurationFormatter implements TextFormatter {
     throw new TypeError('Unsupported value')
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   format(modelValue: any): TextFormatResult {
     let value = modelValue
     let textValue = ''
@@ -83,7 +81,6 @@ export class DurationFormatter implements TextFormatter {
     return '' + hr + 'h ' + (min < 10 ? '0' + min : min) + 'm'
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   unformat(input: any): number | null {
     if (!isNaN(Number(input))) return this.treatAsHours(input)
     if (input === null || input === undefined) return null
@@ -123,7 +120,7 @@ export class DurationFormatter implements TextFormatter {
           else return
         }
       }
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
       const range = input.value.substring(selStart!, selEnd)
       if (!range.match(/[0-9]/)) {
         const selPos = (evt.key === 'Backspace' ? selStart : selEnd) as number

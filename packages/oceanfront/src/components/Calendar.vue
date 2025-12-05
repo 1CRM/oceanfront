@@ -1,9 +1,9 @@
 <template>
   <div class="container">
     <p>
-      <of-button @click="changeLayout"
-        >Switch to {{ switchTo }} layout</of-button
-      >
+      <of-button @click="changeLayout">
+        Switch to {{ switchTo }} layout
+      </of-button>
     </p>
     <div style="position: relative; width: 400px; height: 960px">
       <div
@@ -59,6 +59,7 @@ function mockData(): InternalEvent[] {
     [1, 15, 3, 30],
     [7, 0, 7, 45],
     [4, 30, 7, 45],
+
     [9, 15, 10, 0]
   ]
   return times.map((t, idx) => {
@@ -73,6 +74,7 @@ function mockData(): InternalEvent[] {
       hours: eh,
       minutes: em
     }
+
     return {
       name: 'Event ' + idx,
       color: eventColor(idx),

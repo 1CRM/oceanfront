@@ -86,7 +86,6 @@ export class NumberFormatter implements TextFormatter {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   parseInput(input: string, selStart?: number, formattted = true) {
     const seps = this.getSeparators()
     const sepDecimal = formattted ? seps.decimal : '.'
@@ -126,7 +125,7 @@ export class NumberFormatter implements TextFormatter {
           negative = true
         } else if (isDigit(c)) {
           parsed += c
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
           if (minDecs !== null && selStart > idx && idx > decPos!) {
             minDecs++
           }
@@ -173,7 +172,6 @@ export class NumberFormatter implements TextFormatter {
     return { decimal, group }
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   loadValue(modelValue: any): number | null {
     // bigint?
     if (typeof modelValue === 'number') return modelValue
@@ -186,7 +184,6 @@ export class NumberFormatter implements TextFormatter {
     throw new TypeError('Unsupported value')
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   format(modelValue: any): TextFormatResult {
     let value = modelValue
     let textValue = ''
@@ -222,7 +219,6 @@ export class NumberFormatter implements TextFormatter {
     throw new TypeError('Unsupported value')
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   applyOptions(
     textValue: string,
     selStart: number,
@@ -318,7 +314,7 @@ export class NumberFormatter implements TextFormatter {
           else return
         }
       }
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
       const range = input.value.substring(selStart!, selEnd)
       if (
         !range.match(/-[0-9]/) &&

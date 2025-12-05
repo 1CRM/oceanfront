@@ -69,7 +69,9 @@
               </div>
               <div v-if="item.postfix" class="of-list-item-postfix">
                 <component v-if="isVNode(item.postfix)" :is="item.postfix" />
-                <div v-else>{{ item.postfix }}</div>
+                <div v-else>
+                  {{ item.postfix }}
+                </div>
               </div>
             </of-list-item>
           </template>

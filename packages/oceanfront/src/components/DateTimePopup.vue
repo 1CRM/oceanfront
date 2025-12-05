@@ -207,7 +207,7 @@ export default defineComponent({
     const weekStartDayLocale = computed(() => {
       const day =
         props.weekStart === undefined
-          ? locale.localeParams?.weekStart ?? 1
+          ? (locale.localeParams?.weekStart ?? 1)
           : props.weekStart
       return parseDay(day)
     })
@@ -311,7 +311,7 @@ export default defineComponent({
       const date = new Date(
         props.withTime
           ? selDateLocale.value.getTime() +
-            selDateLocale.value.getTimezoneOffset() * 60 * 1000
+              selDateLocale.value.getTimezoneOffset() * 60 * 1000
           : selDate.value.getTime()
       )
       return sameDate(date, cell.date)
@@ -320,8 +320,8 @@ export default defineComponent({
       let date = new Date(
         props.withTime
           ? focusedDate.value.getTime() +
-            localeOffset.value +
-            focusedDate.value.getTimezoneOffset() * 60 * 1000
+              localeOffset.value +
+              focusedDate.value.getTimezoneOffset() * 60 * 1000
           : focusedDate.value.getTime()
       )
       return sameDate(date, cell.date)
@@ -367,8 +367,8 @@ export default defineComponent({
         const date = new Date(
           props.withTime
             ? focusedDate.value.getTime() +
-              localeOffset.value +
-              selDateLocale.value.getTimezoneOffset() * 60 * 1000
+                localeOffset.value +
+                selDateLocale.value.getTimezoneOffset() * 60 * 1000
             : focusedDate.value.getTime()
         )
         selectDate(date, true)

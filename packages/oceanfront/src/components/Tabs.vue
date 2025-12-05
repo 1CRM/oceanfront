@@ -84,7 +84,9 @@
                 <span v-if="tab.text">{{ tab.text }}</span>
               </div>
               <div class="of--layer of--layer-state" />
-              <div v-if="tab.count" class="of-tab-count">{{ tab.count }}</div>
+              <div v-if="tab.count" class="of-tab-count">
+                {{ tab.count }}
+              </div>
             </div>
           </template>
           <div class="of-tabs-line" ref="tabLine"></div>
@@ -117,9 +119,9 @@
             :items="subMenuTabsList"
             :focus="optionListFocused"
           >
-            <template #option-icon="item"
-              ><slot name="submenu-option-icon" v-bind="item"
-            /></template>
+            <template #option-icon="item">
+              <slot name="submenu-option-icon" v-bind="item" />
+            </template>
             <template
               v-for="(item, index) in subMenuSlots"
               :key="index"

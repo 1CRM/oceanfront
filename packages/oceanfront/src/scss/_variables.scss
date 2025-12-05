@@ -1,3 +1,6 @@
+@use 'sass:list';
+@use 'sass:map';
+
 @function use-var($cat, $var, $state: false) {
   @if $state {
     @return var(--of-#{$cat}-#{$var}-#{$state}, var(--of-#{$cat}-#{$var}));
@@ -28,21 +31,21 @@
 
 @mixin define-color-opacity($cat, $default, $spec: ()) {
   $default: (
-    color: #{nth($default, 1)},
-    opacity: #{nth($default, 2)},
+    color: #{list.nth($default, 1)},
+    opacity: #{list.nth($default, 2)}
   );
   $new_spec: ();
 
   @each $state, $vals in $spec {
-    $_color: nth($vals, 1);
-    $_opa: nth($vals, 2);
-    $new_spec: map-merge(
+    $_color: list.nth($vals, 1);
+    $_opa: list.nth($vals, 2);
+    $new_spec: map.merge(
       $new_spec,
       (
         $state: (
-          color: #{$_color},
-          opacity: #{$_opa},
-        ),
+            color: #{$_color},
+            opacity: #{$_opa}
+          )
       )
     );
   }

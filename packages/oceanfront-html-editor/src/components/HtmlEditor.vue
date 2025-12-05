@@ -249,7 +249,7 @@ export default defineComponent({
 
       if (record.value && props.name) {
         const htmlValue = htmlFieldName.value
-          ? record.value.value[htmlFieldName.value] ?? null
+          ? (record.value.value[htmlFieldName.value] ?? null)
           : null
         const textValue = record.value.value[props.name] ?? null
         if (htmlValue) {

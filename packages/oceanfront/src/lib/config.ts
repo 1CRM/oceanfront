@@ -29,7 +29,7 @@ export class ConfigState {
     this._cache = computed(() => {
       this._cacheVal = {}
       const pbuild = buildingConfig
-      // eslint-disable-next-line @typescript-eslint/no-this-alias
+
       buildingConfig = this
       this.apply()
       buildingConfig = pbuild

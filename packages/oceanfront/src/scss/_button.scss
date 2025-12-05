@@ -1,3 +1,5 @@
+@use 'variables' as *;
+
 @mixin apply-button-bg($cat, $state: false) {
   --button-bg-color: #{use-color(#{$cat}-bg, $state)};
   --button-bg-opacity: #{use-opacity(#{$cat}-bg, $state)};
