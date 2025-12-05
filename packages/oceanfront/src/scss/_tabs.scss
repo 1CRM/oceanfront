@@ -1,3 +1,5 @@
+@use 'variables' as *;
+
 @mixin apply-tab-bg($cat, $state: false) {
   --tab-bg-color: #{use-color(#{$cat}-bg, $state)};
   --tab-bg-opacity: #{use-opacity(#{$cat}-bg, $state)};

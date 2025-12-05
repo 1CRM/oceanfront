@@ -332,7 +332,7 @@ export const OfFieldBase = defineComponent({
         }
 
         const tooltipNode = computed(() =>
-          props.tooltip ?? '' !== '' ? tooltip : undefined
+          (props.tooltip ?? '' !== '') ? tooltip : undefined
         )
         const emptyFieldLabelNode = h('label', {
           class: 'of-field-label'

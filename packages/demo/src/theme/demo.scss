@@ -1,12 +1,11 @@
-@import 'page';
+@use 'page';
+@use 'oceanfront/css' as oceanfront;
+@use 'oceanfront-html-editor/css' as html-editor;
 
 ::selection {
   background-color: var(--of-primary-tint);
   color: var(--of-on-primary-tint);
 }
-
-@import 'oceanfront/css';
-@import 'oceanfront-html-editor/css';
 
 .of-code {
   border-radius: 5px;

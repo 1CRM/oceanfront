@@ -56,7 +56,9 @@
               :alt="card.assignee.name"
               class="avatar-image"
             />
-            <div v-else class="avatar-text">{{ assigneeInitials }}</div>
+            <div v-else class="avatar-text">
+              {{ assigneeInitials }}
+            </div>
           </div>
         </slot>
       </div>
@@ -74,8 +76,9 @@
             icon=""
             size="sm"
             @click.stop="$emit('card-tag-click', tag)"
-            >{{ tag }}</of-button
           >
+            {{ tag }}
+          </of-button>
         </div>
       </div>
     </div>

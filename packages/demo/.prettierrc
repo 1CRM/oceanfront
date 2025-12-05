@@ -1,6 +1,5 @@
 {
   "singleQuote": true,
-  "eslintIntegration": true,
   "semi": false,
   "htmlWhitespaceSensitivity": "css",
   "trailingComma": "none"

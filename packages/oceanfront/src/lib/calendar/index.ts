@@ -201,7 +201,7 @@ export function getNormalizedTSRange(
     compareTimestamps(event.startTS, dayOrStartTS) < 0
       ? dayOrStartTS
       : event.startTS
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
   const end = compareTimestamps(event.endTS, endTS!) > 0 ? endTS! : event.endTS
   return [start, end]
 }

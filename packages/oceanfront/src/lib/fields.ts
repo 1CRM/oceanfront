@@ -246,7 +246,6 @@ export function extendFieldFormat(
 }
 
 export function makeFieldContext<C>(
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   props: any,
   ctx: SetupContext<C>
 ): FieldContext {
@@ -409,7 +408,6 @@ const fieldContextKey = Symbol('[oceanfront-field-context')
 const fieldRenderKey = Symbol('[oceanfront-field-render')
 
 export function provideFieldContext<C>(
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   props: any,
   ctx: SetupContext<C>
 ): FieldContext {

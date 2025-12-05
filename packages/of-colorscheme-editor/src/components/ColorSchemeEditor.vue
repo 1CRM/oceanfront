@@ -46,7 +46,7 @@ const ColorSchemeEditor = defineComponent({
     const formatName = (name: string): string => {
       return (
         name.substring(0, 1).toUpperCase() +
-        name.substring(1).replace(/\-/g, ' ')
+        name.substring(1).replace(/-/g, ' ')
       )
     }
 

@@ -12,13 +12,12 @@ export class UrlFormatter implements TextFormatter {
   constructor(config?: Config, options?: UrlFormatterOptions) {
     this.options = options
   }
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+
   loadValue(modelValue: any): string | null {
     if (modelValue === null || modelValue === undefined) return null
     return modelValue.toString().trim()
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   format(modelValue: any): TextFormatResult {
     let value = modelValue
     let textValue = ''
@@ -39,7 +38,6 @@ export class UrlFormatter implements TextFormatter {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   fixUrl(value: any): string {
     let url = typeof value === 'string' ? value : value ? value.toString() : '',
       tail
@@ -65,7 +63,6 @@ export class UrlFormatter implements TextFormatter {
     return input
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   formatFixed(modelValue: any): Renderable | undefined {
     const url = this.fixUrl(modelValue as string)
     return url === '' ? '' : h('a', { href: url, target: '_blank' }, url)

@@ -1,3 +1,5 @@
+@use 'variables' as *;
+
 .of--calendar {
   --calendar-background: var(--of-color-background);
   --calendar-grid-color: var(--of-color-outline);

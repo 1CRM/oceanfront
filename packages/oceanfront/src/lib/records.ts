@@ -46,9 +46,9 @@ export interface Lock {
   release(): void
 }
 
-class BasicRecord<T extends object = Record<string, any>>
-  implements FormRecord
-{
+class BasicRecord<
+  T extends object = Record<string, any>
+> implements FormRecord {
   _initial: Ref<Readonly<T>>
   _rules: Ref<((value: T) => boolean)[]>
   _state: Ref<FieldRecordState>

@@ -9,7 +9,8 @@ export default defineConfig(({ command, mode }): any => {
   const plugins = [
     vue(),
     dts({
-      rollupTypes: true
+      rollupTypes: true,
+      tsconfigPath: './tsconfig.json'
     })
   ]
   return {

@@ -85,7 +85,7 @@
         tint="primary"
         icon="plus"
       >
-        <slot name="create-button">Create Issue</slot>
+        <slot name="create-button"> Create Issue </slot>
       </of-button>
     </div>
   </div>

@@ -59,7 +59,7 @@ export default defineComponent({
       const locale = useLocale()
       const day =
         this.weekStart === undefined
-          ? locale.localeParams?.weekStart ?? 1
+          ? (locale.localeParams?.weekStart ?? 1)
           : this.weekStart
       return parseDay(day)
     }

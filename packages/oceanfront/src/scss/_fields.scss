@@ -1,3 +1,5 @@
+@use 'variables' as *;
+
 @mixin field-text-base {
   font-family: $font-family-input;
   font-weight: $font-weight-input;

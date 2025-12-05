@@ -74,7 +74,9 @@
         <template #avatar="slotProps">
           <slot name="avatar" :card="slotProps.card" />
         </template>
-        <template #create-button><slot name="create-button" /></template>
+        <template #create-button>
+          <slot name="create-button" />
+        </template>
       </kanban-column>
     </div>
   </div>

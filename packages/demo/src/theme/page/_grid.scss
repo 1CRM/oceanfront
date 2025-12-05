@@ -1,4 +1,5 @@
 @use 'sass:math';
+@use './variables' as *;
 
 .container {
   box-sizing: border-box;
@@ -105,12 +106,12 @@
   @if ($index <= $count) {
     $prev: $index - 1;
     .#{$prefix}#{$index} {
-      flex: 0 0 percentage(math.div($index, $count));
-      max-width: percentage(math.div($index, $count));
+      flex: 0 0 math.percentage(math.div($index, $count));
+      max-width: math.percentage(math.div($index, $count));
     }
     // offset columns (aka push in bootstrap - use [size]-order-[n] to replace pull)
     .#{$prefix}offset-#{$prev} {
-      margin-left: percentage(math.div($prev, $count));
+      margin-left: math.percentage(math.div($prev, $count));
     }
     @include mk-cols($prefix, $count, $index + 1);
   }

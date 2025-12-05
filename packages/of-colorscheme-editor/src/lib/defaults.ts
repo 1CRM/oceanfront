@@ -33,10 +33,9 @@ const getLimit = (limits: any, name: string, type: string, mode: string) => {
   if (!l) return 1
   const v = l[name]
   if (!v) return 1
-  return typeof v === 'number' ? v : v[mode] ?? 1
+  return typeof v === 'number' ? v : (v[mode] ?? 1)
 }
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export const defaultPalletes = (colors: any, limits: any): any => {
   return Object.keys(unref(colors ?? {})).reduce(
     (acc, name) => {
@@ -63,7 +62,6 @@ export const defaultPalletes = (colors: any, limits: any): any => {
   )
 }
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export const defaultStyles = (pallettes: any): string => {
   let style = ''
   style += `--of-color-primary-light: ${pallettes['primary']['light'][40]};\n`

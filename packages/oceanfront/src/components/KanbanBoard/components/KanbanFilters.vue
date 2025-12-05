@@ -38,7 +38,7 @@
             @click="handleClearFilters"
             variant="text"
           >
-            <slot name="clear-filters">Clear filters</slot>
+            <slot name="clear-filters"> Clear filters </slot>
           </of-button>
         </div>
       </div>
