@@ -176,6 +176,9 @@ export default defineComponent({
     }
 
     const dragAndDropAction = (e: MouseEvent) => {
+      // only allow left mouse button
+      if (e.button !== 0) return
+
       e.preventDefault()
 
       // @media (max-width: 800px)
