@@ -277,7 +277,7 @@ const OfOptionList = defineComponent({
       ctx.emit('close')
     }
     const focusFirstItem = (ignoreSelected = false) => {
-      if (filterItems.value.length == 0) return
+      if (!filterItems.value || filterItems.value?.length == 0) return
 
       const selected = filterItems.value.findIndex(
         (item) => item.selected && item.selected === true
@@ -291,7 +291,7 @@ const OfOptionList = defineComponent({
       } else {
         scrollListTop()
 
-        filterItems.value.some((item) => {
+        filterItems.value?.some((item) => {
           if (!item.special) {
             item.attrs = { ...item.attrs, ...{ isFocused: true } }
             return true
