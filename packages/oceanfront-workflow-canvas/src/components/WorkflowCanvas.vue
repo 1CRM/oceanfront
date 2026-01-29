@@ -109,9 +109,13 @@
             <div
               v-if="!readonly && canHaveOutputs(node)"
               class="workflow-canvas-node__handle workflow-canvas-node__handle--output"
+              :class="{ 'workflow-canvas-node__handle--free': isOutputFree(node.id) }"
               @mousedown.stop="handleHandleMouseDown($event, node.id, 'output')"
               @mouseup.stop="handleHandleMouseUp(node.id, 'output')"
-            ></div>
+              @click.stop="handleFreeOutputClick(node.id)"
+            >
+              <span v-if="isOutputFree(node.id)" class="workflow-canvas-node__handle-plus">+</span>
+            </div>
           </div>
 
           <!-- Plus placeholders -->
@@ -382,6 +386,11 @@ function getEdgePath(edge: WorkflowEdge): string {
 const canHaveInputs = (_node: WorkflowNode) => true
 const canHaveOutputs = (_node: WorkflowNode) => true
 
+// Check if a node's output handle is free (no outgoing edge)
+function isOutputFree(nodeId: string): boolean {
+  return !graph.value.edges.some(edge => edge.from.nodeId === nodeId)
+}
+
 function handleCanvasClick(event: MouseEvent) {
   const target = event.target as HTMLElement
   if (target === canvasRef.value || target.classList.contains('workflow-canvas__container')) {
@@ -645,6 +654,12 @@ function handleHandleMouseDown(event: MouseEvent, nodeId: string, port: string) 
   // Only handle left mouse button (button 0)
   if (event.button !== 0) return
 
+  // Check if this is an output handle with no existing connection
+  // In this case, don't start dragging - let the click handler create a new node
+  if (port === 'output' && isOutputFree(nodeId)) {
+    return
+  }
+
   event.preventDefault()
   event.stopPropagation()
 
@@ -725,6 +740,14 @@ function handleHandleMouseUp(nodeId: string, port: string) {
 
 const handleAddStep = (event: AddStepEvent) => emit('add-step', event)
 const closePanel = () => emit('update:selectedId', null)
+
+function handleFreeOutputClick(nodeId: string) {
+  // Only trigger if output is actually free
+  if (!isOutputFree(nodeId)) return
+
+  // Emit add-step event with the current node as afterNodeId
+  emit('add-step', { afterNodeId: nodeId })
+}
 
 function handleDeleteNode() {
   // Remove the node from the graph

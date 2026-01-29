@@ -250,6 +250,30 @@
     &--output {
       bottom: -7px;
     }
+
+    // Free output handle (no connection) - show as "+" button (matches placeholder style)
+    &--free {
+      width: 22px;
+      height: 22px;
+      background: var(--of-surface, #fff);
+      border: 1px solid var(--of-border, #e1dddd);
+      opacity: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      bottom: -10px;
+
+      &:hover {
+        transform: translateX(-50%);
+        background: var(--of-surface, #fff);
+        border-color: var(--of-primary-tint, #2196f3);
+      }
+    }
+  }
+
+  &__handle-plus {
+    color: var(--of-border, #999);
   }
 }
 
@@ -539,6 +563,27 @@
       &:hover {
         color: var(--of-color-primary-dark, #77d7ea);
         border-color: var(--of-color-primary-dark, #77d7ea);
+      }
+    }
+  }
+
+  .workflow-canvas-node {
+    &__handle {
+      &--free {
+        background: var(--of-color-surface-dark, #44473d);
+        border-color: var(--of-color-outline-dark, #8e9384);
+
+        &:hover {
+          border-color: var(--of-color-primary-dark, #77d7ea);
+        }
+      }
+    }
+
+    &__handle-plus {
+      color: var(--of-color-outline-dark, #8e9384);
+
+      .workflow-canvas-node__handle--free:hover & {
+        color: var(--of-color-primary-dark, #77d7ea);
       }
     }
   }
