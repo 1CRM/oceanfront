@@ -26,6 +26,7 @@ import KanbanBoard from './components/KanbanBoard.vue'
 import ElevationDemo from './components/ElevationDemo.vue'
 import HtmlEditor from './components/HtmlEditor.vue'
 import ColorScheme from './components/ColorScheme.vue'
+import WorkflowCanvasDemo from './components/WorkflowCanvas.vue'
 export const routerHistory = createWebHashHistory('/ofdocs')
 export const router = createRouter({
   history: routerHistory,
@@ -55,6 +56,7 @@ export const router = createRouter({
     { path: '/kanban', component: KanbanBoard },
     { path: '/color-scheme', component: ColorScheme },
     { path: '/elevation', component: ElevationDemo },
-    { path: '/html-editor', component: HtmlEditor }
+    { path: '/html-editor', component: HtmlEditor },
+    { path: '/workflow-canvas', component: WorkflowCanvasDemo }
   ]
 })

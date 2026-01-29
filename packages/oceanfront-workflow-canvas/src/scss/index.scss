@@ -1,0 +1,553 @@
+// Main SCSS entry for oceanfront-workflow-canvas
+
+.workflow-canvas-wrapper {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+
+  // Sidebar positioning within canvas
+  .workflow-canvas__sidebar {
+    position: relative;
+    flex-shrink: 0;
+    height: 100%;
+
+    .of-sidebar {
+      width: 350px;
+      border-left: 1px solid var(--of-border, #e0e0e0);
+      border-radius: 0;
+      box-shadow: none;
+    }
+  }
+}
+
+.workflow-canvas {
+  position: relative;
+  flex: 1;
+  height: 100%;
+  overflow: auto;
+  background-color: var(--of-surface, #f5f5f5);
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+  background-size: 20px 20px;
+
+  &__container {
+    position: relative;
+    min-width: 100%;
+    min-height: 100%;
+  }
+
+  &__svg-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 1;
+    overflow: visible;
+  }
+
+  &__nodes-layer {
+    position: relative;
+    z-index: 2;
+  }
+
+  &__panel-default {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 0;
+  }
+
+  &__panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    border-bottom: 1px solid var(--of-border, #e0e0e0);
+    background: var(--of-surface, #fff);
+
+    h3 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--of-text-primary, #333);
+    }
+  }
+
+  &__panel-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--of-text-secondary, #666);
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background: var(--of-surface-hover, #f0f0f0);
+    }
+  }
+
+  &__panel-content {
+    padding: 16px;
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  &__panel-field {
+    margin-bottom: 16px;
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+      font-size: 13px;
+      color: var(--of-text-primary, #333);
+    }
+
+    > div {
+      font-size: 14px;
+      color: var(--of-text-secondary, #666);
+    }
+  }
+  &__panel-actions {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--of-border, #e0e0e0);
+  }
+}
+
+// Slide transition for panel
+.slide-right-enter-active,
+.slide-right-leave-active {
+  transition:
+    transform 0.3s ease,
+    opacity 0.3s ease;
+}
+
+.slide-right-enter-from {
+  transform: translateX(100%);
+  opacity: 0;
+}
+
+.slide-right-leave-to {
+  transform: translateX(100%);
+  opacity: 0;
+}
+
+.workflow-canvas-group {
+  position: absolute;
+  border: 2px dashed var(--of-border, #ccc);
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.3);
+  z-index: 0;
+  pointer-events: auto;
+  cursor: move;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s,
+    border-width 0.2s,
+    opacity 0.2s;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    border-color: var(--of-primary-tint, #2196f3);
+  }
+
+  &--selected {
+    border-color: var(--of-primary-tint, #2196f3);
+    background-color: rgba(0, 0, 0, 0.05);
+    border-width: 3px;
+  }
+
+  &--dragging {
+    opacity: 0.7;
+    cursor: grabbing;
+  }
+
+  &--dropzone {
+    background-color: rgba(0, 0, 0, 0.05);
+    border-color: var(--of-primary-tint, #2196f3);
+  }
+
+  &__title {
+    position: absolute;
+    top: -10px;
+    left: 8px;
+    background-color: var(--of-surface, #fff);
+    padding: 2px 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--of-text-secondary, #666);
+    pointer-events: none;
+    border-radius: 8px;
+  }
+}
+
+.workflow-canvas-node {
+  position: absolute;
+  z-index: 10;
+  cursor: move;
+  user-select: none;
+  transition: opacity 0.2s;
+
+  &--selected {
+    z-index: 20;
+  }
+
+  &--dragging {
+    cursor: grabbing;
+    z-index: 30;
+  }
+
+  &--drop-target {
+    opacity: 0.4;
+  }
+
+  &__handle {
+    position: absolute;
+    left: 50%;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: var(--of-primary-tint, rgba(33, 150, 243));
+    border: 1.5px solid rgba(255, 255, 255, 0.9);
+    cursor: pointer;
+    z-index: 5;
+    transform: translateX(-50%);
+    transition: all 0.2s;
+    opacity: 0.5;
+
+    // Larger clickable area
+    &::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    &:hover {
+      transform: translateX(-50%) scale(1.15);
+      background-color: var(--of-primary-tint, #2196f3);
+    }
+
+    &--input {
+      top: -5px;
+    }
+
+    &--output {
+      bottom: -7px;
+    }
+  }
+}
+
+.workflow-canvas-tile {
+  background: var(--of-surface, #fff);
+  border: 1px solid var(--of-border, #e0e0e0);
+  border-radius: 8px;
+  padding: 16px;
+  min-width: 200px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s;
+
+  &--selected {
+    border-color: var(--of-primary-tint, #2196f3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  &--dragging {
+    opacity: 0.8;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  }
+
+  &__header {
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  &__title {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--of-text-primary, #333);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    line-height: 1.5;
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    position: relative;
+
+    &::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: 30px;
+      background: linear-gradient(to right, transparent, var(--of-surface, #fff));
+      pointer-events: none;
+    }
+  }
+
+  &__title-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__menu {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+    color: var(--of-text-secondary, #666);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    opacity: 0.7;
+
+    &:hover {
+      background: var(--of-surface-hover, #f0f0f0);
+      color: var(--of-primary-tint, #2196f3);
+      opacity: 1;
+    }
+
+    .of-icon {
+      display: block;
+      font-size: 16px;
+    }
+
+    &.of-button {
+      --button-h-pad: 0;
+    }
+    svg {
+      display: block;
+    }
+  }
+
+  &__icon {
+    flex-shrink: 0;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    font-size: 18px;
+    color: var(--of-primary-tint, #2196f3);
+  }
+
+  &__content {
+    font-size: 13px;
+    color: var(--of-text-secondary, #666);
+  }
+}
+
+.workflow-canvas-connector {
+  fill: none;
+  stroke: var(--of-border, #999);
+  stroke-width: 2;
+  pointer-events: none;
+
+  &--preview {
+    stroke: var(--of-primary-tint, #2196f3);
+    stroke-dasharray: 5, 5;
+  }
+
+  &__marker {
+    fill: var(--of-border, #999);
+  }
+}
+
+.workflow-canvas-plus-placeholder {
+  position: absolute;
+  z-index: 5;
+
+  &__button {
+    width: 23px;
+    height: 23px;
+    border-radius: 50%;
+    background: var(--of-surface, #fff);
+    color: var(--of-border, #999);
+    border: 1px solid var(--of-border, #e1dddd);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 18px;
+    font-weight: 300;
+
+    &:hover {
+      color: var(--of-primary-tint, #2196f3);
+      border-color: var(--of-primary-tint, #2196f3);
+    }
+  }
+}
+
+// Dark Theme Overrides
+.-of-theme-dark {
+  .workflow-canvas {
+    background-color: var(--of-color-background-dark, #383b33);
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+
+    &__panel-default {
+      background: var(--of-color-surface-dark, #44473d);
+    }
+
+    &__panel-header {
+      background: var(--of-color-surface-dark, #44473d);
+      border-bottom-color: var(--of-color-outline-dark, #8e9384);
+
+      h3 {
+        color: var(--of-color-on-surface-dark, #e1e4dd);
+      }
+    }
+
+    &__panel-close {
+      color: var(--of-color-on-surface-variant-dark, #c4c9bd);
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+    }
+
+    &__panel-field {
+      label {
+        color: var(--of-color-on-surface-dark, #e1e4dd);
+      }
+
+      > div {
+        color: var(--of-color-on-surface-variant-dark, #c4c9bd);
+      }
+    }
+
+    &__panel-actions {
+      border-top-color: var(--of-color-outline-dark, #8e9384);
+    }
+  }
+
+  .workflow-canvas-group {
+    border-color: var(--of-color-outline-dark, #8e9384);
+    background-color: rgba(0, 0, 0, 0.2);
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.05);
+      border-color: var(--of-color-primary-dark, #77d7ea);
+    }
+
+    &--selected {
+      border-color: var(--of-color-primary-dark, #77d7ea);
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    &--dropzone {
+      background-color: rgba(255, 255, 255, 0.05);
+      border-color: var(--of-color-primary-dark, #77d7ea);
+    }
+
+    &__title {
+      background-color: var(--of-color-surface-dark, #44473d);
+      color: var(--of-color-on-surface-variant-dark, #c4c9bd);
+    }
+  }
+
+  .workflow-canvas-tile {
+    background: var(--of-color-surface-dark, #44473d);
+    border-color: var(--of-color-outline-dark, #8e9384);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+
+    &--selected {
+      border-color: var(--of-color-primary-dark, #77d7ea);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+    }
+
+    &--dragging {
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    }
+
+    &__title {
+      color: var(--of-color-on-surface-dark, #e1e4dd);
+
+      &::after {
+        background: linear-gradient(to right, transparent, var(--of-color-surface-dark, #44473d));
+      }
+    }
+
+    &__menu {
+      color: var(--of-color-on-surface-variant-dark, #c4c9bd);
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--of-color-primary-dark, #77d7ea);
+      }
+    }
+
+    &__icon {
+      color: var(--of-primary-tint, #77d7ea);
+    }
+
+    &__content {
+      color: var(--of-color-on-surface-variant-dark, #c4c9bd);
+    }
+  }
+
+  .workflow-canvas-node {
+    &__handle {
+      background-color: var(--of-primary-tint, #77d7ea);
+      border-color: var(--of-primary-tint, #44473d);
+    }
+  }
+
+  .workflow-canvas-connector {
+    stroke: var(--of-color-outline-dark, #8e9384);
+
+    &--preview {
+      stroke: var(--of-color-primary-dark, #77d7ea);
+    }
+
+    &__marker {
+      fill: var(--of-color-outline-dark, #8e9384);
+    }
+  }
+
+  .workflow-canvas-plus-placeholder {
+    &__button {
+      background: var(--of-color-surface-dark, #44473d);
+      color: var(--of-color-outline-dark, #8e9384);
+      border-color: var(--of-color-outline-dark, #8e9384);
+
+      &:hover {
+        color: var(--of-color-primary-dark, #77d7ea);
+        border-color: var(--of-color-primary-dark, #77d7ea);
+      }
+    }
+  }
+
+  .workflow-canvas-wrapper {
+    .workflow-canvas__sidebar {
+      .of-sidebar {
+        border-left-color: var(--of-color-outline-dark, #8e9384);
+      }
+    }
+  }
+}

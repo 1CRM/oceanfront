@@ -13,6 +13,7 @@
     "highlight.js": "^11.9.0",
     "oceanfront": "*",
     "oceanfront-html-editor": "*",
+    "oceanfront-workflow-canvas": "*",
     "of-colorscheme-editor": "*",
     "vue": "~3.5.25",
     "vue-router": "~4.3.0"
