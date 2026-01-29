@@ -454,6 +454,7 @@ function handleNodeMouseDown(event: MouseEvent, node: WorkflowNode) {
   const currentGroup = getNodeGroup(graph.value, node.id)
   draggedNodeOriginalGroup.value = currentGroup?.id || null
   draggingNodeId.value = node.id
+  emit('update:selectedId', node.id)
 }
 
 function handleMouseMove(event: MouseEvent) {

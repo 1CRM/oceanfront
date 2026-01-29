@@ -138,10 +138,7 @@ export function removeNodeFromAllGroups(graph: WorkflowGraph, nodeId: string): W
  * Check if a point is inside a rectangle
  */
 export const isPointInRect = (point: Position, rect: Rect): boolean =>
-  point.x >= rect.x &&
-  point.x <= rect.x + rect.w &&
-  point.y >= rect.y &&
-  point.y <= rect.y + rect.h
+  point.x >= rect.x && point.x <= rect.x + rect.w && point.y >= rect.y && point.y <= rect.y + rect.h
 
 /**
  * Find which group (if any) contains a node at the given position
@@ -149,8 +146,7 @@ export const isPointInRect = (point: Position, rect: Rect): boolean =>
 export const findGroupAtPosition = (
   graph: WorkflowGraph,
   position: Position
-): WorkflowGroup | undefined =>
-  graph.groups.find(g => isPointInRect(position, g.rect))
+): WorkflowGroup | undefined => graph.groups.find(g => isPointInRect(position, g.rect))
 
 /**
  * Get all edges connected to a node
@@ -223,9 +219,7 @@ export function updateGroupBounds(
 
   return {
     ...graph,
-    groups: graph.groups.map(g =>
-      g.id === groupId ? { ...g, rect: newBounds } : g
-    )
+    groups: graph.groups.map(g => (g.id === groupId ? { ...g, rect: newBounds } : g))
   }
 }
 
@@ -294,13 +288,13 @@ export function arrangeNodesInGroup(
   const updatedGroups = graph.groups.map(g =>
     g.id === groupId
       ? {
-        ...g,
-        rect: {
-          ...g.rect,
-          w: groupWidth,
-          h: groupHeight
+          ...g,
+          rect: {
+            ...g.rect,
+            w: groupWidth,
+            h: groupHeight
+          }
         }
-      }
       : g
   )
 
@@ -337,15 +331,12 @@ export function reorderNodeInGroup(
   // Update the group
   const updatedGraph = {
     ...graph,
-    groups: graph.groups.map(g =>
-      g.id === group.id ? { ...g, nodeIds: newNodeIds } : g
-    )
+    groups: graph.groups.map(g => (g.id === group.id ? { ...g, nodeIds: newNodeIds } : g))
   }
 
   // Rearrange nodes to reflect new order
   return arrangeNodesInGroup(updatedGraph, group.id)
 }
-
 
 /**
  * Update a group's position and move all contained nodes accordingly
@@ -384,13 +375,13 @@ export function updateGroupPosition(
   const updatedGroups = graph.groups.map(g =>
     g.id === groupId
       ? {
-        ...g,
-        rect: {
-          ...g.rect,
-          x: newPosition.x,
-          y: newPosition.y
+          ...g,
+          rect: {
+            ...g.rect,
+            x: newPosition.x,
+            y: newPosition.y
+          }
         }
-      }
       : g
   )
 

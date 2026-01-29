@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import WorkflowCanvas from '../WorkflowCanvas.vue'
-import type { WorkflowGraph, WorkflowNode } from '../../types/workflow'
+import type { WorkflowGraph } from '../../types/workflow'
 import {
   addEdge,
   updateNodePosition,
@@ -251,9 +251,7 @@ describe('Graph Helper Functions', () => {
           { id: 'node-2', kind: 'action', position: { x: 0, y: 100 } },
           { id: 'node-3', kind: 'action', position: { x: 0, y: 200 } }
         ],
-        edges: [
-          { id: 'edge-1', from: { nodeId: 'node-1' }, to: { nodeId: 'node-2' } }
-        ],
+        edges: [{ id: 'edge-1', from: { nodeId: 'node-1' }, to: { nodeId: 'node-2' } }],
         groups: []
       }
 
@@ -276,9 +274,7 @@ describe('Graph Helper Functions', () => {
           { id: 'node-2', kind: 'action', position: { x: 0, y: 100 } },
           { id: 'node-3', kind: 'action', position: { x: 0, y: 200 } }
         ],
-        edges: [
-          { id: 'edge-1', from: { nodeId: 'node-1' }, to: { nodeId: 'node-3' } }
-        ],
+        edges: [{ id: 'edge-1', from: { nodeId: 'node-1' }, to: { nodeId: 'node-3' } }],
         groups: []
       }
 
@@ -327,9 +323,7 @@ describe('Graph Helper Functions', () => {
           { id: 'node-1', kind: 'trigger', position: { x: 0, y: 0 } },
           { id: 'node-2', kind: 'action', position: { x: 0, y: 100 } }
         ],
-        edges: [
-          { id: 'edge-1', from: { nodeId: 'node-1' }, to: { nodeId: 'node-2' } }
-        ],
+        edges: [{ id: 'edge-1', from: { nodeId: 'node-1' }, to: { nodeId: 'node-2' } }],
         groups: []
       }
 
@@ -444,7 +438,7 @@ describe('Graph Helper Functions', () => {
       expect(bounds.x).toBe(80) // 100 - 20 padding
       expect(bounds.y).toBe(80) // 100 - 20 padding
       expect(bounds.w).toBe(290) // 250 + 40 padding
-      expect(bounds.h).toBe(310) // 250 height span + 40 padding
+      expect(bounds.h).toBe(290) // 250 height span + 40 padding
     })
 
     it('arranges nodes in group vertically', () => {
@@ -498,9 +492,7 @@ describe('Graph Helper Functions', () => {
 
     it('updates group position and moves contained nodes', () => {
       const graph: WorkflowGraph = {
-        nodes: [
-          { id: 'node-1', kind: 'trigger', position: { x: 70, y: 70 } }
-        ],
+        nodes: [{ id: 'node-1', kind: 'trigger', position: { x: 70, y: 70 } }],
         edges: [],
         groups: [
           {

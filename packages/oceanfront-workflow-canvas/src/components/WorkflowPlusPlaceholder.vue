@@ -1,6 +1,8 @@
 <template>
   <div class="workflow-canvas-plus-placeholder" :style="positionStyle">
-    <button class="workflow-canvas-plus-placeholder__button" @click="handleClick" type="button">+</button>
+    <button class="workflow-canvas-plus-placeholder__button" @click="handleClick" type="button">
+      +
+    </button>
   </div>
 </template>
 
