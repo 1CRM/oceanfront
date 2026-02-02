@@ -42,6 +42,12 @@
             <div>{{ selectedGroup.id }}</div>
           </div>
           <of-text-field
+            label="Type"
+            class="workflow-canvas__panel-field"
+            :model-value="selectedGroup.kind"
+            @update:model-value="updateGroupKind"
+          />
+          <of-text-field
             label="Title"
             class="workflow-canvas__panel-field"
             :model-value="selectedGroup.title || ''"
@@ -49,8 +55,16 @@
             placeholder="Enter group title"
           />
           <div class="workflow-canvas__panel-field">
-            <label>Nodes:</label>
-            <div>{{ selectedGroup.nodeIds.length }}</div>
+            <label>Contained Items:</label>
+            <div>{{ selectedGroup.containedIds.length }} {{ selectedGroup.containedIds.length === 1 ? 'item' : 'items' }}</div>
+          </div>
+          <div class="workflow-canvas__panel-field" v-if="groupDepth !== undefined">
+            <label>Nesting Depth:</label>
+            <div>{{ groupDepth === 0 ? 'Top-level' : `Level ${groupDepth}` }}</div>
+          </div>
+          <div class="workflow-canvas__panel-field">
+            <label>Size:</label>
+            <div>{{ selectedGroup.size.w }} × {{ selectedGroup.size.h }}</div>
           </div>
           <div class="workflow-canvas__panel-actions">
             <of-button @click="emit('delete-group')" variant="filled" tint="secondary">
@@ -65,7 +79,8 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { WorkflowNode, WorkflowGroup } from '../types/workflow'
+import type { WorkflowNode, WorkflowGroup, WorkflowGraph } from '../types/workflow'
+import { getGroupDepth } from '../utils/graph-helpers'
 
 defineOptions({
   name: 'WorkflowConfigPanel'
@@ -75,10 +90,12 @@ const props = withDefaults(
   defineProps<{
     selectedNode?: WorkflowNode | null
     selectedGroup?: WorkflowGroup | null
+    graph?: WorkflowGraph | null
   }>(),
   {
     selectedNode: null,
-    selectedGroup: null
+    selectedGroup: null,
+    graph: null
   }
 )
 
@@ -91,6 +108,11 @@ const emit = defineEmits<{
 }>()
 
 const isOpen = computed(() => !!(props.selectedNode || props.selectedGroup))
+
+const groupDepth = computed(() => {
+  if (!props.selectedGroup || !props.graph) return undefined
+  return getGroupDepth(props.graph, props.selectedGroup.id)
+})
 
 interface NodeData {
   title?: string
@@ -136,6 +158,14 @@ const updateGroupTitle = (value: string) => {
   emit('update-group', {
     ...props.selectedGroup,
     title: value
+  })
+}
+
+const updateGroupKind = (value: string) => {
+  if (!props.selectedGroup) return
+  emit('update-group', {
+    ...props.selectedGroup,
+    kind: value
   })
 }
 </script>

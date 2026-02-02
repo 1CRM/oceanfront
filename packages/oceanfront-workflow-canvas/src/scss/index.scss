@@ -157,7 +157,8 @@
     border-width 0.2s,
     opacity 0.2s;
 
-  &:hover {
+  &:hover,
+  &--child-hovered {
     background-color: rgba(0, 0, 0, 0.05);
     border-color: var(--of-primary-tint, #2196f3);
   }
@@ -178,9 +179,27 @@
     border-color: var(--of-primary-tint, #2196f3);
   }
 
+  // Nested groups styling
+  &--nested {
+    border-color: var(--of-border, #999);
+    background-color: rgba(255, 255, 255, 0.4);
+    border-width: 2px;
+
+    &:hover,
+    &.workflow-canvas-group--child-hovered {
+      background-color: rgba(0, 0, 0, 0.08);
+      border-color: var(--of-primary-tint, #2196f3);
+    }
+
+    &.workflow-canvas-group--selected {
+      border-color: var(--of-primary-tint, #2196f3);
+      background-color: rgba(0, 0, 0, 0.08);
+    }
+  }
+
   &__title {
     position: absolute;
-    top: -10px;
+    top: -13px;
     left: 8px;
     background-color: var(--of-surface, #fff);
     padding: 2px 8px;
@@ -189,6 +208,183 @@
     color: var(--of-text-secondary, #666);
     pointer-events: none;
     border-radius: 8px;
+  }
+
+  // Group connection handles
+  &__handle {
+    position: absolute;
+    left: 50%;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: var(--of-primary-tint, rgba(33, 150, 243));
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    cursor: pointer;
+    z-index: 25;
+    transform: translateX(calc(-50% - 2px));
+    transition: all 0.2s;
+    opacity: 0.6;
+
+    // Larger clickable area
+    &::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    &:hover {
+      transform: translateX(-50%) scale(1.2);
+      background-color: var(--of-primary-tint, #2196f3);
+      opacity: 1;
+    }
+
+    &--input {
+      top: -7px;
+    }
+
+    &--output {
+      bottom: -9px;
+    }
+
+    // Free output handle (no connection)
+    &--free {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      bottom: -8px;
+      transform: translateX(-50%);
+    }
+  }
+
+  // Resize handles
+  &__resize-handle {
+    position: absolute;
+    background: transparent;
+    z-index: 20;
+
+    // Edge handles
+    &--top,
+    &--bottom {
+      left: 10%;
+      right: 10%;
+      height: 8px;
+      cursor: ns-resize;
+    }
+
+    &--left,
+    &--right {
+      top: 10%;
+      bottom: 10%;
+      width: 8px;
+      cursor: ew-resize;
+    }
+
+    &--top {
+      top: -4px;
+    }
+
+    &--bottom {
+      bottom: -4px;
+    }
+
+    &--left {
+      left: -4px;
+    }
+
+    &--right {
+      right: -4px;
+    }
+
+    // Corner handles - thick curved lines
+    &--top-left,
+    &--top-right,
+    &--bottom-left,
+    &--bottom-right {
+      width: 10px;
+      height: 10px;
+      background: transparent;
+      opacity: 0;
+      transition: opacity 0.2s;
+
+      &::before {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border: 4px solid var(--of-primary-tint, #2196f3);
+        border-color: transparent;
+      }
+    }
+
+    &--top-left {
+      top: -3px;
+      left: -3px;
+      cursor: nwse-resize;
+
+      &::before {
+        border-top-color: var(--of-primary-tint, #2196f3);
+        border-left-color: var(--of-primary-tint, #2196f3);
+        border-top-left-radius: 8px;
+      }
+    }
+
+    &--top-right {
+      top: -3px;
+      right: 4px;
+      cursor: nesw-resize;
+
+      &::before {
+        border-top-color: var(--of-primary-tint, #2196f3);
+        border-right-color: var(--of-primary-tint, #2196f3);
+        border-top-right-radius: 8px;
+      }
+    }
+
+    &--bottom-left {
+      bottom: 5px;
+      left: -3px;
+      cursor: nesw-resize;
+
+      &::before {
+        border-bottom-color: var(--of-primary-tint, #2196f3);
+        border-left-color: var(--of-primary-tint, #2196f3);
+        border-bottom-left-radius: 8px;
+      }
+    }
+
+    &--bottom-right {
+      bottom: 5px;
+      right: 4px;
+      cursor: nwse-resize;
+
+      &::before {
+        border-bottom-color: var(--of-primary-tint, #2196f3);
+        border-right-color: var(--of-primary-tint, #2196f3);
+        border-bottom-right-radius: 8px;
+      }
+    }
+  }
+
+  // Show resize handles on hover or when selected
+  &:hover &__resize-handle--top-left,
+  &:hover &__resize-handle--top-right,
+  &:hover &__resize-handle--bottom-left,
+  &:hover &__resize-handle--bottom-right,
+  &--child-hovered &__resize-handle--top-left,
+  &--child-hovered &__resize-handle--top-right,
+  &--child-hovered &__resize-handle--bottom-left,
+  &--child-hovered &__resize-handle--bottom-right,
+  &--selected &__resize-handle--top-left,
+  &--selected &__resize-handle--top-right,
+  &--selected &__resize-handle--bottom-left,
+  &--selected &__resize-handle--bottom-right {
+    opacity: 1;
   }
 }
 
@@ -206,10 +402,6 @@
   &--dragging {
     cursor: grabbing;
     z-index: 30;
-  }
-
-  &--drop-target {
-    opacity: 0.4;
   }
 
   &__handle {
@@ -253,27 +445,12 @@
 
     // Free output handle (no connection) - show as "+" button (matches placeholder style)
     &--free {
-      width: 22px;
-      height: 22px;
-      background: var(--of-surface, #fff);
-      border: 1px solid var(--of-border, #e1dddd);
-      opacity: 1;
       display: flex;
       align-items: center;
       justify-content: center;
       transition: all 0.2s;
-      bottom: -10px;
-
-      &:hover {
-        transform: translateX(-50%);
-        background: var(--of-surface, #fff);
-        border-color: var(--of-primary-tint, #2196f3);
-      }
+      bottom: -6px;
     }
-  }
-
-  &__handle-plus {
-    color: var(--of-border, #999);
   }
 }
 
@@ -397,6 +574,7 @@
 
   &__marker {
     fill: var(--of-border, #999);
+    stroke: none;
   }
 }
 
@@ -474,7 +652,8 @@
     border-color: var(--of-color-outline-dark, #8e9384);
     background-color: rgba(0, 0, 0, 0.2);
 
-    &:hover {
+    &:hover,
+    &--child-hovered {
       background-color: rgba(255, 255, 255, 0.05);
       border-color: var(--of-color-primary-dark, #77d7ea);
     }
@@ -489,9 +668,70 @@
       border-color: var(--of-color-primary-dark, #77d7ea);
     }
 
+    &--nested {
+      border-color: var(--of-color-outline-dark, #666);
+      background-color: rgba(0, 0, 0, 0.3);
+
+      &:hover,
+      &.workflow-canvas-group--child-hovered {
+        background-color: rgba(255, 255, 255, 0.08);
+        border-color: var(--of-color-primary-dark, #77d7ea);
+      }
+
+      &.workflow-canvas-group--selected {
+        border-color: var(--of-color-primary-dark, #77d7ea);
+        background-color: rgba(255, 255, 255, 0.08);
+      }
+    }
+
     &__title {
       background-color: var(--of-color-surface-dark, #44473d);
       color: var(--of-color-on-surface-variant-dark, #c4c9bd);
+    }
+
+    &__handle {
+      background-color: var(--of-primary-tint, #77d7ea);
+      border-color: var(--of-primary-tint, #44473d);
+
+      &--free {
+        background: var(--of-color-surface-dark, #44473d);
+        border-color: var(--of-color-outline-dark, #8e9384);
+
+        &:hover {
+          border-color: var(--of-color-primary-dark, #77d7ea);
+        }
+      }
+    }
+
+    &__resize-handle {
+      &--top-left,
+      &--top-right,
+      &--bottom-left,
+      &--bottom-right {
+        &::before {
+          border-color: transparent;
+        }
+      }
+
+      &--top-left::before {
+        border-top-color: var(--of-color-primary-dark, #77d7ea);
+        border-left-color: var(--of-color-primary-dark, #77d7ea);
+      }
+
+      &--top-right::before {
+        border-top-color: var(--of-color-primary-dark, #77d7ea);
+        border-right-color: var(--of-color-primary-dark, #77d7ea);
+      }
+
+      &--bottom-left::before {
+        border-bottom-color: var(--of-color-primary-dark, #77d7ea);
+        border-left-color: var(--of-color-primary-dark, #77d7ea);
+      }
+
+      &--bottom-right::before {
+        border-bottom-color: var(--of-color-primary-dark, #77d7ea);
+        border-right-color: var(--of-color-primary-dark, #77d7ea);
+      }
     }
   }
 
@@ -580,11 +820,8 @@
     }
 
     &__handle-plus {
-      color: var(--of-color-outline-dark, #8e9384);
-
-      .workflow-canvas-node__handle--free:hover & {
-        color: var(--of-color-primary-dark, #77d7ea);
-      }
+      width: 10px;
+      height: 10px;
     }
   }
 

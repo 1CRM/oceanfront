@@ -37,7 +37,7 @@ export interface Rect {
  * Connection port reference
  */
 export interface Port {
-  nodeId: string
+  entityId: string // Can refer to either a node or a group
   port?: string
 }
 
@@ -62,13 +62,16 @@ export interface WorkflowEdge {
 }
 
 /**
- * A group (container) for nodes
+ * A group (container) for nodes and other groups
  */
 export interface WorkflowGroup {
   id: string
+  kind: string // Type of group (e.g., 'group', 'swimlane', 'phase')
   title?: string
-  rect: Rect
-  nodeIds: string[]
+  position: Position
+  size: Size
+  containedIds: string[] // Contains both node IDs and group IDs
+  data?: unknown // Consumer-owned data
 }
 
 /**

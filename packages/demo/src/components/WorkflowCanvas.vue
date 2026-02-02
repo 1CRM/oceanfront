@@ -22,6 +22,21 @@
         :height="600"
         @add-step="handleAddStep"
         @connect="handleConnect"
+        @node-drag-start="handleNodeDragStart"
+        @node-drag-end="handleNodeDragEnd"
+        @node-click="handleNodeClick"
+        @node-delete="handleNodeDelete"
+        @node-update="handleNodeUpdate"
+        @group-drag-start="handleGroupDragStart"
+        @group-drag-end="handleGroupDragEnd"
+        @group-click="handleGroupClick"
+        @group-delete="handleGroupDelete"
+        @group-update="handleGroupUpdate"
+        @group-resize-start="handleGroupResizeStart"
+        @group-resize-end="handleGroupResizeEnd"
+        @edge-delete="handleEdgeDelete"
+        @canvas-click="handleCanvasClick"
+        @entity-moved-to-group="handleEntityMovedToGroup"
       />
     </div>
 
@@ -38,6 +53,21 @@
         <summary>View JSON</summary>
         <pre>{{ JSON.stringify(workflowGraph, null, 2) }}</pre>
       </details>
+
+      <details open>
+        <summary>Event Log (Last 10 events)</summary>
+        <div class="event-log">
+          <of-button @click="clearEventLog" variant="outlined" size="small">
+            Clear Log
+          </of-button>
+          <div v-if="eventLog.length === 0" class="no-events">No events yet</div>
+          <div v-for="(event, index) in eventLog" :key="index" class="event-item">
+            <span class="event-name">{{ event.name }}</span>
+            <span class="event-data">{{ event.data }}</span>
+            <span class="event-time">{{ event.time }}</span>
+          </div>
+        </div>
+      </details>
     </div>
   </div>
 </template>
@@ -53,7 +83,8 @@ import {
   type AddStepEvent,
   type ConnectEvent,
   addEdge,
-  findNode
+  findNode,
+  addNodeToGroup
 } from 'oceanfront-workflow-canvas'
 import 'oceanfront-workflow-canvas/css'
 
@@ -62,67 +93,15 @@ import 'oceanfront-workflow-canvas/css'
 const initialWorkflowGraph: WorkflowGraph = {
   nodes: [
     {
-      id: 'trigger-1',
-      kind: 'trigger',
-      position: {
-        x: 100,
-        y: 50
-      },
-      data: {
-        title: 'New or Updated Quote',
-        description: 'Triggers when a quote is created or modified',
-        icon: 'hourglass'
-      }
-    },
-    {
-      id: 'action-1',
-      kind: 'action',
-      position: {
-        x: 100,
-        y: 229
-      },
-      data: {
-        title: 'Validate Quote Data',
-        description: 'Checks for required fields and data integrity',
-        icon: 'gear'
-      }
-    },
-    {
-      id: 'condition-1',
-      kind: 'condition',
-      position: {
-        x: 100,
-        y: 394
-      },
-      data: {
-        title: 'Check Quote Value',
-        description: 'Route based on quote value threshold',
-        icon: 'help circle'
-      }
-    },
-    {
-      id: 'condition-2',
-      kind: 'condition',
-      position: {
-        x: 841,
-        y: 402
-      },
-      data: {
-        title: 'Manager Decision',
-        description: 'Wait for manager to approve or reject',
-        icon: 'help circle'
-      }
-    },
-    {
       id: 'action-10',
       kind: 'action',
       position: {
-        x: 467,
-        y: 48
+        x: 148,
+        y: 730
       },
       data: {
-        title: 'Financial Analysis',
-        description: 'Perform detailed financial review',
+        title: 'Type',
+        description: 'Value changed to: "mmm"',
         icon: 'gear'
       }
     },
@@ -130,12 +109,12 @@ const initialWorkflowGraph: WorkflowGraph = {
       id: 'action-11',
       kind: 'action',
       position: {
-        x: 467,
-        y: 188
+        x: 144,
+        y: 554.5
       },
       data: {
-        title: 'Request Executive Approval',
-        description: 'Route to VP or C-level for approval',
+        title: 'Contact Phone',
+        description: 'Value changed to: "fff"',
         icon: 'user'
       }
     },
@@ -143,12 +122,12 @@ const initialWorkflowGraph: WorkflowGraph = {
       id: 'condition-3',
       kind: 'condition',
       position: {
-        x: 467,
-        y: 328
+        x: 145,
+        y: 387.5
       },
       data: {
-        title: 'Executive Decision',
-        description: 'Wait for executive approval',
+        title: 'Category',
+        description: 'Value changed to: "fff"',
         icon: 'help circle'
       }
     },
@@ -156,12 +135,12 @@ const initialWorkflowGraph: WorkflowGraph = {
       id: 'action-13',
       kind: 'action',
       position: {
-        x: 467,
-        y: 468
+        x: 146,
+        y: 234.5
       },
       data: {
-        title: 'Send Contract',
-        description: 'Email contract to customer',
+        title: 'Status',
+        description: 'Value changed to "ddd"',
         icon: 'email'
       }
     },
@@ -169,134 +148,229 @@ const initialWorkflowGraph: WorkflowGraph = {
       id: 'action-15',
       kind: 'action',
       position: {
-        x: 840,
-        y: 45
+        x: 160,
+        y: 54.5
       },
       data: {
-        title: 'Log Executive Rejection',
-        description: 'Record executive rejection',
+        title: 'Assets',
+        description: 'Value changed to "aaa"',
         icon: 'gear'
       }
     },
     {
-      id: 'action-16',
+      id: 'node-1770043111576',
       kind: 'action',
       position: {
-        x: 840,
-        y: 185
+        x: 555,
+        y: 107.5
       },
       data: {
-        title: 'Escalate Rejection',
-        description: 'Notify senior management',
-        icon: 'email'
+        title: 'Subject',
+        description: 'Value changed to: "ooo"'
+      }
+    },
+    {
+      id: 'node-1770043184121',
+      kind: 'action',
+      position: {
+        x: 555,
+        y: 254.5
+      },
+      data: {
+        title: 'Created by',
+        description: 'Value changed to: "ppp"'
+      }
+    },
+    {
+      id: 'node-1770043222729',
+      kind: 'action',
+      position: {
+        x: 561,
+        y: 450.5
+      },
+      data: {
+        title: 'Created by',
+        description: 'Value changed to: "ll"'
+      }
+    },
+    {
+      id: 'node-1770043293931',
+      kind: 'action',
+      position: {
+        x: 549,
+        y: 620.5
+      },
+      data: {
+        title: 'Vendor RMA #',
+        description: 'Value changed to: "fff"'
+      }
+    },
+    {
+      id: 'node-1770043343226',
+      kind: 'action',
+      position: {
+        x: 549,
+        y: 769.5
+      },
+      data: {
+        title: 'Contact Phone',
+        description: 'Value changed to: "fff"'
       }
     }
   ],
   edges: [
     {
-      id: 'edge-1',
+      id: 'edge-1770042749417',
       from: {
-        nodeId: 'trigger-1'
+        entityId: 'action-15'
       },
       to: {
-        nodeId: 'action-1'
+        entityId: 'group-1770042668276'
       }
     },
     {
-      id: 'edge-2',
+      id: 'edge-1770042895298',
       from: {
-        nodeId: 'action-1'
+        entityId: 'group-1770042668276'
       },
       to: {
-        nodeId: 'condition-1'
+        entityId: 'action-11'
       }
     },
     {
-      id: 'edge-12',
+      id: 'edge-1770042942337',
       from: {
-        nodeId: 'condition-1'
+        entityId: 'action-13'
       },
       to: {
-        nodeId: 'action-10'
+        entityId: 'group-1770042767028'
       }
     },
     {
-      id: 'edge-13',
+      id: 'edge-1770042997115',
       from: {
-        nodeId: 'action-10'
+        entityId: 'group-5'
       },
       to: {
-        nodeId: 'action-11'
+        entityId: 'action-10'
       }
     },
     {
-      id: 'edge-14',
+      id: 'edge-1770043246438',
       from: {
-        nodeId: 'action-11'
+        entityId: 'node-1770043111576'
       },
       to: {
-        nodeId: 'condition-3'
+        entityId: 'node-1770043184121'
       }
     },
     {
-      id: 'edge-19',
+      id: 'edge-1770043251254',
       from: {
-        nodeId: 'action-15'
+        entityId: 'group-1770043032659'
       },
       to: {
-        nodeId: 'action-16'
+        entityId: 'node-1770043222729'
       }
     },
     {
-      id: 'edge-1769669311940',
+      id: 'edge-1770043256488',
       from: {
-        nodeId: 'condition-3'
+        entityId: 'action-10'
       },
       to: {
-        nodeId: 'action-13'
+        entityId: 'group-1770043032659'
       }
     },
     {
-      id: 'edge-1769669319694',
+      id: 'edge-1770043375162',
       from: {
-        nodeId: 'action-13'
+        entityId: 'node-1770043293931'
       },
       to: {
-        nodeId: 'action-15'
+        entityId: 'node-1770043343226'
       }
     },
     {
-      id: 'edge-1769669399303',
+      id: 'edge-1770043381753',
       from: {
-        nodeId: 'action-16'
+        entityId: 'node-1770043222729'
       },
       to: {
-        nodeId: 'condition-2'
+        entityId: 'group-1770043280273'
       }
     }
   ],
   groups: [
     {
-      id: 'group-4',
-      title: 'Executive Approval',
-      rect: {
-        x: 447,
-        y: 28,
-        w: 290,
-        h: 560
+      id: 'group-5',
+      kind: 'group',
+      title: 'Group: All Of',
+      position: {
+        x: 85,
+        y: 34.5
       },
-      nodeIds: ['action-10', 'action-11', 'condition-3', 'action-13']
+      size: {
+        w: 370,
+        h: 640
+      },
+      containedIds: ['group-1770042668276', 'action-15', 'action-11']
     },
     {
-      id: 'group-5',
-      title: 'Executive Rejection',
-      rect: {
-        x: 820,
-        y: 25,
-        w: 290,
-        h: 280
+      id: 'group-1770042668276',
+      kind: 'group',
+      title: 'Group: Not All Of',
+      position: {
+        x: 105,
+        y: 214.5
       },
-      nodeIds: ['action-15', 'action-16']
+      size: {
+        w: 330,
+        h: 313
+      },
+      containedIds: ['group-1770042767028', 'action-13']
+    },
+    {
+      id: 'group-1770042767028',
+      kind: 'group',
+      title: 'Group: All Of',
+      position: {
+        x: 125,
+        y: 367.5
+      },
+      size: {
+        w: 290,
+        h: 140
+      },
+      containedIds: ['condition-3']
+    },
+    {
+      id: 'group-1770043032659',
+      kind: 'group',
+      title: 'Group: All Of',
+      position: {
+        x: 535,
+        y: 87.5
+      },
+      size: {
+        w: 290,
+        h: 287
+      },
+      containedIds: ['node-1770043111576', 'node-1770043184121']
+    },
+    {
+      id: 'group-1770043280273',
+      kind: 'group',
+      title: 'Group: All Of',
+      position: {
+        x: 529,
+        y: 600.5
+      },
+      size: {
+        w: 290,
+        h: 289
+      },
+      containedIds: ['node-1770043343226', 'node-1770043293931']
     }
   ]
 }
@@ -352,14 +426,14 @@ function handleAddStep(event: AddStepEvent) {
   // Find the edge from the afterNode (if it exists)
   const existingEdge = event.afterNodeId
     ? workflowGraph.value.edges.find(
-        (e: WorkflowEdge) => e.from.nodeId === event.afterNodeId
+        (e: WorkflowEdge) => e.from.entityId === event.afterNodeId
       )
     : null
 
   // Calculate position between the two nodes if there's an existing edge
   let position: { x: number; y: number }
   if (afterNode && existingEdge) {
-    const toNode = findNode(workflowGraph.value, existingEdge.to.nodeId)
+    const toNode = findNode(workflowGraph.value, existingEdge.to.entityId)
     if (toNode) {
       // Place new node between the two connected nodes
       position = {
@@ -389,12 +463,21 @@ function handleAddStep(event: AddStepEvent) {
     }
   })
 
+  // If the source node is in a group, add the new node to the same group
+  if (event.inGroupId) {
+    workflowGraph.value = addNodeToGroup(
+      workflowGraph.value,
+      newNodeId,
+      event.inGroupId
+    )
+  }
+
   // If there's an existing edge, we need to:
   // 1. Remove the old edge
   // 2. Create edge from afterNode to newNode
   // 3. Create edge from newNode to the original target
   if (existingEdge && event.afterNodeId) {
-    const targetNodeId = existingEdge.to.nodeId
+    const targetNodeId = existingEdge.to.entityId
 
     // Remove the old edge
     workflowGraph.value.edges = workflowGraph.value.edges.filter(
@@ -404,22 +487,22 @@ function handleAddStep(event: AddStepEvent) {
     // Add edge from afterNode to new node
     workflowGraph.value = addEdge(workflowGraph.value, {
       id: `edge-${Date.now()}-1`,
-      from: { nodeId: event.afterNodeId },
-      to: { nodeId: newNodeId }
+      from: { entityId: event.afterNodeId },
+      to: { entityId: newNodeId }
     })
 
     // Add edge from new node to original target
     workflowGraph.value = addEdge(workflowGraph.value, {
       id: `edge-${Date.now()}-2`,
-      from: { nodeId: newNodeId },
-      to: { nodeId: targetNodeId }
+      from: { entityId: newNodeId },
+      to: { entityId: targetNodeId }
     })
   } else if (event.afterNodeId) {
     // No existing edge, just create one from afterNode to newNode
     workflowGraph.value = addEdge(workflowGraph.value, {
       id: `edge-${Date.now()}`,
-      from: { nodeId: event.afterNodeId },
-      to: { nodeId: newNodeId }
+      from: { entityId: event.afterNodeId },
+      to: { entityId: newNodeId }
     })
   }
 
@@ -432,8 +515,8 @@ function handleConnect(event: ConnectEvent) {
   const edgeId = `edge-${Date.now()}`
   workflowGraph.value = addEdge(workflowGraph.value, {
     id: edgeId,
-    from: { nodeId: event.fromNodeId },
-    to: { nodeId: event.toNodeId }
+    from: { entityId: event.fromNodeId },
+    to: { entityId: event.toNodeId }
   })
 }
 
@@ -477,7 +560,7 @@ function addNewGroup() {
   })
 
   workflowGraph.value.groups.forEach((group: WorkflowGroup) => {
-    const groupRight = group.rect.x + group.rect.w
+    const groupRight = group.position.x + group.size.w
     if (groupRight > maxX) {
       maxX = groupRight
     }
@@ -486,9 +569,11 @@ function addNewGroup() {
   // Create new group (empty, suitable size for one node)
   workflowGraph.value.groups.push({
     id: newGroupId,
+    kind: 'group',
     title: 'New Group',
-    rect: { x: maxX + 50, y: 100, w: 290, h: 140 },
-    nodeIds: []
+    position: { x: maxX + 50, y: 100 },
+    size: { w: 290, h: 140 },
+    containedIds: []
   })
 
   selectedId.value = newGroupId
@@ -497,6 +582,93 @@ function addNewGroup() {
 function resetCanvas() {
   workflowGraph.value = JSON.parse(JSON.stringify(initialWorkflowGraph))
   selectedId.value = null
+}
+
+// Event log for demonstrating all emits
+interface EventLogEntry {
+  name: string
+  data: string
+  time: string
+}
+
+const eventLog = ref<EventLogEntry[]>([])
+const MAX_LOG_ENTRIES = 10
+
+function logEvent(name: string, data: any) {
+  const entry: EventLogEntry = {
+    name,
+    data: JSON.stringify(data),
+    time: new Date().toLocaleTimeString()
+  }
+  eventLog.value.unshift(entry)
+  if (eventLog.value.length > MAX_LOG_ENTRIES) {
+    eventLog.value = eventLog.value.slice(0, MAX_LOG_ENTRIES)
+  }
+}
+
+function clearEventLog() {
+  eventLog.value = []
+}
+
+// Event handlers for all new emits
+function handleNodeDragStart(nodeId: string) {
+  logEvent('node-drag-start', { nodeId })
+}
+
+function handleNodeDragEnd(nodeId: string, position: { x: number; y: number }) {
+  logEvent('node-drag-end', { nodeId, position })
+}
+
+function handleNodeClick(nodeId: string) {
+  logEvent('node-click', { nodeId })
+}
+
+function handleNodeDelete(nodeId: string) {
+  logEvent('node-delete', { nodeId })
+}
+
+function handleNodeUpdate(node: WorkflowNode) {
+  logEvent('node-update', { id: node.id, kind: node.kind })
+}
+
+function handleGroupDragStart(groupId: string) {
+  logEvent('group-drag-start', { groupId })
+}
+
+function handleGroupDragEnd(groupId: string, position: { x: number; y: number }) {
+  logEvent('group-drag-end', { groupId, position })
+}
+
+function handleGroupClick(groupId: string) {
+  logEvent('group-click', { groupId })
+}
+
+function handleGroupDelete(groupId: string) {
+  logEvent('group-delete', { groupId })
+}
+
+function handleGroupUpdate(group: WorkflowGroup) {
+  logEvent('group-update', { id: group.id, title: group.title })
+}
+
+function handleGroupResizeStart(groupId: string) {
+  logEvent('group-resize-start', { groupId })
+}
+
+function handleGroupResizeEnd(groupId: string, size: { w: number; h: number }) {
+  logEvent('group-resize-end', { groupId, size })
+}
+
+function handleEdgeDelete(edgeId: string) {
+  logEvent('edge-delete', { edgeId })
+}
+
+function handleCanvasClick() {
+  logEvent('canvas-click', {})
+}
+
+function handleEntityMovedToGroup(entityId: string, groupId: string | null) {
+  logEvent('entity-moved-to-group', { entityId, groupId })
 }
 </script>
 
@@ -531,5 +703,51 @@ pre {
   border-radius: 4px;
   overflow-x: auto;
   font-size: 12px;
+}
+
+.event-log {
+  margin-top: 8px;
+}
+
+.no-events {
+  padding: 16px;
+  text-align: center;
+  color: #999;
+  font-style: italic;
+}
+
+.event-item {
+  display: flex;
+  gap: 12px;
+  padding: 8px;
+  border-bottom: 1px solid #e0e0e0;
+  font-size: 13px;
+  align-items: center;
+}
+
+.event-item:last-child {
+  border-bottom: none;
+}
+
+.event-name {
+  font-weight: 600;
+  color: #2196f3;
+  min-width: 180px;
+}
+
+.event-data {
+  flex: 1;
+  font-family: monospace;
+  color: #666;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.event-time {
+  color: #999;
+  font-size: 11px;
+  min-width: 80px;
+  text-align: right;
 }
 </style>

@@ -31,14 +31,15 @@ export {
   removeNodeFromAllGroups,
   isPointInRect,
   findGroupAtPosition,
+  findAllGroupsAtPosition,
   getNodeEdges,
   getNodeGroup,
   calculateGroupBounds,
   updateGroupBounds,
   updateAllGroupBounds,
   arrangeNodesInGroup,
-  reorderNodeInGroup,
-  updateGroupPosition
+  updateGroupPosition,
+  areEntitiesInDifferentGroups
 } from './utils/graph-helpers'
 
 // Components

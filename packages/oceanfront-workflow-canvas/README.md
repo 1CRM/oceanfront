@@ -13,11 +13,11 @@ A Vue 3 + TypeScript library for building Zapier-like graphical workflow builder
   - Add new steps via "+" placeholders on edges
   - Group nodes in containers with automatic layout
   - Drag nodes into/out of groups
-  - Reorder nodes within groups by dragging
   - Move entire groups with all contained nodes
   - Configure selected nodes/groups in a slide-out panel
   - Delete nodes and groups via configuration panel
 - **Single Connection Per Port**: Each node has one input and one output - connecting a new edge automatically removes the previous one
+- **Group Connection Restrictions**: Nodes and groups in different groups cannot be connected to each other
 - **Automatic Group Layout**: Nodes in groups are arranged vertically with consistent spacing
 - **Framework Agnostic Data Model**: General-purpose graph structure with consumer-defined node types
 - **TypeScript Support**: Fully typed API with comprehensive type definitions
@@ -100,10 +100,32 @@ Main canvas component that renders the workflow graph.
 
 **Events:**
 
+Core events:
 - `update:modelValue` - Emitted when graph changes (node drag, group operations, edge disconnection)
 - `update:selectedId` - Emitted when selection changes (node click, group click, canvas click)
 - `add-step` - Emitted when + button clicked: `{ afterNodeId?: string, inGroupId?: string }`
 - `connect` - Emitted when nodes connected: `{ fromNodeId: string, toNodeId: string }`
+
+Node events:
+- `node-drag-start` - Emitted when node drag begins: `(nodeId: string)`
+- `node-drag-end` - Emitted when node drag ends: `(nodeId: string, position: Position)`
+- `node-click` - Emitted when node is clicked: `(nodeId: string)`
+- `node-delete` - Emitted when node is deleted: `(nodeId: string)`
+- `node-update` - Emitted when node is updated: `(node: WorkflowNode)`
+
+Group events:
+- `group-drag-start` - Emitted when group drag begins: `(groupId: string)`
+- `group-drag-end` - Emitted when group drag ends: `(groupId: string, position: Position)`
+- `group-click` - Emitted when group is clicked: `(groupId: string)`
+- `group-delete` - Emitted when group is deleted: `(groupId: string)`
+- `group-update` - Emitted when group is updated: `(group: WorkflowGroup)`
+- `group-resize-start` - Emitted when group resize begins: `(groupId: string)`
+- `group-resize-end` - Emitted when group resize ends: `(groupId: string, size: { w: number; h: number })`
+
+Other events:
+- `edge-delete` - Emitted when edge is deleted: `(edgeId: string)`
+- `canvas-click` - Emitted when canvas background is clicked
+- `entity-moved-to-group` - Emitted when entity is moved to/from a group: `(entityId: string, groupId: string | null)`
 
 **Slots:**
 
@@ -187,8 +209,10 @@ import {
   updateGroupBounds,
   updateAllGroupBounds,
   arrangeNodesInGroup,
-  reorderNodeInGroup,
   updateGroupPosition,
+
+  // Validation functions
+  areEntitiesInDifferentGroups,
 
   // Utility functions
   isPointInRect
@@ -315,17 +339,32 @@ const updated = updateGroupBounds(graph, 'group-1', 20)
 const updated = arrangeNodesInGroup(graph, 'group-1', 20, 40)
 ```
 
-**`reorderNodeInGroup(graph, nodeId, newIndex)`** - Change a node's position in the group's node array
-
-```typescript
-const updated = reorderNodeInGroup(graph, 'node-1', 2)
-```
-
 **`updateGroupPosition(graph, groupId, newPosition)`** - Move a group and all its nodes
 
 ```typescript
 const updated = updateGroupPosition(graph, 'group-1', { x: 200, y: 300 })
 ```
+
+### Validation Functions
+
+**`areEntitiesInDifferentGroups(graph, entityId1, entityId2)`** - Check if two entities belong to different groups
+
+Returns `true` if the entities are in different groups, `false` if they're in the same group or both ungrouped. Useful for validating connections before creating edges.
+
+```typescript
+// Check if two nodes can be connected
+const canConnect = !areEntitiesInDifferentGroups(graph, 'node-1', 'node-2')
+
+if (canConnect) {
+  graph = addEdge(graph, {
+    id: 'edge-1',
+    from: { entityId: 'node-1' },
+    to: { entityId: 'node-2' }
+  })
+}
+```
+
+Note: The `WorkflowCanvas` component automatically enforces this validation when connecting nodes interactively.
 
 ## Configuration Panel
 
@@ -363,6 +402,7 @@ If no `panel` slot is provided, a default panel (`WorkflowConfigPanel`) shows:
 - **Select**: Click on a node to select it and open the configuration panel
 - **Drag**: Click and drag a node to move it
 - **Connect**: Drag from the output handle (bottom) to another node's input handle (top)
+  - Note: Connections between nodes in different groups are not allowed
 - **Disconnect**: Drag from an input handle to disconnect and optionally reconnect elsewhere
 - **Delete**: Select a node and click the delete button in the configuration panel
 
@@ -372,7 +412,6 @@ If no `panel` slot is provided, a default panel (`WorkflowConfigPanel`) shows:
 - **Drag Group**: Click and drag a group's title or background to move it (all nodes move with it)
 - **Add to Group**: Drag a node's center over a group to add it to that group
 - **Remove from Group**: Drag a node out of a group
-- **Reorder in Group**: Drag a node over another node within the same group to reorder
 - **Delete**: Select a group and click the delete button in the configuration panel
 
 ### Canvas Operations
@@ -433,6 +472,8 @@ You can override the default styles by targeting the component classes:
 
 ### Handling Events
 
+#### Basic Events
+
 ```vue
 <script setup lang="ts">
 import { ref } from 'vue'
@@ -472,6 +513,113 @@ function handleAddStep(event: { afterNodeId?: string; inGroupId?: string }) {
       to: { nodeId: newNode.id }
     })
   }
+}
+</script>
+```
+
+#### Handling All Events
+
+The canvas emits detailed events for tracking user interactions:
+
+```vue
+<template>
+  <WorkflowCanvas
+    v-model="graph"
+    v-model:selected-id="selectedId"
+    @node-drag-start="onNodeDragStart"
+    @node-drag-end="onNodeDragEnd"
+    @node-click="onNodeClick"
+    @node-delete="onNodeDelete"
+    @node-update="onNodeUpdate"
+    @group-drag-start="onGroupDragStart"
+    @group-drag-end="onGroupDragEnd"
+    @group-click="onGroupClick"
+    @group-delete="onGroupDelete"
+    @group-update="onGroupUpdate"
+    @group-resize-start="onGroupResizeStart"
+    @group-resize-end="onGroupResizeEnd"
+    @edge-delete="onEdgeDelete"
+    @canvas-click="onCanvasClick"
+    @entity-moved-to-group="onEntityMovedToGroup"
+  />
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue'
+import type { WorkflowGraph, WorkflowNode, WorkflowGroup, Position } from 'oceanfront-workflow-canvas'
+
+const graph = ref<WorkflowGraph>({ nodes: [], edges: [], groups: [] })
+const selectedId = ref<string | null>(null)
+
+// Node events
+function onNodeDragStart(nodeId: string) {
+  console.log('Node drag started:', nodeId)
+  // Track drag state, show indicators, etc.
+}
+
+function onNodeDragEnd(nodeId: string, position: Position) {
+  console.log('Node drag ended:', nodeId, position)
+  // Save position to backend, log analytics, etc.
+}
+
+function onNodeClick(nodeId: string) {
+  console.log('Node clicked:', nodeId)
+  // Additional click handling beyond selection
+}
+
+function onNodeDelete(nodeId: string) {
+  console.log('Node deleted:', nodeId)
+  // Sync with backend, show notification, etc.
+}
+
+function onNodeUpdate(node: WorkflowNode) {
+  console.log('Node updated:', node)
+  // Sync changes to backend
+}
+
+// Group events
+function onGroupDragStart(groupId: string) {
+  console.log('Group drag started:', groupId)
+}
+
+function onGroupDragEnd(groupId: string, position: Position) {
+  console.log('Group drag ended:', groupId, position)
+}
+
+function onGroupClick(groupId: string) {
+  console.log('Group clicked:', groupId)
+}
+
+function onGroupDelete(groupId: string) {
+  console.log('Group deleted:', groupId)
+}
+
+function onGroupUpdate(group: WorkflowGroup) {
+  console.log('Group updated:', group)
+}
+
+function onGroupResizeStart(groupId: string) {
+  console.log('Group resize started:', groupId)
+}
+
+function onGroupResizeEnd(groupId: string, size: { w: number; h: number }) {
+  console.log('Group resized:', groupId, size)
+}
+
+// Other events
+function onEdgeDelete(edgeId: string) {
+  console.log('Edge deleted:', edgeId)
+  // Sync with backend
+}
+
+function onCanvasClick() {
+  console.log('Canvas clicked')
+  // Clear selections, close panels, etc.
+}
+
+function onEntityMovedToGroup(entityId: string, groupId: string | null) {
+  console.log('Entity moved to group:', entityId, groupId)
+  // groupId is null if entity was removed from all groups
 }
 </script>
 ```
