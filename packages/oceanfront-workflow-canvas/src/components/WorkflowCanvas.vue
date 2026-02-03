@@ -172,6 +172,7 @@
                 :dragging="
                   draggingNodeId === node.id && !!getParentGroup(props.modelValue, node.id)
                 "
+                :labels="mergedLabels"
                 @menu-click="
                   () => {
                     emit('update:selectedId', node.id)
@@ -219,6 +220,7 @@
         :selected-node="selectedNode"
         :selected-group="selectedGroup"
         :graph="props.modelValue"
+        :labels="mergedLabels"
         @close="closePanel"
         @delete-node="handleDeleteNode"
         @delete-group="handleDeleteGroup"
@@ -238,7 +240,8 @@ import type {
   Position,
   WorkflowGroup,
   AddStepEvent,
-  ConnectEvent
+  ConnectEvent,
+  WorkflowCanvasLabels
 } from '../types/workflow'
 import {
   updateNodePosition,
@@ -253,11 +256,17 @@ import {
   updateGroupPosition,
   getGroupDepth,
   wouldCreateCycle,
+  wouldExceedMaxDepth,
   calculateGroupMinimumSize,
   updateGroupBounds,
   isPointInRect,
-  areEntitiesInDifferentGroups
+  areEntitiesInDifferentGroups,
+  handleAddStepToGraph,
+  handleConnectNodes,
+  addNode,
+  addGroup
 } from '../utils/graph-helpers'
+import { DEFAULT_LABELS } from '../constants/labels'
 import WorkflowTile from './WorkflowTile.vue'
 import WorkflowConfigPanel from './WorkflowConfigPanel.vue'
 import WorkflowPlusPlaceholder from './WorkflowPlusPlaceholder.vue'
@@ -273,20 +282,30 @@ const props = withDefaults(
     selectedId?: string | null
     width?: number
     height?: number
+    maxGroupDepth?: number | null
+    labels?: Partial<WorkflowCanvasLabels>
   }>(),
   {
     readonly: false,
     selectedId: null,
     width: 1000,
-    height: 1000
+    height: 1000,
+    maxGroupDepth: null
   }
 )
+
+// Merge provided labels with defaults
+const mergedLabels = computed<WorkflowCanvasLabels>(() => ({
+  ...DEFAULT_LABELS,
+  ...props.labels
+}))
 
 const emit = defineEmits<{
   'update:modelValue': [graph: WorkflowGraph]
   'update:selectedId': [id: string | null]
-  'add-step': [event: AddStepEvent]
-  connect: [event: ConnectEvent]
+  'node-add': [node: WorkflowNode]
+  'group-add': [group: WorkflowGroup]
+  'edge-add': [edge: WorkflowEdge]
   'node-drag-start': [nodeId: string]
   'node-drag-end': [nodeId: string, position: Position]
   'node-click': [nodeId: string]
@@ -745,17 +764,21 @@ function handleGroupDragMove(newPosition: Position) {
     }
   }
 
-  // Show dropzone highlight
-  if (targetGroup && !wouldCreateCycle(updatedGraph, draggingGroupId.value, targetGroup.id)) {
-    nodeOverGroupId.value = targetGroup.id
-    nodeOverGroupIds.value = allGroupsAtPosition.map(g => g.id)
+  // Determine the primary target group
+  let primaryTargetGroup: string | null = null
+  if (
+    targetGroup &&
+    !wouldCreateCycle(updatedGraph, draggingGroupId.value, targetGroup.id) &&
+    !wouldExceedMaxDepth(updatedGraph, draggingGroupId.value, targetGroup.id, props.maxGroupDepth)
+  ) {
+    primaryTargetGroup = targetGroup.id
   } else if (centerInOriginalParent && originalParent) {
-    nodeOverGroupId.value = originalParent
-    nodeOverGroupIds.value = allGroupsAtPosition.map(g => g.id)
-  } else {
-    nodeOverGroupId.value = null
-    nodeOverGroupIds.value = []
+    primaryTargetGroup = originalParent
   }
+
+  // Set all groups at position for dropzone highlighting
+  nodeOverGroupId.value = primaryTargetGroup
+  nodeOverGroupIds.value = primaryTargetGroup ? allGroupsAtPosition.map(g => g.id) : []
 
   return true
 }
@@ -779,13 +802,18 @@ function handleNodeDragMove(newPosition: Position) {
   const targetGroup = findGroupAtPosition(updatedGraph, nodeCenter)
   const allGroupsAtPosition = findAllGroupsAtPosition(updatedGraph, nodeCenter)
 
-  if (targetGroup) {
-    nodeOverGroupId.value = targetGroup.id
-    nodeOverGroupIds.value = allGroupsAtPosition.map(g => g.id)
-  } else {
-    nodeOverGroupId.value = null
-    nodeOverGroupIds.value = []
+  // Check if target group would exceed max depth
+  let validTargetGroup = targetGroup
+  if (
+    targetGroup &&
+    wouldExceedMaxDepth(updatedGraph, draggingNodeId.value, targetGroup.id, props.maxGroupDepth)
+  ) {
+    validTargetGroup = undefined
   }
+
+  // Set all groups at position for dropzone highlighting
+  nodeOverGroupIds.value = allGroupsAtPosition.map(g => g.id)
+  nodeOverGroupId.value = validTargetGroup?.id || null
 
   return true
 }
@@ -907,7 +935,8 @@ function handleMouseUp() {
       if (
         targetGroup &&
         targetGroup.id !== groupId &&
-        !wouldCreateCycle(props.modelValue, groupId, targetGroup.id)
+        !wouldCreateCycle(props.modelValue, groupId, targetGroup.id) &&
+        !wouldExceedMaxDepth(props.modelValue, groupId, targetGroup.id, props.maxGroupDepth)
       ) {
         // Center is inside a valid target group
         if (originalParent !== targetGroup.id) {
@@ -1002,7 +1031,11 @@ function handleMouseUp() {
       }
 
       // If dropped inside a different group, add to that group (bounds auto-updated in addEntityToGroup)
-      if (targetGroup) {
+      // But only if it doesn't exceed max depth
+      if (
+        targetGroup &&
+        !wouldExceedMaxDepth(updatedGraph, nodeId, targetGroup.id, props.maxGroupDepth)
+      ) {
         updatedGraph = addEntityToGroup(updatedGraph, nodeId, targetGroup.id)
       }
 
@@ -1160,19 +1193,22 @@ function handleEntityHandleMouseUp(entityId: string, port: string) {
 
     if (shouldConnect) {
       // If we were disconnecting an edge, remove it first
+      let baseGraph = props.modelValue
       if (disconnectingEdge.value) {
-        const updatedGraph = {
+        baseGraph = {
           ...props.modelValue,
           edges: props.modelValue.edges.filter(edge => edge.id !== disconnectingEdge.value!.id)
         }
-        emit('update:modelValue', updatedGraph)
       }
 
-      // Emit connect event for the new connection
-      emit('connect', {
+      // Create the connection
+      const updatedGraph = handleConnectNodes(baseGraph, {
         fromNodeId: fromEntityId,
         toNodeId: toEntityId
       })
+      emit('update:modelValue', updatedGraph)
+      const newEdge = updatedGraph.edges[updatedGraph.edges.length - 1]
+      emit('edge-add', newEdge)
     }
   }
 
@@ -1190,7 +1226,14 @@ function handleHandleMouseUp(nodeId: string, port: string) {
   handleEntityHandleMouseUp(nodeId, port)
 }
 
-const handleAddStep = (event: AddStepEvent) => emit('add-step', event)
+function handleAddStep(event: AddStepEvent) {
+  const result = handleAddStepToGraph(props.modelValue, event)
+  emit('update:modelValue', result.graph)
+  emit('update:selectedId', result.newNodeId)
+  const newNode = result.graph.nodes.find(n => n.id === result.newNodeId)!
+  emit('node-add', newNode)
+}
+
 const closePanel = () => emit('update:selectedId', null)
 
 function handleFreeOutputClick(nodeId: string) {
@@ -1201,8 +1244,8 @@ function handleFreeOutputClick(nodeId: string) {
   // Get the parent group of the node (if any)
   const parentGroup = getParentGroup(props.modelValue, nodeId)
 
-  // Emit add-step event with the current node as afterNodeId and group info
-  emit('add-step', {
+  // Call handleAddStep with the event
+  handleAddStep({
     afterNodeId: nodeId,
     inGroupId: parentGroup?.id
   })
@@ -1327,5 +1370,27 @@ onUnmounted(() => {
   document.removeEventListener('mousemove', handleMouseMove)
   document.removeEventListener('mouseup', handleMouseUp)
   document.removeEventListener('keydown', handleKeyDown)
+})
+
+// Public methods exposed to parent components
+function addNewNode() {
+  const result = addNode(props.modelValue)
+  emit('update:modelValue', result.graph)
+  emit('update:selectedId', result.newNodeId)
+  const newNode = result.graph.nodes.find(n => n.id === result.newNodeId)!
+  emit('node-add', newNode)
+}
+
+function addNewGroup() {
+  const result = addGroup(props.modelValue)
+  emit('update:modelValue', result.graph)
+  emit('update:selectedId', result.newGroupId)
+  const newGroup = result.graph.groups.find(g => g.id === result.newGroupId)!
+  emit('group-add', newGroup)
+}
+
+defineExpose({
+  addNewNode,
+  addNewGroup
 })
 </script>

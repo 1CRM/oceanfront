@@ -195,6 +195,11 @@
       border-color: var(--of-primary-tint, #2196f3);
       background-color: rgba(0, 0, 0, 0.08);
     }
+
+    &.workflow-canvas-group--dropzone {
+      background-color: rgba(0, 0, 0, 0.08);
+      border-color: var(--of-primary-tint, #2196f3);
+    }
   }
 
   &__title {

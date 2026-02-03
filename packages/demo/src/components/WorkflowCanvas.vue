@@ -3,10 +3,18 @@
     <h1>Workflow Canvas</h1>
 
     <div class="demo-actions">
-      <of-button @click="addNewNode" variant="filled" tint="primary">
+      <of-button
+        @click="workflowCanvasRef?.addNewNode()"
+        variant="filled"
+        tint="primary"
+      >
         + Add New Node
       </of-button>
-      <of-button @click="addNewGroup" variant="filled" tint="primary">
+      <of-button
+        @click="workflowCanvasRef?.addNewGroup()"
+        variant="filled"
+        tint="primary"
+      >
         + Add New Group
       </of-button>
       <of-button @click="resetCanvas" variant="outlined">
@@ -14,14 +22,33 @@
       </of-button>
     </div>
 
+    <div class="controls">
+      <label>
+        Max Group Depth:
+        <input
+          type="number"
+          v-model.number="maxGroupDepth"
+          min="0"
+          placeholder="No limit"
+          style="width: 80px; margin-left: 8px"
+        />
+        <span style="margin-left: 8px; color: #666; font-size: 13px">
+          (leave empty for no limit, 0 means no nesting allowed)
+        </span>
+      </label>
+    </div>
+
     <div class="workflow-demo">
       <WorkflowCanvas
+        ref="workflowCanvasRef"
         v-model="workflowGraph"
         v-model:selected-id="selectedId"
         :width="1000"
         :height="600"
-        @add-step="handleAddStep"
-        @connect="handleConnect"
+        :max-group-depth="maxGroupDepth"
+        @node-add="handleNodeAdd"
+        @group-add="handleGroupAdd"
+        @edge-add="handleEdgeAdd"
         @node-drag-start="handleNodeDragStart"
         @node-drag-end="handleNodeDragEnd"
         @node-click="handleNodeClick"
@@ -76,23 +103,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref } from 'vue'
 import {
   WorkflowCanvas,
   type WorkflowGraph,
   type WorkflowNode,
   type WorkflowEdge,
-  type WorkflowGroup,
-  type AddStepEvent,
-  type ConnectEvent,
-  addEdge,
-  findNode,
-  addEntityToGroup
+  type WorkflowGroup
 } from 'oceanfront-workflow-canvas'
 import 'oceanfront-workflow-canvas/css'
 
 // Initial workflow graph state - Complex linear workflow with branches (one in, one out per node)
-// Node height = 100px, gap between nodes = 40px, so Y spacing = 140px
 const initialWorkflowGraph: WorkflowGraph = {
   nodes: [],
   edges: [],
@@ -105,203 +126,8 @@ const workflowGraph = ref<WorkflowGraph>(
 )
 
 const selectedId = ref<string | null>(null)
-const nodeConfig = ref({ title: '', description: '' })
-const groupConfig = ref({ title: '' })
-
-const selectedNode = computed(() => {
-  if (!selectedId.value) return null
-  return findNode(workflowGraph.value, selectedId.value)
-})
-
-const selectedGroup = computed(() => {
-  if (!selectedId.value) return null
-  return workflowGraph.value.groups.find(
-    (g: WorkflowGroup) => g.id === selectedId.value
-  )
-})
-
-// Watch selected node and update config
-watch(selectedNode, (node) => {
-  if (node) {
-    nodeConfig.value = {
-      title: (node.data as any)?.title || '',
-      description: (node.data as any)?.description || ''
-    }
-  }
-})
-
-// Watch selected group and update config
-watch(selectedGroup, (group) => {
-  if (group) {
-    groupConfig.value = {
-      title: group.title || ''
-    }
-  }
-})
-
-function handleAddStep(event: AddStepEvent) {
-  console.log('Add step:', event)
-
-  const newNodeId = `node-${Date.now()}`
-  const afterNode = event.afterNodeId
-    ? findNode(workflowGraph.value, event.afterNodeId)
-    : null
-
-  // Find the edge from the afterNode (if it exists)
-  const existingEdge = event.afterNodeId
-    ? workflowGraph.value.edges.find(
-        (e: WorkflowEdge) => e.from.entityId === event.afterNodeId
-      )
-    : null
-
-  // Calculate position between the two nodes if there's an existing edge
-  let position: { x: number; y: number }
-  if (afterNode && existingEdge) {
-    const toNode = findNode(workflowGraph.value, existingEdge.to.entityId)
-    if (toNode) {
-      // Place new node between the two connected nodes
-      position = {
-        x: (afterNode.position.x + toNode.position.x) / 2,
-        y: (afterNode.position.y + toNode.position.y) / 2
-      }
-    } else {
-      // Fallback: place below the afterNode
-      position = { x: afterNode.position.x, y: afterNode.position.y + 150 }
-    }
-  } else if (afterNode) {
-    // No existing edge, place below the afterNode
-    position = { x: afterNode.position.x, y: afterNode.position.y + 150 }
-  } else {
-    // No afterNode specified, place at default position
-    position = { x: 100, y: 100 }
-  }
-
-  // Create the new node
-  workflowGraph.value.nodes.push({
-    id: newNodeId,
-    kind: 'action',
-    position,
-    data: {
-      title: 'New Action',
-      description: 'Configure this action'
-    }
-  })
-
-  // If the source node is in a group, add the new node to the same group
-  if (event.inGroupId) {
-    workflowGraph.value = addEntityToGroup(
-      workflowGraph.value,
-      newNodeId,
-      event.inGroupId
-    )
-  }
-
-  // If there's an existing edge, we need to:
-  // 1. Remove the old edge
-  // 2. Create edge from afterNode to newNode
-  // 3. Create edge from newNode to the original target
-  if (existingEdge && event.afterNodeId) {
-    const targetNodeId = existingEdge.to.entityId
-
-    // Remove the old edge
-    workflowGraph.value.edges = workflowGraph.value.edges.filter(
-      (e: WorkflowEdge) => e.id !== existingEdge.id
-    )
-
-    // Add edge from afterNode to new node
-    workflowGraph.value = addEdge(workflowGraph.value, {
-      id: `edge-${Date.now()}-1`,
-      from: { entityId: event.afterNodeId },
-      to: { entityId: newNodeId }
-    })
-
-    // Add edge from new node to original target
-    workflowGraph.value = addEdge(workflowGraph.value, {
-      id: `edge-${Date.now()}-2`,
-      from: { entityId: newNodeId },
-      to: { entityId: targetNodeId }
-    })
-  } else if (event.afterNodeId) {
-    // No existing edge, just create one from afterNode to newNode
-    workflowGraph.value = addEdge(workflowGraph.value, {
-      id: `edge-${Date.now()}`,
-      from: { entityId: event.afterNodeId },
-      to: { entityId: newNodeId }
-    })
-  }
-
-  selectedId.value = newNodeId
-}
-
-function handleConnect(event: ConnectEvent) {
-  console.log('Connect:', event)
-
-  const edgeId = `edge-${Date.now()}`
-  workflowGraph.value = addEdge(workflowGraph.value, {
-    id: edgeId,
-    from: { entityId: event.fromNodeId },
-    to: { entityId: event.toNodeId }
-  })
-}
-
-function addNewNode() {
-  const newNodeId = `node-${Date.now()}`
-
-  // Calculate position: find the bottommost node and place new node below it
-  let maxY = 0
-  workflowGraph.value.nodes.forEach((node: WorkflowNode) => {
-    const nodeBottom = node.position.y + (node.size?.h || 100)
-    if (nodeBottom > maxY) {
-      maxY = nodeBottom
-    }
-  })
-
-  // Create new node
-  const newNode: WorkflowNode = {
-    id: newNodeId,
-    kind: 'action',
-    position: { x: 100, y: maxY + 50 },
-    data: {
-      title: 'New Action',
-      description: 'Configure this action'
-    }
-  }
-
-  workflowGraph.value.nodes.push(newNode)
-  selectedId.value = newNodeId
-}
-
-function addNewGroup() {
-  const newGroupId = `group-${Date.now()}`
-
-  // Calculate position: find the rightmost node/group and place new group to the right
-  let maxX = 0
-  workflowGraph.value.nodes.forEach((node: WorkflowNode) => {
-    const nodeRight = node.position.x + (node.size?.w || 250)
-    if (nodeRight > maxX) {
-      maxX = nodeRight
-    }
-  })
-
-  workflowGraph.value.groups.forEach((group: WorkflowGroup) => {
-    const groupRight = group.position.x + group.size.w
-    if (groupRight > maxX) {
-      maxX = groupRight
-    }
-  })
-
-  // Create new group (empty, suitable size for one node)
-  workflowGraph.value.groups.push({
-    id: newGroupId,
-    kind: 'group',
-    title: 'New Group',
-    position: { x: maxX + 50, y: 100 },
-    size: { w: 290, h: 140 },
-    containedIds: []
-  })
-
-  selectedId.value = newGroupId
-}
+const workflowCanvasRef = ref<InstanceType<typeof WorkflowCanvas> | null>(null)
+const maxGroupDepth = ref<number | null>(null)
 
 function resetCanvas() {
   workflowGraph.value = JSON.parse(JSON.stringify(initialWorkflowGraph))
@@ -330,7 +156,22 @@ function logEvent(name: string, data: any) {
   }
 }
 
-// Event handlers for all new emits
+function handleNodeAdd(node: WorkflowNode) {
+  logEvent('node-add', { id: node.id, kind: node.kind })
+}
+
+function handleGroupAdd(group: WorkflowGroup) {
+  logEvent('group-add', { id: group.id, title: group.title })
+}
+
+function handleEdgeAdd(edge: WorkflowEdge) {
+  logEvent('edge-add', {
+    id: edge.id,
+    from: edge.from.entityId,
+    to: edge.to.entityId
+  })
+}
+
 function handleNodeDragStart(nodeId: string) {
   logEvent('node-drag-start', { nodeId })
 }
@@ -400,6 +241,26 @@ function handleEntityMovedToGroup(entityId: string, groupId: string | null) {
   display: flex;
   gap: 12px;
   margin: 20px 0;
+}
+
+.controls {
+  margin: 20px 0;
+  padding: 16px;
+  background: #f5f5f5;
+  border-radius: 8px;
+}
+
+.controls label {
+  display: flex;
+  align-items: center;
+  font-weight: 500;
+}
+
+.controls input[type='number'] {
+  padding: 6px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
 }
 
 .state-info {

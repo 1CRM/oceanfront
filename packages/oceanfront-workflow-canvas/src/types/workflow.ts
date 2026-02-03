@@ -100,3 +100,33 @@ export interface ConnectEvent {
   fromPort?: string
   toPort?: string
 }
+
+/**
+ * Labels for internationalization support
+ */
+export interface WorkflowCanvasLabels {
+  // Panel headers
+  nodeDetailsHeader: string
+  groupDetailsHeader: string
+
+  // Field labels
+  idLabel: string
+  typeLabel: string
+  titleLabel: string
+  descriptionLabel: string
+  containedItemsLabel: string
+  nestingDepthLabel: string
+  sizeLabel: string
+
+  // Buttons
+  deleteNodeButton: string
+  deleteGroupButton: string
+  configureButton: string
+
+  // Placeholders
+  groupTitlePlaceholder: string
+
+  // Dynamic text formatters
+  itemCount: (count: number) => string
+  nestingDepth: (depth: number) => string
+}

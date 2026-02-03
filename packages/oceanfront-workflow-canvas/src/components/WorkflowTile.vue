@@ -22,7 +22,7 @@
         scale="sm"
         @click.stop="handleMenuClick"
         @mousedown.stop
-        title="Configure"
+        :title="effectiveLabels.configureButton"
       >
         <of-icon scale="sm" name="more alt" />
       </of-button>
@@ -35,7 +35,8 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { WorkflowNode, NodeData } from '../types/workflow'
+import type { WorkflowNode, NodeData, WorkflowCanvasLabels } from '../types/workflow'
+import { DEFAULT_LABELS } from '../constants/labels'
 
 defineOptions({
   name: 'WorkflowTile'
@@ -46,12 +47,16 @@ const props = withDefaults(
     node: WorkflowNode
     selected?: boolean
     dragging?: boolean
+    labels?: WorkflowCanvasLabels
   }>(),
   {
     selected: false,
     dragging: false
   }
 )
+
+// Use DEFAULT_LABELS if no labels provided
+const effectiveLabels = computed(() => props.labels || DEFAULT_LABELS)
 
 const emit = defineEmits<{
   'menu-click': []

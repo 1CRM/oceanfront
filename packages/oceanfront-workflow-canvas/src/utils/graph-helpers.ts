@@ -4,7 +4,10 @@ import type {
   WorkflowEdge,
   WorkflowGroup,
   Position,
-  Rect
+  Rect,
+  AddStepEvent,
+  ConnectEvent,
+  Size
 } from '../types/workflow'
 
 /**
@@ -267,6 +270,49 @@ export function wouldCreateCycle(graph: WorkflowGraph, childId: string, parentId
   // Check if parentId is a descendant of childId
   const descendants = getGroupDescendants(graph, childId)
   return descendants.includes(parentId)
+}
+
+/**
+ * Check if adding an entity to a group would exceed the maximum depth
+ * @param graph - The workflow graph
+ * @param entityId - The entity to be added
+ * @param parentId - The group to add the entity to
+ * @param maxDepth - Maximum allowed depth (null means no limit)
+ * @returns true if the operation would exceed max depth, false otherwise
+ */
+export function wouldExceedMaxDepth(
+  graph: WorkflowGraph,
+  entityId: string,
+  parentId: string,
+  maxDepth: number | null
+): boolean {
+  // If no max depth is set, no limit
+  if (maxDepth === null) return false
+
+  // Calculate what the depth of the entity would be after adding to parent
+  const parentDepth = getGroupDepth(graph, parentId)
+  const newEntityDepth = parentDepth + 1
+
+  // If entity is a group, check if any of its descendants would exceed max depth
+  const entity = findGroup(graph, entityId)
+  if (entity) {
+    // Get the maximum depth of descendants relative to this group
+    let maxDescendantDepth = 0
+    const descendants = getGroupDescendants(graph, entityId)
+    descendants.forEach(descendantId => {
+      const descendant = findGroup(graph, descendantId)
+      if (descendant) {
+        const relativeDepth = getGroupDepth(graph, descendantId) - getGroupDepth(graph, entityId)
+        maxDescendantDepth = Math.max(maxDescendantDepth, relativeDepth)
+      }
+    })
+    
+    // Check if the deepest descendant would exceed max depth
+    return newEntityDepth + maxDescendantDepth > maxDepth
+  }
+
+  // For nodes, just check the new depth
+  return newEntityDepth > maxDepth
 }
 
 /**
@@ -649,4 +695,261 @@ export function updateGroupPosition(
     nodes: updatedNodes,
     groups: updatedGroups
   }
+}
+
+/**
+ * Default ID generator using timestamp
+ */
+const defaultIdGenerator = (prefix: string) => () => `${prefix}-${Date.now()}`
+
+/**
+ * Handle adding a step to the workflow graph
+ * Inserts a new node after a specified node, handling edge reconnection
+ * @param graph - The workflow graph
+ * @param event - The add step event with afterNodeId and optional inGroupId
+ * @param options - Optional configuration for node creation
+ * @returns Updated graph and the new node ID
+ */
+export function handleAddStepToGraph(
+  graph: WorkflowGraph,
+  event: AddStepEvent,
+  options?: {
+    nodeIdGenerator?: () => string
+    edgeIdGenerator?: () => string
+    defaultNodeData?: unknown
+    defaultKind?: string
+  }
+): { graph: WorkflowGraph; newNodeId: string } {
+  const nodeIdGenerator = options?.nodeIdGenerator || defaultIdGenerator('node')
+  const edgeIdGenerator = options?.edgeIdGenerator || defaultIdGenerator('edge')
+  const defaultNodeData = options?.defaultNodeData || {
+    title: 'New Action',
+    description: 'Configure this action'
+  }
+  const defaultKind = options?.defaultKind || 'action'
+
+  const newNodeId = nodeIdGenerator()
+  const afterNode = event.afterNodeId ? findNode(graph, event.afterNodeId) : null
+
+  // Find the edge from the afterNode (if it exists)
+  const existingEdge = event.afterNodeId
+    ? graph.edges.find((e: WorkflowEdge) => e.from.entityId === event.afterNodeId)
+    : null
+
+  // Calculate position between the two nodes if there's an existing edge
+  let position: Position
+  if (afterNode && existingEdge) {
+    const toNode = findNode(graph, existingEdge.to.entityId)
+    if (toNode) {
+      // Place new node between the two connected nodes
+      position = {
+        x: (afterNode.position.x + toNode.position.x) / 2,
+        y: (afterNode.position.y + toNode.position.y) / 2
+      }
+    } else {
+      // Fallback: place below the afterNode
+      position = { x: afterNode.position.x, y: afterNode.position.y + 150 }
+    }
+  } else if (afterNode) {
+    // No existing edge, place below the afterNode
+    position = { x: afterNode.position.x, y: afterNode.position.y + 150 }
+  } else {
+    // No afterNode specified, place at default position
+    position = { x: 100, y: 100 }
+  }
+
+  // Create the new node
+  const newNode: WorkflowNode = {
+    id: newNodeId,
+    kind: defaultKind,
+    position,
+    data: defaultNodeData
+  }
+
+  let updatedGraph: WorkflowGraph = {
+    ...graph,
+    nodes: [...graph.nodes, newNode]
+  }
+
+  // If the source node is in a group, add the new node to the same group
+  if (event.inGroupId) {
+    updatedGraph = addEntityToGroup(updatedGraph, newNodeId, event.inGroupId)
+  }
+
+  // If there's an existing edge, we need to:
+  // 1. Remove the old edge
+  // 2. Create edge from afterNode to newNode
+  // 3. Create edge from newNode to the original target
+  if (existingEdge && event.afterNodeId) {
+    const targetNodeId = existingEdge.to.entityId
+
+    // Remove the old edge
+    updatedGraph = {
+      ...updatedGraph,
+      edges: updatedGraph.edges.filter((e: WorkflowEdge) => e.id !== existingEdge.id)
+    }
+
+    // Add edge from afterNode to new node
+    updatedGraph = addEdge(updatedGraph, {
+      id: edgeIdGenerator(),
+      from: { entityId: event.afterNodeId },
+      to: { entityId: newNodeId }
+    })
+
+    // Add edge from new node to original target
+    updatedGraph = addEdge(updatedGraph, {
+      id: edgeIdGenerator(),
+      from: { entityId: newNodeId },
+      to: { entityId: targetNodeId }
+    })
+  } else if (event.afterNodeId) {
+    // No existing edge, just create one from afterNode to newNode
+    updatedGraph = addEdge(updatedGraph, {
+      id: edgeIdGenerator(),
+      from: { entityId: event.afterNodeId },
+      to: { entityId: newNodeId }
+    })
+  }
+
+  return { graph: updatedGraph, newNodeId }
+}
+
+/**
+ * Handle connecting two nodes in the workflow graph
+ * @param graph - The workflow graph
+ * @param event - The connect event with fromNodeId and toNodeId
+ * @param options - Optional configuration for edge creation
+ * @returns Updated graph
+ */
+export function handleConnectNodes(
+  graph: WorkflowGraph,
+  event: ConnectEvent,
+  options?: {
+    edgeIdGenerator?: () => string
+  }
+): WorkflowGraph {
+  const edgeIdGenerator = options?.edgeIdGenerator || defaultIdGenerator('edge')
+
+  return addEdge(graph, {
+    id: edgeIdGenerator(),
+    from: { entityId: event.fromNodeId },
+    to: { entityId: event.toNodeId }
+  })
+}
+
+/**
+ * Add a new node to the workflow graph
+ * @param graph - The workflow graph
+ * @param options - Optional configuration for node creation
+ * @returns Updated graph and the new node ID
+ */
+export function addNode(
+  graph: WorkflowGraph,
+  options?: {
+    nodeIdGenerator?: () => string
+    position?: Position
+    nodeData?: unknown
+    kind?: string
+  }
+): { graph: WorkflowGraph; newNodeId: string } {
+  const nodeIdGenerator = options?.nodeIdGenerator || defaultIdGenerator('node')
+  const defaultNodeData = options?.nodeData || {
+    title: 'New Action',
+    description: 'Configure this action'
+  }
+  const defaultKind = options?.kind || 'action'
+
+  const newNodeId = nodeIdGenerator()
+
+  // Calculate position: find the bottommost node and place new node below it
+  let position: Position
+  if (options?.position) {
+    position = options.position
+  } else {
+    let maxY = 0
+    graph.nodes.forEach((node: WorkflowNode) => {
+      const nodeBottom = node.position.y + (node.size?.h || 100)
+      if (nodeBottom > maxY) {
+        maxY = nodeBottom
+      }
+    })
+    position = { x: 100, y: maxY + 50 }
+  }
+
+  // Create new node
+  const newNode: WorkflowNode = {
+    id: newNodeId,
+    kind: defaultKind,
+    position,
+    data: defaultNodeData
+  }
+
+  const updatedGraph: WorkflowGraph = {
+    ...graph,
+    nodes: [...graph.nodes, newNode]
+  }
+
+  return { graph: updatedGraph, newNodeId }
+}
+
+/**
+ * Add a new group to the workflow graph
+ * @param graph - The workflow graph
+ * @param options - Optional configuration for group creation
+ * @returns Updated graph and the new group ID
+ */
+export function addGroup(
+  graph: WorkflowGraph,
+  options?: {
+    groupIdGenerator?: () => string
+    position?: Position
+    title?: string
+    size?: Size
+  }
+): { graph: WorkflowGraph; newGroupId: string } {
+  const groupIdGenerator = options?.groupIdGenerator || defaultIdGenerator('group')
+  const defaultTitle = options?.title || 'New Group'
+  const defaultSize = options?.size || { w: 290, h: 140 }
+
+  const newGroupId = groupIdGenerator()
+
+  // Calculate position: find the rightmost node/group and place new group to the right
+  let position: Position
+  if (options?.position) {
+    position = options.position
+  } else {
+    let maxX = 0
+    graph.nodes.forEach((node: WorkflowNode) => {
+      const nodeRight = node.position.x + (node.size?.w || 250)
+      if (nodeRight > maxX) {
+        maxX = nodeRight
+      }
+    })
+
+    graph.groups.forEach((group: WorkflowGroup) => {
+      const groupRight = group.position.x + group.size.w
+      if (groupRight > maxX) {
+        maxX = groupRight
+      }
+    })
+
+    position = { x: maxX + 50, y: 100 }
+  }
+
+  // Create new group (empty, suitable size for one node)
+  const newGroup: WorkflowGroup = {
+    id: newGroupId,
+    kind: 'group',
+    title: defaultTitle,
+    position,
+    size: defaultSize,
+    containedIds: []
+  }
+
+  const updatedGraph: WorkflowGraph = {
+    ...graph,
+    groups: [...graph.groups, newGroup]
+  }
+
+  return { graph: updatedGraph, newGroupId }
 }

@@ -15,8 +15,12 @@ export type {
   Port,
   NodeData,
   AddStepEvent,
-  ConnectEvent
+  ConnectEvent,
+  WorkflowCanvasLabels
 } from './types/workflow'
+
+// Constants
+export { DEFAULT_LABELS } from './constants/labels'
 
 // Utilities
 export {
