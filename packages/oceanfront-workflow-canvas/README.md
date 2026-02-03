@@ -157,7 +157,6 @@ interface WorkflowGraph {
   nodes: WorkflowNode[]
   edges: WorkflowEdge[]
   groups: WorkflowGroup[]
-  viewport?: Viewport
 }
 
 interface WorkflowNode {
@@ -180,6 +179,12 @@ interface WorkflowGroup {
   rect: Rect
   nodeIds: string[]
 }
+
+interface NodeData {
+  icon?: string
+  title?: string
+  description?: string
+}
 ```
 
 ## Utilities
@@ -192,7 +197,7 @@ import {
   findNode,
   updateNodePosition,
   updateNodesPositions,
-  getNodeEdges,
+  getEntityEdges,
 
   // Edge operations
   addEdge,
@@ -200,10 +205,10 @@ import {
 
   // Group operations
   findGroup,
-  addNodeToGroup,
-  removeNodeFromGroup,
-  removeNodeFromAllGroups,
-  getNodeGroup,
+  addEntityToGroup,
+  removeEntityFromGroup,
+  removeEntityFromAllGroups,
+  getParentGroup,
   findGroupAtPosition,
   calculateGroupBounds,
   updateGroupBounds,
@@ -242,10 +247,10 @@ const updated = updateNodesPositions(graph, [
 ])
 ```
 
-**`getNodeEdges(graph, nodeId)`** - Get all edges connected to a node
+**`getEntityEdges(graph, nodeId)`** - Get all edges connected to a node
 
 ```typescript
-const edges = getNodeEdges(graph, 'node-1')
+const edges = getEntityEdges(graph, 'node-1')
 ```
 
 ### Edge Operations
@@ -290,28 +295,28 @@ const updated = removeEdge(graph, 'edge-1')
 const group = findGroup(graph, 'group-1')
 ```
 
-**`addNodeToGroup(graph, nodeId, groupId)`** - Add a node to a group
+**`addEntityToGroup(graph, nodeId, groupId)`** - Add a node to a group
 
 ```typescript
-const updated = addNodeToGroup(graph, 'node-1', 'group-1')
+const updated = addEntityToGroup(graph, 'node-1', 'group-1')
 ```
 
-**`removeNodeFromGroup(graph, nodeId, groupId)`** - Remove a node from a specific group
+**`removeEntityFromGroup(graph, nodeId, groupId)`** - Remove a node from a specific group
 
 ```typescript
-const updated = removeNodeFromGroup(graph, 'node-1', 'group-1')
+const updated = removeEntityFromGroup(graph, 'node-1', 'group-1')
 ```
 
-**`removeNodeFromAllGroups(graph, nodeId)`** - Remove a node from all groups
+**`removeEntityFromAllGroups(graph, nodeId)`** - Remove a node from all groups
 
 ```typescript
-const updated = removeNodeFromAllGroups(graph, 'node-1')
+const updated = removeEntityFromAllGroups(graph, 'node-1')
 ```
 
-**`getNodeGroup(graph, nodeId)`** - Get the group containing a node
+**`getParentGroup(graph, nodeId)`** - Get the group containing a node
 
 ```typescript
-const group = getNodeGroup(graph, 'node-1')
+const group = getParentGroup(graph, 'node-1')
 ```
 
 **`findGroupAtPosition(graph, position)`** - Find which group (if any) contains a point
@@ -650,7 +655,7 @@ function onEntityMovedToGroup(entityId: string, groupId: string | null) {
 import {
   updateNodePosition,
   addEdge,
-  addNodeToGroup,
+  addEntityToGroup,
   arrangeNodesInGroup,
   updateGroupPosition
 } from 'oceanfront-workflow-canvas'
@@ -666,7 +671,7 @@ graph = addEdge(graph, {
 })
 
 // Add node to group and arrange
-graph = addNodeToGroup(graph, 'node-1', 'group-1')
+graph = addEntityToGroup(graph, 'node-1', 'group-1')
 graph = arrangeNodesInGroup(graph, 'group-1')
 
 // Move entire group

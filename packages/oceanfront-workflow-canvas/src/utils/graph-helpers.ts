@@ -153,24 +153,6 @@ export function removeEntityFromAllGroups(graph: WorkflowGraph, entityId: string
 }
 
 /**
- * Legacy function for backward compatibility (deprecated)
- * @deprecated Use addEntityToGroup instead
- */
-export const addNodeToGroup = addEntityToGroup
-
-/**
- * Legacy function for backward compatibility (deprecated)
- * @deprecated Use removeEntityFromGroup instead
- */
-export const removeNodeFromGroup = removeEntityFromGroup
-
-/**
- * Legacy function for backward compatibility (deprecated)
- * @deprecated Use removeEntityFromAllGroups instead
- */
-export const removeNodeFromAllGroups = removeEntityFromAllGroups
-
-/**
  * Check if a point is inside a rectangle
  */
 export const isPointInRect = (point: Position, rect: Rect): boolean =>
@@ -208,10 +190,7 @@ export function findGroupAtPosition(
 /**
  * Find all groups at a position (including nested groups)
  */
-export function findAllGroupsAtPosition(
-  graph: WorkflowGraph,
-  position: Position
-): WorkflowGroup[] {
+export function findAllGroupsAtPosition(graph: WorkflowGraph, position: Position): WorkflowGroup[] {
   return graph.groups.filter(g => {
     const rect: Rect = {
       x: g.position.x,
@@ -236,18 +215,6 @@ export const getParentGroup = (graph: WorkflowGraph, entityId: string): Workflow
   graph.groups.find(g => g.containedIds.includes(entityId))
 
 /**
- * Legacy function for backward compatibility (deprecated)
- * @deprecated Use getEntityEdges instead
- */
-export const getNodeEdges = getEntityEdges
-
-/**
- * Legacy function for backward compatibility (deprecated)
- * @deprecated Use getParentGroup instead
- */
-export const getNodeGroup = getParentGroup
-
-/**
  * Get all children (nodes + groups) of a group
  */
 export function getGroupChildren(
@@ -257,9 +224,10 @@ export function getGroupChildren(
   const group = findGroup(graph, groupId)
   if (!group) return []
 
-  return group.containedIds
-    .map(id => findEntity(graph, id))
-    .filter(Boolean) as (WorkflowNode | WorkflowGroup)[]
+  return group.containedIds.map(id => findEntity(graph, id)).filter(Boolean) as (
+    | WorkflowNode
+    | WorkflowGroup
+  )[]
 }
 
 /**
@@ -288,11 +256,7 @@ export function getGroupDescendants(graph: WorkflowGraph, groupId: string): stri
 /**
  * Check if adding an entity to a group would create a cycle
  */
-export function wouldCreateCycle(
-  graph: WorkflowGraph,
-  childId: string,
-  parentId: string
-): boolean {
+export function wouldCreateCycle(graph: WorkflowGraph, childId: string, parentId: string): boolean {
   // Can't add a group to itself
   if (childId === parentId) return true
 
@@ -356,15 +320,20 @@ export function calculateGroupBounds(
   const group = findGroup(graph, groupId)
   if (!group || group.containedIds.length === 0) {
     // Default size for empty group (suitable for one node)
-    return { x: 0, y: 0, w: 290, h: 140 }
+    // Preserve the current position if the group exists
+    return group 
+      ? { x: group.position.x, y: group.position.y, w: 290, h: 140 }
+      : { x: 0, y: 0, w: 290, h: 140 }
   }
 
-  const entities = group.containedIds
-    .map(id => findEntity(graph, id))
-    .filter(Boolean) as (WorkflowNode | WorkflowGroup)[]
+  const entities = group.containedIds.map(id => findEntity(graph, id)).filter(Boolean) as (
+    | WorkflowNode
+    | WorkflowGroup
+  )[]
 
   if (entities.length === 0) {
-    return { x: 0, y: 0, w: 290, h: 140 }
+    // Preserve the current position
+    return { x: group.position.x, y: group.position.y, w: 290, h: 140 }
   }
 
   // Find bounds of all entities
@@ -423,9 +392,10 @@ export function calculateGroupMinimumSize(
     return { w: 100, h: 100 }
   }
 
-  const entities = group.containedIds
-    .map(id => findEntity(graph, id))
-    .filter(Boolean) as (WorkflowNode | WorkflowGroup)[]
+  const entities = group.containedIds.map(id => findEntity(graph, id)).filter(Boolean) as (
+    | WorkflowNode
+    | WorkflowGroup
+  )[]
 
   if (entities.length === 0) {
     return { w: 100, h: 100 }
@@ -463,20 +433,9 @@ export function calculateGroupMinimumSize(
     maxY = Math.max(maxY, entityY + entityH)
   })
 
-  // The group needs to span from the leftmost entity (with padding) to the rightmost entity (with padding)
-  // If the group's current position is at minX - padding, then width = (maxX - minX) + 2*padding
-  // But the group position might not align with minX - padding during resize
-
-  // Calculate the required size to contain all entities from the current group position
-  const requiredWidth = Math.max(
-    maxX - group.position.x + padding, // Distance from group left edge to rightmost entity
-    group.position.x + padding - minX  // Distance from leftmost entity to group left edge
-  )
-
-  const requiredHeight = Math.max(
-    maxY - group.position.y + padding, // Distance from group top edge to bottom-most entity
-    group.position.y + padding - minY  // Distance from topmost entity to group top edge
-  )
+  // Calculate required size from group position to contain all entities with padding
+  const requiredWidth = maxX - group.position.x + padding
+  const requiredHeight = maxY - group.position.y + padding
 
   return {
     w: Math.max(100, requiredWidth),
@@ -503,10 +462,10 @@ export function updateGroupBounds(
     groups: graph.groups.map(g =>
       g.id === groupId
         ? {
-          ...g,
-          position: { x: newBounds.x, y: newBounds.y },
-          size: { w: newBounds.w, h: newBounds.h }
-        }
+            ...g,
+            position: { x: newBounds.x, y: newBounds.y },
+            size: { w: newBounds.w, h: newBounds.h }
+          }
         : g
     )
   }
@@ -554,9 +513,10 @@ export function arrangeNodesInGroup(
   const group = findGroup(graph, groupId)
   if (!group || group.containedIds.length === 0) return graph
 
-  const entities = group.containedIds
-    .map(id => findEntity(graph, id))
-    .filter(Boolean) as (WorkflowNode | WorkflowGroup)[]
+  const entities = group.containedIds.map(id => findEntity(graph, id)).filter(Boolean) as (
+    | WorkflowNode
+    | WorkflowGroup
+  )[]
   if (entities.length === 0) return graph
 
   const entityCount = entities.length

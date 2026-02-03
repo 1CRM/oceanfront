@@ -15,15 +15,6 @@ export interface Size {
 }
 
 /**
- * Viewport state for pan/zoom (optional for v1)
- */
-export interface Viewport {
-  x: number
-  y: number
-  zoom: number
-}
-
-/**
  * Rectangle for groups
  */
 export interface Rect {
@@ -31,6 +22,15 @@ export interface Rect {
   y: number
   w: number
   h: number
+}
+
+/**
+ * Node data structure for titles, descriptions, and icons
+ */
+export interface NodeData {
+  icon?: string
+  title?: string
+  description?: string
 }
 
 /**
@@ -81,7 +81,6 @@ export interface WorkflowGraph {
   nodes: WorkflowNode[]
   edges: WorkflowEdge[]
   groups: WorkflowGroup[]
-  viewport?: Viewport
 }
 
 /**

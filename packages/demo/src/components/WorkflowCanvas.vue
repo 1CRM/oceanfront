@@ -57,11 +57,14 @@
       <details open>
         <summary>Event Log (Last 10 events)</summary>
         <div class="event-log">
-          <of-button @click="clearEventLog" variant="outlined" size="small">
-            Clear Log
-          </of-button>
-          <div v-if="eventLog.length === 0" class="no-events">No events yet</div>
-          <div v-for="(event, index) in eventLog" :key="index" class="event-item">
+          <div v-if="eventLog.length === 0" class="no-events">
+            No events yet
+          </div>
+          <div
+            v-for="(event, index) in eventLog"
+            :key="index"
+            class="event-item"
+          >
             <span class="event-name">{{ event.name }}</span>
             <span class="event-data">{{ event.data }}</span>
             <span class="event-time">{{ event.time }}</span>
@@ -84,295 +87,16 @@ import {
   type ConnectEvent,
   addEdge,
   findNode,
-  addNodeToGroup
+  addEntityToGroup
 } from 'oceanfront-workflow-canvas'
 import 'oceanfront-workflow-canvas/css'
 
 // Initial workflow graph state - Complex linear workflow with branches (one in, one out per node)
 // Node height = 100px, gap between nodes = 40px, so Y spacing = 140px
 const initialWorkflowGraph: WorkflowGraph = {
-  nodes: [
-    {
-      id: 'action-10',
-      kind: 'action',
-      position: {
-        x: 148,
-        y: 730
-      },
-      data: {
-        title: 'Type',
-        description: 'Value changed to: "mmm"',
-        icon: 'gear'
-      }
-    },
-    {
-      id: 'action-11',
-      kind: 'action',
-      position: {
-        x: 144,
-        y: 554.5
-      },
-      data: {
-        title: 'Contact Phone',
-        description: 'Value changed to: "fff"',
-        icon: 'user'
-      }
-    },
-    {
-      id: 'condition-3',
-      kind: 'condition',
-      position: {
-        x: 145,
-        y: 387.5
-      },
-      data: {
-        title: 'Category',
-        description: 'Value changed to: "fff"',
-        icon: 'help circle'
-      }
-    },
-    {
-      id: 'action-13',
-      kind: 'action',
-      position: {
-        x: 146,
-        y: 234.5
-      },
-      data: {
-        title: 'Status',
-        description: 'Value changed to "ddd"',
-        icon: 'email'
-      }
-    },
-    {
-      id: 'action-15',
-      kind: 'action',
-      position: {
-        x: 160,
-        y: 54.5
-      },
-      data: {
-        title: 'Assets',
-        description: 'Value changed to "aaa"',
-        icon: 'gear'
-      }
-    },
-    {
-      id: 'node-1770043111576',
-      kind: 'action',
-      position: {
-        x: 555,
-        y: 107.5
-      },
-      data: {
-        title: 'Subject',
-        description: 'Value changed to: "ooo"'
-      }
-    },
-    {
-      id: 'node-1770043184121',
-      kind: 'action',
-      position: {
-        x: 555,
-        y: 254.5
-      },
-      data: {
-        title: 'Created by',
-        description: 'Value changed to: "ppp"'
-      }
-    },
-    {
-      id: 'node-1770043222729',
-      kind: 'action',
-      position: {
-        x: 561,
-        y: 450.5
-      },
-      data: {
-        title: 'Created by',
-        description: 'Value changed to: "ll"'
-      }
-    },
-    {
-      id: 'node-1770043293931',
-      kind: 'action',
-      position: {
-        x: 549,
-        y: 620.5
-      },
-      data: {
-        title: 'Vendor RMA #',
-        description: 'Value changed to: "fff"'
-      }
-    },
-    {
-      id: 'node-1770043343226',
-      kind: 'action',
-      position: {
-        x: 549,
-        y: 769.5
-      },
-      data: {
-        title: 'Contact Phone',
-        description: 'Value changed to: "fff"'
-      }
-    }
-  ],
-  edges: [
-    {
-      id: 'edge-1770042749417',
-      from: {
-        entityId: 'action-15'
-      },
-      to: {
-        entityId: 'group-1770042668276'
-      }
-    },
-    {
-      id: 'edge-1770042895298',
-      from: {
-        entityId: 'group-1770042668276'
-      },
-      to: {
-        entityId: 'action-11'
-      }
-    },
-    {
-      id: 'edge-1770042942337',
-      from: {
-        entityId: 'action-13'
-      },
-      to: {
-        entityId: 'group-1770042767028'
-      }
-    },
-    {
-      id: 'edge-1770042997115',
-      from: {
-        entityId: 'group-5'
-      },
-      to: {
-        entityId: 'action-10'
-      }
-    },
-    {
-      id: 'edge-1770043246438',
-      from: {
-        entityId: 'node-1770043111576'
-      },
-      to: {
-        entityId: 'node-1770043184121'
-      }
-    },
-    {
-      id: 'edge-1770043251254',
-      from: {
-        entityId: 'group-1770043032659'
-      },
-      to: {
-        entityId: 'node-1770043222729'
-      }
-    },
-    {
-      id: 'edge-1770043256488',
-      from: {
-        entityId: 'action-10'
-      },
-      to: {
-        entityId: 'group-1770043032659'
-      }
-    },
-    {
-      id: 'edge-1770043375162',
-      from: {
-        entityId: 'node-1770043293931'
-      },
-      to: {
-        entityId: 'node-1770043343226'
-      }
-    },
-    {
-      id: 'edge-1770043381753',
-      from: {
-        entityId: 'node-1770043222729'
-      },
-      to: {
-        entityId: 'group-1770043280273'
-      }
-    }
-  ],
-  groups: [
-    {
-      id: 'group-5',
-      kind: 'group',
-      title: 'Group: All Of',
-      position: {
-        x: 85,
-        y: 34.5
-      },
-      size: {
-        w: 370,
-        h: 640
-      },
-      containedIds: ['group-1770042668276', 'action-15', 'action-11']
-    },
-    {
-      id: 'group-1770042668276',
-      kind: 'group',
-      title: 'Group: Not All Of',
-      position: {
-        x: 105,
-        y: 214.5
-      },
-      size: {
-        w: 330,
-        h: 313
-      },
-      containedIds: ['group-1770042767028', 'action-13']
-    },
-    {
-      id: 'group-1770042767028',
-      kind: 'group',
-      title: 'Group: All Of',
-      position: {
-        x: 125,
-        y: 367.5
-      },
-      size: {
-        w: 290,
-        h: 140
-      },
-      containedIds: ['condition-3']
-    },
-    {
-      id: 'group-1770043032659',
-      kind: 'group',
-      title: 'Group: All Of',
-      position: {
-        x: 535,
-        y: 87.5
-      },
-      size: {
-        w: 290,
-        h: 287
-      },
-      containedIds: ['node-1770043111576', 'node-1770043184121']
-    },
-    {
-      id: 'group-1770043280273',
-      kind: 'group',
-      title: 'Group: All Of',
-      position: {
-        x: 529,
-        y: 600.5
-      },
-      size: {
-        w: 290,
-        h: 289
-      },
-      containedIds: ['node-1770043343226', 'node-1770043293931']
-    }
-  ]
+  nodes: [],
+  edges: [],
+  groups: []
 }
 
 // Current workflow graph
@@ -465,7 +189,7 @@ function handleAddStep(event: AddStepEvent) {
 
   // If the source node is in a group, add the new node to the same group
   if (event.inGroupId) {
-    workflowGraph.value = addNodeToGroup(
+    workflowGraph.value = addEntityToGroup(
       workflowGraph.value,
       newNodeId,
       event.inGroupId
@@ -606,10 +330,6 @@ function logEvent(name: string, data: any) {
   }
 }
 
-function clearEventLog() {
-  eventLog.value = []
-}
-
 // Event handlers for all new emits
 function handleNodeDragStart(nodeId: string) {
   logEvent('node-drag-start', { nodeId })
@@ -635,7 +355,10 @@ function handleGroupDragStart(groupId: string) {
   logEvent('group-drag-start', { groupId })
 }
 
-function handleGroupDragEnd(groupId: string, position: { x: number; y: number }) {
+function handleGroupDragEnd(
+  groupId: string,
+  position: { x: number; y: number }
+) {
   logEvent('group-drag-end', { groupId, position })
 }
 

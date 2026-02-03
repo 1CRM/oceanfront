@@ -35,7 +35,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { WorkflowNode } from '../types/workflow'
+import type { WorkflowNode, NodeData } from '../types/workflow'
 
 defineOptions({
   name: 'WorkflowTile'
@@ -56,12 +56,6 @@ const props = withDefaults(
 const emit = defineEmits<{
   'menu-click': []
 }>()
-
-interface NodeData {
-  icon?: string
-  title?: string
-  description?: string
-}
 
 const nodeData = computed(() => {
   const data = props.node.data as NodeData | undefined

@@ -79,7 +79,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { WorkflowNode, WorkflowGroup, WorkflowGraph } from '../types/workflow'
+import type { WorkflowNode, WorkflowGroup, WorkflowGraph, NodeData } from '../types/workflow'
 import { getGroupDepth } from '../utils/graph-helpers'
 
 defineOptions({
@@ -113,11 +113,6 @@ const groupDepth = computed(() => {
   if (!props.selectedGroup || !props.graph) return undefined
   return getGroupDepth(props.graph, props.selectedGroup.id)
 })
-
-interface NodeData {
-  title?: string
-  description?: string
-}
 
 const getNodeData = (node: WorkflowNode) => (node.data as NodeData | undefined) || {}
 
