@@ -351,10 +351,10 @@ export function updateGroupBounds(
     groups: graph.groups.map(g =>
       g.id === groupId
         ? {
-          ...g,
-          position: { x: newBounds.x, y: newBounds.y },
-          size: { w: newBounds.w, h: newBounds.h }
-        }
+            ...g,
+            position: { x: newBounds.x, y: newBounds.y },
+            size: { w: newBounds.w, h: newBounds.h }
+          }
         : g
     )
   }
