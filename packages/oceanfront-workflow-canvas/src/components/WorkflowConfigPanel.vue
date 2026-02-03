@@ -81,8 +81,8 @@
   </of-sidebar>
 </template>
 
-<script setup lang="ts">
-import { computed } from 'vue'
+<script lang="ts">
+import { defineComponent, computed } from 'vue'
 import type {
   WorkflowNode,
   WorkflowGroup,
@@ -93,89 +93,99 @@ import type {
 import { getGroupDepth } from '../utils/graph-helpers'
 import { DEFAULT_LABELS } from '../constants/labels'
 
-defineOptions({
-  name: 'WorkflowConfigPanel'
-})
+export default defineComponent({
+  name: 'WorkflowConfigPanel',
+  props: {
+    selectedNode: {
+      type: Object as () => WorkflowNode | null,
+      default: null
+    },
+    selectedGroup: {
+      type: Object as () => WorkflowGroup | null,
+      default: null
+    },
+    graph: {
+      type: Object as () => WorkflowGraph | null,
+      default: null
+    },
+    labels: {
+      type: Object as () => WorkflowCanvasLabels,
+      default: undefined
+    }
+  },
+  emits: ['close', 'delete-node', 'delete-group', 'update-node', 'update-group'],
+  setup(props, { emit }) {
+    // Use DEFAULT_LABELS if no labels provided
+    const effectiveLabels = computed(() => props.labels || DEFAULT_LABELS)
 
-const props = withDefaults(
-  defineProps<{
-    selectedNode?: WorkflowNode | null
-    selectedGroup?: WorkflowGroup | null
-    graph?: WorkflowGraph | null
-    labels?: WorkflowCanvasLabels
-  }>(),
-  {
-    selectedNode: null,
-    selectedGroup: null,
-    graph: null
+    const isOpen = computed(() => !!(props.selectedNode || props.selectedGroup))
+
+    const groupDepth = computed(() => {
+      if (!props.selectedGroup || !props.graph) return undefined
+      return getGroupDepth(props.graph, props.selectedGroup.id)
+    })
+
+    const getNodeData = (node: WorkflowNode) => (node.data as NodeData | undefined) || {}
+
+    const updateNodeKind = (value: string) => {
+      if (!props.selectedNode) return
+      emit('update-node', {
+        ...props.selectedNode,
+        kind: value
+      })
+    }
+
+    const updateNodeTitle = (value: string) => {
+      if (!props.selectedNode) return
+      const currentData = getNodeData(props.selectedNode)
+      emit('update-node', {
+        ...props.selectedNode,
+        data: {
+          ...currentData,
+          title: value
+        }
+      })
+    }
+
+    const updateNodeDescription = (value: string) => {
+      if (!props.selectedNode) return
+      const currentData = getNodeData(props.selectedNode)
+      emit('update-node', {
+        ...props.selectedNode,
+        data: {
+          ...currentData,
+          description: value
+        }
+      })
+    }
+
+    const updateGroupTitle = (value: string) => {
+      if (!props.selectedGroup) return
+      emit('update-group', {
+        ...props.selectedGroup,
+        title: value
+      })
+    }
+
+    const updateGroupKind = (value: string) => {
+      if (!props.selectedGroup) return
+      emit('update-group', {
+        ...props.selectedGroup,
+        kind: value
+      })
+    }
+
+    return {
+      effectiveLabels,
+      isOpen,
+      groupDepth,
+      getNodeData,
+      updateNodeKind,
+      updateNodeTitle,
+      updateNodeDescription,
+      updateGroupTitle,
+      updateGroupKind
+    }
   }
-)
-
-// Use DEFAULT_LABELS if no labels provided
-const effectiveLabels = computed(() => props.labels || DEFAULT_LABELS)
-
-const emit = defineEmits<{
-  close: []
-  'delete-node': []
-  'delete-group': []
-  'update-node': [node: WorkflowNode]
-  'update-group': [group: WorkflowGroup]
-}>()
-
-const isOpen = computed(() => !!(props.selectedNode || props.selectedGroup))
-
-const groupDepth = computed(() => {
-  if (!props.selectedGroup || !props.graph) return undefined
-  return getGroupDepth(props.graph, props.selectedGroup.id)
 })
-
-const getNodeData = (node: WorkflowNode) => (node.data as NodeData | undefined) || {}
-
-const updateNodeKind = (value: string) => {
-  if (!props.selectedNode) return
-  emit('update-node', {
-    ...props.selectedNode,
-    kind: value
-  })
-}
-
-const updateNodeTitle = (value: string) => {
-  if (!props.selectedNode) return
-  const currentData = getNodeData(props.selectedNode)
-  emit('update-node', {
-    ...props.selectedNode,
-    data: {
-      ...currentData,
-      title: value
-    }
-  })
-}
-
-const updateNodeDescription = (value: string) => {
-  if (!props.selectedNode) return
-  const currentData = getNodeData(props.selectedNode)
-  emit('update-node', {
-    ...props.selectedNode,
-    data: {
-      ...currentData,
-      description: value
-    }
-  })
-}
-
-const updateGroupTitle = (value: string) => {
-  if (!props.selectedGroup) return
-  emit('update-group', {
-    ...props.selectedGroup,
-    title: value
-  })
-}
-
-const updateGroupKind = (value: string) => {
-  if (!props.selectedGroup) return
-  emit('update-group', {
-    ...props.selectedGroup,
-    kind: value
-  })
-}
 </script>

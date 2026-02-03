@@ -33,43 +33,52 @@
   </div>
 </template>
 
-<script setup lang="ts">
-import { computed } from 'vue'
+<script lang="ts">
+import { defineComponent, computed } from 'vue'
 import type { WorkflowNode, NodeData, WorkflowCanvasLabels } from '../types/workflow'
 import { DEFAULT_LABELS } from '../constants/labels'
 
-defineOptions({
-  name: 'WorkflowTile'
-})
+export default defineComponent({
+  name: 'WorkflowTile',
+  props: {
+    node: {
+      type: Object as () => WorkflowNode,
+      required: true
+    },
+    selected: {
+      type: Boolean,
+      default: false
+    },
+    dragging: {
+      type: Boolean,
+      default: false
+    },
+    labels: {
+      type: Object as () => WorkflowCanvasLabels,
+      default: undefined
+    }
+  },
+  emits: ['menu-click'],
+  setup(props, { emit }) {
+    // Use DEFAULT_LABELS if no labels provided
+    const effectiveLabels = computed(() => props.labels || DEFAULT_LABELS)
 
-const props = withDefaults(
-  defineProps<{
-    node: WorkflowNode
-    selected?: boolean
-    dragging?: boolean
-    labels?: WorkflowCanvasLabels
-  }>(),
-  {
-    selected: false,
-    dragging: false
+    const nodeData = computed(() => {
+      const data = props.node.data as NodeData | undefined
+      return {
+        icon: data?.icon,
+        title: data?.title,
+        description: data?.description
+      }
+    })
+
+    const handleMenuClick = () => emit('menu-click')
+
+    return {
+      effectiveLabels,
+      nodeData,
+      handleMenuClick
+    }
   }
-)
-
-// Use DEFAULT_LABELS if no labels provided
-const effectiveLabels = computed(() => props.labels || DEFAULT_LABELS)
-
-const emit = defineEmits<{
-  'menu-click': []
-}>()
-
-const nodeData = computed(() => {
-  const data = props.node.data as NodeData | undefined
-  return {
-    icon: data?.icon,
-    title: data?.title,
-    description: data?.description
-  }
 })
-
-const handleMenuClick = () => emit('menu-click')
 </script>

@@ -6,34 +6,45 @@
   </div>
 </template>
 
-<script setup lang="ts">
-import { computed } from 'vue'
+<script lang="ts">
+import { defineComponent, computed } from 'vue'
 import type { Position } from '../types/workflow'
 
-defineOptions({
-  name: 'WorkflowPlusPlaceholder'
+export default defineComponent({
+  name: 'WorkflowPlusPlaceholder',
+  props: {
+    position: {
+      type: Object as () => Position,
+      required: true
+    },
+    afterNodeId: {
+      type: String,
+      default: undefined
+    },
+    inGroupId: {
+      type: String,
+      default: undefined
+    }
+  },
+  emits: ['add-step'],
+  setup(props, { emit }) {
+    const positionStyle = computed(() => ({
+      left: `${props.position.x}px`,
+      top: `${props.position.y}px`,
+      transform: 'translate(-50%, -50%)'
+    }))
+
+    function handleClick() {
+      emit('add-step', {
+        afterNodeId: props.afterNodeId,
+        inGroupId: props.inGroupId
+      })
+    }
+
+    return {
+      positionStyle,
+      handleClick
+    }
+  }
 })
-
-const props = defineProps<{
-  position: Position
-  afterNodeId?: string
-  inGroupId?: string
-}>()
-
-const emit = defineEmits<{
-  'add-step': [{ afterNodeId?: string; inGroupId?: string }]
-}>()
-
-const positionStyle = computed(() => ({
-  left: `${props.position.x}px`,
-  top: `${props.position.y}px`,
-  transform: 'translate(-50%, -50%)'
-}))
-
-function handleClick() {
-  emit('add-step', {
-    afterNodeId: props.afterNodeId,
-    inGroupId: props.inGroupId
-  })
-}
 </script>

@@ -1,6 +1,6 @@
 # Oceanfront Workflow Canvas
 
-A Vue 3 + TypeScript library for building Zapier-like graphical workflow builders with HTML nodes and SVG connectors.
+A Vue 3 + TypeScript library for building graphical workflow builders with HTML nodes and SVG connectors.
 
 ## Features
 
