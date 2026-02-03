@@ -765,6 +765,7 @@ export default defineComponent({
 
     return {
       props,
+      emit,
       mergedLabels,
       selectedNode,
       selectedGroup,

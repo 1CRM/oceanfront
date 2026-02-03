@@ -176,6 +176,7 @@ export default defineComponent({
     }
 
     return {
+      emit,
       effectiveLabels,
       isOpen,
       groupDepth,

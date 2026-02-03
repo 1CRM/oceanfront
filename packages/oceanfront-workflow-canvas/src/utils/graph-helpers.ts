@@ -351,10 +351,10 @@ export function updateGroupBounds(
     groups: graph.groups.map(g =>
       g.id === groupId
         ? {
-            ...g,
-            position: { x: newBounds.x, y: newBounds.y },
-            size: { w: newBounds.w, h: newBounds.h }
-          }
+          ...g,
+          position: { x: newBounds.x, y: newBounds.y },
+          size: { w: newBounds.w, h: newBounds.h }
+        }
         : g
     )
   }
@@ -432,9 +432,14 @@ export function updateGroupPosition(
 }
 
 /**
- * Default ID generator using timestamp
+ * Default ID generator using timestamp and counter to ensure uniqueness
  */
-const defaultIdGenerator = (prefix: string) => () => `${prefix}-${Date.now()}`
+let idCounter = 0
+const defaultIdGenerator = (prefix: string) => () => {
+  const timestamp = Date.now()
+  const counter = idCounter++
+  return `${prefix}-${timestamp}-${counter}`
+}
 
 /**
  * Handle adding a step to the workflow graph
