@@ -116,7 +116,10 @@ export function useDragging(options: UseDraggingOptions) {
     hoveredNodeGroupId.value = null
   }
 
-  const getNodeDimensions = (node: WorkflowNode, nodeElements: Map<string, HTMLElement>): { width: number; height: number } => {
+  const getNodeDimensions = (
+    node: WorkflowNode,
+    nodeElements: Map<string, HTMLElement>
+  ): { width: number; height: number } => {
     const element = nodeElements.get(node.id)
     if (element) {
       const rect = element.getBoundingClientRect()
@@ -161,7 +164,10 @@ export function useDragging(options: UseDraggingOptions) {
   const handleGroupDragMove = (
     newPosition: Position,
     findAllGroupsAtPosition: (position: Position) => WorkflowGroup[],
-    isPointInRect: (point: Position, rect: { x: number; y: number; w: number; h: number }) => boolean
+    isPointInRect: (
+      point: Position,
+      rect: { x: number; y: number; w: number; h: number }
+    ) => boolean
   ): boolean => {
     if (!draggingGroupId.value) return false
 
@@ -210,7 +216,10 @@ export function useDragging(options: UseDraggingOptions) {
   }
 
   const handleMouseUp = (
-    isPointInRect: (point: Position, rect: { x: number; y: number; w: number; h: number }) => boolean
+    isPointInRect: (
+      point: Position,
+      rect: { x: number; y: number; w: number; h: number }
+    ) => boolean
   ) => {
     if (draggingGroupId.value) {
       const groupId = draggingGroupId.value
@@ -240,7 +249,11 @@ export function useDragging(options: UseDraggingOptions) {
         let updatedGraph = graph.value
         let parentChanged = false
 
-        if (targetGroup && targetGroup.id !== groupId && !wouldExceedMaxDepth(groupId, targetGroup.id)) {
+        if (
+          targetGroup &&
+          targetGroup.id !== groupId &&
+          !wouldExceedMaxDepth(groupId, targetGroup.id)
+        ) {
           if (originalParent !== targetGroup.id) {
             parentChanged = true
             updatedGraph = removeEntityFromAllGroups(updatedGraph, groupId)

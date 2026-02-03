@@ -2,7 +2,11 @@
   <of-sidebar v-if="isOpen" :model-value="true" :embed="true" class="workflow-canvas__sidebar">
     <div class="workflow-canvas__panel-default">
       <div class="workflow-canvas__panel-header">
-        <h3>{{ selectedNode ? effectiveLabels.nodeDetailsHeader : effectiveLabels.groupDetailsHeader }}</h3>
+        <h3>
+          {{
+            selectedNode ? effectiveLabels.nodeDetailsHeader : effectiveLabels.groupDetailsHeader
+          }}
+        </h3>
         <button @click="emit('close')" class="workflow-canvas__panel-close" type="button">×</button>
       </div>
       <div class="workflow-canvas__panel-content">

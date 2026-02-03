@@ -191,21 +191,6 @@ export function findGroupAtPosition(
 }
 
 /**
- * Find all groups at a position (including nested groups) (internal use only)
- */
-const findAllGroupsAtPosition = (graph: WorkflowGraph, position: Position): WorkflowGroup[] => {
-  return graph.groups.filter(g => {
-    const rect: Rect = {
-      x: g.position.x,
-      y: g.position.y,
-      w: g.size.w,
-      h: g.size.h
-    }
-    return isPointInRect(position, rect)
-  })
-}
-
-/**
  * Get all edges connected to an entity (node or group)
  */
 export const getEntityEdges = (graph: WorkflowGraph, entityId: string): WorkflowEdge[] =>
@@ -238,65 +223,6 @@ const getGroupDescendants = (graph: WorkflowGraph, groupId: string): string[] =>
   }
 
   return descendants
-}
-
-/**
- * Check if adding an entity to a group would create a cycle (internal use only)
- */
-const wouldCreateCycle = (graph: WorkflowGraph, childId: string, parentId: string): boolean => {
-  // Can't add a group to itself
-  if (childId === parentId) return true
-
-  // If child is not a group, no cycle possible
-  const childGroup = findGroup(graph, childId)
-  if (!childGroup) return false
-
-  // Check if parentId is a descendant of childId
-  const descendants = getGroupDescendants(graph, childId)
-  return descendants.includes(parentId)
-}
-
-/**
- * Check if adding an entity to a group would exceed the maximum depth (internal use only)
- * @param graph - The workflow graph
- * @param entityId - The entity to be added
- * @param parentId - The group to add the entity to
- * @param maxDepth - Maximum allowed depth (null means no limit)
- * @returns true if the operation would exceed max depth, false otherwise
- */
-const wouldExceedMaxDepth = (
-  graph: WorkflowGraph,
-  entityId: string,
-  parentId: string,
-  maxDepth: number | null
-): boolean => {
-  // If no max depth is set, no limit
-  if (maxDepth === null) return false
-
-  // Calculate what the depth of the entity would be after adding to parent
-  const parentDepth = getGroupDepth(graph, parentId)
-  const newEntityDepth = parentDepth + 1
-
-  // If entity is a group, check if any of its descendants would exceed max depth
-  const entity = findGroup(graph, entityId)
-  if (entity) {
-    // Get the maximum depth of descendants relative to this group
-    let maxDescendantDepth = 0
-    const descendants = getGroupDescendants(graph, entityId)
-    descendants.forEach(descendantId => {
-      const descendant = findGroup(graph, descendantId)
-      if (descendant) {
-        const relativeDepth = getGroupDepth(graph, descendantId) - getGroupDepth(graph, entityId)
-        maxDescendantDepth = Math.max(maxDescendantDepth, relativeDepth)
-      }
-    })
-    
-    // Check if the deepest descendant would exceed max depth
-    return newEntityDepth + maxDescendantDepth > maxDepth
-  }
-
-  // For nodes, just check the new depth
-  return newEntityDepth > maxDepth
 }
 
 /**
@@ -351,7 +277,7 @@ export function calculateGroupBounds(
   if (!group || group.containedIds.length === 0) {
     // Default size for empty group (suitable for one node)
     // Preserve the current position if the group exists
-    return group 
+    return group
       ? { x: group.position.x, y: group.position.y, w: 290, h: 140 }
       : { x: 0, y: 0, w: 290, h: 140 }
   }
@@ -403,73 +329,6 @@ export function calculateGroupBounds(
     y: minY - padding,
     w: maxX - minX + padding * 2,
     h: maxY - minY + padding * 2
-  }
-}
-
-/**
- * Calculate the minimum size required for a group to contain all its entities (internal use only)
- * Returns the minimum width and height with padding, accounting for entity positions
- * relative to the current group position
- */
-const calculateGroupMinimumSize = (
-  graph: WorkflowGraph,
-  groupId: string,
-  padding: number = 20
-): { w: number; h: number } => {
-  const group = findGroup(graph, groupId)
-  if (!group || group.containedIds.length === 0) {
-    // Minimum size for empty group
-    return { w: 100, h: 100 }
-  }
-
-  const entities = group.containedIds.map(id => findEntity(graph, id)).filter(Boolean) as (
-    | WorkflowNode
-    | WorkflowGroup
-  )[]
-
-  if (entities.length === 0) {
-    return { w: 100, h: 100 }
-  }
-
-  // Find bounds of all entities in absolute coordinates
-  let minX = Infinity
-  let minY = Infinity
-  let maxX = -Infinity
-  let maxY = -Infinity
-
-  entities.forEach(entity => {
-    let entityX: number
-    let entityY: number
-    let entityW: number
-    let entityH: number
-
-    if ('kind' in entity && 'containedIds' in entity) {
-      // It's a group
-      entityX = entity.position.x
-      entityY = entity.position.y
-      entityW = entity.size.w
-      entityH = entity.size.h
-    } else {
-      // It's a node
-      entityX = entity.position.x
-      entityY = entity.position.y
-      entityW = entity.size?.w || 250
-      entityH = entity.size?.h || 100
-    }
-
-    minX = Math.min(minX, entityX)
-    minY = Math.min(minY, entityY)
-    maxX = Math.max(maxX, entityX + entityW)
-    maxY = Math.max(maxY, entityY + entityH)
-  })
-
-  // Calculate required size from group position to contain all entities with padding
-  const requiredWidth = maxX - group.position.x + padding
-  const requiredHeight = maxY - group.position.y + padding
-
-  return {
-    w: Math.max(100, requiredWidth),
-    h: Math.max(100, requiredHeight)
   }
 }
 

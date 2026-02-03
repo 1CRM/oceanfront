@@ -250,7 +250,6 @@ import type {
 import {
   findNode,
   findGroup,
-  findGroupAtPosition,
   getParentGroup,
   removeEntityFromAllGroups,
   updateGroupBounds,
@@ -348,28 +347,6 @@ const findAllGroupsAtPosition = (position: Position): WorkflowGroup[] => {
       h: g.size.h
     })
   })
-}
-
-const wouldCreateCycle = (childId: string, parentId: string): boolean => {
-  if (childId === parentId) return true
-  const childGroup = findGroup(props.modelValue, childId)
-  if (!childGroup) return false
-
-  const getDescendants = (groupId: string): string[] => {
-    const group = findGroup(props.modelValue, groupId)
-    if (!group) return []
-    const descendants: string[] = []
-    const toProcess = [...group.containedIds]
-    while (toProcess.length > 0) {
-      const entityId = toProcess.shift()!
-      descendants.push(entityId)
-      const childGroup = findGroup(props.modelValue, entityId)
-      if (childGroup) toProcess.push(...childGroup.containedIds)
-    }
-    return descendants
-  }
-
-  return getDescendants(childId).includes(parentId)
 }
 
 const wouldExceedMaxDepth = (entityId: string, parentId: string): boolean => {

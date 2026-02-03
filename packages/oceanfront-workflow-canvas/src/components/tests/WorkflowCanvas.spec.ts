@@ -553,7 +553,9 @@ describe('Graph Helper Functions', () => {
 
     it('updates parent group bounds when moving node within group', () => {
       const graph: WorkflowGraph = {
-        nodes: [{ id: 'node-1', kind: 'trigger', position: { x: 100, y: 100 }, size: { w: 250, h: 100 } }],
+        nodes: [
+          { id: 'node-1', kind: 'trigger', position: { x: 100, y: 100 }, size: { w: 250, h: 100 } }
+        ],
         edges: [],
         groups: [
           {
@@ -611,7 +613,9 @@ describe('Graph Helper Functions', () => {
 
     it('auto-updates nested group bounds when adding entity', () => {
       const graph: WorkflowGraph = {
-        nodes: [{ id: 'node-1', kind: 'trigger', position: { x: 120, y: 120 }, size: { w: 250, h: 100 } }],
+        nodes: [
+          { id: 'node-1', kind: 'trigger', position: { x: 120, y: 120 }, size: { w: 250, h: 100 } }
+        ],
         edges: [],
         groups: [
           {
@@ -646,7 +650,9 @@ describe('Graph Helper Functions', () => {
 
     it('recursively updates multiple levels of nested groups', () => {
       const graph: WorkflowGraph = {
-        nodes: [{ id: 'node-1', kind: 'trigger', position: { x: 200, y: 200 }, size: { w: 250, h: 100 } }],
+        nodes: [
+          { id: 'node-1', kind: 'trigger', position: { x: 200, y: 200 }, size: { w: 250, h: 100 } }
+        ],
         edges: [],
         groups: [
           {
@@ -677,7 +683,12 @@ describe('Graph Helper Functions', () => {
       }
 
       // Add a node far away to the innermost group
-      const newNode = { id: 'node-2', kind: 'action', position: { x: 800, y: 800 }, size: { w: 250, h: 100 } }
+      const newNode = {
+        id: 'node-2',
+        kind: 'action',
+        position: { x: 800, y: 800 },
+        size: { w: 250, h: 100 }
+      }
       let updated: WorkflowGraph = {
         ...graph,
         nodes: [...graph.nodes, newNode]
@@ -748,7 +759,9 @@ describe('Graph Helper Functions', () => {
 
     it('handles deep nesting with 4 levels of groups', () => {
       const graph: WorkflowGraph = {
-        nodes: [{ id: 'node-1', kind: 'trigger', position: { x: 300, y: 300 }, size: { w: 250, h: 100 } }],
+        nodes: [
+          { id: 'node-1', kind: 'trigger', position: { x: 300, y: 300 }, size: { w: 250, h: 100 } }
+        ],
         edges: [],
         groups: [
           {
@@ -787,7 +800,12 @@ describe('Graph Helper Functions', () => {
       }
 
       // Add a new node to the deepest group
-      const newNode = { id: 'node-2', kind: 'action', position: { x: 1200, y: 1200 }, size: { w: 250, h: 100 } }
+      const newNode = {
+        id: 'node-2',
+        kind: 'action',
+        position: { x: 1200, y: 1200 },
+        size: { w: 250, h: 100 }
+      }
       let updated: WorkflowGraph = {
         ...graph,
         nodes: [...graph.nodes, newNode]

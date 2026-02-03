@@ -80,7 +80,9 @@ export function useCanvas(options: UseCanvasOptions) {
     }
   }
 
-  const getEntityDimensions = (entity: WorkflowNode | WorkflowGroup): {
+  const getEntityDimensions = (
+    entity: WorkflowNode | WorkflowGroup
+  ): {
     width: number
     height: number
   } => {

@@ -1,6 +1,17 @@
 import { ref, type Ref } from 'vue'
-import type { Position, WorkflowGraph, WorkflowEdge, WorkflowNode, WorkflowGroup } from '../types/workflow'
-import { findNode, findGroup, areEntitiesInDifferentGroups, handleConnectNodes } from '../utils/graph-helpers'
+import type {
+  Position,
+  WorkflowGraph,
+  WorkflowEdge,
+  WorkflowNode,
+  WorkflowGroup
+} from '../types/workflow'
+import {
+  findNode,
+  findGroup,
+  areEntitiesInDifferentGroups,
+  handleConnectNodes
+} from '../utils/graph-helpers'
 
 export interface UseConnectionsOptions {
   graph: Ref<WorkflowGraph>
@@ -17,7 +28,7 @@ export function useConnections(options: UseConnectionsOptions) {
   const {
     graph,
     readonly,
-    canvasRef,
+    canvasRef: _canvasRef,
     getEntityCenter,
     getEntityDimensions,
     onGraphUpdate,
@@ -29,17 +40,6 @@ export function useConnections(options: UseConnectionsOptions) {
   const connectionDragStart = ref<{ nodeId: string; port: string } | null>(null)
   const connectionDragMoved = ref(false)
   const disconnectingEdge = ref<WorkflowEdge | null>(null)
-
-  const getCanvasMousePosition = (event: MouseEvent): Position | null => {
-    const canvas = canvasRef.value
-    if (!canvas) return null
-
-    const rect = canvas.getBoundingClientRect()
-    return {
-      x: event.clientX - rect.left + canvas.scrollLeft,
-      y: event.clientY - rect.top + canvas.scrollTop
-    }
-  }
 
   const findEntity = (entityId: string): WorkflowNode | WorkflowGroup | undefined => {
     const node = findNode(graph.value, entityId)
