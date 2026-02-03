@@ -1,0 +1,640 @@
+// Main SCSS entry for oceanfront-workflow-canvas
+
+// CSS Variables for theming
+:root {
+  --wf-surface: var(--of-surface, #f5f5f5);
+  --wf-surface-2: var(--of-surface, #fff);
+  --wf-surface-hover: var(--of-surface-hover, #f0f0f0);
+  --wf-border: var(--of-border, #e0e0e0);
+  --wf-border-secondary: var(--of-border, #ccc);
+  --wf-primary: var(--of-color-primary-light, #2196f3);
+  --wf-text-primary: var(--of-text-primary, #333);
+  --wf-text-secondary: var(--of-text-secondary, #666);
+  --wf-grid-line: rgba(0, 0, 0, 0.05);
+  --wf-group-bg: rgba(255, 255, 255, 0.3);
+  --wf-group-bg-nested: rgba(255, 255, 255, 0.4);
+  --wf-group-bg-hover: rgba(0, 0, 0, 0.05);
+  --wf-group-bg-hover-nested: rgba(0, 0, 0, 0.08);
+  --wf-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --wf-shadow-selected: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --wf-shadow-dragging: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.-of-theme-dark {
+  --wf-surface: var(--of-color-background-dark, #383b33);
+  --wf-surface-2: var(--of-color-surface-dark, #44473d);
+  --wf-surface-hover: rgba(255, 255, 255, 0.1);
+  --wf-border: var(--of-color-outline-dark, #8e9384);
+  --wf-border-secondary: var(--of-color-outline-dark, #666);
+  --wf-primary: var(--of-color-primary-dark, #77d7ea);
+  --wf-text-primary: var(--of-color-on-surface-dark, #e1e4dd);
+  --wf-text-secondary: var(--of-color-on-surface-variant-dark, #c4c9bd);
+  --wf-grid-line: rgba(255, 255, 255, 0.08);
+  --wf-group-bg: rgba(0, 0, 0, 0.2);
+  --wf-group-bg-nested: rgba(0, 0, 0, 0.3);
+  --wf-group-bg-hover: rgba(255, 255, 255, 0.05);
+  --wf-group-bg-hover-nested: rgba(255, 255, 255, 0.08);
+  --wf-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --wf-shadow-selected: 0 4px 16px rgba(0, 0, 0, 0.6);
+  --wf-shadow-dragging: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.workflow-canvas-wrapper {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+
+  .workflow-canvas__sidebar {
+    position: relative;
+    flex-shrink: 0;
+    height: 100%;
+
+    .of-sidebar {
+      width: 350px;
+      border-left: 1px solid var(--wf-border);
+      border-radius: 0;
+      box-shadow: none;
+    }
+  }
+}
+
+.workflow-canvas {
+  position: relative;
+  flex: 1;
+  height: 100%;
+  overflow: auto;
+  background-color: var(--wf-surface);
+  background-image:
+    linear-gradient(var(--wf-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--wf-grid-line) 1px, transparent 1px);
+  background-size: 20px 20px;
+
+  &__container {
+    position: relative;
+    min-width: 100%;
+    min-height: 100%;
+  }
+
+  &__svg-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 1;
+    overflow: visible;
+  }
+
+  &__nodes-layer {
+    position: relative;
+    z-index: 2;
+  }
+
+  &__panel-default {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 0;
+  }
+
+  &__panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    border-bottom: 1px solid var(--wf-border);
+    background: var(--wf-surface-2);
+
+    h3 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--wf-text-primary);
+    }
+  }
+
+  &__panel-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--wf-text-secondary);
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background: var(--wf-surface-hover);
+    }
+  }
+
+  &__panel-content {
+    padding: 16px;
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  &__panel-field {
+    margin-bottom: 16px;
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+      font-size: 13px;
+      color: var(--wf-text-primary);
+    }
+
+    > div {
+      font-size: 14px;
+      color: var(--wf-text-secondary);
+    }
+  }
+
+  &__panel-actions {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--wf-border);
+  }
+}
+
+// Slide transition for panel
+.slide-right-enter-active,
+.slide-right-leave-active {
+  transition:
+    transform 0.3s ease,
+    opacity 0.3s ease;
+}
+
+.slide-right-enter-from {
+  transform: translateX(100%);
+  opacity: 0;
+}
+
+.slide-right-leave-to {
+  transform: translateX(100%);
+  opacity: 0;
+}
+
+.workflow-canvas-group {
+  position: absolute;
+  border: 2px dashed var(--wf-border-secondary);
+  border-radius: 8px;
+  background-color: var(--wf-group-bg);
+  z-index: 0;
+  pointer-events: auto;
+  cursor: move;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s,
+    border-width 0.2s,
+    opacity 0.2s;
+
+  &:hover,
+  &--child-hovered {
+    background-color: var(--wf-group-bg-hover);
+    border-color: var(--wf-primary);
+  }
+
+  &--selected {
+    border-color: var(--wf-primary);
+    background-color: var(--wf-group-bg-hover);
+    border-width: 3px;
+  }
+
+  &--dragging {
+    opacity: 0.7;
+    cursor: grabbing;
+  }
+
+  &--dropzone {
+    background-color: var(--wf-group-bg-hover);
+    border-color: var(--wf-primary);
+  }
+
+  &--nested {
+    border-color: var(--wf-border-secondary);
+    background-color: var(--wf-group-bg-nested);
+    border-width: 2px;
+
+    &:hover,
+    &.workflow-canvas-group--child-hovered {
+      background-color: var(--wf-group-bg-hover-nested);
+      border-color: var(--wf-primary);
+    }
+
+    &.workflow-canvas-group--selected {
+      border-color: var(--wf-primary);
+      background-color: var(--wf-group-bg-hover-nested);
+    }
+
+    &.workflow-canvas-group--dropzone {
+      background-color: var(--wf-group-bg-hover-nested);
+      border-color: var(--wf-primary);
+    }
+  }
+
+  &__title {
+    position: absolute;
+    top: -13px;
+    left: 8px;
+    background-color: var(--wf-surface-2);
+    padding: 2px 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--wf-text-secondary);
+    pointer-events: none;
+    border-radius: 8px;
+  }
+
+  &__handle {
+    position: absolute;
+    left: 50%;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: var(--wf-primary);
+    border: 2px solid var(--wf-surface-2);
+    cursor: pointer;
+    z-index: 25;
+    transform: translateX(calc(-50% - 2px));
+    transition: all 0.2s;
+    opacity: 0.6;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    &:hover {
+      transform: translateX(-50%) scale(1.2);
+      background-color: var(--wf-primary);
+      opacity: 1;
+    }
+
+    &--input {
+      top: -7px;
+    }
+
+    &--output {
+      bottom: -9px;
+    }
+
+    &--free {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      bottom: -8px;
+      transform: translateX(-50%);
+    }
+  }
+
+  &__resize-handle {
+    position: absolute;
+    background: transparent;
+    z-index: 20;
+
+    &--top,
+    &--bottom {
+      left: 10%;
+      right: 10%;
+      height: 8px;
+      cursor: ns-resize;
+    }
+
+    &--left,
+    &--right {
+      top: 10%;
+      bottom: 10%;
+      width: 8px;
+      cursor: ew-resize;
+    }
+
+    &--top {
+      top: -4px;
+    }
+
+    &--bottom {
+      bottom: -4px;
+    }
+
+    &--left {
+      left: -4px;
+    }
+
+    &--right {
+      right: -4px;
+    }
+
+    &--top-left,
+    &--top-right,
+    &--bottom-left,
+    &--bottom-right {
+      width: 10px;
+      height: 10px;
+      background: transparent;
+      opacity: 0;
+      transition: opacity 0.2s;
+
+      &::before {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border: 4px solid var(--wf-primary);
+        border-color: transparent;
+      }
+    }
+
+    &--top-left {
+      top: -3px;
+      left: -3px;
+      cursor: nwse-resize;
+
+      &::before {
+        border-top-color: var(--wf-primary);
+        border-left-color: var(--wf-primary);
+        border-top-left-radius: 8px;
+      }
+    }
+
+    &--top-right {
+      top: -3px;
+      right: 4px;
+      cursor: nesw-resize;
+
+      &::before {
+        border-top-color: var(--wf-primary);
+        border-right-color: var(--wf-primary);
+        border-top-right-radius: 8px;
+      }
+    }
+
+    &--bottom-left {
+      bottom: 5px;
+      left: -3px;
+      cursor: nesw-resize;
+
+      &::before {
+        border-bottom-color: var(--wf-primary);
+        border-left-color: var(--wf-primary);
+        border-bottom-left-radius: 8px;
+      }
+    }
+
+    &--bottom-right {
+      bottom: 5px;
+      right: 4px;
+      cursor: nwse-resize;
+
+      &::before {
+        border-bottom-color: var(--wf-primary);
+        border-right-color: var(--wf-primary);
+        border-bottom-right-radius: 8px;
+      }
+    }
+  }
+
+  &:hover &__resize-handle--top-left,
+  &:hover &__resize-handle--top-right,
+  &:hover &__resize-handle--bottom-left,
+  &:hover &__resize-handle--bottom-right,
+  &--child-hovered &__resize-handle--top-left,
+  &--child-hovered &__resize-handle--top-right,
+  &--child-hovered &__resize-handle--bottom-left,
+  &--child-hovered &__resize-handle--bottom-right,
+  &--selected &__resize-handle--top-left,
+  &--selected &__resize-handle--top-right,
+  &--selected &__resize-handle--bottom-left,
+  &--selected &__resize-handle--bottom-right {
+    opacity: 1;
+  }
+}
+
+.workflow-canvas-node {
+  position: absolute;
+  z-index: 10;
+  cursor: move;
+  user-select: none;
+  transition: opacity 0.2s;
+
+  &--selected {
+    z-index: 20;
+  }
+
+  &--dragging {
+    cursor: grabbing;
+    z-index: 30;
+  }
+
+  &__handle {
+    position: absolute;
+    left: 50%;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: var(--wf-primary);
+    border: 1.5px solid var(--wf-surface-2);
+    cursor: pointer;
+    z-index: 5;
+    transform: translateX(-50%);
+    transition: all 0.2s;
+    opacity: 0.5;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    &:hover {
+      transform: translateX(-50%) scale(1.15);
+      background-color: var(--wf-primary);
+    }
+
+    &--input {
+      top: -5px;
+    }
+
+    &--output {
+      bottom: -7px;
+    }
+
+    &--free {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      bottom: -6px;
+    }
+  }
+}
+
+.workflow-canvas-tile {
+  background: var(--wf-surface-2);
+  border: 1px solid var(--wf-border);
+  border-radius: 8px;
+  padding: 16px;
+  min-width: 200px;
+  box-shadow: var(--wf-shadow);
+  transition: all 0.2s;
+
+  &--selected {
+    border-color: var(--wf-primary);
+    box-shadow: var(--wf-shadow-selected);
+  }
+
+  &--dragging {
+    opacity: 0.8;
+    box-shadow: var(--wf-shadow-dragging);
+  }
+
+  &__header {
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  &__title {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--wf-text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    line-height: 1.5;
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    position: relative;
+
+    &::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: 30px;
+      background: linear-gradient(to right, transparent, var(--wf-surface-2));
+      pointer-events: none;
+    }
+  }
+
+  &__title-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__menu {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+    color: var(--wf-text-secondary);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    opacity: 0.7;
+
+    &:hover {
+      background: var(--wf-surface-hover);
+      color: var(--wf-primary);
+      opacity: 1;
+    }
+
+    .of-icon {
+      display: block;
+      font-size: 16px;
+    }
+
+    &.of-button {
+      --button-h-pad: 0;
+    }
+
+    svg {
+      display: block;
+    }
+  }
+
+  &__icon {
+    flex-shrink: 0;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    font-size: 18px;
+    color: var(--wf-primary);
+  }
+
+  &__content {
+    font-size: 13px;
+    color: var(--wf-text-secondary);
+  }
+}
+
+.workflow-canvas-connector {
+  fill: none;
+  stroke: var(--wf-border-secondary);
+  stroke-width: 2;
+  pointer-events: none;
+
+  &--preview {
+    stroke: var(--wf-primary);
+    stroke-dasharray: 5, 5;
+  }
+
+  &__marker {
+    fill: var(--wf-border-secondary);
+    stroke: none;
+  }
+}
+
+.workflow-canvas-plus-placeholder {
+  position: absolute;
+  z-index: 5;
+
+  &__button {
+    width: 23px;
+    height: 23px;
+    border-radius: 50%;
+    background: var(--wf-surface-2);
+    color: var(--wf-border-secondary);
+    border: 1px solid var(--wf-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 18px;
+    font-weight: 300;
+
+    &:hover {
+      color: var(--wf-primary);
+      border-color: var(--wf-primary);
+    }
+  }
+}
