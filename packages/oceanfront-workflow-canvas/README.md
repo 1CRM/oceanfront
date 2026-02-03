@@ -212,12 +212,17 @@ import {
   findGroupAtPosition,
   calculateGroupBounds,
   updateGroupBounds,
-  updateAllGroupBounds,
-  arrangeNodesInGroup,
   updateGroupPosition,
+  getGroupDepth,
 
   // Validation functions
   areEntitiesInDifferentGroups,
+
+  // Helper functions for adding nodes/groups
+  handleAddStepToGraph,
+  handleConnectNodes,
+  addNode,
+  addGroup,
 
   // Utility functions
   isPointInRect
@@ -338,16 +343,16 @@ const bounds = calculateGroupBounds(graph, ['node-1', 'node-2'], 20)
 const updated = updateGroupBounds(graph, 'group-1', 20)
 ```
 
-**`arrangeNodesInGroup(graph, groupId, padding?, spacing?)`** - Arrange nodes vertically in a group
-
-```typescript
-const updated = arrangeNodesInGroup(graph, 'group-1', 20, 40)
-```
-
 **`updateGroupPosition(graph, groupId, newPosition)`** - Move a group and all its nodes
 
 ```typescript
 const updated = updateGroupPosition(graph, 'group-1', { x: 200, y: 300 })
+```
+
+**`getGroupDepth(graph, groupId)`** - Get nesting depth of a group (0 = top-level)
+
+```typescript
+const depth = getGroupDepth(graph, 'group-1')
 ```
 
 ### Validation Functions
@@ -656,8 +661,8 @@ import {
   updateNodePosition,
   addEdge,
   addEntityToGroup,
-  arrangeNodesInGroup,
-  updateGroupPosition
+  updateGroupPosition,
+  updateGroupBounds
 } from 'oceanfront-workflow-canvas'
 
 // Move a node
@@ -666,17 +671,29 @@ let graph = updateNodePosition(graph, 'node-1', { x: 200, y: 300 })
 // Connect nodes
 graph = addEdge(graph, {
   id: 'edge-1',
-  from: { nodeId: 'node-1' },
-  to: { nodeId: 'node-2' }
+  from: { entityId: 'node-1' },
+  to: { entityId: 'node-2' }
 })
 
-// Add node to group and arrange
+// Add node to group (bounds auto-update)
 graph = addEntityToGroup(graph, 'node-1', 'group-1')
-graph = arrangeNodesInGroup(graph, 'group-1')
+
+// Manually update group bounds if needed
+graph = updateGroupBounds(graph, 'group-1')
 
 // Move entire group
 graph = updateGroupPosition(graph, 'group-1', { x: 500, y: 200 })
 ```
+
+## Architecture
+
+The library is built with:
+
+- **Vue 3 Composition API**: Modern reactive component design
+- **Composables**: Modular logic for dragging, connections, resizing, and canvas management
+- **Immutable Updates**: All helper functions return new graph objects
+- **TypeScript**: Full type safety and excellent IDE support
+- **CSS Variables**: Theme-friendly styling with automatic dark mode support
 
 ## Testing
 

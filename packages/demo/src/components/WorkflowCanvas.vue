@@ -3,18 +3,10 @@
     <h1>Workflow Canvas</h1>
 
     <div class="demo-actions">
-      <of-button
-        @click="workflowCanvasRef?.addNewNode()"
-        variant="filled"
-        tint="primary"
-      >
+      <of-button @click="workflowCanvasRef?.addNewNode()" variant="filled">
         + Add New Node
       </of-button>
-      <of-button
-        @click="workflowCanvasRef?.addNewGroup()"
-        variant="filled"
-        tint="primary"
-      >
+      <of-button @click="workflowCanvasRef?.addNewGroup()" variant="filled">
         + Add New Group
       </of-button>
       <of-button @click="resetCanvas" variant="outlined">
@@ -115,9 +107,307 @@ import 'oceanfront-workflow-canvas/css'
 
 // Initial workflow graph state - Complex linear workflow with branches (one in, one out per node)
 const initialWorkflowGraph: WorkflowGraph = {
-  nodes: [],
-  edges: [],
-  groups: []
+  nodes: [
+    {
+      id: 'trigger-1',
+      kind: 'trigger',
+      position: {
+        x: 100,
+        y: 50
+      },
+      data: {
+        title: 'New or Updated Quote',
+        description: 'Triggers when a quote is created or modified',
+        icon: 'hourglass'
+      }
+    },
+    {
+      id: 'action-1',
+      kind: 'action',
+      position: {
+        x: 100,
+        y: 229
+      },
+      data: {
+        title: 'Validate Quote Data',
+        description: 'Checks for required fields and data integrity',
+        icon: 'gear'
+      }
+    },
+    {
+      id: 'condition-1',
+      kind: 'condition',
+      position: {
+        x: 100,
+        y: 394
+      },
+      data: {
+        title: 'Check Quote Value',
+        description: 'Route based on quote value threshold',
+        icon: 'help circle'
+      }
+    },
+    {
+      id: 'condition-2',
+      kind: 'condition',
+      position: {
+        x: 844,
+        y: 678
+      },
+      data: {
+        title: 'Manager Decision',
+        description: 'Wait for manager to approve or reject',
+        icon: 'help circle'
+      }
+    },
+    {
+      id: 'action-10',
+      kind: 'action',
+      position: {
+        x: 467,
+        y: 48
+      },
+      data: {
+        title: 'Financial Analysis',
+        description: 'Perform detailed financial review',
+        icon: 'gear'
+      }
+    },
+    {
+      id: 'action-11',
+      kind: 'action',
+      position: {
+        x: 467,
+        y: 188
+      },
+      data: {
+        title: 'Request Executive Approval',
+        description: 'Route to VP or C-level for approval',
+        icon: 'user'
+      }
+    },
+    {
+      id: 'condition-3',
+      kind: 'condition',
+      position: {
+        x: 467,
+        y: 328
+      },
+      data: {
+        title: 'Executive Decision',
+        description: 'Wait for executive approval',
+        icon: 'help circle'
+      }
+    },
+    {
+      id: 'action-13',
+      kind: 'action',
+      position: {
+        x: 467,
+        y: 468
+      },
+      data: {
+        title: 'Send Contract',
+        description: 'Email contract to customer',
+        icon: 'email'
+      }
+    },
+    {
+      id: 'action-15',
+      kind: 'action',
+      position: {
+        x: 840,
+        y: 45
+      },
+      data: {
+        title: 'Log Executive Rejection',
+        description: 'Record executive rejection',
+        icon: 'gear'
+      }
+    },
+    {
+      id: 'action-16',
+      kind: 'action',
+      position: {
+        x: 840,
+        y: 185
+      },
+      data: {
+        title: 'Escalate Rejection',
+        description: 'Notify senior management',
+        icon: 'email'
+      }
+    },
+    {
+      id: 'node-1770122294598',
+      kind: 'action',
+      position: {
+        x: 839,
+        y: 348
+      },
+      data: {
+        title: 'New Action',
+        description: 'Configure this action'
+      }
+    },
+    {
+      id: 'node-1770122302593',
+      kind: 'action',
+      position: {
+        x: 848,
+        y: 485
+      },
+      data: {
+        title: 'New Action',
+        description: 'Configure this action'
+      }
+    }
+  ],
+  edges: [
+    {
+      id: 'edge-1',
+      from: {
+        entityId: 'trigger-1'
+      },
+      to: {
+        entityId: 'action-1'
+      }
+    },
+    {
+      id: 'edge-2',
+      from: {
+        entityId: 'action-1'
+      },
+      to: {
+        entityId: 'condition-1'
+      }
+    },
+    {
+      id: 'edge-12',
+      from: {
+        entityId: 'condition-1'
+      },
+      to: {
+        entityId: 'action-10'
+      }
+    },
+    {
+      id: 'edge-13',
+      from: {
+        entityId: 'action-10'
+      },
+      to: {
+        entityId: 'action-11'
+      }
+    },
+    {
+      id: 'edge-14',
+      from: {
+        entityId: 'action-11'
+      },
+      to: {
+        entityId: 'condition-3'
+      }
+    },
+    {
+      id: 'edge-19',
+      from: {
+        entityId: 'action-15'
+      },
+      to: {
+        entityId: 'action-16'
+      }
+    },
+    {
+      id: 'edge-1769669311940',
+      from: {
+        entityId: 'condition-3'
+      },
+      to: {
+        entityId: 'action-13'
+      }
+    },
+    {
+      id: 'edge-1769669319694',
+      from: {
+        entityId: 'action-13'
+      },
+      to: {
+        entityId: 'action-15'
+      }
+    },
+    {
+      id: 'edge-1770122310274',
+      from: {
+        entityId: 'node-1770122294598'
+      },
+      to: {
+        entityId: 'node-1770122302593'
+      }
+    },
+    {
+      id: 'edge-1770122312670',
+      from: {
+        entityId: 'action-16'
+      },
+      to: {
+        entityId: 'group-1770122290693'
+      }
+    },
+    {
+      id: 'edge-1770122321167',
+      from: {
+        entityId: 'group-5'
+      },
+      to: {
+        entityId: 'condition-2'
+      }
+    }
+  ],
+  groups: [
+    {
+      id: 'group-4',
+      kind: 'group',
+      title: 'Executive Approval',
+      position: {
+        x: 447,
+        y: 28
+      },
+      size: {
+        w: 290,
+        h: 560
+      },
+      containedIds: ['action-10', 'action-11', 'condition-3', 'action-13']
+    },
+    {
+      id: 'group-5',
+      kind: 'group',
+      title: 'Executive Rejection',
+      position: {
+        x: 799,
+        y: 25
+      },
+      size: {
+        w: 339,
+        h: 600
+      },
+      containedIds: ['action-15', 'action-16', 'group-1770122290693']
+    },
+    {
+      id: 'group-1770122290693',
+      kind: 'group',
+      title: 'New Group',
+      position: {
+        x: 819,
+        y: 328
+      },
+      size: {
+        w: 299,
+        h: 277
+      },
+      containedIds: ['node-1770122294598', 'node-1770122302593']
+    }
+  ]
 }
 
 // Current workflow graph
@@ -246,7 +536,6 @@ function handleEntityMovedToGroup(entityId: string, groupId: string | null) {
 .controls {
   margin: 20px 0;
   padding: 16px;
-  background: #f5f5f5;
   border-radius: 8px;
 }
 
@@ -268,7 +557,6 @@ function handleEntityMovedToGroup(entityId: string, groupId: string | null) {
   grid-template-columns: repeat(4, 1fr);
   gap: 12px;
   padding: 16px;
-  background: #f5f5f5;
   border-radius: 8px;
   margin: 16px 0;
 }
@@ -277,12 +565,10 @@ summary {
   cursor: pointer;
   font-weight: 600;
   padding: 8px;
-  background: #f5f5f5;
   border-radius: 4px;
 }
 
 pre {
-  background: #f5f5f5;
   padding: 16px;
   border-radius: 4px;
   overflow-x: auto;

@@ -1,5 +1,44 @@
 // Main SCSS entry for oceanfront-workflow-canvas
 
+// CSS Variables for theming
+:root {
+  --wf-surface: var(--of-surface, #f5f5f5);
+  --wf-surface-2: var(--of-surface, #fff);
+  --wf-surface-hover: var(--of-surface-hover, #f0f0f0);
+  --wf-border: var(--of-border, #e0e0e0);
+  --wf-border-secondary: var(--of-border, #ccc);
+  --wf-primary: var(--of-color-primary-light, #2196f3);
+  --wf-text-primary: var(--of-text-primary, #333);
+  --wf-text-secondary: var(--of-text-secondary, #666);
+  --wf-grid-line: rgba(0, 0, 0, 0.05);
+  --wf-group-bg: rgba(255, 255, 255, 0.3);
+  --wf-group-bg-nested: rgba(255, 255, 255, 0.4);
+  --wf-group-bg-hover: rgba(0, 0, 0, 0.05);
+  --wf-group-bg-hover-nested: rgba(0, 0, 0, 0.08);
+  --wf-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --wf-shadow-selected: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --wf-shadow-dragging: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.-of-theme-dark {
+  --wf-surface: var(--of-color-background-dark, #383b33);
+  --wf-surface-2: var(--of-color-surface-dark, #44473d);
+  --wf-surface-hover: rgba(255, 255, 255, 0.1);
+  --wf-border: var(--of-color-outline-dark, #8e9384);
+  --wf-border-secondary: var(--of-color-outline-dark, #666);
+  --wf-primary: var(--of-color-primary-dark, #77d7ea);
+  --wf-text-primary: var(--of-color-on-surface-dark, #e1e4dd);
+  --wf-text-secondary: var(--of-color-on-surface-variant-dark, #c4c9bd);
+  --wf-grid-line: rgba(255, 255, 255, 0.08);
+  --wf-group-bg: rgba(0, 0, 0, 0.2);
+  --wf-group-bg-nested: rgba(0, 0, 0, 0.3);
+  --wf-group-bg-hover: rgba(255, 255, 255, 0.05);
+  --wf-group-bg-hover-nested: rgba(255, 255, 255, 0.08);
+  --wf-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --wf-shadow-selected: 0 4px 16px rgba(0, 0, 0, 0.6);
+  --wf-shadow-dragging: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
 .workflow-canvas-wrapper {
   position: relative;
   display: flex;
@@ -7,7 +46,6 @@
   height: 100%;
   overflow: hidden;
 
-  // Sidebar positioning within canvas
   .workflow-canvas__sidebar {
     position: relative;
     flex-shrink: 0;
@@ -15,7 +53,7 @@
 
     .of-sidebar {
       width: 350px;
-      border-left: 1px solid var(--of-border, #e0e0e0);
+      border-left: 1px solid var(--wf-border);
       border-radius: 0;
       box-shadow: none;
     }
@@ -27,10 +65,10 @@
   flex: 1;
   height: 100%;
   overflow: auto;
-  background-color: var(--of-surface, #f5f5f5);
+  background-color: var(--wf-surface);
   background-image:
-    linear-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+    linear-gradient(var(--wf-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--wf-grid-line) 1px, transparent 1px);
   background-size: 20px 20px;
 
   &__container {
@@ -65,14 +103,14 @@
     justify-content: space-between;
     align-items: center;
     padding: 16px;
-    border-bottom: 1px solid var(--of-border, #e0e0e0);
-    background: var(--of-surface, #fff);
+    border-bottom: 1px solid var(--wf-border);
+    background: var(--wf-surface-2);
 
     h3 {
       margin: 0;
       font-size: 18px;
       font-weight: 600;
-      color: var(--of-text-primary, #333);
+      color: var(--wf-text-primary);
     }
   }
 
@@ -81,7 +119,7 @@
     border: none;
     font-size: 24px;
     cursor: pointer;
-    color: var(--of-text-secondary, #666);
+    color: var(--wf-text-secondary);
     padding: 0;
     width: 32px;
     height: 32px;
@@ -92,7 +130,7 @@
     transition: background-color 0.2s;
 
     &:hover {
-      background: var(--of-surface-hover, #f0f0f0);
+      background: var(--wf-surface-hover);
     }
   }
 
@@ -110,18 +148,19 @@
       font-weight: 600;
       margin-bottom: 8px;
       font-size: 13px;
-      color: var(--of-text-primary, #333);
+      color: var(--wf-text-primary);
     }
 
     > div {
       font-size: 14px;
-      color: var(--of-text-secondary, #666);
+      color: var(--wf-text-secondary);
     }
   }
+
   &__panel-actions {
     margin-top: 24px;
     padding-top: 16px;
-    border-top: 1px solid var(--of-border, #e0e0e0);
+    border-top: 1px solid var(--wf-border);
   }
 }
 
@@ -145,9 +184,9 @@
 
 .workflow-canvas-group {
   position: absolute;
-  border: 2px dashed var(--of-border, #ccc);
+  border: 2px dashed var(--wf-border-secondary);
   border-radius: 8px;
-  background-color: rgba(255, 255, 255, 0.3);
+  background-color: var(--wf-group-bg);
   z-index: 0;
   pointer-events: auto;
   cursor: move;
@@ -159,13 +198,13 @@
 
   &:hover,
   &--child-hovered {
-    background-color: rgba(0, 0, 0, 0.05);
-    border-color: var(--of-primary-tint, #2196f3);
+    background-color: var(--wf-group-bg-hover);
+    border-color: var(--wf-primary);
   }
 
   &--selected {
-    border-color: var(--of-primary-tint, #2196f3);
-    background-color: rgba(0, 0, 0, 0.05);
+    border-color: var(--wf-primary);
+    background-color: var(--wf-group-bg-hover);
     border-width: 3px;
   }
 
@@ -175,30 +214,29 @@
   }
 
   &--dropzone {
-    background-color: rgba(0, 0, 0, 0.05);
-    border-color: var(--of-primary-tint, #2196f3);
+    background-color: var(--wf-group-bg-hover);
+    border-color: var(--wf-primary);
   }
 
-  // Nested groups styling
   &--nested {
-    border-color: var(--of-border, #999);
-    background-color: rgba(255, 255, 255, 0.4);
+    border-color: var(--wf-border-secondary);
+    background-color: var(--wf-group-bg-nested);
     border-width: 2px;
 
     &:hover,
     &.workflow-canvas-group--child-hovered {
-      background-color: rgba(0, 0, 0, 0.08);
-      border-color: var(--of-primary-tint, #2196f3);
+      background-color: var(--wf-group-bg-hover-nested);
+      border-color: var(--wf-primary);
     }
 
     &.workflow-canvas-group--selected {
-      border-color: var(--of-primary-tint, #2196f3);
-      background-color: rgba(0, 0, 0, 0.08);
+      border-color: var(--wf-primary);
+      background-color: var(--wf-group-bg-hover-nested);
     }
 
     &.workflow-canvas-group--dropzone {
-      background-color: rgba(0, 0, 0, 0.08);
-      border-color: var(--of-primary-tint, #2196f3);
+      background-color: var(--wf-group-bg-hover-nested);
+      border-color: var(--wf-primary);
     }
   }
 
@@ -206,31 +244,29 @@
     position: absolute;
     top: -13px;
     left: 8px;
-    background-color: var(--of-surface, #fff);
+    background-color: var(--wf-surface-2);
     padding: 2px 8px;
     font-size: 12px;
     font-weight: 600;
-    color: var(--of-text-secondary, #666);
+    color: var(--wf-text-secondary);
     pointer-events: none;
     border-radius: 8px;
   }
 
-  // Group connection handles
   &__handle {
     position: absolute;
     left: 50%;
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    background-color: var(--of-primary-tint, rgba(33, 150, 243));
-    border: 2px solid rgba(255, 255, 255, 0.9);
+    background-color: var(--wf-primary);
+    border: 2px solid var(--wf-surface-2);
     cursor: pointer;
     z-index: 25;
     transform: translateX(calc(-50% - 2px));
     transition: all 0.2s;
     opacity: 0.6;
 
-    // Larger clickable area
     &::before {
       content: '';
       position: absolute;
@@ -244,7 +280,7 @@
 
     &:hover {
       transform: translateX(-50%) scale(1.2);
-      background-color: var(--of-primary-tint, #2196f3);
+      background-color: var(--wf-primary);
       opacity: 1;
     }
 
@@ -256,7 +292,6 @@
       bottom: -9px;
     }
 
-    // Free output handle (no connection)
     &--free {
       display: flex;
       align-items: center;
@@ -267,13 +302,11 @@
     }
   }
 
-  // Resize handles
   &__resize-handle {
     position: absolute;
     background: transparent;
     z-index: 20;
 
-    // Edge handles
     &--top,
     &--bottom {
       left: 10%;
@@ -306,7 +339,6 @@
       right: -4px;
     }
 
-    // Corner handles - thick curved lines
     &--top-left,
     &--top-right,
     &--bottom-left,
@@ -322,7 +354,7 @@
         position: absolute;
         width: 100%;
         height: 100%;
-        border: 4px solid var(--of-primary-tint, #2196f3);
+        border: 4px solid var(--wf-primary);
         border-color: transparent;
       }
     }
@@ -333,8 +365,8 @@
       cursor: nwse-resize;
 
       &::before {
-        border-top-color: var(--of-primary-tint, #2196f3);
-        border-left-color: var(--of-primary-tint, #2196f3);
+        border-top-color: var(--wf-primary);
+        border-left-color: var(--wf-primary);
         border-top-left-radius: 8px;
       }
     }
@@ -345,8 +377,8 @@
       cursor: nesw-resize;
 
       &::before {
-        border-top-color: var(--of-primary-tint, #2196f3);
-        border-right-color: var(--of-primary-tint, #2196f3);
+        border-top-color: var(--wf-primary);
+        border-right-color: var(--wf-primary);
         border-top-right-radius: 8px;
       }
     }
@@ -357,8 +389,8 @@
       cursor: nesw-resize;
 
       &::before {
-        border-bottom-color: var(--of-primary-tint, #2196f3);
-        border-left-color: var(--of-primary-tint, #2196f3);
+        border-bottom-color: var(--wf-primary);
+        border-left-color: var(--wf-primary);
         border-bottom-left-radius: 8px;
       }
     }
@@ -369,14 +401,13 @@
       cursor: nwse-resize;
 
       &::before {
-        border-bottom-color: var(--of-primary-tint, #2196f3);
-        border-right-color: var(--of-primary-tint, #2196f3);
+        border-bottom-color: var(--wf-primary);
+        border-right-color: var(--wf-primary);
         border-bottom-right-radius: 8px;
       }
     }
   }
 
-  // Show resize handles on hover or when selected
   &:hover &__resize-handle--top-left,
   &:hover &__resize-handle--top-right,
   &:hover &__resize-handle--bottom-left,
@@ -415,15 +446,14 @@
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    background-color: var(--of-primary-tint, rgba(33, 150, 243));
-    border: 1.5px solid rgba(255, 255, 255, 0.9);
+    background-color: var(--wf-primary);
+    border: 1.5px solid var(--wf-surface-2);
     cursor: pointer;
     z-index: 5;
     transform: translateX(-50%);
     transition: all 0.2s;
     opacity: 0.5;
 
-    // Larger clickable area
     &::before {
       content: '';
       position: absolute;
@@ -437,7 +467,7 @@
 
     &:hover {
       transform: translateX(-50%) scale(1.15);
-      background-color: var(--of-primary-tint, #2196f3);
+      background-color: var(--wf-primary);
     }
 
     &--input {
@@ -448,7 +478,6 @@
       bottom: -7px;
     }
 
-    // Free output handle (no connection) - show as "+" button (matches placeholder style)
     &--free {
       display: flex;
       align-items: center;
@@ -460,22 +489,22 @@
 }
 
 .workflow-canvas-tile {
-  background: var(--of-surface, #fff);
-  border: 1px solid var(--of-border, #e0e0e0);
+  background: var(--wf-surface-2);
+  border: 1px solid var(--wf-border);
   border-radius: 8px;
   padding: 16px;
   min-width: 200px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--wf-shadow);
   transition: all 0.2s;
 
   &--selected {
-    border-color: var(--of-primary-tint, #2196f3);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border-color: var(--wf-primary);
+    box-shadow: var(--wf-shadow-selected);
   }
 
   &--dragging {
     opacity: 0.8;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--wf-shadow-dragging);
   }
 
   &__header {
@@ -489,7 +518,7 @@
   &__title {
     font-weight: 600;
     font-size: 14px;
-    color: var(--of-text-primary, #333);
+    color: var(--wf-text-primary);
     display: flex;
     align-items: center;
     gap: 8px;
@@ -507,7 +536,7 @@
       top: 0;
       bottom: 0;
       width: 30px;
-      background: linear-gradient(to right, transparent, var(--of-surface, #fff));
+      background: linear-gradient(to right, transparent, var(--wf-surface-2));
       pointer-events: none;
     }
   }
@@ -524,7 +553,7 @@
     border: none;
     padding: 4px;
     cursor: pointer;
-    color: var(--of-text-secondary, #666);
+    color: var(--wf-text-secondary);
     border-radius: 4px;
     display: flex;
     align-items: center;
@@ -533,8 +562,8 @@
     opacity: 0.7;
 
     &:hover {
-      background: var(--of-surface-hover, #f0f0f0);
-      color: var(--of-primary-tint, #2196f3);
+      background: var(--wf-surface-hover);
+      color: var(--wf-primary);
       opacity: 1;
     }
 
@@ -546,6 +575,7 @@
     &.of-button {
       --button-h-pad: 0;
     }
+
     svg {
       display: block;
     }
@@ -557,28 +587,28 @@
     display: inline-flex;
     align-items: center;
     font-size: 18px;
-    color: var(--of-primary-tint, #2196f3);
+    color: var(--wf-primary);
   }
 
   &__content {
     font-size: 13px;
-    color: var(--of-text-secondary, #666);
+    color: var(--wf-text-secondary);
   }
 }
 
 .workflow-canvas-connector {
   fill: none;
-  stroke: var(--of-border, #999);
+  stroke: var(--wf-border-secondary);
   stroke-width: 2;
   pointer-events: none;
 
   &--preview {
-    stroke: var(--of-primary-tint, #2196f3);
+    stroke: var(--wf-primary);
     stroke-dasharray: 5, 5;
   }
 
   &__marker {
-    fill: var(--of-border, #999);
+    fill: var(--wf-border-secondary);
     stroke: none;
   }
 }
@@ -591,9 +621,9 @@
     width: 23px;
     height: 23px;
     border-radius: 50%;
-    background: var(--of-surface, #fff);
-    color: var(--of-border, #999);
-    border: 1px solid var(--of-border, #e1dddd);
+    background: var(--wf-surface-2);
+    color: var(--wf-border-secondary);
+    border: 1px solid var(--wf-border);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -603,238 +633,8 @@
     font-weight: 300;
 
     &:hover {
-      color: var(--of-primary-tint, #2196f3);
-      border-color: var(--of-primary-tint, #2196f3);
-    }
-  }
-}
-
-// Dark Theme Overrides
-.-of-theme-dark {
-  .workflow-canvas {
-    background-color: var(--of-color-background-dark, #383b33);
-    background-image:
-      linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
-
-    &__panel-default {
-      background: var(--of-color-surface-dark, #44473d);
-    }
-
-    &__panel-header {
-      background: var(--of-color-surface-dark, #44473d);
-      border-bottom-color: var(--of-color-outline-dark, #8e9384);
-
-      h3 {
-        color: var(--of-color-on-surface-dark, #e1e4dd);
-      }
-    }
-
-    &__panel-close {
-      color: var(--of-color-on-surface-variant-dark, #c4c9bd);
-
-      &:hover {
-        background: rgba(255, 255, 255, 0.1);
-      }
-    }
-
-    &__panel-field {
-      label {
-        color: var(--of-color-on-surface-dark, #e1e4dd);
-      }
-
-      > div {
-        color: var(--of-color-on-surface-variant-dark, #c4c9bd);
-      }
-    }
-
-    &__panel-actions {
-      border-top-color: var(--of-color-outline-dark, #8e9384);
-    }
-  }
-
-  .workflow-canvas-group {
-    border-color: var(--of-color-outline-dark, #8e9384);
-    background-color: rgba(0, 0, 0, 0.2);
-
-    &:hover,
-    &--child-hovered {
-      background-color: rgba(255, 255, 255, 0.05);
-      border-color: var(--of-color-primary-dark, #77d7ea);
-    }
-
-    &--selected {
-      border-color: var(--of-color-primary-dark, #77d7ea);
-      background-color: rgba(255, 255, 255, 0.05);
-    }
-
-    &--dropzone {
-      background-color: rgba(255, 255, 255, 0.05);
-      border-color: var(--of-color-primary-dark, #77d7ea);
-    }
-
-    &--nested {
-      border-color: var(--of-color-outline-dark, #666);
-      background-color: rgba(0, 0, 0, 0.3);
-
-      &:hover,
-      &.workflow-canvas-group--child-hovered {
-        background-color: rgba(255, 255, 255, 0.08);
-        border-color: var(--of-color-primary-dark, #77d7ea);
-      }
-
-      &.workflow-canvas-group--selected {
-        border-color: var(--of-color-primary-dark, #77d7ea);
-        background-color: rgba(255, 255, 255, 0.08);
-      }
-    }
-
-    &__title {
-      background-color: var(--of-color-surface-dark, #44473d);
-      color: var(--of-color-on-surface-variant-dark, #c4c9bd);
-    }
-
-    &__handle {
-      background-color: var(--of-primary-tint, #77d7ea);
-      border-color: var(--of-primary-tint, #44473d);
-
-      &--free {
-        background: var(--of-color-surface-dark, #44473d);
-        border-color: var(--of-color-outline-dark, #8e9384);
-
-        &:hover {
-          border-color: var(--of-color-primary-dark, #77d7ea);
-        }
-      }
-    }
-
-    &__resize-handle {
-      &--top-left,
-      &--top-right,
-      &--bottom-left,
-      &--bottom-right {
-        &::before {
-          border-color: transparent;
-        }
-      }
-
-      &--top-left::before {
-        border-top-color: var(--of-color-primary-dark, #77d7ea);
-        border-left-color: var(--of-color-primary-dark, #77d7ea);
-      }
-
-      &--top-right::before {
-        border-top-color: var(--of-color-primary-dark, #77d7ea);
-        border-right-color: var(--of-color-primary-dark, #77d7ea);
-      }
-
-      &--bottom-left::before {
-        border-bottom-color: var(--of-color-primary-dark, #77d7ea);
-        border-left-color: var(--of-color-primary-dark, #77d7ea);
-      }
-
-      &--bottom-right::before {
-        border-bottom-color: var(--of-color-primary-dark, #77d7ea);
-        border-right-color: var(--of-color-primary-dark, #77d7ea);
-      }
-    }
-  }
-
-  .workflow-canvas-tile {
-    background: var(--of-color-surface-dark, #44473d);
-    border-color: var(--of-color-outline-dark, #8e9384);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-
-    &--selected {
-      border-color: var(--of-color-primary-dark, #77d7ea);
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
-    }
-
-    &--dragging {
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-    }
-
-    &__title {
-      color: var(--of-color-on-surface-dark, #e1e4dd);
-
-      &::after {
-        background: linear-gradient(to right, transparent, var(--of-color-surface-dark, #44473d));
-      }
-    }
-
-    &__menu {
-      color: var(--of-color-on-surface-variant-dark, #c4c9bd);
-
-      &:hover {
-        background: rgba(255, 255, 255, 0.1);
-        color: var(--of-color-primary-dark, #77d7ea);
-      }
-    }
-
-    &__icon {
-      color: var(--of-primary-tint, #77d7ea);
-    }
-
-    &__content {
-      color: var(--of-color-on-surface-variant-dark, #c4c9bd);
-    }
-  }
-
-  .workflow-canvas-node {
-    &__handle {
-      background-color: var(--of-primary-tint, #77d7ea);
-      border-color: var(--of-primary-tint, #44473d);
-    }
-  }
-
-  .workflow-canvas-connector {
-    stroke: var(--of-color-outline-dark, #8e9384);
-
-    &--preview {
-      stroke: var(--of-color-primary-dark, #77d7ea);
-    }
-
-    &__marker {
-      fill: var(--of-color-outline-dark, #8e9384);
-    }
-  }
-
-  .workflow-canvas-plus-placeholder {
-    &__button {
-      background: var(--of-color-surface-dark, #44473d);
-      color: var(--of-color-outline-dark, #8e9384);
-      border-color: var(--of-color-outline-dark, #8e9384);
-
-      &:hover {
-        color: var(--of-color-primary-dark, #77d7ea);
-        border-color: var(--of-color-primary-dark, #77d7ea);
-      }
-    }
-  }
-
-  .workflow-canvas-node {
-    &__handle {
-      &--free {
-        background: var(--of-color-surface-dark, #44473d);
-        border-color: var(--of-color-outline-dark, #8e9384);
-
-        &:hover {
-          border-color: var(--of-color-primary-dark, #77d7ea);
-        }
-      }
-    }
-
-    &__handle-plus {
-      width: 10px;
-      height: 10px;
-    }
-  }
-
-  .workflow-canvas-wrapper {
-    .workflow-canvas__sidebar {
-      .of-sidebar {
-        border-left-color: var(--of-color-outline-dark, #8e9384);
-      }
+      color: var(--wf-primary);
+      border-color: var(--wf-primary);
     }
   }
 }

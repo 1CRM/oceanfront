@@ -1,13 +1,13 @@
 <template>
   <div class="workflow-canvas-wrapper">
     <div class="workflow-canvas" ref="canvasRef" @click="handleCanvasClick">
-      <div class="workflow-canvas__container" :style="containerStyle">
+      <div class="workflow-canvas__container" :style="canvas.containerStyle.value">
         <!-- SVG layer for connectors -->
         <svg
           class="workflow-canvas__svg-layer"
-          :viewBox="svgViewBox"
-          :width="svgWidth"
-          :height="svgHeight"
+          :viewBox="canvas.svgViewBox.value"
+          :width="canvas.svgWidth.value"
+          :height="canvas.svgHeight.value"
         >
           <defs>
             <marker
@@ -24,7 +24,7 @@
           </defs>
 
           <!-- Groups background (sorted by depth) -->
-          <g v-for="group in sortedGroups" :key="group.id">
+          <g v-for="group in canvas.sortedGroups.value" :key="group.id">
             <rect
               :x="group.position.x"
               :y="group.position.y"
@@ -47,8 +47,8 @@
 
           <!-- Preview connection while dragging -->
           <path
-            v-if="connectionPreview"
-            :d="connectionPreview.path"
+            v-if="connections.connectionPreview.value"
+            :d="connections.connectionPreview.value.path"
             class="workflow-canvas-connector workflow-canvas-connector--preview"
           />
         </svg>
@@ -57,27 +57,28 @@
         <div class="workflow-canvas__nodes-layer">
           <!-- Group labels (sorted by depth) -->
           <div
-            v-for="group in sortedGroups"
+            v-for="group in canvas.sortedGroups.value"
             :key="`group-label-${group.id}`"
             class="workflow-canvas-group"
             :class="{
               'workflow-canvas-group--selected': props.selectedId === group.id,
-              'workflow-canvas-group--dragging': draggingGroupId === group.id,
+              'workflow-canvas-group--dragging': dragging.draggingGroupId.value === group.id,
               'workflow-canvas-group--dropzone':
-                nodeOverGroupId === group.id || nodeOverGroupIds.includes(group.id),
+                dragging.nodeOverGroupId.value === group.id ||
+                dragging.nodeOverGroupIds.value.includes(group.id),
               'workflow-canvas-group--nested': getGroupDepth(props.modelValue, group.id) > 0,
-              'workflow-canvas-group--child-hovered': hoveredNodeGroupId === group.id
+              'workflow-canvas-group--child-hovered': dragging.hoveredNodeGroupId.value === group.id
             }"
-            :style="getGroupStyle(group)"
-            @mousedown="handleGroupMouseDown($event, group)"
+            :style="canvas.getGroupStyle(group)"
+            @mousedown="dragging.handleGroupMouseDown($event, group)"
             @click.stop="handleGroupClick(group.id)"
           >
             <!-- Input handle -->
             <div
               v-if="!readonly"
               class="workflow-canvas-group__handle workflow-canvas-group__handle--input"
-              @mousedown.stop="handleGroupHandleMouseDown($event, group.id, 'input')"
-              @mouseup.stop="handleGroupHandleMouseUp(group.id, 'input')"
+              @mousedown.stop="connections.handleEntityHandleMouseDown($event, group.id, 'input')"
+              @mouseup.stop="connections.handleEntityHandleMouseUp(group.id, 'input')"
             ></div>
 
             <div v-if="group.title" class="workflow-canvas-group__title">{{ group.title }}</div>
@@ -86,9 +87,9 @@
             <div
               v-if="!readonly"
               class="workflow-canvas-group__handle workflow-canvas-group__handle--output"
-              :class="{ 'workflow-canvas-group__handle--free': isOutputFree(group.id) }"
-              @mousedown.stop="handleGroupHandleMouseDown($event, group.id, 'output')"
-              @mouseup.stop="handleGroupHandleMouseUp(group.id, 'output')"
+              :class="{ 'workflow-canvas-group__handle--free': connections.isOutputFree(group.id) }"
+              @mousedown.stop="connections.handleEntityHandleMouseDown($event, group.id, 'output')"
+              @mouseup.stop="connections.handleEntityHandleMouseUp(group.id, 'output')"
             ></div>
 
             <!-- Resize handles -->
@@ -96,37 +97,37 @@
               <!-- Edge handles -->
               <div
                 class="workflow-canvas-group__resize-handle workflow-canvas-group__resize-handle--top"
-                @mousedown.stop="handleResizeMouseDown($event, group.id, 'top')"
+                @mousedown.stop="resize.handleResizeMouseDown($event, group.id, 'top')"
               ></div>
               <div
                 class="workflow-canvas-group__resize-handle workflow-canvas-group__resize-handle--right"
-                @mousedown.stop="handleResizeMouseDown($event, group.id, 'right')"
+                @mousedown.stop="resize.handleResizeMouseDown($event, group.id, 'right')"
               ></div>
               <div
                 class="workflow-canvas-group__resize-handle workflow-canvas-group__resize-handle--bottom"
-                @mousedown.stop="handleResizeMouseDown($event, group.id, 'bottom')"
+                @mousedown.stop="resize.handleResizeMouseDown($event, group.id, 'bottom')"
               ></div>
               <div
                 class="workflow-canvas-group__resize-handle workflow-canvas-group__resize-handle--left"
-                @mousedown.stop="handleResizeMouseDown($event, group.id, 'left')"
+                @mousedown.stop="resize.handleResizeMouseDown($event, group.id, 'left')"
               ></div>
 
               <!-- Corner handles -->
               <div
                 class="workflow-canvas-group__resize-handle workflow-canvas-group__resize-handle--top-left"
-                @mousedown.stop="handleResizeMouseDown($event, group.id, 'top-left')"
+                @mousedown.stop="resize.handleResizeMouseDown($event, group.id, 'top-left')"
               ></div>
               <div
                 class="workflow-canvas-group__resize-handle workflow-canvas-group__resize-handle--top-right"
-                @mousedown.stop="handleResizeMouseDown($event, group.id, 'top-right')"
+                @mousedown.stop="resize.handleResizeMouseDown($event, group.id, 'top-right')"
               ></div>
               <div
                 class="workflow-canvas-group__resize-handle workflow-canvas-group__resize-handle--bottom-left"
-                @mousedown.stop="handleResizeMouseDown($event, group.id, 'bottom-left')"
+                @mousedown.stop="resize.handleResizeMouseDown($event, group.id, 'bottom-left')"
               ></div>
               <div
                 class="workflow-canvas-group__resize-handle workflow-canvas-group__resize-handle--bottom-right"
-                @mousedown.stop="handleResizeMouseDown($event, group.id, 'bottom-right')"
+                @mousedown.stop="resize.handleResizeMouseDown($event, group.id, 'bottom-right')"
               ></div>
             </template>
           </div>
@@ -139,19 +140,19 @@
             class="workflow-canvas-node"
             :class="{
               'workflow-canvas-node--selected': props.selectedId === node.id,
-              'workflow-canvas-node--dragging': draggingNodeId === node.id
+              'workflow-canvas-node--dragging': dragging.draggingNodeId.value === node.id
             }"
-            :style="getNodeStyle(node)"
-            @mousedown="handleNodeMouseDown($event, node)"
-            @mouseenter="handleNodeMouseEnter(node)"
-            @mouseleave="handleNodeMouseLeave"
+            :style="canvas.getNodeStyle(node)"
+            @mousedown="dragging.handleNodeMouseDown($event, node)"
+            @mouseenter="dragging.handleNodeMouseEnter(node)"
+            @mouseleave="dragging.handleNodeMouseLeave"
           >
             <!-- Input handle -->
             <div
               v-if="!readonly"
               class="workflow-canvas-node__handle workflow-canvas-node__handle--input"
-              @mousedown.stop="handleHandleMouseDown($event, node.id, 'input')"
-              @mouseup.stop="handleHandleMouseUp(node.id, 'input')"
+              @mousedown.stop="connections.handleEntityHandleMouseDown($event, node.id, 'input')"
+              @mouseup.stop="connections.handleEntityHandleMouseUp(node.id, 'input')"
             ></div>
 
             <!-- Node content (slot or default tile) -->
@@ -170,7 +171,8 @@
                 :node="node"
                 :selected="props.selectedId === node.id"
                 :dragging="
-                  draggingNodeId === node.id && !!getParentGroup(props.modelValue, node.id)
+                  dragging.draggingNodeId.value === node.id &&
+                  !!getParentGroup(props.modelValue, node.id)
                 "
                 :labels="mergedLabels"
                 @menu-click="
@@ -186,12 +188,15 @@
             <div
               v-if="!readonly"
               class="workflow-canvas-node__handle workflow-canvas-node__handle--output"
-              :class="{ 'workflow-canvas-node__handle--free': isOutputFree(node.id) }"
-              @mousedown.stop="handleHandleMouseDown($event, node.id, 'output')"
-              @mouseup.stop="handleHandleMouseUp(node.id, 'output')"
+              :class="{ 'workflow-canvas-node__handle--free': connections.isOutputFree(node.id) }"
+              @mousedown.stop="connections.handleEntityHandleMouseDown($event, node.id, 'output')"
+              @mouseup.stop="connections.handleEntityHandleMouseUp(node.id, 'output')"
               @click.stop="handleFreeOutputClick(node.id)"
             >
-              <span v-if="isOutputFree(node.id)" class="workflow-canvas-node__handle-plus"></span>
+              <span
+                v-if="connections.isOutputFree(node.id)"
+                class="workflow-canvas-node__handle-plus"
+              ></span>
             </div>
           </div>
 
@@ -232,7 +237,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, toRef } from 'vue'
 import type {
   WorkflowGraph,
   WorkflowNode,
@@ -240,29 +245,18 @@ import type {
   Position,
   WorkflowGroup,
   AddStepEvent,
-  ConnectEvent,
   WorkflowCanvasLabels
 } from '../types/workflow'
 import {
-  updateNodePosition,
   findNode,
-  findEntity,
   findGroup,
   findGroupAtPosition,
-  findAllGroupsAtPosition,
   getParentGroup,
   removeEntityFromAllGroups,
-  addEntityToGroup,
-  updateGroupPosition,
-  getGroupDepth,
-  wouldCreateCycle,
-  wouldExceedMaxDepth,
-  calculateGroupMinimumSize,
   updateGroupBounds,
   isPointInRect,
-  areEntitiesInDifferentGroups,
+  getGroupDepth,
   handleAddStepToGraph,
-  handleConnectNodes,
   addNode,
   addGroup
 } from '../utils/graph-helpers'
@@ -270,6 +264,10 @@ import { DEFAULT_LABELS } from '../constants/labels'
 import WorkflowTile from './WorkflowTile.vue'
 import WorkflowConfigPanel from './WorkflowConfigPanel.vue'
 import WorkflowPlusPlaceholder from './WorkflowPlusPlaceholder.vue'
+import { useDragging } from '../composables/useDragging'
+import { useConnections } from '../composables/useConnections'
+import { useGroupResize } from '../composables/useGroupResize'
+import { useCanvas } from '../composables/useCanvas'
 
 defineOptions({
   name: 'WorkflowCanvas'
@@ -294,7 +292,6 @@ const props = withDefaults(
   }
 )
 
-// Merge provided labels with defaults
 const mergedLabels = computed<WorkflowCanvasLabels>(() => ({
   ...DEFAULT_LABELS,
   ...props.labels
@@ -303,6 +300,7 @@ const mergedLabels = computed<WorkflowCanvasLabels>(() => ({
 const emit = defineEmits<{
   'update:modelValue': [graph: WorkflowGraph]
   'update:selectedId': [id: string | null]
+  'add-step': [event: AddStepEvent]
   'node-add': [node: WorkflowNode]
   'group-add': [group: WorkflowGroup]
   'edge-add': [edge: WorkflowEdge]
@@ -323,31 +321,6 @@ const emit = defineEmits<{
   'entity-moved-to-group': [entityId: string, groupId: string | null]
 }>()
 
-// Helper function to remove all edges connected to an entity
-function removeEdgesForEntity(graph: WorkflowGraph, entityId: string): WorkflowGraph {
-  return {
-    ...graph,
-    edges: graph.edges.filter(
-      edge => edge.from.entityId !== entityId && edge.to.entityId !== entityId
-    )
-  }
-}
-
-// Helper function to find target group at position, excluding a specific group
-function findDropTargetGroup(
-  x: number,
-  y: number,
-  excludeId: string | null
-): WorkflowGroup | undefined {
-  // Get all groups at this position, sorted by depth (deepest first)
-  const allGroupsAtPosition = findAllGroupsAtPosition(props.modelValue, { x, y })
-    .filter(g => g.id !== excludeId)
-    .sort((a, b) => getGroupDepth(props.modelValue, b.id) - getGroupDepth(props.modelValue, a.id))
-
-  // Return the deepest group that isn't the one being excluded
-  return allGroupsAtPosition.length > 0 ? allGroupsAtPosition[0] : undefined
-}
-
 const selectedNode = computed(() =>
   props.selectedId ? findNode(props.modelValue, props.selectedId) : null
 )
@@ -358,56 +331,183 @@ const selectedGroup = computed(() =>
 
 const canvasRef = ref<HTMLElement>()
 const nodeElements = ref<Map<string, HTMLElement>>(new Map())
-const draggingNodeId = ref<string | null>(null)
-const draggingGroupId = ref<string | null>(null)
-const dragOffset = ref<Position>({ x: 0, y: 0 })
-const connectionPreview = ref<{ path: string; fromNodeId: string } | null>(null)
-const connectionDragStart = ref<{ nodeId: string; port: string } | null>(null)
-const connectionDragMoved = ref(false)
-const draggedNodeOriginalGroup = ref<string | null>(null)
-const disconnectingEdge = ref<WorkflowEdge | null>(null)
-const nodeOverGroupId = ref<string | null>(null)
-const nodeOverGroupIds = ref<string[]>([])
-const hoveredNodeGroupId = ref<string | null>(null)
-const resizingGroupId = ref<string | null>(null)
-const resizeDirection = ref<string | null>(null)
-const resizeStartBounds = ref<{ x: number; y: number; w: number; h: number } | null>(null)
-const resizeStartMousePos = ref<Position | null>(null)
 
-// Calculate container size to fit all nodes and groups
-const containerStyle = computed(() => {
-  let width = props.width
-  let height = props.height
+// Helper functions for composables
+const findEntity = (entityId: string): WorkflowNode | WorkflowGroup | undefined => {
+  const node = findNode(props.modelValue, entityId)
+  if (node) return node
+  return findGroup(props.modelValue, entityId)
+}
 
-  props.modelValue.nodes.forEach(node => {
-    const right = node.position.x + (node.size?.w || 250)
-    const bottom = node.position.y + (node.size?.h || 100)
-    if (right > width) width = right
-    if (bottom > height) height = bottom
+const findAllGroupsAtPosition = (position: Position): WorkflowGroup[] => {
+  return props.modelValue.groups.filter(g => {
+    return isPointInRect(position, {
+      x: g.position.x,
+      y: g.position.y,
+      w: g.size.w,
+      h: g.size.h
+    })
   })
+}
 
-  props.modelValue.groups.forEach(group => {
-    const right = group.position.x + group.size.w
-    const bottom = group.position.y + group.size.h
-    if (right > width) width = right
-    if (bottom > height) height = bottom
-  })
+const wouldCreateCycle = (childId: string, parentId: string): boolean => {
+  if (childId === parentId) return true
+  const childGroup = findGroup(props.modelValue, childId)
+  if (!childGroup) return false
 
-  return {
-    width: `${width + 100}px`,
-    height: `${height + 100}px`
+  const getDescendants = (groupId: string): string[] => {
+    const group = findGroup(props.modelValue, groupId)
+    if (!group) return []
+    const descendants: string[] = []
+    const toProcess = [...group.containedIds]
+    while (toProcess.length > 0) {
+      const entityId = toProcess.shift()!
+      descendants.push(entityId)
+      const childGroup = findGroup(props.modelValue, entityId)
+      if (childGroup) toProcess.push(...childGroup.containedIds)
+    }
+    return descendants
   }
+
+  return getDescendants(childId).includes(parentId)
+}
+
+const wouldExceedMaxDepth = (entityId: string, parentId: string): boolean => {
+  if (props.maxGroupDepth === null) return false
+  const parentDepth = getGroupDepth(props.modelValue, parentId)
+  const newEntityDepth = parentDepth + 1
+  const entity = findGroup(props.modelValue, entityId)
+
+  if (entity) {
+    const getDescendants = (groupId: string): string[] => {
+      const group = findGroup(props.modelValue, groupId)
+      if (!group) return []
+      const descendants: string[] = []
+      const toProcess = [...group.containedIds]
+      while (toProcess.length > 0) {
+        const entityId = toProcess.shift()!
+        descendants.push(entityId)
+        const childGroup = findGroup(props.modelValue, entityId)
+        if (childGroup) toProcess.push(...childGroup.containedIds)
+      }
+      return descendants
+    }
+
+    let maxDescendantDepth = 0
+    const descendants = getDescendants(entityId)
+    descendants.forEach(descendantId => {
+      const descendant = findGroup(props.modelValue, descendantId)
+      if (descendant) {
+        const relativeDepth =
+          getGroupDepth(props.modelValue, descendantId) - getGroupDepth(props.modelValue, entityId)
+        maxDescendantDepth = Math.max(maxDescendantDepth, relativeDepth)
+      }
+    })
+    return newEntityDepth + maxDescendantDepth > props.maxGroupDepth
+  }
+
+  return newEntityDepth > props.maxGroupDepth
+}
+
+const calculateGroupMinimumSize = (groupId: string): { w: number; h: number } => {
+  const group = findGroup(props.modelValue, groupId)
+  if (!group || group.containedIds.length === 0) {
+    return { w: 100, h: 100 }
+  }
+
+  const entities = group.containedIds.map(id => findEntity(id)).filter(Boolean) as (
+    | WorkflowNode
+    | WorkflowGroup
+  )[]
+
+  if (entities.length === 0) return { w: 100, h: 100 }
+
+  let minX = Infinity,
+    minY = Infinity,
+    maxX = -Infinity,
+    maxY = -Infinity
+
+  entities.forEach(entity => {
+    let entityX: number, entityY: number, entityW: number, entityH: number
+    if ('containedIds' in entity) {
+      entityX = entity.position.x
+      entityY = entity.position.y
+      entityW = entity.size.w
+      entityH = entity.size.h
+    } else {
+      entityX = entity.position.x
+      entityY = entity.position.y
+      entityW = entity.size?.w || 250
+      entityH = entity.size?.h || 100
+    }
+    minX = Math.min(minX, entityX)
+    minY = Math.min(minY, entityY)
+    maxX = Math.max(maxX, entityX + entityW)
+    maxY = Math.max(maxY, entityY + entityH)
+  })
+
+  const padding = 20
+  return {
+    w: Math.max(100, maxX - group.position.x + padding),
+    h: Math.max(100, maxY - group.position.y + padding)
+  }
+}
+
+const findDropTargetGroup = (
+  x: number,
+  y: number,
+  excludeId: string | null
+): WorkflowGroup | undefined => {
+  const allGroupsAtPosition = findAllGroupsAtPosition({ x, y })
+    .filter(g => g.id !== excludeId)
+    .sort((a, b) => getGroupDepth(props.modelValue, b.id) - getGroupDepth(props.modelValue, a.id))
+  return allGroupsAtPosition.length > 0 ? allGroupsAtPosition[0] : undefined
+}
+
+// Initialize composables
+const canvas = useCanvas({
+  graph: toRef(props, 'modelValue'),
+  width: toRef(props, 'width'),
+  height: toRef(props, 'height'),
+  nodeElements
 })
 
-const svgViewBox = computed(() => {
-  const style = containerStyle.value
-  const width = parseInt(style.width)
-  const height = parseInt(style.height)
-  return `0 0 ${width} ${height}`
+const dragging = useDragging({
+  graph: toRef(props, 'modelValue'),
+  maxGroupDepth: toRef(props, 'maxGroupDepth'),
+  readonly: toRef(props, 'readonly'),
+  canvasRef,
+  findDropTargetGroup,
+  wouldExceedMaxDepth,
+  onGraphUpdate: graph => emit('update:modelValue', graph),
+  onNodeDragStart: nodeId => emit('node-drag-start', nodeId),
+  onNodeDragEnd: (nodeId, position) => emit('node-drag-end', nodeId, position),
+  onGroupDragStart: groupId => emit('group-drag-start', groupId),
+  onGroupDragEnd: (groupId, position) => emit('group-drag-end', groupId, position),
+  onEntityMovedToGroup: (entityId, groupId) => emit('entity-moved-to-group', entityId, groupId)
 })
 
-const svgWidth = computed(() => containerStyle.value.width)
-const svgHeight = computed(() => containerStyle.value.height)
+const connections = useConnections({
+  graph: toRef(props, 'modelValue'),
+  readonly: toRef(props, 'readonly'),
+  canvasRef,
+  getEntityCenter: canvas.getEntityCenter,
+  getEntityDimensions: canvas.getEntityDimensions,
+  onGraphUpdate: graph => emit('update:modelValue', graph),
+  onEdgeAdd: edge => emit('edge-add', edge),
+  onEdgeDelete: edgeId => emit('edge-delete', edgeId)
+})
+
+const resize = useGroupResize({
+  graph: toRef(props, 'modelValue'),
+  readonly: toRef(props, 'readonly'),
+  canvasRef,
+  calculateGroupMinimumSize,
+  onGraphUpdate: graph => emit('update:modelValue', graph),
+  onGroupResizeStart: groupId => emit('group-resize-start', groupId),
+  onGroupResizeEnd: (groupId, size) => emit('group-resize-end', groupId, size),
+  onUpdateSelectedId: id => emit('update:selectedId', id)
+})
 
 // Calculate plus placeholder positions on edges
 const placeholders = computed(() => {
@@ -420,30 +520,24 @@ const placeholders = computed(() => {
 
   if (props.readonly) return result
 
-  // Show "+" on all edges
   props.modelValue.edges.forEach(edge => {
     const fromNode = findNode(props.modelValue, edge.from.entityId)
     const toNode = findNode(props.modelValue, edge.to.entityId)
 
     if (!fromNode || !toNode) return
 
-    // Calculate midpoint between the two nodes
-    const fromCenter = getNodeCenter(fromNode)
-    const toCenter = getNodeCenter(toNode)
+    const fromCenter = canvas.getNodeCenter(fromNode)
+    const toCenter = canvas.getNodeCenter(toNode)
 
-    const fromDimensions = getNodeDimensions(fromNode)
-    const toDimensions = getNodeDimensions(toNode)
+    const fromDimensions = canvas.getNodeDimensions(fromNode)
+    const toDimensions = canvas.getNodeDimensions(toNode)
 
-    // Output handle is on the bottom of source node
     fromCenter.y += fromDimensions.height / 2
-    // Input handle is on the top of target node
     toCenter.y -= toDimensions.height / 2
 
-    // Calculate midpoint
     const midX = (fromCenter.x + toCenter.x) / 2
     const midY = (fromCenter.y + toCenter.y) / 2
 
-    // Get the parent group of the source node (if any)
     const parentGroup = getParentGroup(props.modelValue, fromNode.id)
 
     result.push({
@@ -465,114 +559,25 @@ function setNodeRef(nodeId: string, el: HTMLElement | null) {
   }
 }
 
-function getNodeStyle(node: WorkflowNode) {
-  return {
-    left: `${node.position.x}px`,
-    top: `${node.position.y}px`,
-    width: node.size?.w ? `${node.size.w}px` : '250px',
-    height: node.size?.h ? `${node.size.h}px` : 'auto'
-  }
-}
-
-function getGroupStyle(group: WorkflowGroup) {
-  return {
-    left: `${group.position.x}px`,
-    top: `${group.position.y}px`,
-    width: `${group.size.w}px`,
-    height: `${group.size.h}px`,
-    zIndex: getGroupDepth(props.modelValue, group.id)
-  }
-}
-
-// Sort groups by depth (lowest depth first, so nested groups render on top)
-const sortedGroups = computed(() => {
-  return [...props.modelValue.groups].sort((a, b) => {
-    return getGroupDepth(props.modelValue, a.id) - getGroupDepth(props.modelValue, b.id)
-  })
-})
-
-function getNodeDimensions(node: WorkflowNode): { width: number; height: number } {
-  // Try to get actual rendered dimensions from DOM element
-  const element = nodeElements.value.get(node.id)
-  if (element) {
-    const rect = element.getBoundingClientRect()
-    return {
-      width: rect.width,
-      height: rect.height
-    }
-  }
-
-  // Fall back to node.size or defaults
-  return {
-    width: node.size?.w || 250,
-    height: node.size?.h || 100
-  }
-}
-
-function getNodeCenter(node: WorkflowNode): Position {
-  const { width, height } = getNodeDimensions(node)
-  return {
-    x: node.position.x + width / 2,
-    y: node.position.y + height / 2
-  }
-}
-
-function getEntityCenter(entity: WorkflowNode | WorkflowGroup): Position {
-  if ('kind' in entity && 'containedIds' in entity) {
-    // It's a group
-    return {
-      x: entity.position.x + entity.size.w / 2,
-      y: entity.position.y + entity.size.h / 2
-    }
-  } else {
-    // It's a node
-    return getNodeCenter(entity)
-  }
-}
-
-function getEntityDimensions(entity: WorkflowNode | WorkflowGroup): {
-  width: number
-  height: number
-} {
-  if ('kind' in entity && 'containedIds' in entity) {
-    // It's a group
-    return {
-      width: entity.size.w,
-      height: entity.size.h
-    }
-  } else {
-    // It's a node
-    return getNodeDimensions(entity)
-  }
-}
-
 function getEdgePath(edge: WorkflowEdge): string {
-  const fromEntity = findEntity(props.modelValue, edge.from.entityId)
-  const toEntity = findEntity(props.modelValue, edge.to.entityId)
+  const fromEntity = findEntity(edge.from.entityId)
+  const toEntity = findEntity(edge.to.entityId)
 
   if (!fromEntity || !toEntity) return ''
 
-  const fromPos = getEntityCenter(fromEntity)
-  const toPos = getEntityCenter(toEntity)
+  const fromPos = canvas.getEntityCenter(fromEntity)
+  const toPos = canvas.getEntityCenter(toEntity)
 
-  const fromDimensions = getEntityDimensions(fromEntity)
-  const toDimensions = getEntityDimensions(toEntity)
+  const fromDimensions = canvas.getEntityDimensions(fromEntity)
+  const toDimensions = canvas.getEntityDimensions(toEntity)
 
-  // Output handle is on the bottom
   fromPos.y += fromDimensions.height / 2
-  // Input handle is on the top
   toPos.y -= toDimensions.height / 2
 
-  // Simple bezier curve with vertical control points
   const dy = toPos.y - fromPos.y
   const controlOffset = Math.abs(dy) / 2
 
   return `M ${fromPos.x},${fromPos.y} C ${fromPos.x},${fromPos.y + controlOffset} ${toPos.x},${toPos.y - controlOffset} ${toPos.x},${toPos.y}`
-}
-
-// Check if an entity's output handle is free (no outgoing edge)
-function isOutputFree(entityId: string): boolean {
-  return !props.modelValue.edges.some(edge => edge.from.entityId === entityId)
 }
 
 function handleCanvasClick(event: MouseEvent) {
@@ -590,643 +595,11 @@ function handleGroupClick(groupId: string) {
   }
 }
 
-function handleNodeMouseEnter(node: WorkflowNode) {
-  const parentGroup = getParentGroup(props.modelValue, node.id)
-  if (parentGroup) {
-    hoveredNodeGroupId.value = parentGroup.id
-  }
-}
-
-function handleNodeMouseLeave() {
-  hoveredNodeGroupId.value = null
-}
-
-function getCanvasMousePosition(event: MouseEvent) {
-  const canvas = canvasRef.value
-  if (!canvas) return null
-
-  const rect = canvas.getBoundingClientRect()
-  return {
-    x: event.clientX - rect.left + canvas.scrollLeft,
-    y: event.clientY - rect.top + canvas.scrollTop
-  }
-}
-
-function handleGroupMouseDown(event: MouseEvent, group: WorkflowGroup) {
-  if (props.readonly) return
-  // Only handle left mouse button (button 0)
-  if (event.button !== 0) return
-
-  const target = event.target as HTMLElement
-  if (target.closest('.workflow-canvas-node')) return
-  if (target.classList.contains('workflow-canvas-group__handle')) return
-  if (target.classList.contains('workflow-canvas-group__resize-handle')) return
-
-  event.preventDefault()
-  const mousePos = getCanvasMousePosition(event)
-  if (!mousePos) return
-
-  dragOffset.value = {
-    x: mousePos.x - group.position.x,
-    y: mousePos.y - group.position.y
-  }
-
-  const currentParent = getParentGroup(props.modelValue, group.id)
-  draggedNodeOriginalGroup.value = currentParent?.id || null
-  draggingGroupId.value = group.id
-  emit('group-drag-start', group.id)
-  // Group selection handled by handleGroupClick, not during mousedown
-}
-
-function handleNodeMouseDown(event: MouseEvent, node: WorkflowNode) {
-  if (props.readonly) return
-  if ((event.target as HTMLElement).classList.contains('workflow-canvas-node__handle')) return
-  // Only handle left mouse button (button 0)
-  if (event.button !== 0) return
-
-  event.preventDefault()
-  const mousePos = getCanvasMousePosition(event)
-  if (!mousePos) return
-
-  dragOffset.value = {
-    x: mousePos.x - node.position.x,
-    y: mousePos.y - node.position.y
-  }
-
-  const currentGroup = getParentGroup(props.modelValue, node.id)
-  draggedNodeOriginalGroup.value = currentGroup?.id || null
-  draggingNodeId.value = node.id
-  emit('node-drag-start', node.id)
-  // Node selection removed - only select via menu click
-}
-
-// Handle group resize during mouse move
-function handleResizeMove(mousePos: Position) {
-  if (
-    !resizingGroupId.value ||
-    !resizeDirection.value ||
-    !resizeStartBounds.value ||
-    !resizeStartMousePos.value
-  ) {
-    return false
-  }
-
-  const group = findGroup(props.modelValue, resizingGroupId.value)
-  if (!group) return true
-
-  const deltaX = mousePos.x - resizeStartMousePos.value.x
-  const deltaY = mousePos.y - resizeStartMousePos.value.y
-  const minimumSize = calculateGroupMinimumSize(props.modelValue, resizingGroupId.value)
-
-  let newPosition = { ...group.position }
-  let newSize = { ...group.size }
-
-  // Handle different resize directions
-  switch (resizeDirection.value) {
-    case 'right':
-      newSize.w = Math.max(minimumSize.w, resizeStartBounds.value.w + deltaX)
-      break
-    case 'left':
-      newSize.w = Math.max(minimumSize.w, resizeStartBounds.value.w - deltaX)
-      newPosition.x = resizeStartBounds.value.x + (resizeStartBounds.value.w - newSize.w)
-      break
-    case 'bottom':
-      newSize.h = Math.max(minimumSize.h, resizeStartBounds.value.h + deltaY)
-      break
-    case 'top':
-      newSize.h = Math.max(minimumSize.h, resizeStartBounds.value.h - deltaY)
-      newPosition.y = resizeStartBounds.value.y + (resizeStartBounds.value.h - newSize.h)
-      break
-    case 'top-left':
-      newSize.w = Math.max(minimumSize.w, resizeStartBounds.value.w - deltaX)
-      newSize.h = Math.max(minimumSize.h, resizeStartBounds.value.h - deltaY)
-      newPosition.x = resizeStartBounds.value.x + (resizeStartBounds.value.w - newSize.w)
-      newPosition.y = resizeStartBounds.value.y + (resizeStartBounds.value.h - newSize.h)
-      break
-    case 'top-right':
-      newSize.w = Math.max(minimumSize.w, resizeStartBounds.value.w + deltaX)
-      newSize.h = Math.max(minimumSize.h, resizeStartBounds.value.h - deltaY)
-      newPosition.y = resizeStartBounds.value.y + (resizeStartBounds.value.h - newSize.h)
-      break
-    case 'bottom-left':
-      newSize.w = Math.max(minimumSize.w, resizeStartBounds.value.w - deltaX)
-      newSize.h = Math.max(minimumSize.h, resizeStartBounds.value.h + deltaY)
-      newPosition.x = resizeStartBounds.value.x + (resizeStartBounds.value.w - newSize.w)
-      break
-    case 'bottom-right':
-      newSize.w = Math.max(minimumSize.w, resizeStartBounds.value.w + deltaX)
-      newSize.h = Math.max(minimumSize.h, resizeStartBounds.value.h + deltaY)
-      break
-  }
-
-  const updatedGraph = {
-    ...props.modelValue,
-    groups: props.modelValue.groups.map(g =>
-      g.id === resizingGroupId.value ? { ...g, position: newPosition, size: newSize } : g
-    )
-  }
-  emit('update:modelValue', updatedGraph)
-  return true
-}
-
-// Handle group drag during mouse move
-function handleGroupDragMove(newPosition: Position) {
-  if (!draggingGroupId.value) return false
-
-  const updatedGraph = updateGroupPosition(props.modelValue, draggingGroupId.value, newPosition)
-  emit('update:modelValue', updatedGraph)
-
-  const group = findGroup(updatedGraph, draggingGroupId.value)
-  if (!group) return true
-
-  const groupCenter = {
-    x: group.position.x + group.size.w / 2,
-    y: group.position.y + group.size.h / 2
-  }
-
-  const targetGroup = findDropTargetGroup(groupCenter.x, groupCenter.y, draggingGroupId.value)
-  let allGroupsAtPosition = findAllGroupsAtPosition(updatedGraph, groupCenter).filter(
-    g => g.id !== draggingGroupId.value
-  )
-
-  const originalParent = draggedNodeOriginalGroup.value
-  let centerInOriginalParent = false
-
-  if (originalParent) {
-    const parentGroup = findGroup(updatedGraph, originalParent)
-    if (parentGroup) {
-      centerInOriginalParent = isPointInRect(groupCenter, {
-        x: parentGroup.position.x,
-        y: parentGroup.position.y,
-        w: parentGroup.size.w,
-        h: parentGroup.size.h
-      })
-    }
-  }
-
-  // Determine the primary target group
-  let primaryTargetGroup: string | null = null
-  if (
-    targetGroup &&
-    !wouldCreateCycle(updatedGraph, draggingGroupId.value, targetGroup.id) &&
-    !wouldExceedMaxDepth(updatedGraph, draggingGroupId.value, targetGroup.id, props.maxGroupDepth)
-  ) {
-    primaryTargetGroup = targetGroup.id
-  } else if (centerInOriginalParent && originalParent) {
-    primaryTargetGroup = originalParent
-  }
-
-  // Set all groups at position for dropzone highlighting
-  nodeOverGroupId.value = primaryTargetGroup
-  nodeOverGroupIds.value = primaryTargetGroup ? allGroupsAtPosition.map(g => g.id) : []
-
-  return true
-}
-
-// Handle node drag during mouse move
-function handleNodeDragMove(newPosition: Position) {
-  if (!draggingNodeId.value) return false
-
-  const updatedGraph = updateNodePosition(props.modelValue, draggingNodeId.value, newPosition)
-  emit('update:modelValue', updatedGraph)
-
-  const node = findNode(updatedGraph, draggingNodeId.value)
-  if (!node) return true
-
-  const nodeDimensions = getNodeDimensions(node)
-  const nodeCenter = {
-    x: node.position.x + nodeDimensions.width / 2,
-    y: node.position.y + nodeDimensions.height / 2
-  }
-
-  const targetGroup = findGroupAtPosition(updatedGraph, nodeCenter)
-  const allGroupsAtPosition = findAllGroupsAtPosition(updatedGraph, nodeCenter)
-
-  // Check if target group would exceed max depth
-  let validTargetGroup = targetGroup
-  if (
-    targetGroup &&
-    wouldExceedMaxDepth(updatedGraph, draggingNodeId.value, targetGroup.id, props.maxGroupDepth)
-  ) {
-    validTargetGroup = undefined
-  }
-
-  // Set all groups at position for dropzone highlighting
-  nodeOverGroupIds.value = allGroupsAtPosition.map(g => g.id)
-  nodeOverGroupId.value = validTargetGroup?.id || null
-
-  return true
-}
-
-// Handle connection preview during mouse move
-function handleConnectionDragMove(mousePos: Position) {
-  if (!connectionDragStart.value) return false
-
-  connectionDragMoved.value = true
-
-  const dragEntity = findEntity(props.modelValue, connectionDragStart.value.nodeId)
-  if (!dragEntity) return true
-
-  const dragPos = getEntityCenter(dragEntity)
-  const dragDimensions = getEntityDimensions(dragEntity)
-
-  let startPos: Position
-  let endPos: Position = mousePos
-  let startControlY: number
-  let endControlY: number
-
-  if (connectionDragStart.value.port === 'input') {
-    startPos = { x: dragPos.x, y: dragPos.y - dragDimensions.height / 2 }
-    const dy = endPos.y - startPos.y
-    const controlOffset = Math.abs(dy) / 2
-    startControlY = startPos.y - controlOffset
-    endControlY = endPos.y + controlOffset
-  } else {
-    startPos = { x: dragPos.x, y: dragPos.y + dragDimensions.height / 2 }
-    const dy = endPos.y - startPos.y
-    const controlOffset = Math.abs(dy) / 2
-    startControlY = startPos.y + controlOffset
-    endControlY = endPos.y - controlOffset
-  }
-
-  connectionPreview.value = {
-    path: `M ${startPos.x},${startPos.y} C ${startPos.x},${startControlY} ${endPos.x},${endControlY} ${endPos.x},${endPos.y}`,
-    fromNodeId: connectionDragStart.value.nodeId
-  }
-
-  return true
-}
-
-function handleMouseMove(event: MouseEvent) {
-  const mousePos = getCanvasMousePosition(event)
-  if (!mousePos) return
-
-  // Try each handler in order
-  if (handleResizeMove(mousePos)) return
-
-  const newPosition = {
-    x: Math.max(0, mousePos.x - dragOffset.value.x),
-    y: Math.max(0, mousePos.y - dragOffset.value.y)
-  }
-
-  if (handleGroupDragMove(newPosition)) return
-  if (handleNodeDragMove(newPosition)) return
-  if (handleConnectionDragMove(mousePos)) return
-}
-
-function handleMouseUp() {
-  if (resizingGroupId.value) {
-    const groupId = resizingGroupId.value
-    const group = findGroup(props.modelValue, groupId)
-
-    // Update parent groups recursively to fit the resized group
-    const parentGroup = getParentGroup(props.modelValue, groupId)
-    if (parentGroup) {
-      const updatedGraph = updateGroupBounds(props.modelValue, parentGroup.id)
-      emit('update:modelValue', updatedGraph)
-    }
-
-    // Emit resize end event
-    if (group) {
-      emit('group-resize-end', groupId, { w: group.size.w, h: group.size.h })
-    }
-
-    // Clear resize state
-    resizingGroupId.value = null
-    resizeDirection.value = null
-    resizeStartBounds.value = null
-    resizeStartMousePos.value = null
-    return
-  }
-
-  if (draggingGroupId.value) {
-    const groupId = draggingGroupId.value
-    const group = findGroup(props.modelValue, groupId)
-
-    if (group) {
-      // Check if group center is inside another group
-      const groupCenter = {
-        x: group.position.x + group.size.w / 2,
-        y: group.position.y + group.size.h / 2
-      }
-      let targetGroup = findDropTargetGroup(groupCenter.x, groupCenter.y, groupId)
-      const originalParent = draggedNodeOriginalGroup.value
-
-      // Check if center is still inside the original parent (for sticky behavior)
-      let centerInOriginalParent = false
-      if (originalParent) {
-        const parentGroup = findGroup(props.modelValue, originalParent)
-        if (parentGroup) {
-          centerInOriginalParent = isPointInRect(groupCenter, {
-            x: parentGroup.position.x,
-            y: parentGroup.position.y,
-            w: parentGroup.size.w,
-            h: parentGroup.size.h
-          })
-        }
-      }
-
-      let updatedGraph = props.modelValue
-
-      // Check if parent group changed
-      let parentChanged = false
-
-      // Determine the action based on target and original parent
-      if (
-        targetGroup &&
-        targetGroup.id !== groupId &&
-        !wouldCreateCycle(props.modelValue, groupId, targetGroup.id) &&
-        !wouldExceedMaxDepth(props.modelValue, groupId, targetGroup.id, props.maxGroupDepth)
-      ) {
-        // Center is inside a valid target group
-        if (originalParent !== targetGroup.id) {
-          // Moving from one parent to another (or from no parent to a parent)
-          parentChanged = true
-          updatedGraph = removeEntityFromAllGroups(updatedGraph, groupId)
-
-          // Update the old parent's bounds if it exists
-          if (originalParent) {
-            updatedGraph = updateGroupBounds(updatedGraph, originalParent)
-          }
-
-          // Add to the new parent group (bounds auto-updated in addEntityToGroup)
-          updatedGraph = addEntityToGroup(updatedGraph, groupId, targetGroup.id)
-
-          // If parent changed, remove all connected edges
-          if (parentChanged) {
-            updatedGraph = {
-              ...updatedGraph,
-              edges: updatedGraph.edges.filter(
-                edge => edge.from.entityId !== groupId && edge.to.entityId !== groupId
-              )
-            }
-          }
-
-          emit('update:modelValue', updatedGraph)
-          emit('entity-moved-to-group', groupId, targetGroup.id)
-        } else if (originalParent) {
-          // Moved within the same parent group - update parent bounds
-          updatedGraph = updateGroupBounds(updatedGraph, originalParent)
-          emit('update:modelValue', updatedGraph)
-        }
-      } else if (centerInOriginalParent && originalParent) {
-        // Center is still inside original parent (even though targetGroup might be undefined due to nesting)
-        // Stay in the parent and update its bounds
-        updatedGraph = updateGroupBounds(updatedGraph, originalParent)
-        emit('update:modelValue', updatedGraph)
-      } else if (originalParent && !centerInOriginalParent) {
-        // Center has left the original parent - detach from parent
-        parentChanged = true
-        updatedGraph = removeEntityFromAllGroups(updatedGraph, groupId)
-        updatedGraph = updateGroupBounds(updatedGraph, originalParent)
-
-        // If parent changed, remove all connected edges
-        if (parentChanged) {
-          updatedGraph = {
-            ...updatedGraph,
-            edges: updatedGraph.edges.filter(
-              edge => edge.from.entityId !== groupId && edge.to.entityId !== groupId
-            )
-          }
-        }
-
-        emit('update:modelValue', updatedGraph)
-        emit('entity-moved-to-group', groupId, null)
-      }
-
-      // Emit group drag end event
-      emit('group-drag-end', groupId, group.position)
-    }
-
-    draggingGroupId.value = null
-    draggedNodeOriginalGroup.value = null
-    nodeOverGroupId.value = null
-    nodeOverGroupIds.value = []
-  } else if (draggingNodeId.value) {
-    const nodeId = draggingNodeId.value
-    const node = findNode(props.modelValue, nodeId)
-
-    if (node) {
-      // Check if node center is inside a group
-      const nodeDimensions = getNodeDimensions(node)
-      const nodeCenter = {
-        x: node.position.x + nodeDimensions.width / 2,
-        y: node.position.y + nodeDimensions.height / 2
-      }
-      const targetGroup = findGroupAtPosition(props.modelValue, nodeCenter)
-      const originalGroup = draggedNodeOriginalGroup.value
-
-      let updatedGraph = props.modelValue
-
-      // Check if parent group changed
-      const parentChanged = originalGroup !== (targetGroup?.id || null)
-
-      // Moving between groups or in/out of groups
-      // If moving out of a group, update the original group's bounds
-      if (originalGroup) {
-        updatedGraph = removeEntityFromAllGroups(updatedGraph, nodeId)
-        updatedGraph = updateGroupBounds(updatedGraph, originalGroup)
-      } else {
-        updatedGraph = removeEntityFromAllGroups(updatedGraph, nodeId)
-      }
-
-      // If dropped inside a different group, add to that group (bounds auto-updated in addEntityToGroup)
-      // But only if it doesn't exceed max depth
-      if (
-        targetGroup &&
-        !wouldExceedMaxDepth(updatedGraph, nodeId, targetGroup.id, props.maxGroupDepth)
-      ) {
-        updatedGraph = addEntityToGroup(updatedGraph, nodeId, targetGroup.id)
-      }
-
-      // If parent changed, remove all connected edges
-      if (parentChanged) {
-        updatedGraph = {
-          ...updatedGraph,
-          edges: updatedGraph.edges.filter(
-            edge => edge.from.entityId !== nodeId && edge.to.entityId !== nodeId
-          )
-        }
-      }
-
-      emit('update:modelValue', updatedGraph)
-
-      // Emit entity moved to group event
-      if (targetGroup) {
-        emit('entity-moved-to-group', nodeId, targetGroup.id)
-      } else if (originalGroup) {
-        emit('entity-moved-to-group', nodeId, null)
-      }
-
-      // Emit node drag end event
-      emit('node-drag-end', nodeId, node.position)
-    }
-
-    draggingNodeId.value = null
-    draggedNodeOriginalGroup.value = null
-    nodeOverGroupId.value = null
-    nodeOverGroupIds.value = []
-  }
-
-  if (connectionDragStart.value) {
-    // If we were disconnecting an edge and released without connecting to a new target,
-    // remove the edge
-    if (disconnectingEdge.value) {
-      const edgeId = disconnectingEdge.value.id
-      const updatedGraph = {
-        ...props.modelValue,
-        edges: props.modelValue.edges.filter(edge => edge.id !== edgeId)
-      }
-      emit('update:modelValue', updatedGraph)
-      emit('edge-delete', edgeId)
-      disconnectingEdge.value = null
-    }
-
-    connectionDragStart.value = null
-    connectionPreview.value = null
-    connectionDragMoved.value = false
-  }
-}
-
-// Generic function to handle handle mouse down for both nodes and groups
-function handleEntityHandleMouseDown(event: MouseEvent, entityId: string, port: string) {
-  if (props.readonly) return
-  // Only handle left mouse button (button 0)
-  if (event.button !== 0) return
-
-  event.preventDefault()
-  event.stopPropagation()
-
-  // Check if this is an input handle with an existing connection
-  if (port === 'input') {
-    const existingEdge = props.modelValue.edges.find(edge => edge.to.entityId === entityId)
-    if (existingEdge) {
-      // Start disconnecting: drag from the input handle itself
-      connectionDragStart.value = { nodeId: entityId, port: 'input' }
-      disconnectingEdge.value = existingEdge
-      return
-    }
-  }
-
-  // Check if this is an output handle with an existing connection
-  if (port === 'output') {
-    const existingEdge = props.modelValue.edges.find(edge => edge.from.entityId === entityId)
-    if (existingEdge) {
-      // Start disconnecting: drag from the output handle itself
-      connectionDragStart.value = { nodeId: entityId, port: 'output' }
-      disconnectingEdge.value = existingEdge
-      return
-    }
-  }
-
-  // Normal connection start (no existing edge)
-  connectionDragStart.value = { nodeId: entityId, port }
-  disconnectingEdge.value = null
-}
-
-// Wrapper functions for backward compatibility with template
-function handleHandleMouseDown(event: MouseEvent, nodeId: string, port: string) {
-  handleEntityHandleMouseDown(event, nodeId, port)
-}
-
-function handleGroupHandleMouseDown(event: MouseEvent, groupId: string, port: string) {
-  handleEntityHandleMouseDown(event, groupId, port)
-}
-
-function handleResizeMouseDown(event: MouseEvent, groupId: string, direction: string) {
-  if (props.readonly) return
-  // Only handle left mouse button (button 0)
-  if (event.button !== 0) return
-
-  event.preventDefault()
-  event.stopPropagation()
-
-  const group = findGroup(props.modelValue, groupId)
-  if (!group) return
-
-  const mousePos = getCanvasMousePosition(event)
-  if (!mousePos) return
-
-  resizingGroupId.value = groupId
-  resizeDirection.value = direction
-  resizeStartBounds.value = {
-    x: group.position.x,
-    y: group.position.y,
-    w: group.size.w,
-    h: group.size.h
-  }
-  resizeStartMousePos.value = mousePos
-  emit('update:selectedId', groupId)
-  emit('group-resize-start', groupId)
-}
-
-// Generic function to handle handle mouse up for both nodes and groups
-function handleEntityHandleMouseUp(entityId: string, port: string) {
-  if (props.readonly) return
-
-  if (connectionDragStart.value && connectionDragStart.value.nodeId !== entityId) {
-    let shouldConnect = false
-    let fromEntityId = ''
-    let toEntityId = ''
-
-    // Determine connection direction based on drag start port
-    if (connectionDragStart.value.port === 'input') {
-      // Dragging from input handle - can only connect to output handles
-      if (port === 'output') {
-        shouldConnect = true
-        fromEntityId = entityId // The entity we're dropping on becomes the source
-        toEntityId = connectionDragStart.value.nodeId // The entity we started from becomes the target
-      }
-    } else {
-      // Dragging from output handle - can only connect to input handles
-      if (port === 'input') {
-        shouldConnect = true
-        fromEntityId = connectionDragStart.value.nodeId
-        toEntityId = entityId
-      }
-    }
-
-    // Check if entities are in different groups
-    if (shouldConnect && areEntitiesInDifferentGroups(props.modelValue, fromEntityId, toEntityId)) {
-      shouldConnect = false
-    }
-
-    if (shouldConnect) {
-      // If we were disconnecting an edge, remove it first
-      let baseGraph = props.modelValue
-      if (disconnectingEdge.value) {
-        baseGraph = {
-          ...props.modelValue,
-          edges: props.modelValue.edges.filter(edge => edge.id !== disconnectingEdge.value!.id)
-        }
-      }
-
-      // Create the connection
-      const updatedGraph = handleConnectNodes(baseGraph, {
-        fromNodeId: fromEntityId,
-        toNodeId: toEntityId
-      })
-      emit('update:modelValue', updatedGraph)
-      const newEdge = updatedGraph.edges[updatedGraph.edges.length - 1]
-      emit('edge-add', newEdge)
-    }
-  }
-
-  connectionDragStart.value = null
-  connectionPreview.value = null
-  disconnectingEdge.value = null
-}
-
-// Wrapper functions for backward compatibility with template
-function handleGroupHandleMouseUp(groupId: string, port: string) {
-  handleEntityHandleMouseUp(groupId, port)
-}
-
-function handleHandleMouseUp(nodeId: string, port: string) {
-  handleEntityHandleMouseUp(nodeId, port)
-}
-
 function handleAddStep(event: AddStepEvent) {
+  // Emit the add-step event for consumers to handle
+  emit('add-step', event)
+
+  // Also handle it internally by default
   const result = handleAddStepToGraph(props.modelValue, event)
   emit('update:modelValue', result.graph)
   emit('update:selectedId', result.newNodeId)
@@ -1237,14 +610,11 @@ function handleAddStep(event: AddStepEvent) {
 const closePanel = () => emit('update:selectedId', null)
 
 function handleFreeOutputClick(nodeId: string) {
-  // Only trigger if output is actually free and no drag occurred
-  if (!isOutputFree(nodeId)) return
-  if (connectionDragMoved.value) return
+  if (!connections.isOutputFree(nodeId)) return
+  if (connections.connectionDragMoved.value) return
 
-  // Get the parent group of the node (if any)
   const parentGroup = getParentGroup(props.modelValue, nodeId)
 
-  // Call handleAddStep with the event
   handleAddStep({
     afterNodeId: nodeId,
     inGroupId: parentGroup?.id
@@ -1252,11 +622,9 @@ function handleFreeOutputClick(nodeId: string) {
 }
 
 function handleDeleteNode() {
-  // Remove the node from the graph
   const nodeId = selectedNode.value?.id
   if (!nodeId) return
 
-  // Get the parent group before removing the node
   const parentGroup = getParentGroup(props.modelValue, nodeId)
 
   const updatedGraph = {
@@ -1267,19 +635,14 @@ function handleDeleteNode() {
     )
   }
 
-  // Remove node from any groups
   let graphWithoutNode = removeEntityFromAllGroups(updatedGraph, nodeId)
 
-  // Update parent group bounds if it exists
   if (parentGroup) {
     graphWithoutNode = updateGroupBounds(graphWithoutNode, parentGroup.id)
   }
 
-  // Close the panel
   emit('update:selectedId', null)
-  // Update the graph
   emit('update:modelValue', graphWithoutNode)
-  // Emit node delete event
   emit('node-delete', nodeId)
 }
 
@@ -1287,7 +650,6 @@ function handleDeleteGroup() {
   const groupId = selectedGroup.value?.id
   if (!groupId) return
 
-  // Remove the group from the graph and its edges
   let updatedGraph = {
     ...props.modelValue,
     groups: props.modelValue.groups.filter(group => group.id !== groupId),
@@ -1296,32 +658,24 @@ function handleDeleteGroup() {
     )
   }
 
-  // Remove group from any parent groups
   updatedGraph = removeEntityFromAllGroups(updatedGraph, groupId)
 
-  // Close the panel
   emit('update:selectedId', null)
-  // Update the graph
   emit('update:modelValue', updatedGraph)
-  // Emit group delete event
   emit('group-delete', groupId)
 }
 
 function handleUpdateNode(updatedNode: WorkflowNode) {
-  // Update the node in the graph
   const updatedGraph = {
     ...props.modelValue,
     nodes: props.modelValue.nodes.map(node => (node.id === updatedNode.id ? updatedNode : node))
   }
 
-  // Update the graph
   emit('update:modelValue', updatedGraph)
-  // Emit node update event
   emit('node-update', updatedNode)
 }
 
 function handleUpdateGroup(updatedGroup: WorkflowGroup) {
-  // Update the group in the graph
   const updatedGraph = {
     ...props.modelValue,
     groups: props.modelValue.groups.map(group =>
@@ -1329,35 +683,55 @@ function handleUpdateGroup(updatedGroup: WorkflowGroup) {
     )
   }
 
-  // Update the graph
   emit('update:modelValue', updatedGraph)
-  // Emit group update event
   emit('group-update', updatedGroup)
 }
 
 function handleKeyDown(event: KeyboardEvent) {
-  // Only handle Delete/Backspace when something is selected and not in readonly mode
   if (props.readonly || !props.selectedId) return
 
-  // Check if the user is typing in an input field
   const target = event.target as HTMLElement
   if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
     return
   }
 
-  // Handle Delete or Backspace key
   if (event.key === 'Delete' || event.key === 'Backspace') {
     event.preventDefault()
 
-    // Check if selected item is a node
     if (selectedNode.value) {
       handleDeleteNode()
-    }
-    // Check if selected item is a group
-    else if (selectedGroup.value) {
+    } else if (selectedGroup.value) {
       handleDeleteGroup()
     }
   }
+}
+
+function handleMouseMove(event: MouseEvent) {
+  const canvas = canvasRef.value
+  if (!canvas) return
+
+  const rect = canvas.getBoundingClientRect()
+  const mousePos = {
+    x: event.clientX - rect.left + canvas.scrollLeft,
+    y: event.clientY - rect.top + canvas.scrollTop
+  }
+
+  if (resize.handleResizeMove(mousePos)) return
+
+  const newPosition = {
+    x: Math.max(0, mousePos.x - dragging.dragOffset.value.x),
+    y: Math.max(0, mousePos.y - dragging.dragOffset.value.y)
+  }
+
+  if (dragging.handleGroupDragMove(newPosition, findAllGroupsAtPosition, isPointInRect)) return
+  if (dragging.handleNodeDragMove(newPosition, nodeElements.value, findAllGroupsAtPosition)) return
+  if (connections.handleConnectionDragMove(mousePos)) return
+}
+
+function handleMouseUp() {
+  resize.handleMouseUp()
+  dragging.handleMouseUp(isPointInRect)
+  connections.handleMouseUp()
 }
 
 onMounted(() => {

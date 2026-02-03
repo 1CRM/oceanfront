@@ -23,9 +23,9 @@ export const findGroup = (graph: WorkflowGraph, groupId: string): WorkflowGroup 
   graph.groups.find(g => g.id === groupId)
 
 /**
- * Find an entity (node or group) by ID
+ * Find an entity (node or group) by ID (internal use only)
  */
-export const findEntity = (
+const findEntity = (
   graph: WorkflowGraph,
   entityId: string
 ): WorkflowNode | WorkflowGroup | undefined => {
@@ -191,9 +191,9 @@ export function findGroupAtPosition(
 }
 
 /**
- * Find all groups at a position (including nested groups)
+ * Find all groups at a position (including nested groups) (internal use only)
  */
-export function findAllGroupsAtPosition(graph: WorkflowGraph, position: Position): WorkflowGroup[] {
+const findAllGroupsAtPosition = (graph: WorkflowGraph, position: Position): WorkflowGroup[] => {
   return graph.groups.filter(g => {
     const rect: Rect = {
       x: g.position.x,
@@ -218,25 +218,9 @@ export const getParentGroup = (graph: WorkflowGraph, entityId: string): Workflow
   graph.groups.find(g => g.containedIds.includes(entityId))
 
 /**
- * Get all children (nodes + groups) of a group
+ * Get all descendants (recursive) of a group (internal use only)
  */
-export function getGroupChildren(
-  graph: WorkflowGraph,
-  groupId: string
-): (WorkflowNode | WorkflowGroup)[] {
-  const group = findGroup(graph, groupId)
-  if (!group) return []
-
-  return group.containedIds.map(id => findEntity(graph, id)).filter(Boolean) as (
-    | WorkflowNode
-    | WorkflowGroup
-  )[]
-}
-
-/**
- * Get all descendants (recursive) of a group
- */
-export function getGroupDescendants(graph: WorkflowGraph, groupId: string): string[] {
+const getGroupDescendants = (graph: WorkflowGraph, groupId: string): string[] => {
   const group = findGroup(graph, groupId)
   if (!group) return []
 
@@ -257,9 +241,9 @@ export function getGroupDescendants(graph: WorkflowGraph, groupId: string): stri
 }
 
 /**
- * Check if adding an entity to a group would create a cycle
+ * Check if adding an entity to a group would create a cycle (internal use only)
  */
-export function wouldCreateCycle(graph: WorkflowGraph, childId: string, parentId: string): boolean {
+const wouldCreateCycle = (graph: WorkflowGraph, childId: string, parentId: string): boolean => {
   // Can't add a group to itself
   if (childId === parentId) return true
 
@@ -273,19 +257,19 @@ export function wouldCreateCycle(graph: WorkflowGraph, childId: string, parentId
 }
 
 /**
- * Check if adding an entity to a group would exceed the maximum depth
+ * Check if adding an entity to a group would exceed the maximum depth (internal use only)
  * @param graph - The workflow graph
  * @param entityId - The entity to be added
  * @param parentId - The group to add the entity to
  * @param maxDepth - Maximum allowed depth (null means no limit)
  * @returns true if the operation would exceed max depth, false otherwise
  */
-export function wouldExceedMaxDepth(
+const wouldExceedMaxDepth = (
   graph: WorkflowGraph,
   entityId: string,
   parentId: string,
   maxDepth: number | null
-): boolean {
+): boolean => {
   // If no max depth is set, no limit
   if (maxDepth === null) return false
 
@@ -423,15 +407,15 @@ export function calculateGroupBounds(
 }
 
 /**
- * Calculate the minimum size required for a group to contain all its entities
+ * Calculate the minimum size required for a group to contain all its entities (internal use only)
  * Returns the minimum width and height with padding, accounting for entity positions
  * relative to the current group position
  */
-export function calculateGroupMinimumSize(
+const calculateGroupMinimumSize = (
   graph: WorkflowGraph,
   groupId: string,
   padding: number = 20
-): { w: number; h: number } {
+): { w: number; h: number } => {
   const group = findGroup(graph, groupId)
   if (!group || group.containedIds.length === 0) {
     // Minimum size for empty group
@@ -523,115 +507,6 @@ export function updateGroupBounds(
   }
 
   return updatedGraph
-}
-
-/**
- * Update all group bounds
- */
-export function updateAllGroupBounds(graph: WorkflowGraph, padding: number = 20): WorkflowGraph {
-  return {
-    ...graph,
-    groups: graph.groups.map(g => {
-      const bounds = calculateGroupBounds(graph, g.id, padding)
-      return {
-        ...g,
-        position: { x: bounds.x, y: bounds.y },
-        size: { w: bounds.w, h: bounds.h }
-      }
-    })
-  }
-}
-
-/**
- * Arrange entities within a group in a single vertical column
- * @param graph - The workflow graph
- * @param groupId - The group to arrange entities in
- * @param padding - Padding around the group (default: 20)
- * @param spacing - Spacing between entities (default: 40)
- * @returns Updated graph with rearranged entities and resized group
- */
-export function arrangeNodesInGroup(
-  graph: WorkflowGraph,
-  groupId: string,
-  padding: number = 20,
-  spacing: number = 40
-): WorkflowGraph {
-  const group = findGroup(graph, groupId)
-  if (!group || group.containedIds.length === 0) return graph
-
-  const entities = group.containedIds.map(id => findEntity(graph, id)).filter(Boolean) as (
-    | WorkflowNode
-    | WorkflowGroup
-  )[]
-  if (entities.length === 0) return graph
-
-  const entityCount = entities.length
-
-  // Get entity dimensions (assume uniform size or use first entity's dimensions)
-  const firstEntity = entities[0]
-  let entityWidth: number
-  let entityHeight: number
-
-  if ('kind' in firstEntity && 'containedIds' in firstEntity) {
-    entityWidth = firstEntity.size.w
-    entityHeight = firstEntity.size.h
-  } else {
-    entityWidth = firstEntity.size?.w || 250
-    entityHeight = firstEntity.size?.h || 100
-  }
-
-  // Calculate starting position (group top-left + padding)
-  const startX = group.position.x + padding
-  const startY = group.position.y + padding
-
-  // Update node positions in a single vertical column
-  const updatedNodes = graph.nodes.map(node => {
-    const entityIndex = group.containedIds.indexOf(node.id)
-    if (entityIndex === -1) return node
-
-    return {
-      ...node,
-      position: {
-        x: startX,
-        y: startY + entityIndex * (entityHeight + spacing)
-      }
-    }
-  })
-
-  // Update group positions in a single vertical column
-  const updatedGroups = graph.groups.map(g => {
-    if (g.id === groupId) {
-      // Update the parent group bounds
-      const groupWidth = entityWidth + padding * 2
-      const groupHeight = entityCount * entityHeight + (entityCount - 1) * spacing + padding * 2
-
-      return {
-        ...g,
-        position: g.position,
-        size: {
-          w: groupWidth,
-          h: groupHeight
-        }
-      }
-    }
-
-    const entityIndex = group.containedIds.indexOf(g.id)
-    if (entityIndex === -1) return g
-
-    return {
-      ...g,
-      position: {
-        x: startX,
-        y: startY + entityIndex * (entityHeight + spacing)
-      }
-    }
-  })
-
-  return {
-    ...graph,
-    nodes: updatedNodes,
-    groups: updatedGroups
-  }
 }
 
 /**

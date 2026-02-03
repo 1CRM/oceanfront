@@ -38,7 +38,6 @@ export interface NodeData {
  */
 export interface Port {
   entityId: string // Can refer to either a node or a group
-  port?: string
 }
 
 /**
@@ -97,8 +96,6 @@ export interface AddStepEvent {
 export interface ConnectEvent {
   fromNodeId: string
   toNodeId: string
-  fromPort?: string
-  toPort?: string
 }
 
 /**

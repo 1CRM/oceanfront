@@ -35,15 +35,17 @@ export {
   removeEntityFromAllGroups,
   isPointInRect,
   findGroupAtPosition,
-  findAllGroupsAtPosition,
   getEntityEdges,
   getParentGroup,
   calculateGroupBounds,
   updateGroupBounds,
-  updateAllGroupBounds,
-  arrangeNodesInGroup,
   updateGroupPosition,
-  areEntitiesInDifferentGroups
+  getGroupDepth,
+  areEntitiesInDifferentGroups,
+  handleAddStepToGraph,
+  handleConnectNodes,
+  addNode,
+  addGroup
 } from './utils/graph-helpers'
 
 // Components
