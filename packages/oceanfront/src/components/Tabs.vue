@@ -598,6 +598,13 @@ export default defineComponent({
             break
           }
         }
+      } else {
+        // In AlwaysOverflowOnlyMode, we still need to set overflowButtonEl for positioning
+        nextTick(() => {
+          overflowButtonEl.value = tabs.value?.querySelector(
+            '.of-tab-header-item.overflow-button'
+          )
+        })
       }
 
       for (const item of items.value.items) {
