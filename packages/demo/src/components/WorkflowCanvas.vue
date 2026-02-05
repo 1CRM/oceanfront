@@ -119,7 +119,8 @@ const initialWorkflowGraph: WorkflowGraph = {
         title: 'New or Updated Quote',
         description: 'Triggers when a quote is created or modified',
         icon: 'hourglass'
-      }
+      },
+      locked: true
     },
     {
       id: 'action-1',
@@ -271,7 +272,8 @@ const initialWorkflowGraph: WorkflowGraph = {
       },
       to: {
         entityId: 'action-1'
-      }
+      },
+      locked: true
     },
     {
       id: 'edge-2',
@@ -377,7 +379,8 @@ const initialWorkflowGraph: WorkflowGraph = {
         w: 290,
         h: 560
       },
-      containedIds: ['action-10', 'action-11', 'condition-3', 'action-13']
+      containedIds: ['action-10', 'action-11', 'condition-3', 'action-13'],
+      locked: true
     },
     {
       id: 'group-5',
@@ -406,6 +409,20 @@ const initialWorkflowGraph: WorkflowGraph = {
         h: 277
       },
       containedIds: ['node-1770122294598', 'node-1770122302593']
+    },
+    {
+      id: 'group-empty-test',
+      kind: 'group',
+      title: 'Empty Group',
+      position: {
+        x: 100,
+        y: 650
+      },
+      size: {
+        w: 290,
+        h: 200
+      },
+      containedIds: []
     }
   ]
 }

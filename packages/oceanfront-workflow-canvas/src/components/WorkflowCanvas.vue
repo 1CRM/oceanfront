@@ -12,14 +12,14 @@
           <defs>
             <marker
               id="arrowhead"
-              markerWidth="10"
-              markerHeight="10"
-              refX="8"
-              refY="5"
+              markerWidth="14"
+              markerHeight="14"
+              refX="11"
+              refY="7"
               orient="auto"
               markerUnits="userSpaceOnUse"
             >
-              <path d="M0,0 L0,10 L8,5 z" class="workflow-canvas-connector__marker" />
+              <path d="M0,0 L0,14 L11,7 z" class="workflow-canvas-connector__marker" />
             </marker>
           </defs>
 
@@ -209,6 +209,26 @@
             :in-group-id="placeholder.inGroupId"
             @add-step="handleAddStep"
           />
+
+          <!-- Empty group add buttons -->
+          <div
+            v-for="group in emptyGroups"
+            :key="`empty-group-btn-${group.id}`"
+            class="workflow-canvas-empty-group-add"
+            :style="{
+              left: `${group.position.x + group.size.w / 2}px`,
+              top: `${group.position.y + group.size.h / 2}px`,
+              transform: 'translate(-50%, -50%)'
+            }"
+          >
+            <button
+              class="workflow-canvas-empty-group-add__button"
+              @click.stop="handleEmptyGroupAddNode(group.id)"
+              type="button"
+            >
+              +
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -257,7 +277,8 @@ import {
   getGroupDepth,
   handleAddStepToGraph,
   addNode,
-  addGroup
+  addGroup,
+  addEntityToGroup
 } from '../utils/graph-helpers'
 import { DEFAULT_LABELS } from '../constants/labels'
 import WorkflowTile from './WorkflowTile.vue'
@@ -545,6 +566,12 @@ export default defineComponent({
       return result
     })
 
+    // Filter empty groups for add button
+    const emptyGroups = computed(() => {
+      if (props.readonly) return []
+      return props.modelValue.groups.filter(g => g.containedIds.length === 0)
+    })
+
     function setNodeRef(nodeId: string, el: HTMLElement | null) {
       if (el) {
         nodeElements.value.set(nodeId, el)
@@ -615,9 +642,32 @@ export default defineComponent({
       })
     }
 
+    function handleEmptyGroupAddNode(groupId: string) {
+      const group = findGroup(props.modelValue, groupId)
+      if (!group) return
+
+      // Calculate center position
+      const centerX = group.position.x + group.size.w / 2 - 125 // 250/2 = half node width
+      const centerY = group.position.y + group.size.h / 2 - 50 // 100/2 = half node height
+
+      // Create new node at center
+      const result = addNode(props.modelValue, {
+        position: { x: centerX, y: centerY }
+      })
+
+      // Add node to group
+      const updatedGraph = addEntityToGroup(result.graph, result.newNodeId, groupId)
+
+      emit('update:modelValue', updatedGraph)
+      emit('update:selectedId', result.newNodeId)
+      const newNode = updatedGraph.nodes.find(n => n.id === result.newNodeId)!
+      emit('node-add', newNode)
+    }
+
     function handleDeleteNode() {
       const nodeId = selectedNode.value?.id
       if (!nodeId) return
+      if (selectedNode.value?.locked) return
 
       const parentGroup = getParentGroup(props.modelValue, nodeId)
 
@@ -643,6 +693,7 @@ export default defineComponent({
     function handleDeleteGroup() {
       const groupId = selectedGroup.value?.id
       if (!groupId) return
+      if (selectedGroup.value?.locked) return
 
       let updatedGraph = {
         ...props.modelValue,
@@ -693,9 +744,13 @@ export default defineComponent({
         event.preventDefault()
 
         if (selectedNode.value) {
-          handleDeleteNode()
+          if (!selectedNode.value.locked) {
+            handleDeleteNode()
+          }
         } else if (selectedGroup.value) {
-          handleDeleteGroup()
+          if (!selectedGroup.value.locked) {
+            handleDeleteGroup()
+          }
         }
       }
     }
@@ -776,6 +831,7 @@ export default defineComponent({
       connections,
       resize,
       placeholders,
+      emptyGroups,
       setNodeRef,
       getEdgePath,
       handleCanvasClick,
@@ -783,6 +839,7 @@ export default defineComponent({
       handleAddStep,
       closePanel,
       handleFreeOutputClick,
+      handleEmptyGroupAddNode,
       handleDeleteNode,
       handleDeleteGroup,
       handleUpdateNode,

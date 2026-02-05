@@ -599,7 +599,7 @@
 .workflow-canvas-connector {
   fill: none;
   stroke: var(--wf-border-secondary);
-  stroke-width: 2;
+  stroke-width: 2.5;
   pointer-events: none;
 
   &--preview {
@@ -630,6 +630,32 @@
     cursor: pointer;
     transition: all 0.2s;
     font-size: 18px;
+    font-weight: 300;
+
+    &:hover {
+      color: var(--wf-primary);
+      border-color: var(--wf-primary);
+    }
+  }
+}
+
+.workflow-canvas-empty-group-add {
+  position: absolute;
+  z-index: 5;
+
+  &__button {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--wf-surface-2);
+    color: var(--wf-border-secondary);
+    border: 1px solid var(--wf-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 24px;
     font-weight: 300;
 
     &:hover {

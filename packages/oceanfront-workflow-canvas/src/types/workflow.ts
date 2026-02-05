@@ -49,6 +49,7 @@ export interface WorkflowNode {
   position: Position
   size?: Size
   data?: unknown // consumer-owned data
+  locked?: boolean // if true, prevents deletion
 }
 
 /**
@@ -58,6 +59,7 @@ export interface WorkflowEdge {
   id: string
   from: Port
   to: Port
+  locked?: boolean // if true, prevents disconnection/deletion
 }
 
 /**
@@ -71,6 +73,7 @@ export interface WorkflowGroup {
   size: Size
   containedIds: string[] // Contains both node IDs and group IDs
   data?: unknown // Consumer-owned data
+  locked?: boolean // if true, prevents deletion
 }
 
 /**

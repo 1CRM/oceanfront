@@ -35,7 +35,12 @@
             rows="3"
           />
           <div class="workflow-canvas__panel-actions">
-            <of-button @click="emit('delete-node')" variant="filled" tint="secondary">
+            <of-button
+              v-if="!selectedNode.locked"
+              @click="emit('delete-node')"
+              variant="filled"
+              tint="secondary"
+            >
               {{ effectiveLabels.deleteNodeButton }}
             </of-button>
           </div>
@@ -71,7 +76,12 @@
             <div>{{ selectedGroup.size.w }} × {{ selectedGroup.size.h }}</div>
           </div>
           <div class="workflow-canvas__panel-actions">
-            <of-button @click="emit('delete-group')" variant="filled" tint="secondary">
+            <of-button
+              v-if="!selectedGroup.locked"
+              @click="emit('delete-group')"
+              variant="filled"
+              tint="secondary"
+            >
               {{ effectiveLabels.deleteGroupButton }}
             </of-button>
           </div>

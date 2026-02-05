@@ -26,5 +26,12 @@ module.exports = {
         "./src/components/**/*.vue",
       ],
     },
+    {
+      root: "./packages/oceanfront-workflow-canvas",
+      globalComponents: [
+        "./src/components/**/*.ts",
+        "./src/components/**/*.vue",
+      ],
+    },
   ],
 };

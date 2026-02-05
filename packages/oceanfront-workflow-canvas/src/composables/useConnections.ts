@@ -56,7 +56,7 @@ export function useConnections(options: UseConnectionsOptions) {
 
     if (port === 'input') {
       const existingEdge = graph.value.edges.find(edge => edge.to.entityId === entityId)
-      if (existingEdge) {
+      if (existingEdge && !existingEdge.locked) {
         connectionDragStart.value = { nodeId: entityId, port: 'input' }
         disconnectingEdge.value = existingEdge
         return
@@ -65,7 +65,7 @@ export function useConnections(options: UseConnectionsOptions) {
 
     if (port === 'output') {
       const existingEdge = graph.value.edges.find(edge => edge.from.entityId === entityId)
-      if (existingEdge) {
+      if (existingEdge && !existingEdge.locked) {
         connectionDragStart.value = { nodeId: entityId, port: 'output' }
         disconnectingEdge.value = existingEdge
         return
@@ -166,7 +166,7 @@ export function useConnections(options: UseConnectionsOptions) {
 
   const handleMouseUp = () => {
     if (connectionDragStart.value) {
-      if (disconnectingEdge.value) {
+      if (disconnectingEdge.value && !disconnectingEdge.value.locked) {
         const edgeId = disconnectingEdge.value.id
         const updatedGraph = {
           ...graph.value,
