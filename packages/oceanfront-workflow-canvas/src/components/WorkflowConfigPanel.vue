@@ -4,36 +4,40 @@
       <div class="workflow-canvas__panel-header">
         <h3>
           {{
-            selectedNode ? effectiveLabels.nodeDetailsHeader : effectiveLabels.groupDetailsHeader
+            selectedNode
+              ? hasNodeType
+                ? nodeTypeDefinition?.label || selectedNode.kind
+                : effectiveLabels.nodeDetailsHeader
+              : effectiveLabels.groupDetailsHeader
           }}
         </h3>
         <button @click="emit('close')" class="workflow-canvas__panel-close" type="button">×</button>
       </div>
       <div class="workflow-canvas__panel-content">
         <div v-if="selectedNode">
-          <div class="workflow-canvas__panel-field">
-            <label>{{ effectiveLabels.idLabel }}</label>
-            <div>{{ selectedNode.id }}</div>
-          </div>
-          <of-text-field
+          <!-- Type selector (only shown when no type is set) -->
+          <of-field
+            v-if="!hasNodeType"
             :label="effectiveLabels.typeLabel"
-            class="workflow-canvas__panel-field"
+            type="select"
+            :items="typeOptions"
             :model-value="selectedNode.kind"
             @update:model-value="updateNodeKind"
           />
-          <of-text-field
-            :label="effectiveLabels.titleLabel"
-            class="workflow-canvas__panel-field"
-            :model-value="getNodeData(selectedNode).title || ''"
-            @update:model-value="updateNodeTitle"
-          />
-          <of-text-field
-            :label="effectiveLabels.descriptionLabel"
-            class="workflow-canvas__panel-field"
-            :model-value="getNodeData(selectedNode).description || ''"
-            @update:model-value="updateNodeDescription"
-            rows="3"
-          />
+
+          <!-- Dynamic fields based on node type -->
+          <template v-if="nodeTypeDefinition">
+            <template v-for="field in nodeTypeDefinition.fields" :key="field.name">
+              <of-field
+                v-bind="{
+                  ...field
+                }"
+                :model-value="getFieldValue(field.name)"
+                @update:model-value="updateNodeField(field.name, $event)"
+              />
+            </template>
+          </template>
+
           <div class="workflow-canvas__panel-actions">
             <of-button
               v-if="!selectedNode.locked"
@@ -46,35 +50,17 @@
           </div>
         </div>
         <div v-if="selectedGroup">
-          <div class="workflow-canvas__panel-field">
-            <label>{{ effectiveLabels.idLabel }}</label>
-            <div>{{ selectedGroup.id }}</div>
-          </div>
           <of-text-field
             :label="effectiveLabels.typeLabel"
-            class="workflow-canvas__panel-field"
             :model-value="selectedGroup.kind"
             @update:model-value="updateGroupKind"
           />
           <of-text-field
             :label="effectiveLabels.titleLabel"
-            class="workflow-canvas__panel-field"
             :model-value="selectedGroup.title || ''"
             @update:model-value="updateGroupTitle"
             :placeholder="effectiveLabels.groupTitlePlaceholder"
           />
-          <div class="workflow-canvas__panel-field">
-            <label>{{ effectiveLabels.containedItemsLabel }}</label>
-            <div>{{ effectiveLabels.itemCount(selectedGroup.containedIds.length) }}</div>
-          </div>
-          <div class="workflow-canvas__panel-field" v-if="groupDepth !== undefined">
-            <label>{{ effectiveLabels.nestingDepthLabel }}</label>
-            <div>{{ effectiveLabels.nestingDepth(groupDepth) }}</div>
-          </div>
-          <div class="workflow-canvas__panel-field">
-            <label>{{ effectiveLabels.sizeLabel }}</label>
-            <div>{{ selectedGroup.size.w }} × {{ selectedGroup.size.h }}</div>
-          </div>
           <div class="workflow-canvas__panel-actions">
             <of-button
               v-if="!selectedGroup.locked"
@@ -97,8 +83,9 @@ import type {
   WorkflowNode,
   WorkflowGroup,
   WorkflowGraph,
-  NodeData,
-  WorkflowCanvasLabels
+  WorkflowCanvasLabels,
+  NodeTypeConfig,
+  NodeFieldDefinition
 } from '../types/workflow'
 import { getGroupDepth } from '../utils/graph-helpers'
 import { DEFAULT_LABELS } from '../constants/labels'
@@ -121,6 +108,10 @@ export default defineComponent({
     labels: {
       type: Object as () => WorkflowCanvasLabels,
       default: undefined
+    },
+    nodeTypes: {
+      type: Object as () => NodeTypeConfig,
+      default: () => ({})
     }
   },
   emits: ['close', 'delete-node', 'delete-group', 'update-node', 'update-group'],
@@ -128,45 +119,69 @@ export default defineComponent({
     // Use DEFAULT_LABELS if no labels provided
     const effectiveLabels = computed(() => props.labels || DEFAULT_LABELS)
 
-    const isOpen = computed(() => !!(props.selectedNode || props.selectedGroup))
+    const isOpen = computed(() => {
+      if (props.selectedNode?.readonly || props.selectedGroup?.readonly) {
+        return false
+      }
+      return !!(props.selectedNode || props.selectedGroup)
+    })
 
     const groupDepth = computed(() => {
       if (!props.selectedGroup || !props.graph) return undefined
       return getGroupDepth(props.graph, props.selectedGroup.id)
     })
 
-    const getNodeData = (node: WorkflowNode) => (node.data as NodeData | undefined) || {}
+    const getNodeData = (node: WorkflowNode) => (node.data as Record<string, any> | undefined) || {}
+
+    const hasNodeType = computed(() => {
+      return props.selectedNode && props.selectedNode.kind && props.selectedNode.kind !== ''
+    })
+
+    const nodeTypeDefinition = computed(() => {
+      if (!props.selectedNode?.kind) return null
+      return props.nodeTypes[props.selectedNode.kind] || null
+    })
+
+    const typeOptions = computed(() => {
+      return Object.values(props.nodeTypes).map(def => ({
+        value: def.type,
+        text: def.label
+      }))
+    })
 
     const updateNodeKind = (value: string) => {
       if (!props.selectedNode) return
       emit('update-node', {
         ...props.selectedNode,
-        kind: value
+        kind: value,
+        data: {} // Reset data when type changes
       })
     }
 
-    const updateNodeTitle = (value: string) => {
+    const updateNodeField = (fieldName: string, value: any) => {
       if (!props.selectedNode) return
       const currentData = getNodeData(props.selectedNode)
       emit('update-node', {
         ...props.selectedNode,
         data: {
           ...currentData,
-          title: value
+          [fieldName]: value
         }
       })
     }
 
-    const updateNodeDescription = (value: string) => {
-      if (!props.selectedNode) return
-      const currentData = getNodeData(props.selectedNode)
-      emit('update-node', {
-        ...props.selectedNode,
-        data: {
-          ...currentData,
-          description: value
-        }
-      })
+    const getFieldValue = (fieldName: string) => {
+      if (!props.selectedNode) return ''
+      const data = getNodeData(props.selectedNode)
+      return data[fieldName] ?? ''
+    }
+
+    const getSelectItems = (field: NodeFieldDefinition) => {
+      // Transform options to the format expected by of-field select
+      return (field.items || []).map(item => ({
+        value: item.value,
+        text: item.text
+      }))
     }
 
     const updateGroupTitle = (value: string) => {
@@ -191,9 +206,13 @@ export default defineComponent({
       isOpen,
       groupDepth,
       getNodeData,
+      hasNodeType,
+      nodeTypeDefinition,
+      typeOptions,
       updateNodeKind,
-      updateNodeTitle,
-      updateNodeDescription,
+      updateNodeField,
+      getFieldValue,
+      getSelectItems,
       updateGroupTitle,
       updateGroupKind
     }

@@ -9,13 +9,9 @@ export const DEFAULT_LABELS: WorkflowCanvasLabels = {
   groupDetailsHeader: 'Group Details',
 
   // Field labels
-  idLabel: 'ID:',
   typeLabel: 'Type',
   titleLabel: 'Title',
   descriptionLabel: 'Description',
-  containedItemsLabel: 'Contained Items:',
-  nestingDepthLabel: 'Nesting Depth:',
-  sizeLabel: 'Size:',
 
   // Buttons
   deleteNodeButton: 'Delete Node',
@@ -24,6 +20,11 @@ export const DEFAULT_LABELS: WorkflowCanvasLabels = {
 
   // Placeholders
   groupTitlePlaceholder: 'Enter group title',
+  selectNodeTypePlaceholder: 'Select node type...',
+
+  // Boolean values
+  yes: 'Yes',
+  no: 'No',
 
   // Dynamic text formatters
   itemCount: (count: number) => `${count} ${count === 1 ? 'item' : 'items'}`,

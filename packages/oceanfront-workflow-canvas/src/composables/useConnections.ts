@@ -22,6 +22,7 @@ export interface UseConnectionsOptions {
   onGraphUpdate: (graph: WorkflowGraph) => void
   onEdgeAdd: (edge: WorkflowEdge) => void
   onEdgeDelete: (edgeId: string) => void
+  nodeTypes?: Ref<Record<string, any>>
 }
 
 export function useConnections(options: UseConnectionsOptions) {
@@ -33,13 +34,15 @@ export function useConnections(options: UseConnectionsOptions) {
     getEntityDimensions,
     onGraphUpdate,
     onEdgeAdd,
-    onEdgeDelete
+    onEdgeDelete,
+    nodeTypes
   } = options
 
-  const connectionPreview = ref<{ path: string; fromNodeId: string } | null>(null)
+  const connectionPreview = ref<{ path: string; fromNodeId: string; isInvalid?: boolean } | null>(null)
   const connectionDragStart = ref<{ nodeId: string; port: string } | null>(null)
   const connectionDragMoved = ref(false)
   const disconnectingEdge = ref<WorkflowEdge | null>(null)
+  const hoveredEntityId = ref<string | null>(null)
 
   const findEntity = (entityId: string): WorkflowNode | WorkflowGroup | undefined => {
     const node = findNode(graph.value, entityId)
@@ -106,12 +109,32 @@ export function useConnections(options: UseConnectionsOptions) {
       endControlY = endPos.y - controlOffset
     }
 
+    // Check if hovering over an incompatible node type
+    let isInvalid = false
+    if (hoveredEntityId.value && 'kind' in dragEntity) {
+      const hoveredEntity = findEntity(hoveredEntityId.value)
+      if (hoveredEntity && 'kind' in hoveredEntity) {
+        if (dragEntity.kind !== hoveredEntity.kind) {
+          isInvalid = true
+        }
+      }
+    }
+
     connectionPreview.value = {
       path: `M ${startPos.x},${startPos.y} C ${startPos.x},${startControlY} ${endPos.x},${endControlY} ${endPos.x},${endPos.y}`,
-      fromNodeId: connectionDragStart.value.nodeId
+      fromNodeId: connectionDragStart.value.nodeId,
+      isInvalid
     }
 
     return true
+  }
+
+  const handleEntityHandleMouseEnter = (entityId: string) => {
+    hoveredEntityId.value = entityId
+  }
+
+  const handleEntityHandleMouseLeave = () => {
+    hoveredEntityId.value = null
   }
 
   const handleEntityHandleMouseUp = (entityId: string, port: string) => {
@@ -138,6 +161,19 @@ export function useConnections(options: UseConnectionsOptions) {
 
       if (shouldConnect && areEntitiesInDifferentGroups(graph.value, fromEntityId, toEntityId)) {
         shouldConnect = false
+      }
+
+      // Validate type matching - only allow connections between same types
+      if (shouldConnect) {
+        const fromEntity = findEntity(fromEntityId)
+        const toEntity = findEntity(toEntityId)
+
+        if (fromEntity && toEntity && 'kind' in fromEntity && 'kind' in toEntity) {
+          // Only allow connections between entities of the same type
+          if (fromEntity.kind !== toEntity.kind) {
+            shouldConnect = false
+          }
+        }
       }
 
       if (shouldConnect) {
@@ -192,8 +228,11 @@ export function useConnections(options: UseConnectionsOptions) {
     connectionDragStart,
     connectionDragMoved,
     disconnectingEdge,
+    hoveredEntityId,
     handleEntityHandleMouseDown,
     handleEntityHandleMouseUp,
+    handleEntityHandleMouseEnter,
+    handleEntityHandleMouseLeave,
     handleConnectionDragMove,
     handleMouseUp,
     isOutputFree

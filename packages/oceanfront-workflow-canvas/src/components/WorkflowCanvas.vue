@@ -50,6 +50,9 @@
             v-if="connections.connectionPreview.value"
             :d="connections.connectionPreview.value.path"
             class="workflow-canvas-connector workflow-canvas-connector--preview"
+            :class="{
+              'workflow-canvas-connector--invalid': connections.connectionPreview.value.isInvalid
+            }"
           />
         </svg>
 
@@ -140,7 +143,8 @@
             class="workflow-canvas-node"
             :class="{
               'workflow-canvas-node--selected': props.selectedId === node.id,
-              'workflow-canvas-node--dragging': dragging.draggingNodeId.value === node.id
+              'workflow-canvas-node--dragging': dragging.draggingNodeId.value === node.id,
+              [`workflow-canvas-node--type-${node.kind}`]: node.kind
             }"
             :style="canvas.getNodeStyle(node)"
             @mousedown="dragging.handleNodeMouseDown($event, node)"
@@ -153,6 +157,8 @@
               class="workflow-canvas-node__handle workflow-canvas-node__handle--input"
               @mousedown.stop="connections.handleEntityHandleMouseDown($event, node.id, 'input')"
               @mouseup.stop="connections.handleEntityHandleMouseUp(node.id, 'input')"
+              @mouseenter="connections.handleEntityHandleMouseEnter(node.id)"
+              @mouseleave="connections.handleEntityHandleMouseLeave()"
             ></div>
 
             <!-- Node content (slot or default tile) -->
@@ -162,8 +168,10 @@
               :selected="props.selectedId === node.id"
               :on-menu-click="
                 () => {
-                  emit('update:selectedId', node.id)
-                  emit('node-click', node.id)
+                  if (!node.readonly) {
+                    emit('update:selectedId', node.id)
+                    emit('node-click', node.id)
+                  }
                 }
               "
             >
@@ -175,10 +183,13 @@
                   !!getParentGroup(props.modelValue, node.id)
                 "
                 :labels="mergedLabels"
+                :node-types="props.nodeTypes"
                 @menu-click="
                   () => {
-                    emit('update:selectedId', node.id)
-                    emit('node-click', node.id)
+                    if (!node.readonly) {
+                      emit('update:selectedId', node.id)
+                      emit('node-click', node.id)
+                    }
                   }
                 "
               />
@@ -191,6 +202,8 @@
               :class="{ 'workflow-canvas-node__handle--free': connections.isOutputFree(node.id) }"
               @mousedown.stop="connections.handleEntityHandleMouseDown($event, node.id, 'output')"
               @mouseup.stop="connections.handleEntityHandleMouseUp(node.id, 'output')"
+              @mouseenter="connections.handleEntityHandleMouseEnter(node.id)"
+              @mouseleave="connections.handleEntityHandleMouseLeave()"
               @click.stop="handleFreeOutputClick(node.id)"
             >
               <span
@@ -246,6 +259,7 @@
         :selected-group="selectedGroup"
         :graph="props.modelValue"
         :labels="mergedLabels"
+        :node-types="props.nodeTypes"
         @close="closePanel"
         @delete-node="handleDeleteNode"
         @delete-group="handleDeleteGroup"
@@ -265,7 +279,8 @@ import type {
   Position,
   WorkflowGroup,
   AddStepEvent,
-  WorkflowCanvasLabels
+  WorkflowCanvasLabels,
+  NodeTypeConfig
 } from '../types/workflow'
 import {
   findNode,
@@ -324,6 +339,10 @@ export default defineComponent({
     labels: {
       type: Object as () => Partial<WorkflowCanvasLabels>,
       default: undefined
+    },
+    nodeTypes: {
+      type: Object as () => NodeTypeConfig,
+      default: () => ({})
     }
   },
   emits: [
@@ -492,6 +511,7 @@ export default defineComponent({
       maxGroupDepth: toRef(props, 'maxGroupDepth'),
       readonly: toRef(props, 'readonly'),
       canvasRef,
+      nodeTypes: toRef(props, 'nodeTypes'),
       findDropTargetGroup,
       wouldExceedMaxDepth,
       onGraphUpdate: graph => emit('update:modelValue', graph),
@@ -510,7 +530,8 @@ export default defineComponent({
       getEntityDimensions: canvas.getEntityDimensions,
       onGraphUpdate: graph => emit('update:modelValue', graph),
       onEdgeAdd: edge => emit('edge-add', edge),
-      onEdgeDelete: edgeId => emit('edge-delete', edgeId)
+      onEdgeDelete: edgeId => emit('edge-delete', edgeId),
+      nodeTypes: toRef(props, 'nodeTypes')
     })
 
     const resize = useGroupResize({
@@ -610,7 +631,8 @@ export default defineComponent({
     }
 
     function handleGroupClick(groupId: string) {
-      if (!props.readonly) {
+      const group = findGroup(props.modelValue, groupId)
+      if (!props.readonly && !group?.readonly) {
         emit('update:selectedId', groupId)
         emit('group-click', groupId)
       }
@@ -620,8 +642,19 @@ export default defineComponent({
       // Emit the add-step event for consumers to handle
       emit('add-step', event)
 
+      // Determine node kind from group if available
+      let defaultKind = ''
+      if (event.inGroupId) {
+        const group = findGroup(props.modelValue, event.inGroupId)
+        if (group && group.kind && props.nodeTypes[group.kind]) {
+          defaultKind = group.kind
+        }
+      }
+
       // Also handle it internally by default
-      const result = handleAddStepToGraph(props.modelValue, event)
+      const result = handleAddStepToGraph(props.modelValue, event, {
+        defaultKind
+      })
       emit('update:modelValue', result.graph)
       emit('update:selectedId', result.newNodeId)
       const newNode = result.graph.nodes.find(n => n.id === result.newNodeId)!
@@ -650,9 +683,16 @@ export default defineComponent({
       const centerX = group.position.x + group.size.w / 2 - 125 // 250/2 = half node width
       const centerY = group.position.y + group.size.h / 2 - 50 // 100/2 = half node height
 
+      // Determine node kind from group if available
+      let nodeKind = ''
+      if (group.kind && props.nodeTypes[group.kind]) {
+        nodeKind = group.kind
+      }
+
       // Create new node at center
       const result = addNode(props.modelValue, {
-        position: { x: centerX, y: centerY }
+        position: { x: centerX, y: centerY },
+        kind: nodeKind
       })
 
       // Add node to group

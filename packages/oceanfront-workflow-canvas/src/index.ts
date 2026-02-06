@@ -16,7 +16,11 @@ export type {
   NodeData,
   AddStepEvent,
   ConnectEvent,
-  WorkflowCanvasLabels
+  WorkflowCanvasLabels,
+  NodeTypeConfig,
+  NodeTypeDefinition,
+  NodeFieldDefinition,
+  FieldType
 } from './types/workflow'
 
 // Constants

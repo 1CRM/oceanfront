@@ -38,6 +38,7 @@
         :width="1000"
         :height="600"
         :max-group-depth="maxGroupDepth"
+        :node-types="nodeTypes"
         @node-add="handleNodeAdd"
         @group-add="handleGroupAdd"
         @edge-add="handleEdgeAdd"
@@ -101,9 +102,123 @@ import {
   type WorkflowGraph,
   type WorkflowNode,
   type WorkflowEdge,
-  type WorkflowGroup
+  type WorkflowGroup,
+  type NodeTypeConfig
 } from 'oceanfront-workflow-canvas'
 import 'oceanfront-workflow-canvas/css'
+
+// Node type configuration
+const nodeTypes: NodeTypeConfig = {
+  trigger: {
+    type: 'trigger',
+    label: 'Trigger',
+    icon: 'hourglass',
+    fields: [
+      {
+        name: 'title',
+        type: 'text',
+        label: 'Title',
+        required: true,
+        showInTile: true,
+        placeholder: 'Enter trigger title'
+      },
+      {
+        name: 'description',
+        type: 'textarea',
+        label: 'Description',
+        showInTile: true,
+        placeholder: 'Describe what triggers this workflow'
+      },
+      {
+        name: 'event',
+        type: 'select',
+        label: 'Event Type',
+        items: [
+          { value: 'new_quote', text: 'New Quote' },
+          { value: 'updated_quote', text: 'Updated Quote' },
+          { value: 'deleted_quote', text: 'Deleted Quote' }
+        ]
+      }
+    ]
+  },
+  action: {
+    type: 'action',
+    label: 'Action',
+    icon: 'gear',
+    fields: [
+      {
+        name: 'title',
+        type: 'text',
+        label: 'Title',
+        required: true,
+        showInTile: true,
+        placeholder: 'Enter action title'
+      },
+      {
+        name: 'description',
+        type: 'textarea',
+        label: 'Description',
+        showInTile: true,
+        placeholder: 'Describe what this action does'
+      },
+      {
+        name: 'actionType',
+        type: 'select',
+        label: 'Action Type',
+        items: [
+          { value: 'email', text: 'Send Email' },
+          { value: 'update', text: 'Update Record' },
+          { value: 'create', text: 'Create Record' },
+          { value: 'delete', text: 'Delete Record' }
+        ]
+      },
+      {
+        name: 'enabled',
+        type: 'toggle',
+        label: 'Enabled'
+      }
+    ]
+  },
+  condition: {
+    type: 'condition',
+    label: 'Condition',
+    icon: 'help circle',
+    fields: [
+      {
+        name: 'title',
+        type: 'text',
+        label: 'Title',
+        required: true,
+        showInTile: true,
+        placeholder: 'Enter condition title'
+      },
+      {
+        name: 'description',
+        type: 'textarea',
+        label: 'Description',
+        showInTile: true,
+        placeholder: 'Describe the condition'
+      },
+      {
+        name: 'operator',
+        type: 'select',
+        label: 'Operator',
+        items: [
+          { value: 'equals', text: 'Equals' },
+          { value: 'not_equals', text: 'Not Equals' },
+          { value: 'greater_than', text: 'Greater Than' },
+          { value: 'less_than', text: 'Less Than' }
+        ]
+      },
+      {
+        name: 'threshold',
+        type: 'number',
+        label: 'Threshold Value',
+        placeholder: '0'
+      }
+    ]
+  }
+}
 
 // Initial workflow graph state - Complex linear workflow with branches (one in, one out per node)
 const initialWorkflowGraph: WorkflowGraph = {
@@ -118,7 +233,7 @@ const initialWorkflowGraph: WorkflowGraph = {
       data: {
         title: 'New or Updated Quote',
         description: 'Triggers when a quote is created or modified',
-        icon: 'hourglass'
+        event: 'new_quote'
       },
       locked: true
     },
@@ -126,52 +241,57 @@ const initialWorkflowGraph: WorkflowGraph = {
       id: 'action-1',
       kind: 'action',
       position: {
-        x: 100,
-        y: 229
+        x: 99,
+        y: 250
       },
       data: {
         title: 'Validate Quote Data',
         description: 'Checks for required fields and data integrity',
-        icon: 'gear'
-      }
+        actionType: 'update',
+        enabled: true
+      },
+      readonly: true
     },
     {
       id: 'condition-1',
       kind: 'condition',
       position: {
-        x: 100,
-        y: 394
+        x: 101,
+        y: 443
       },
       data: {
         title: 'Check Quote Value',
         description: 'Route based on quote value threshold',
-        icon: 'help circle'
+        operator: 'greater_than',
+        threshold: 10000
       }
     },
     {
       id: 'condition-2',
       kind: 'condition',
       position: {
-        x: 844,
-        y: 678
+        x: 838,
+        y: 756
       },
       data: {
         title: 'Manager Decision',
         description: 'Wait for manager to approve or reject',
-        icon: 'help circle'
+        operator: 'equals',
+        threshold: 1
       }
     },
     {
       id: 'action-10',
       kind: 'action',
       position: {
-        x: 467,
-        y: 48
+        x: 468,
+        y: 47
       },
       data: {
         title: 'Financial Analysis',
         description: 'Perform detailed financial review',
-        icon: 'gear'
+        actionType: 'update',
+        enabled: true
       }
     },
     {
@@ -179,38 +299,41 @@ const initialWorkflowGraph: WorkflowGraph = {
       kind: 'action',
       position: {
         x: 467,
-        y: 188
+        y: 219
       },
       data: {
         title: 'Request Executive Approval',
         description: 'Route to VP or C-level for approval',
-        icon: 'user'
+        actionType: 'email',
+        enabled: true
       }
     },
     {
       id: 'condition-3',
       kind: 'condition',
       position: {
-        x: 467,
-        y: 328
+        x: 469,
+        y: 387
       },
       data: {
         title: 'Executive Decision',
         description: 'Wait for executive approval',
-        icon: 'help circle'
+        operator: 'equals',
+        threshold: 1
       }
     },
     {
       id: 'action-13',
       kind: 'action',
       position: {
-        x: 467,
-        y: 468
+        x: 470,
+        y: 562
       },
       data: {
         title: 'Send Contract',
         description: 'Email contract to customer',
-        icon: 'email'
+        actionType: 'email',
+        enabled: true
       }
     },
     {
@@ -223,44 +346,50 @@ const initialWorkflowGraph: WorkflowGraph = {
       data: {
         title: 'Log Executive Rejection',
         description: 'Record executive rejection',
-        icon: 'gear'
+        actionType: 'create',
+        enabled: true
       }
     },
     {
       id: 'action-16',
       kind: 'action',
       position: {
-        x: 840,
-        y: 185
+        x: 839,
+        y: 210
       },
       data: {
         title: 'Escalate Rejection',
         description: 'Notify senior management',
-        icon: 'email'
+        actionType: 'email',
+        enabled: true
       }
     },
     {
       id: 'node-1770122294598',
       kind: 'action',
       position: {
-        x: 839,
-        y: 348
+        x: 838,
+        y: 377
       },
       data: {
         title: 'New Action',
-        description: 'Configure this action'
+        description: 'Configure this action',
+        actionType: 'update',
+        enabled: true
       }
     },
     {
       id: 'node-1770122302593',
       kind: 'action',
       position: {
-        x: 848,
-        y: 485
+        x: 838,
+        y: 560
       },
       data: {
         title: 'New Action',
-        description: 'Configure this action'
+        description: 'Configure this action',
+        actionType: 'update',
+        enabled: true
       }
     }
   ],
@@ -373,56 +502,43 @@ const initialWorkflowGraph: WorkflowGraph = {
       title: 'Executive Approval',
       position: {
         x: 447,
-        y: 28
+        y: 27
       },
       size: {
-        w: 290,
-        h: 560
+        w: 293,
+        h: 655
       },
-      containedIds: ['action-10', 'action-11', 'condition-3', 'action-13'],
-      locked: true
+      containedIds: ['action-10', 'action-13', 'condition-3', 'action-11'],
+      // locked: true,
+      readonly: true
     },
     {
       id: 'group-5',
       kind: 'group',
       title: 'Executive Rejection',
       position: {
-        x: 799,
+        x: 798,
         y: 25
       },
       size: {
-        w: 339,
-        h: 600
+        w: 330,
+        h: 675
       },
-      containedIds: ['action-15', 'action-16', 'group-1770122290693']
+      containedIds: ['action-15', 'group-1770122290693', 'action-16']
     },
     {
       id: 'group-1770122290693',
       kind: 'group',
       title: 'New Group',
       position: {
-        x: 819,
-        y: 328
-      },
-      size: {
-        w: 299,
-        h: 277
-      },
-      containedIds: ['node-1770122294598', 'node-1770122302593']
-    },
-    {
-      id: 'group-empty-test',
-      kind: 'group',
-      title: 'Empty Group',
-      position: {
-        x: 100,
-        y: 650
+        x: 818,
+        y: 357
       },
       size: {
         w: 290,
-        h: 200
+        h: 323
       },
-      containedIds: []
+      containedIds: ['node-1770122294598', 'node-1770122302593']
     }
   ]
 }

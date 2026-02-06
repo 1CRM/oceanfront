@@ -7,7 +7,8 @@ import type {
   Rect,
   AddStepEvent,
   ConnectEvent,
-  Size
+  Size,
+  NodeTypeConfig
 } from '../types/workflow'
 
 /**
@@ -461,11 +462,8 @@ export function handleAddStepToGraph(
 ): { graph: WorkflowGraph; newNodeId: string } {
   const nodeIdGenerator = options?.nodeIdGenerator || defaultIdGenerator('node')
   const edgeIdGenerator = options?.edgeIdGenerator || defaultIdGenerator('edge')
-  const defaultNodeData = options?.defaultNodeData || {
-    title: 'New Action',
-    description: 'Configure this action'
-  }
-  const defaultKind = options?.defaultKind || 'action'
+  const defaultNodeData = options?.defaultNodeData || {}
+  const defaultKind = options?.defaultKind || ''
 
   const newNodeId = nodeIdGenerator()
   const afterNode = event.afterNodeId ? findNode(graph, event.afterNodeId) : null
@@ -592,11 +590,8 @@ export function addNode(
   }
 ): { graph: WorkflowGraph; newNodeId: string } {
   const nodeIdGenerator = options?.nodeIdGenerator || defaultIdGenerator('node')
-  const defaultNodeData = options?.nodeData || {
-    title: 'New Action',
-    description: 'Configure this action'
-  }
-  const defaultKind = options?.kind || 'action'
+  const defaultNodeData = options?.nodeData || {}
+  const defaultKind = options?.kind || ''
 
   const newNodeId = nodeIdGenerator()
 
@@ -691,4 +686,35 @@ export function addGroup(
   }
 
   return { graph: updatedGraph, newGroupId }
+}
+
+/**
+ * Get the auto-assigned node kind based on the parent group's kind
+ * Only assigns if:
+ * 1. Node has no kind (empty string)
+ * 2. Group has a kind that exists in nodeTypes
+ * @param graph - The workflow graph
+ * @param nodeId - The node to check
+ * @param groupId - The parent group
+ * @param nodeTypes - Available node type configurations
+ * @returns The kind to assign, or null if no auto-assignment should occur
+ */
+export function getAutoAssignedNodeKind(
+  graph: WorkflowGraph,
+  nodeId: string,
+  groupId: string,
+  nodeTypes: NodeTypeConfig
+): string | null {
+  const node = findNode(graph, nodeId)
+  const group = findGroup(graph, groupId)
+
+  // Only auto-assign if node has no type
+  if (!node || node.kind) return null
+
+  // Only auto-assign if group kind exists in nodeTypes
+  if (group && group.kind && nodeTypes[group.kind]) {
+    return group.kind
+  }
+
+  return null
 }

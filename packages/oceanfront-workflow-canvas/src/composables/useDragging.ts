@@ -1,5 +1,5 @@
 import { ref, type Ref } from 'vue'
-import type { Position, WorkflowGraph, WorkflowNode, WorkflowGroup } from '../types/workflow'
+import type { Position, WorkflowGraph, WorkflowNode, WorkflowGroup, NodeTypeConfig } from '../types/workflow'
 import {
   updateNodePosition,
   updateGroupPosition,
@@ -9,7 +9,8 @@ import {
   removeEntityFromAllGroups,
   addEntityToGroup,
   updateGroupBounds,
-  findGroupAtPosition
+  findGroupAtPosition,
+  getAutoAssignedNodeKind
 } from '../utils/graph-helpers'
 
 export interface UseDraggingOptions {
@@ -17,6 +18,7 @@ export interface UseDraggingOptions {
   maxGroupDepth: Ref<number | null>
   readonly: Ref<boolean>
   canvasRef: Ref<HTMLElement | undefined>
+  nodeTypes: Ref<NodeTypeConfig>
   findDropTargetGroup: (x: number, y: number, excludeId: string | null) => WorkflowGroup | undefined
   wouldExceedMaxDepth: (entityId: string, targetGroupId: string) => boolean
   onGraphUpdate: (graph: WorkflowGraph) => void
@@ -32,6 +34,7 @@ export function useDragging(options: UseDraggingOptions) {
     graph,
     readonly,
     canvasRef,
+    nodeTypes,
     findDropTargetGroup,
     wouldExceedMaxDepth,
     onGraphUpdate,
@@ -332,6 +335,17 @@ export function useDragging(options: UseDraggingOptions) {
 
         if (targetGroup && !wouldExceedMaxDepth(nodeId, targetGroup.id)) {
           updatedGraph = addEntityToGroup(updatedGraph, nodeId, targetGroup.id)
+          
+          // Auto-assign node type from group if node has no type
+          const autoKind = getAutoAssignedNodeKind(updatedGraph, nodeId, targetGroup.id, nodeTypes.value)
+          if (autoKind) {
+            updatedGraph = {
+              ...updatedGraph,
+              nodes: updatedGraph.nodes.map(n => 
+                n.id === nodeId ? { ...n, kind: autoKind } : n
+              )
+            }
+          }
         }
 
         if (parentChanged) {

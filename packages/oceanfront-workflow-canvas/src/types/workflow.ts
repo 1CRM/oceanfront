@@ -34,6 +34,42 @@ export interface NodeData {
 }
 
 /**
+ * Field type definitions for node configuration
+ */
+export type FieldType = 'text' | 'textarea' | 'number' | 'select' | 'toggle'
+
+/**
+ * Field definition structure for node types
+ */
+export interface NodeFieldDefinition {
+  name: string // Internal field name (e.g., 'emailAddress')
+  type: FieldType // Input type
+  label: string // Display label
+  required?: boolean // Is field required
+  placeholder?: string // Placeholder text
+  items?: Array<{ value: string; text: string }> // For select fields
+  showInTile?: boolean // Display in node tile (not just config panel)
+}
+
+/**
+ * Type definition structure (passed via props)
+ */
+export interface NodeTypeDefinition {
+  type: string // Type identifier (e.g., 'trigger', 'action')
+  label: string // Display name (e.g., 'Trigger')
+  icon?: string // Default icon for this type
+  fields: NodeFieldDefinition[] // Fields for this type
+  cssClass?: string // Custom CSS class (defaults to `workflow-canvas-node--type-${type}`)
+}
+
+/**
+ * Type configuration map (keyed by type identifier)
+ */
+export interface NodeTypeConfig {
+  [typeId: string]: NodeTypeDefinition
+}
+
+/**
  * Connection port reference
  */
 export interface Port {
@@ -50,6 +86,7 @@ export interface WorkflowNode {
   size?: Size
   data?: unknown // consumer-owned data
   locked?: boolean // if true, prevents deletion
+  readonly?: boolean // if true, prevents editing (hides menu and config panel)
 }
 
 /**
@@ -74,6 +111,7 @@ export interface WorkflowGroup {
   containedIds: string[] // Contains both node IDs and group IDs
   data?: unknown // Consumer-owned data
   locked?: boolean // if true, prevents deletion
+  readonly?: boolean // if true, prevents editing (hides config panel)
 }
 
 /**
@@ -110,13 +148,9 @@ export interface WorkflowCanvasLabels {
   groupDetailsHeader: string
 
   // Field labels
-  idLabel: string
   typeLabel: string
   titleLabel: string
   descriptionLabel: string
-  containedItemsLabel: string
-  nestingDepthLabel: string
-  sizeLabel: string
 
   // Buttons
   deleteNodeButton: string
@@ -125,6 +159,11 @@ export interface WorkflowCanvasLabels {
 
   // Placeholders
   groupTitlePlaceholder: string
+  selectNodeTypePlaceholder: string
+
+  // Boolean values
+  yes: string
+  no: string
 
   // Dynamic text formatters
   itemCount: (count: number) => string
