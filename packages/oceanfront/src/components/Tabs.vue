@@ -350,7 +350,19 @@ export default defineComponent({
       return props.params?.submenuCloseDelay
     })
 
-    const overflowButtonEnabled = computed(() => props.overflowButton || false)
+    const hasAlwaysOverflowItems = computed(
+      () =>
+        items.value.items?.some((item: any) => item.alwaysOverflow === true) ??
+        false
+    )
+
+    const isAlwaysOverflowOnlyMode = computed(
+      () => !props.overflowButton && hasAlwaysOverflowItems.value
+    )
+
+    const overflowButtonEnabled = computed(
+      () => props.overflowButton || hasAlwaysOverflowItems.value
+    )
     let showOverflowButton = ref(false)
 
     const ofTabsNavigationHeaderShowNextNavigation = computed(() => {
@@ -544,7 +556,11 @@ export default defineComponent({
             selectedIndex = index
             //don't make sense to update overflow button (key == -1)
           } else if (item['key'] !== -1) {
-            updateTabVisibility(index, false)
+            // In alwaysOverflow-only mode, keep regular tabs visible, hide only alwaysOverflow items
+            const visible = isAlwaysOverflowOnlyMode.value
+              ? item.alwaysOverflow !== true
+              : false
+            updateTabVisibility(index, visible)
           }
 
           if (index !== selectedIndex && item['key'] !== -1) {
@@ -570,16 +586,27 @@ export default defineComponent({
       let tabsWidth = 0
       let hasInvisibleTabs = false
 
-      //Make tabs visible until widths sum < main container's width
-      for (const index of tabsIndexes) {
-        updateTabVisibility(index, true)
-        tabsWidth = calcVisibleTabsWidth()
-        if (tabsWidth > outerWidth) {
-          hasInvisibleTabs = true
-          updateTabVisibility(index, false)
-          break
+      // In alwaysOverflow-only mode, skip width calculations and only check for alwaysOverflow items
+      if (!isAlwaysOverflowOnlyMode.value) {
+        //Make tabs visible until widths sum < main container's width
+        for (const index of tabsIndexes) {
+          updateTabVisibility(index, true)
+          tabsWidth = calcVisibleTabsWidth()
+          if (tabsWidth > outerWidth) {
+            hasInvisibleTabs = true
+            updateTabVisibility(index, false)
+            break
+          }
         }
+      } else {
+        // In AlwaysOverflowOnlyMode, we still need to set overflowButtonEl for positioning
+        nextTick(() => {
+          overflowButtonEl.value = tabs.value?.querySelector(
+            '.of-tab-header-item.overflow-button'
+          )
+        })
       }
+
       for (const item of items.value.items) {
         if (item.disabled !== true && item.visible == true) {
           lastActiveTabIdx.value = item.key
