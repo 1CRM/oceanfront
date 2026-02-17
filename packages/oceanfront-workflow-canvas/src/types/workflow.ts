@@ -1,4 +1,9 @@
 /**
+ * Canvas mode - controls interactivity and display
+ */
+export type WorkflowCanvasMode = 'view' | 'edit'
+
+/**
  * Position in 2D space
  */
 export interface Position {
@@ -34,21 +39,39 @@ export interface NodeData {
 }
 
 /**
- * Field type definitions for node configuration
- */
-export type FieldType = 'text' | 'textarea' | 'number' | 'select' | 'toggle'
-
-/**
  * Field definition structure for node types
  */
 export interface NodeFieldDefinition {
   name: string // Internal field name (e.g., 'emailAddress')
-  type: FieldType // Input type
-  label: string // Display label
-  required?: boolean // Is field required
-  placeholder?: string // Placeholder text
+  type: string // Input type
+  label?: string // Field label
   items?: Array<{ value: string; text: string }> // For select fields
-  showInTile?: boolean // Display in node tile (not just config panel)
+  visible?: boolean // If false, field will not be rendered
+  [key: string]: any
+}
+
+/**
+ * Per-node type definition overrides
+ * Allows individual nodes to override any property from their NodeTypeDefinition
+ *
+ * @example
+ * node.definition = {
+ *   icon: 'custom-icon',
+ *   label: 'Custom Label',
+ *   configPanelLabel: 'Detailed Label for Panel',
+ *   tileLabel: 'Short Label',
+ *   placeholder: 'Custom placeholder',
+ *   fields: [...]
+ * }
+ */
+export interface NodeDefinitionOverride {
+  icon?: string
+  label?: string
+  configPanelLabel?: string
+  tileLabel?: string
+  placeholder?: string
+  fields?: NodeFieldDefinition[]
+  cssClass?: string
 }
 
 /**
@@ -56,10 +79,17 @@ export interface NodeFieldDefinition {
  */
 export interface NodeTypeDefinition {
   type: string // Type identifier (e.g., 'trigger', 'action')
-  label: string // Display name (e.g., 'Trigger')
+  label: string // Display name (e.g., 'Trigger') - used as fallback for both panel and tile
+  configPanelLabel?: string // Label shown in config panel header (falls back to tileLabel, then label)
+  tileLabel?: string // Label shown in tile display (falls back to configPanelLabel, then label)
   icon?: string // Default icon for this type
+  placeholder?: string // Placeholder text to display in tile
   fields: NodeFieldDefinition[] // Fields for this type
   cssClass?: string // Custom CSS class (defaults to `workflow-canvas-node--type-${type}`)
+  lockParent?: boolean // If true, nodes of this type are locked to parent by default
+  hideAddNodeWhenNotEmpty?: boolean // If true, hides hover menu when node has outgoing connection
+  addNodeButtonText?: string // Custom text for "+ node" button in hover menu (defaults to "+ node")
+  addGroupButtonText?: string // Custom text for "+ group" button in hover menu (defaults to "+ group")
 }
 
 /**
@@ -67,6 +97,72 @@ export interface NodeTypeDefinition {
  */
 export interface NodeTypeConfig {
   [typeId: string]: NodeTypeDefinition
+}
+
+/**
+ * Field definition structure for group types
+ */
+export interface GroupTypeFieldDefinition {
+  name: string // Internal field name (e.g., 'description')
+  type: string // Input type
+  label?: string // Field label
+  items?: Array<{ value: string; text: string }> // For select fields
+  visible?: boolean // If false, field will not be rendered
+  [key: string]: any
+}
+
+/**
+ * Configuration for nested groups
+ * Defines default properties for groups created within a parent group
+ */
+export interface NestedGroupConfig {
+  label?: string // Default label for nested groups
+  placeholder?: string // Placeholder text for nested groups
+  fields?: GroupTypeFieldDefinition[] // Field definitions for nested groups
+}
+
+/**
+ * Per-group type definition overrides
+ * Allows individual groups to override any property from their GroupTypeDefinition
+ *
+ * @example
+ * group.definition = {
+ *   label: 'Custom Group Label',
+ *   fields: [...],
+ *   showTypeField: false,
+ *   showTitleField: false
+ * }
+ */
+export interface GroupDefinitionOverride {
+  label?: string
+  labelRight?: string
+  fields?: GroupTypeFieldDefinition[]
+  placeholder?: string
+  showTypeField?: boolean // Override type-level setting for type field visibility
+  showTitleField?: boolean // Override type-level setting for title field visibility
+}
+
+/**
+ * Type definition structure for groups (passed via props)
+ */
+export interface GroupTypeDefinition {
+  type: string // Type identifier (e.g., 'group', 'phase')
+  label: string // Display name (e.g., 'Standard Group')
+  fields: GroupTypeFieldDefinition[] // Fields for this type
+  nested?: NestedGroupConfig // Configuration for nested groups
+  showTypeField?: boolean // Control visibility of type field in config panel (default: true)
+  showTitleField?: boolean // Control visibility of title field in config panel (default: true)
+  lockParent?: boolean // If true, groups of this type are locked to parent by default
+  hideAddNodeWhenNotEmpty?: boolean // If true, hides hover menu when group contains items
+  addNodeButtonText?: string // Custom text for "+ node" button in group hover menu (defaults to "+ node")
+  addGroupButtonText?: string // Custom text for "+ group" button in group hover menu (defaults to "+ group")
+}
+
+/**
+ * Type configuration map for groups (keyed by type identifier)
+ */
+export interface GroupTypeConfig {
+  [typeId: string]: GroupTypeDefinition
 }
 
 /**
@@ -85,8 +181,11 @@ export interface WorkflowNode {
   position: Position
   size?: Size
   data?: unknown // consumer-owned data
+  definition?: NodeDefinitionOverride // overrides for NodeTypeDefinition
   locked?: boolean // if true, prevents deletion
   readonly?: boolean // if true, prevents editing (hides menu and config panel)
+  lockParent?: boolean // if true, prevents moving outside parent group
+  hideAddNodeWhenNotEmpty?: boolean // if true, hides hover menu when node has outgoing connection
 }
 
 /**
@@ -105,13 +204,19 @@ export interface WorkflowEdge {
 export interface WorkflowGroup {
   id: string
   kind: string // Type of group (e.g., 'group', 'swimlane', 'phase')
-  title?: string
+  label?: string
+  labelRight?: string
   position: Position
   size: Size
   containedIds: string[] // Contains both node IDs and group IDs
-  data?: unknown // Consumer-owned data
+  data?: unknown // consumer-owned data
+  definition?: GroupDefinitionOverride // overrides for GroupTypeDefinition
   locked?: boolean // if true, prevents deletion
   readonly?: boolean // if true, prevents editing (hides config panel)
+  lockParent?: boolean // if true, prevents moving outside parent group
+  maxDepth?: number | null // if set, overrides global maxGroupDepth for this group
+  hideAddNodeWhenNotEmpty?: boolean // if true, hides "+ node" button when group contains items
+  nested?: NestedGroupConfig // Per-instance override for nested group configuration
 }
 
 /**
@@ -150,22 +255,32 @@ export interface WorkflowCanvasLabels {
   // Field labels
   typeLabel: string
   titleLabel: string
-  descriptionLabel: string
 
   // Buttons
   deleteNodeButton: string
   deleteGroupButton: string
   configureButton: string
+  addNodeToGroupButton: string
+  addNestedGroupButton: string
+  addNodeAfterNodeButton: string
+  addGroupAfterNodeButton: string
 
   // Placeholders
-  groupTitlePlaceholder: string
+  groupLabelPlaceholder: string
   selectNodeTypePlaceholder: string
 
   // Boolean values
   yes: string
   no: string
 
+  // Button text fallbacks
+  addNodeButtonTextFallback: string
+  addGroupButtonTextFallback: string
+
+  // Default values
+  defaultGroupKind: string
+  defaultGroupLabel: string
+
   // Dynamic text formatters
-  itemCount: (count: number) => string
-  nestingDepth: (depth: number) => string
+  nestedGroupLabel: (kind: string) => string
 }

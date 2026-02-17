@@ -9,20 +9,20 @@
     <div class="workflow-canvas-tile__header">
       <div class="workflow-canvas-tile__title">
         <of-icon
-          v-if="displayIcon"
+          v-if="displayIcon && !hasPlaceholder"
           scale="sm"
           :name="displayIcon"
           class="workflow-canvas-tile__icon"
         />
         <span
           class="workflow-canvas-tile__title-text"
-          :class="{ 'workflow-canvas-tile__title-text--placeholder': !hasNodeType }"
+          :class="{ 'workflow-canvas-tile__title-text--placeholder': hasPlaceholder }"
         >
           {{ displayTitle }}
         </span>
       </div>
       <of-button
-        v-if="!node.readonly"
+        v-if="!viewMode && !node.readonly"
         class="workflow-canvas-tile__menu"
         variant="text"
         scale="sm"
@@ -33,9 +33,17 @@
         <of-icon scale="sm" name="more alt" />
       </of-button>
     </div>
-    <div v-if="fieldsToShow.length > 0" class="workflow-canvas-tile__content">
+    <div v-if="fieldsToShow.length > 0 && !hasPlaceholder" class="workflow-canvas-tile__content">
       <div v-for="field in fieldsToShow" :key="field.name" class="workflow-canvas-tile__field">
-        <template v-if="field.type === 'toggle'">
+        <!-- Custom component rendering -->
+        <component
+          v-if="isComponent(field.tileValue)"
+          :is="field.tileValue"
+          :model-value="getFieldValue(field.name)"
+          @update:model-value="() => {}"
+        />
+        <!-- Standard field rendering -->
+        <template v-else-if="field.type === 'toggle'">
           <label class="workflow-canvas-tile__field-label">
             {{ field.label }}:
             {{ getFieldValue(field.name) ? effectiveLabels.yes : effectiveLabels.no }}
@@ -83,10 +91,25 @@ export default defineComponent({
     nodeTypes: {
       type: Object as () => NodeTypeConfig,
       default: () => ({})
+    },
+    viewMode: {
+      type: Boolean,
+      default: false
     }
   },
   emits: ['menu-click'],
   setup(props, { emit }) {
+    // Helper to check if field.value is a valid component
+    const isComponent = (value: any): boolean => {
+      if (!value) return false
+      // Check if it's a component object (has render, setup, or template)
+      if (typeof value === 'object' && (value.render || value.setup || value.template)) return true
+      // Check if it's a function component
+      if (typeof value === 'function') return true
+      // Check if it's an async component
+      if (value.__asyncLoader) return true
+      return false
+    }
     // Use DEFAULT_LABELS if no labels provided
     const effectiveLabels = computed(() => props.labels || DEFAULT_LABELS)
 
@@ -95,34 +118,81 @@ export default defineComponent({
       return props.nodeTypes[props.node.kind] || null
     })
 
+    const mergedDefinition = computed(() => {
+      const base = nodeTypeDefinition.value
+      const override = props.node.definition
+
+      return {
+        icon: override?.icon ?? base?.icon,
+        label: override?.label ?? base?.label,
+        configPanelLabel: override?.configPanelLabel ?? base?.configPanelLabel,
+        tileLabel: override?.tileLabel ?? base?.tileLabel,
+        placeholder: override?.placeholder ?? base?.placeholder,
+        fields: override?.fields ?? base?.fields ?? [],
+        cssClass: override?.cssClass ?? base?.cssClass
+      }
+    })
+
     const nodeData = computed(() => {
       const data = props.node.data as Record<string, any> | undefined
       return data || {}
     })
 
     const displayIcon = computed(() => {
-      // Priority: node data icon > type definition icon
-      const data = props.node.data as NodeData | undefined
-      return data?.icon || nodeTypeDefinition.value?.icon
+      // Use merged definition icon
+      return mergedDefinition.value.icon
     })
 
     const hasNodeType = computed(() => {
       return props.node.kind && props.node.kind !== ''
     })
 
+    const hasPlaceholder = computed(() => {
+      return !!mergedDefinition.value.placeholder || !hasNodeType.value
+    })
+
     const displayTitle = computed(() => {
-      // If no type is set, show placeholder text
+      const data = props.node.data as Record<string, any> | undefined
+
+      // Priority 1: placeholder from merged definition
+      if (mergedDefinition.value.placeholder) {
+        return mergedDefinition.value.placeholder
+      }
+
+      // Priority 2: no type set
       if (!hasNodeType.value) {
         return effectiveLabels.value.selectNodeTypePlaceholder
       }
-      // For backward compatibility, check data.title first, then fall back to type label or kind
-      const data = props.node.data as NodeData | undefined
-      return data?.title || nodeTypeDefinition.value?.label || props.node.kind
+
+      // Priority 3: data.title
+      if (data?.title) {
+        return data.title
+      }
+
+      // Priority 4: tileLabel
+      if (mergedDefinition.value.tileLabel) {
+        return mergedDefinition.value.tileLabel
+      }
+
+      // Priority 5: configPanelLabel
+      if (mergedDefinition.value.configPanelLabel) {
+        return mergedDefinition.value.configPanelLabel
+      }
+
+      // Priority 6: label
+      if (mergedDefinition.value.label) {
+        return mergedDefinition.value.label
+      }
+
+      // Priority 7: kind
+      return props.node.kind
     })
 
     const fieldsToShow = computed(() => {
-      if (!nodeTypeDefinition.value) return []
-      return nodeTypeDefinition.value.fields.filter(field => field.showInTile)
+      if (!mergedDefinition.value.fields) {
+        return []
+      }
+      return mergedDefinition.value.fields.filter((field: any) => field.showInTile)
     })
 
     const getFieldValue = (fieldName: string) => {
@@ -135,12 +205,15 @@ export default defineComponent({
       effectiveLabels,
       nodeData,
       nodeTypeDefinition,
+      mergedDefinition,
       hasNodeType,
+      hasPlaceholder,
       displayIcon,
       displayTitle,
       fieldsToShow,
       getFieldValue,
-      handleMenuClick
+      handleMenuClick,
+      isComponent
     }
   }
 })

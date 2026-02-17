@@ -100,14 +100,59 @@ export function removeEdge(graph: WorkflowGraph, edgeId: string): WorkflowGraph 
 }
 
 /**
+ * Check if an entity's type is compatible with a target group's type
+ * - Nodes can be added to any group (node kinds and group kinds are separate namespaces)
+ * - Groups can only be added to groups with matching kinds (or no kind)
+ * Returns true if:
+ * - Entity is a node (nodes can always be added to groups)
+ * - Entity is a group with no kind
+ * - Target group has no kind
+ * - Both are groups with matching kinds
+ * Returns false if:
+ * - Entity is a group with a kind that doesn't match the target group's kind
+ */
+export function isEntityTypeCompatibleWithGroup(
+  graph: WorkflowGraph,
+  entityId: string,
+  targetGroupId: string
+): boolean {
+  const node = findNode(graph, entityId)
+  const entityGroup = findGroup(graph, entityId)
+  const targetGroup = findGroup(graph, targetGroupId)
+
+  if (!targetGroup) return true
+
+  // If entity is a node, always allow (node kinds and group kinds are separate)
+  if (node) return true
+
+  // Entity is a group - check kind compatibility for nested groups
+  if (!entityGroup) return true
+
+  const entityKind = entityGroup.kind || ''
+  const groupKind = targetGroup.kind || ''
+
+  // If either has no kind, allow
+  if (!entityKind || !groupKind) return true
+
+  // Both have kinds - they must match
+  return entityKind === groupKind
+}
+
+/**
  * Add an entity (node or group) to a group (immutable)
  * Automatically updates the group bounds to fit the new entity
+ * Validates type compatibility before adding
  */
 export function addEntityToGroup(
   graph: WorkflowGraph,
   entityId: string,
   groupId: string
 ): WorkflowGraph {
+  // Check type compatibility before adding
+  if (!isEntityTypeCompatibleWithGroup(graph, entityId, groupId)) {
+    return graph // Silent fail - return unchanged graph
+  }
+
   let updatedGraph = {
     ...graph,
     groups: graph.groups.map(g => {
@@ -204,9 +249,10 @@ export const getParentGroup = (graph: WorkflowGraph, entityId: string): Workflow
   graph.groups.find(g => g.containedIds.includes(entityId))
 
 /**
- * Get all descendants (recursive) of a group (internal use only)
+ * Get all descendants (recursive) of a group
+ * Returns an array of all entity IDs (nodes and groups) contained within the group
  */
-const getGroupDescendants = (graph: WorkflowGraph, groupId: string): string[] => {
+export function getGroupDescendants(graph: WorkflowGraph, groupId: string): string[] {
   const group = findGroup(graph, groupId)
   if (!group) return []
 
@@ -224,6 +270,18 @@ const getGroupDescendants = (graph: WorkflowGraph, groupId: string): string[] =>
   }
 
   return descendants
+}
+
+/**
+ * Check if a group is a descendant of another group (i.e., nested inside it)
+ */
+export function isGroupDescendantOf(
+  graph: WorkflowGraph,
+  groupId: string,
+  potentialAncestorId: string
+): boolean {
+  const descendants = getGroupDescendants(graph, potentialAncestorId)
+  return descendants.includes(groupId)
 }
 
 /**
@@ -340,10 +398,20 @@ export function calculateGroupBounds(
 export function updateGroupBounds(
   graph: WorkflowGraph,
   groupId: string,
-  padding: number = 20
+  padding: number = 20,
+  visitedGroups: Set<string> = new Set()
 ): WorkflowGraph {
   const group = findGroup(graph, groupId)
   if (!group) return graph
+
+  // Prevent infinite recursion by checking if we've already processed this group
+  if (visitedGroups.has(groupId)) {
+    console.warn(`[updateGroupBounds] Circular reference detected for group ${groupId}`)
+    return graph
+  }
+
+  // Add this group to the visited set
+  visitedGroups.add(groupId)
 
   const newBounds = calculateGroupBounds(graph, groupId, padding)
 
@@ -352,10 +420,10 @@ export function updateGroupBounds(
     groups: graph.groups.map(g =>
       g.id === groupId
         ? {
-            ...g,
-            position: { x: newBounds.x, y: newBounds.y },
-            size: { w: newBounds.w, h: newBounds.h }
-          }
+          ...g,
+          position: { x: newBounds.x, y: newBounds.y },
+          size: { w: newBounds.w, h: newBounds.h }
+        }
         : g
     )
   }
@@ -363,7 +431,7 @@ export function updateGroupBounds(
   // Recursively update parent group if this group is nested
   const parentGroup = getParentGroup(updatedGraph, groupId)
   if (parentGroup) {
-    updatedGraph = updateGroupBounds(updatedGraph, parentGroup.id, padding)
+    updatedGraph = updateGroupBounds(updatedGraph, parentGroup.id, padding, visitedGroups)
   }
 
   return updatedGraph
@@ -443,6 +511,47 @@ const defaultIdGenerator = (prefix: string) => () => {
 }
 
 /**
+ * Move all nodes below a Y threshold down by a specified offset
+ * This is useful when inserting a new node and needing to make space
+ * @param graph - The workflow graph
+ * @param yThreshold - The Y position threshold (nodes at or below this will be moved)
+ * @param offset - How much to move the nodes down (in pixels)
+ * @param excludeNodeId - Optional node ID to exclude from movement (e.g., the newly inserted node)
+ * @returns Updated graph with moved nodes
+ */
+export function moveNodesBelow(
+  graph: WorkflowGraph,
+  yThreshold: number,
+  offset: number,
+  excludeNodeId?: string
+): WorkflowGraph {
+  const updatedNodes = graph.nodes.map(node => {
+    // Skip the excluded node (if specified)
+    if (excludeNodeId && node.id === excludeNodeId) {
+      return node
+    }
+
+    // Move nodes at or below the threshold
+    if (node.position.y >= yThreshold) {
+      return {
+        ...node,
+        position: {
+          ...node.position,
+          y: node.position.y + offset
+        }
+      }
+    }
+
+    return node
+  })
+
+  return {
+    ...graph,
+    nodes: updatedNodes
+  }
+}
+
+/**
  * Handle adding a step to the workflow graph
  * Inserts a new node after a specified node, handling edge reconnection
  * @param graph - The workflow graph
@@ -475,14 +584,22 @@ export function handleAddStepToGraph(
 
   // Calculate position between the two nodes if there's an existing edge
   let position: Position
+  let shouldMoveNodesBelow = false
+  const nodeHeight = 100 // Default node height
+  const nodeSpacing = 20 // Default spacing between nodes
+  const totalOffset = nodeHeight + nodeSpacing
+
   if (afterNode && existingEdge) {
     const toNode = findNode(graph, existingEdge.to.entityId)
     if (toNode) {
-      // Place new node between the two connected nodes
+      // Place new node below the afterNode
+      const afterNodeHeight = afterNode.size?.h || nodeHeight
       position = {
-        x: (afterNode.position.x + toNode.position.x) / 2,
-        y: (afterNode.position.y + toNode.position.y) / 2
+        x: afterNode.position.x,
+        y: afterNode.position.y + afterNodeHeight + nodeSpacing
       }
+      // We need to move all nodes at or below the toNode's position
+      shouldMoveNodesBelow = true
     } else {
       // Fallback: place below the afterNode
       position = { x: afterNode.position.x, y: afterNode.position.y + 150 }
@@ -495,6 +612,16 @@ export function handleAddStepToGraph(
     position = { x: 100, y: 100 }
   }
 
+  // Move all nodes below the insertion point down to make space
+  let workingGraph = graph
+  if (shouldMoveNodesBelow && existingEdge) {
+    const toNode = findNode(graph, existingEdge.to.entityId)
+    if (toNode) {
+      // Move all nodes at or below the target node's position
+      workingGraph = moveNodesBelow(graph, toNode.position.y, totalOffset)
+    }
+  }
+
   // Create the new node
   const newNode: WorkflowNode = {
     id: newNodeId,
@@ -504,11 +631,12 @@ export function handleAddStepToGraph(
   }
 
   let updatedGraph: WorkflowGraph = {
-    ...graph,
-    nodes: [...graph.nodes, newNode]
+    ...workingGraph,
+    nodes: [...workingGraph.nodes, newNode]
   }
 
   // If the source node is in a group, add the new node to the same group
+  // Type compatibility is checked within addEntityToGroup
   if (event.inGroupId) {
     updatedGraph = addEntityToGroup(updatedGraph, newNodeId, event.inGroupId)
   }
@@ -545,6 +673,25 @@ export function handleAddStepToGraph(
       id: edgeIdGenerator(),
       from: { entityId: event.afterNodeId },
       to: { entityId: newNodeId }
+    })
+  }
+
+  // Update group bounds for all affected groups
+  // Collect all unique group IDs that contain nodes that were moved
+  if (shouldMoveNodesBelow) {
+    const affectedGroupIds = new Set<string>()
+
+    // Find all groups that contain moved nodes
+    updatedGraph.nodes.forEach(node => {
+      const parentGroup = getParentGroup(updatedGraph, node.id)
+      if (parentGroup) {
+        affectedGroupIds.add(parentGroup.id)
+      }
+    })
+
+    // Update bounds for each affected group (this handles parent updates recursively)
+    affectedGroupIds.forEach(groupId => {
+      updatedGraph = updateGroupBounds(updatedGraph, groupId)
     })
   }
 
@@ -637,13 +784,17 @@ export function addGroup(
   options?: {
     groupIdGenerator?: () => string
     position?: Position
-    title?: string
+    label?: string
     size?: Size
+    kind?: string
   }
 ): { graph: WorkflowGraph; newGroupId: string } {
   const groupIdGenerator = options?.groupIdGenerator || defaultIdGenerator('group')
-  const defaultTitle = options?.title || 'New Group'
+  // Note: This default label should typically be overridden by the caller using labels from WorkflowCanvasLabels
+  // See DEFAULT_LABELS.defaultGroupLabel for the internationalized version
+  const defaultLabel = options?.label || 'New Group'
   const defaultSize = options?.size || { w: 290, h: 140 }
+  const defaultKind = options?.kind || 'group'
 
   const newGroupId = groupIdGenerator()
 
@@ -673,8 +824,8 @@ export function addGroup(
   // Create new group (empty, suitable size for one node)
   const newGroup: WorkflowGroup = {
     id: newGroupId,
-    kind: 'group',
-    title: defaultTitle,
+    kind: defaultKind,
+    label: defaultLabel,
     position,
     size: defaultSize,
     containedIds: []

@@ -198,6 +198,7 @@ export function useConnections(options: UseConnectionsOptions) {
     connectionDragStart.value = null
     connectionPreview.value = null
     disconnectingEdge.value = null
+    connectionDragMoved.value = false
   }
 
   const handleMouseUp = () => {
@@ -223,6 +224,10 @@ export function useConnections(options: UseConnectionsOptions) {
     return !graph.value.edges.some(edge => edge.from.entityId === entityId)
   }
 
+  const hasIncomingConnection = (entityId: string): boolean => {
+    return graph.value.edges.some(edge => edge.to.entityId === entityId)
+  }
+
   return {
     connectionPreview,
     connectionDragStart,
@@ -235,6 +240,7 @@ export function useConnections(options: UseConnectionsOptions) {
     handleEntityHandleMouseLeave,
     handleConnectionDragMove,
     handleMouseUp,
-    isOutputFree
+    isOutputFree,
+    hasIncomingConnection
   }
 }

@@ -17,10 +17,16 @@ export type {
   AddStepEvent,
   ConnectEvent,
   WorkflowCanvasLabels,
+  WorkflowCanvasMode,
   NodeTypeConfig,
   NodeTypeDefinition,
   NodeFieldDefinition,
-  FieldType
+  NodeDefinitionOverride,
+  GroupTypeConfig,
+  GroupTypeDefinition,
+  GroupTypeFieldDefinition,
+  GroupDefinitionOverride,
+  NestedGroupConfig
 } from './types/workflow'
 
 // Constants
@@ -41,6 +47,7 @@ export {
   findGroupAtPosition,
   getEntityEdges,
   getParentGroup,
+  getGroupDescendants,
   calculateGroupBounds,
   updateGroupBounds,
   updateGroupPosition,
@@ -49,7 +56,10 @@ export {
   handleAddStepToGraph,
   handleConnectNodes,
   addNode,
-  addGroup
+  addGroup,
+  isEntityTypeCompatibleWithGroup,
+  isGroupDescendantOf,
+  moveNodesBelow
 } from './utils/graph-helpers'
 
 // Components

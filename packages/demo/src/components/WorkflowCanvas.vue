@@ -14,31 +14,232 @@
       </of-button>
     </div>
 
-    <div class="controls">
-      <label>
-        Max Group Depth:
-        <input
-          type="number"
-          v-model.number="maxGroupDepth"
-          min="0"
-          placeholder="No limit"
-          style="width: 80px; margin-left: 8px"
-        />
-        <span style="margin-left: 8px; color: #666; font-size: 13px">
-          (leave empty for no limit, 0 means no nesting allowed)
-        </span>
-      </label>
-    </div>
+    <details class="demo-section">
+      <summary>Canvas Basics</summary>
+
+      <div class="controls">
+        <div class="control-item">
+          <strong>Canvas Mode:</strong>
+          <select
+            v-model="canvasMode"
+            style="
+              margin-left: 8px;
+              padding: 6px 8px;
+              border: 1px solid #ddd;
+              border-radius: 4px;
+              font-size: 14px;
+            "
+          >
+            <option value="view">View (Read-only)</option>
+            <option value="edit">Edit (Interactive)</option>
+          </select>
+          <span style="margin-left: 8px; color: #666; font-size: 13px">
+            (view mode: no interactions, no grid | edit mode: full editing)
+          </span>
+        </div>
+        <div class="control-item">
+          <strong>Max Group Depth:</strong>
+          <input
+            type="number"
+            v-model.number="maxGroupDepth"
+            min="0"
+            placeholder="No limit"
+            style="width: 80px; margin-left: 8px"
+          />
+          <span style="margin-left: 8px; color: #666; font-size: 13px">
+            (leave empty for no limit, 0 means no nesting allowed)
+          </span>
+        </div>
+        <div class="control-item">
+          <strong>Hide Empty Handles:</strong>
+          <input
+            type="checkbox"
+            v-model="hideEmptyHandles"
+            style="margin-left: 8px"
+          />
+          <span style="margin-left: 8px; color: #666; font-size: 13px">
+            (hides input/output handles when they have no connections)
+          </span>
+        </div>
+      </div>
+    </details>
+
+    <details class="demo-section">
+      <summary>Direct Data Manipulation Demo</summary>
+      <p class="demo-description">
+        These buttons demonstrate programmatic manipulation of the workflow
+        graph. Changes are made directly to the
+        <code>workflowGraph</code> variable, and the canvas updates
+        automatically.
+      </p>
+      <div class="demo-actions">
+        <of-button @click="moveFirstNodeProgrammatically" variant="outlined">
+          Move First Node +50px
+        </of-button>
+        <of-button @click="updateAllNodeData" variant="outlined">
+          Update All Node Data
+        </of-button>
+        <of-button @click="batchUpdatePositions" variant="outlined">
+          Batch Move All Nodes
+        </of-button>
+        <of-button @click="addNodeDirectly" variant="outlined">
+          Add Node Directly
+        </of-button>
+        <of-button @click="resizeFirstGroup" variant="outlined">
+          Resize First Group
+        </of-button>
+        <of-button @click="updateGroupData" variant="outlined">
+          Update Group Data
+        </of-button>
+      </div>
+    </details>
+
+    <details class="demo-section">
+      <summary>Per-Node Definition Override Demo</summary>
+      <p class="demo-description">
+        These buttons demonstrate per-node definition overrides. Individual
+        nodes can override any property from their type definition including
+        fields, icon, label, placeholder, and cssClass using
+        <code>node.definition</code>. Select a node after clicking to see the
+        changes in the config panel.
+      </p>
+      <div class="demo-actions">
+        <of-button @click="makeFirstNodeTitleReadonly" variant="outlined">
+          Make First Node Title Readonly
+        </of-button>
+        <of-button @click="hideDescriptionForFirstNode" variant="outlined">
+          Hide Description Field
+        </of-button>
+        <of-button @click="customizeLabelForFirstNode" variant="outlined">
+          Customize Field Labels
+        </of-button>
+        <of-button @click="makeMultipleFieldsReadonly" variant="outlined">
+          Multiple Fields Readonly
+        </of-button>
+        <of-button @click="makeFirstGroupFieldsReadonly" variant="outlined">
+          Make Group Fields Readonly
+        </of-button>
+        <of-button @click="resetFieldConfigs" variant="outlined">
+          Reset All Field Configs
+        </of-button>
+      </div>
+    </details>
+
+    <details class="demo-section">
+      <summary>Custom Label Demo (definition.label)</summary>
+      <p class="demo-description">
+        These buttons demonstrate the label override feature. Use
+        <code>node.definition.label</code> or
+        <code>group.definition.label</code>
+        to override the displayed title in tiles, group headers, and config
+        panel headers. Select a node or group after clicking to see the custom
+        label in action.
+      </p>
+      <div class="demo-actions">
+        <of-button @click="setNodeLabel" variant="outlined">
+          Set Custom Node Label
+        </of-button>
+        <of-button @click="setGroupLabel" variant="outlined">
+          Set Custom Group Label
+        </of-button>
+        <of-button @click="clearNodeLabel" variant="outlined">
+          Clear Node Label
+        </of-button>
+        <of-button @click="clearGroupLabel" variant="outlined">
+          Clear Group Label
+        </of-button>
+      </div>
+    </details>
+
+    <details class="demo-section">
+      <summary>Nested Group Configuration Demo</summary>
+      <p class="demo-description">
+        These buttons demonstrate nested group configuration with custom labels
+        and placeholders. Use <code>group.nested</code> to override the default
+        nested group properties from the type definition. Click "+ group" inside
+        a group to see the configured label and placeholder in action.
+      </p>
+      <div class="demo-actions">
+        <of-button @click="setCustomNestedConfig" variant="outlined">
+          Set Custom Nested Config
+        </of-button>
+        <of-button @click="clearNestedConfig" variant="outlined">
+          Clear Nested Config
+        </of-button>
+      </div>
+    </details>
+
+    <details class="demo-section">
+      <summary>Separate Panel/Tile Labels Demo</summary>
+      <p class="demo-description">
+        These buttons demonstrate separate labels for config panel vs tile
+        display. Use <code>node.definition.configPanelLabel</code> for the panel
+        header and <code>node.definition.tileLabel</code> for the tile. Both
+        fall back to <code>label</code> if not specified. Select a node after
+        clicking to see the different labels in action.
+      </p>
+      <div class="demo-actions">
+        <of-button @click="setSeparateLabels" variant="outlined">
+          Set Separate Labels
+        </of-button>
+        <of-button @click="clearSeparateLabels" variant="outlined">
+          Clear Separate Labels
+        </of-button>
+      </div>
+    </details>
+
+    <details class="demo-section">
+      <summary>Group Field Visibility Demo</summary>
+      <p class="demo-description">
+        These buttons demonstrate controlling field visibility in the group
+        config panel. Use <code>showTypeField</code> and
+        <code>showTitleField</code> to hide/show the type and title fields. Can
+        be set at type level or per-instance via <code>group.definition</code>.
+        Select a group after clicking to see the changes.
+      </p>
+      <div class="demo-actions">
+        <of-button @click="hideGroupTypeField" variant="outlined">
+          Hide Type Field
+        </of-button>
+        <of-button @click="hideGroupTitleField" variant="outlined">
+          Hide Title Field
+        </of-button>
+        <of-button @click="showAllGroupFields" variant="outlined">
+          Show All Fields
+        </of-button>
+      </div>
+    </details>
+
+    <details class="demo-section">
+      <summary>Per-Group Max Depth Demo</summary>
+      <p class="demo-description">
+        These buttons demonstrate per-group depth limits using
+        <code>group.maxDepth</code>. Individual groups can override the global
+        <code>maxGroupDepth</code> setting. This allows different groups to have
+        different nesting restrictions.
+      </p>
+      <div class="demo-actions">
+        <of-button @click="setGroupMaxDepth" variant="outlined">
+          Set First Group Max Depth = 1
+        </of-button>
+        <of-button @click="clearGroupMaxDepth" variant="outlined">
+          Clear Group Max Depth
+        </of-button>
+      </div>
+    </details>
 
     <div class="workflow-demo">
       <WorkflowCanvas
         ref="workflowCanvasRef"
         v-model="workflowGraph"
         v-model:selected-id="selectedId"
+        :mode="canvasMode"
         :width="1000"
         :height="600"
         :max-group-depth="maxGroupDepth"
+        :hide-empty-handles="hideEmptyHandles"
         :node-types="nodeTypes"
+        :group-types="groupTypes"
         @node-add="handleNodeAdd"
         @group-add="handleGroupAdd"
         @edge-add="handleEdgeAdd"
@@ -103,7 +304,9 @@ import {
   type WorkflowNode,
   type WorkflowEdge,
   type WorkflowGroup,
-  type NodeTypeConfig
+  type NodeTypeConfig,
+  type GroupTypeConfig,
+  type WorkflowCanvasMode
 } from 'oceanfront-workflow-canvas'
 import 'oceanfront-workflow-canvas/css'
 
@@ -112,7 +315,11 @@ const nodeTypes: NodeTypeConfig = {
   trigger: {
     type: 'trigger',
     label: 'Trigger',
+    configPanelLabel: 'Workflow Trigger Configuration',
+    tileLabel: 'Trigger',
     icon: 'hourglass',
+    addNodeButtonText: '+ action',
+    addGroupButtonText: '+ group',
     fields: [
       {
         name: 'title',
@@ -144,7 +351,11 @@ const nodeTypes: NodeTypeConfig = {
   action: {
     type: 'action',
     label: 'Action',
+    configPanelLabel: 'Action Step Configuration',
+    tileLabel: 'Action',
     icon: 'gear',
+    addNodeButtonText: '+ next',
+    addGroupButtonText: '+ group',
     fields: [
       {
         name: 'title',
@@ -165,6 +376,7 @@ const nodeTypes: NodeTypeConfig = {
         name: 'actionType',
         type: 'select',
         label: 'Action Type',
+        showInTile: true,
         items: [
           { value: 'email', text: 'Send Email' },
           { value: 'update', text: 'Update Record' },
@@ -220,176 +432,274 @@ const nodeTypes: NodeTypeConfig = {
   }
 }
 
-// Initial workflow graph state - Complex linear workflow with branches (one in, one out per node)
+// Group type configuration
+const groupTypes: GroupTypeConfig = {
+  action: {
+    type: 'group',
+    label: 'action group type',
+    addNodeButtonText: '+ step',
+    addGroupButtonText: '+ subgroup',
+    fields: [
+      {
+        name: 'description',
+        type: 'textarea',
+        label: 'Description',
+        placeholder: 'Describe this group'
+      },
+      {
+        name: 'priority',
+        type: 'select',
+        label: 'Priority',
+        items: [
+          { value: 'low', text: 'Low' },
+          { value: 'medium', text: 'Medium' },
+          { value: 'high', text: 'High' }
+        ]
+      },
+      {
+        name: 'owner',
+        type: 'text',
+        label: 'Owner',
+        placeholder: 'Enter owner name'
+      },
+      {
+        name: 'lockParent',
+        type: 'toggle',
+        label: 'Lock to Parent',
+        placeholder: 'Prevent moving outside parent group'
+      }
+    ],
+    nested: {
+      label: 'Sub-Group',
+      placeholder: 'Configure sub-group',
+      fields: [
+        {
+          name: 'description',
+          type: 'textarea',
+          label: 'Sub-Group Description',
+          placeholder: 'Describe this sub-group'
+        },
+        {
+          name: 'priority',
+          type: 'select',
+          label: 'Priority',
+          items: [
+            { value: 'low', text: 'Low' },
+            { value: 'high', text: 'High' }
+          ]
+        }
+      ]
+    }
+  },
+  phase: {
+    type: 'phase',
+    label: 'Workflow Phase',
+    lockParent: true, // All phase groups are locked to parent by default
+    fields: [
+      {
+        name: 'description',
+        type: 'textarea',
+        label: 'Description',
+        placeholder: 'Describe this phase'
+      },
+      {
+        name: 'duration',
+        type: 'number',
+        label: 'Estimated Duration (days)',
+        placeholder: '0'
+      },
+      {
+        name: 'status',
+        type: 'select',
+        label: 'Status',
+        items: [
+          { value: 'not_started', text: 'Not Started' },
+          { value: 'in_progress', text: 'In Progress' },
+          { value: 'completed', text: 'Completed' }
+        ]
+      },
+      {
+        name: 'lockParent',
+        type: 'toggle',
+        label: 'Lock to Parent',
+        placeholder: 'Prevent moving outside parent group'
+      }
+    ],
+    nested: {
+      label: 'Sub-Phase',
+      placeholder: 'Configure phase details',
+      fields: [
+        {
+          name: 'description',
+          type: 'textarea',
+          label: 'Sub-Phase Description',
+          placeholder: 'Describe this sub-phase'
+        },
+        {
+          name: 'duration',
+          type: 'number',
+          label: 'Duration (days)',
+          placeholder: '0'
+        }
+      ]
+    }
+  }
+}
+
+// Initial workflow graph state - Comprehensive demo showcasing various features
 const initialWorkflowGraph: WorkflowGraph = {
   nodes: [
     {
-      id: 'trigger-1',
+      id: 'node-trigger-1',
       kind: 'trigger',
       position: {
-        x: 100,
-        y: 50
+        x: 49,
+        y: 39
       },
       data: {
-        title: 'New or Updated Quote',
-        description: 'Triggers when a quote is created or modified',
+        title: 'Quote Created',
+        description: 'Triggered when a new quote is created in the system',
         event: 'new_quote'
-      },
-      locked: true
+      }
     },
     {
-      id: 'action-1',
+      id: 'node-action-1',
       kind: 'action',
       position: {
-        x: 99,
-        y: 250
+        x: 48,
+        y: 232
       },
       data: {
-        title: 'Validate Quote Data',
-        description: 'Checks for required fields and data integrity',
+        title: 'Validate Quote',
+        description: 'Check if quote meets minimum requirements',
         actionType: 'update',
         enabled: true
-      },
-      readonly: true
+      }
     },
     {
-      id: 'condition-1',
+      id: 'node-condition-1',
       kind: 'condition',
       position: {
-        x: 101,
-        y: 443
+        x: 48,
+        y: 451
       },
       data: {
-        title: 'Check Quote Value',
-        description: 'Route based on quote value threshold',
+        title: 'Amount > $10,000?',
+        description: 'Check if quote amount exceeds threshold',
         operator: 'greater_than',
         threshold: 10000
       }
     },
     {
-      id: 'condition-2',
-      kind: 'condition',
-      position: {
-        x: 838,
-        y: 756
-      },
-      data: {
-        title: 'Manager Decision',
-        description: 'Wait for manager to approve or reject',
-        operator: 'equals',
-        threshold: 1
-      }
-    },
-    {
-      id: 'action-10',
+      id: 'node-action-2',
       kind: 'action',
       position: {
-        x: 468,
-        y: 47
+        x: 50,
+        y: 651
       },
       data: {
-        title: 'Financial Analysis',
-        description: 'Perform detailed financial review',
-        actionType: 'update',
-        enabled: true
-      }
-    },
-    {
-      id: 'action-11',
-      kind: 'action',
-      position: {
-        x: 467,
-        y: 219
-      },
-      data: {
-        title: 'Request Executive Approval',
-        description: 'Route to VP or C-level for approval',
+        title: 'Notify Sales Manager',
+        description: 'Send notification for high-value quotes',
         actionType: 'email',
         enabled: true
       }
     },
     {
-      id: 'condition-3',
-      kind: 'condition',
-      position: {
-        x: 469,
-        y: 387
-      },
-      data: {
-        title: 'Executive Decision',
-        description: 'Wait for executive approval',
-        operator: 'equals',
-        threshold: 1
-      }
-    },
-    {
-      id: 'action-13',
+      id: 'node-action-3',
       kind: 'action',
       position: {
-        x: 470,
-        y: 562
+        x: 50,
+        y: 878
       },
       data: {
-        title: 'Send Contract',
-        description: 'Email contract to customer',
-        actionType: 'email',
-        enabled: true
-      }
-    },
-    {
-      id: 'action-15',
-      kind: 'action',
-      position: {
-        x: 840,
-        y: 45
-      },
-      data: {
-        title: 'Log Executive Rejection',
-        description: 'Record executive rejection',
+        title: 'Create Approval Task',
+        description: 'Require manager approval for large quotes',
         actionType: 'create',
         enabled: true
       }
     },
     {
-      id: 'action-16',
+      id: 'node-action-4',
       kind: 'action',
       position: {
-        x: 839,
-        y: 210
+        x: 340,
+        y: 651
       },
       data: {
-        title: 'Escalate Rejection',
-        description: 'Notify senior management',
+        title: 'Auto-Approve Quote',
+        description: 'Automatically approve standard quotes',
+        actionType: 'update',
+        enabled: true
+      }
+    },
+    {
+      id: 'node-action-5',
+      kind: 'action',
+      position: {
+        x: 421,
+        y: 85
+      },
+      data: {
+        title: 'Update CRM',
+        description: 'Sync quote data to CRM system',
+        actionType: 'update',
+        enabled: true
+      }
+    },
+    {
+      id: 'node-action-6',
+      kind: 'action',
+      position: {
+        x: 422,
+        y: 284
+      },
+      data: {
+        title: 'Generate PDF',
+        description: 'Create PDF document for quote',
+        actionType: 'create',
+        enabled: true
+      }
+    },
+    {
+      id: 'node-action-7',
+      kind: 'action',
+      position: {
+        x: 771,
+        y: 80
+      },
+      data: {
+        title: 'Email Customer',
+        description: 'Send quote to customer email',
         actionType: 'email',
         enabled: true
       }
     },
     {
-      id: 'node-1770122294598',
+      id: 'node-action-8',
       kind: 'action',
       position: {
-        x: 838,
-        y: 377
+        x: 773,
+        y: 273
       },
       data: {
-        title: 'New Action',
-        description: 'Configure this action',
-        actionType: 'update',
+        title: 'Log Activity',
+        description: 'Record quote activity in audit log',
+        actionType: 'create',
         enabled: true
       }
     },
     {
-      id: 'node-1770122302593',
+      id: 'node-action-9',
       kind: 'action',
       position: {
-        x: 838,
-        y: 560
+        x: 792,
+        y: 651
       },
       data: {
-        title: 'New Action',
-        description: 'Configure this action',
+        title: 'Archive Old Quotes',
+        description: 'Move expired quotes to archive',
         actionType: 'update',
-        enabled: true
+        enabled: false
       }
     }
   ],
@@ -397,148 +707,136 @@ const initialWorkflowGraph: WorkflowGraph = {
     {
       id: 'edge-1',
       from: {
-        entityId: 'trigger-1'
+        entityId: 'node-trigger-1'
       },
       to: {
-        entityId: 'action-1'
-      },
-      locked: true
+        entityId: 'node-action-1'
+      }
     },
     {
       id: 'edge-2',
       from: {
-        entityId: 'action-1'
+        entityId: 'node-action-1'
       },
       to: {
-        entityId: 'condition-1'
+        entityId: 'node-condition-1'
       }
     },
     {
-      id: 'edge-12',
+      id: 'edge-3',
       from: {
-        entityId: 'condition-1'
+        entityId: 'node-condition-1'
       },
       to: {
-        entityId: 'action-10'
+        entityId: 'node-action-2'
       }
     },
     {
-      id: 'edge-13',
+      id: 'edge-4',
       from: {
-        entityId: 'action-10'
+        entityId: 'node-condition-1'
       },
       to: {
-        entityId: 'action-11'
+        entityId: 'node-action-4'
       }
     },
     {
-      id: 'edge-14',
+      id: 'edge-5',
       from: {
-        entityId: 'action-11'
+        entityId: 'node-action-2'
       },
       to: {
-        entityId: 'condition-3'
+        entityId: 'node-action-3'
       }
     },
     {
-      id: 'edge-19',
+      id: 'edge-6',
       from: {
-        entityId: 'action-15'
+        entityId: 'node-action-5'
       },
       to: {
-        entityId: 'action-16'
+        entityId: 'node-action-6'
       }
     },
     {
-      id: 'edge-1769669311940',
+      id: 'edge-7',
       from: {
-        entityId: 'condition-3'
+        entityId: 'node-action-7'
       },
       to: {
-        entityId: 'action-13'
+        entityId: 'node-action-8'
       }
     },
     {
-      id: 'edge-1769669319694',
+      id: 'edge-8',
       from: {
-        entityId: 'action-13'
+        entityId: 'node-action-6'
       },
       to: {
-        entityId: 'action-15'
-      }
-    },
-    {
-      id: 'edge-1770122310274',
-      from: {
-        entityId: 'node-1770122294598'
-      },
-      to: {
-        entityId: 'node-1770122302593'
-      }
-    },
-    {
-      id: 'edge-1770122312670',
-      from: {
-        entityId: 'action-16'
-      },
-      to: {
-        entityId: 'group-1770122290693'
-      }
-    },
-    {
-      id: 'edge-1770122321167',
-      from: {
-        entityId: 'group-5'
-      },
-      to: {
-        entityId: 'condition-2'
+        entityId: 'node-action-7'
       }
     }
   ],
   groups: [
     {
-      id: 'group-4',
-      kind: 'group',
-      title: 'Executive Approval',
+      id: 'group-processing-main',
+      kind: 'phase',
+      label: 'Quote Processing Phase',
+      labelRight: 'Phase 1',
       position: {
-        x: 447,
-        y: 27
+        x: 401,
+        y: 40
       },
       size: {
-        w: 293,
-        h: 655
+        w: 662,
+        h: 445
       },
-      containedIds: ['action-10', 'action-13', 'condition-3', 'action-11'],
-      // locked: true,
-      readonly: true
+      containedIds: ['group-processing-sub', 'node-action-5', 'node-action-6'],
+      data: {
+        description: 'Main processing phase for quote handling',
+        duration: 2,
+        status: 'in_progress',
+        lockParent: true
+      }
     },
     {
-      id: 'group-5',
-      kind: 'group',
-      title: 'Executive Rejection',
+      id: 'group-processing-sub',
+      kind: 'action',
+      label: 'Notification Actions',
       position: {
-        x: 798,
-        y: 25
+        x: 745,
+        y: 60
       },
       size: {
-        w: 330,
-        h: 675
+        w: 298,
+        h: 405
       },
-      containedIds: ['action-15', 'group-1770122290693', 'action-16']
+      containedIds: ['node-action-7', 'node-action-8'],
+      data: {
+        description: 'Handle all customer notifications',
+        priority: 'high',
+        owner: 'Sales Team'
+      }
     },
     {
-      id: 'group-1770122290693',
-      kind: 'group',
-      title: 'New Group',
+      id: 'group-admin',
+      kind: 'action',
+      label: 'Administrative Tasks',
       position: {
-        x: 818,
-        y: 357
+        x: 766,
+        y: 617
       },
       size: {
-        w: 290,
-        h: 323
+        w: 298,
+        h: 207
       },
-      containedIds: ['node-1770122294598', 'node-1770122302593']
+      maxDepth: 0,
+      containedIds: [],
+      data: {
+        description: 'Background administrative operations',
+        priority: 'low',
+        owner: 'System Admin'
+      }
     }
   ]
 }
@@ -551,10 +849,403 @@ const workflowGraph = ref<WorkflowGraph>(
 const selectedId = ref<string | null>(null)
 const workflowCanvasRef = ref<InstanceType<typeof WorkflowCanvas> | null>(null)
 const maxGroupDepth = ref<number | null>(null)
+const hideEmptyHandles = ref(true)
+const canvasMode = ref<WorkflowCanvasMode>('edit')
 
 function resetCanvas() {
   workflowGraph.value = JSON.parse(JSON.stringify(initialWorkflowGraph))
   selectedId.value = null
+}
+
+// Direct data manipulation functions - demonstrating programmatic graph updates
+function moveFirstNodeProgrammatically() {
+  if (workflowGraph.value.nodes.length > 0) {
+    const node = workflowGraph.value.nodes[0]
+    node.position.x += 50
+    node.position.y += 50
+    logEvent('programmatic-move', {
+      nodeId: node.id,
+      newPosition: { x: node.position.x, y: node.position.y }
+    })
+  }
+}
+
+function updateAllNodeData() {
+  const timestamp = new Date().toISOString()
+  workflowGraph.value = {
+    ...workflowGraph.value,
+    nodes: workflowGraph.value.nodes.map((node) => ({
+      ...node,
+      data: {
+        ...(node.data as any),
+        lastUpdated: timestamp,
+        programmaticallyModified: true
+      }
+    }))
+  }
+  logEvent('programmatic-update-all', {
+    count: workflowGraph.value.nodes.length,
+    timestamp
+  })
+}
+
+function batchUpdatePositions() {
+  workflowGraph.value.nodes.forEach((node, index) => {
+    node.position.x += index % 2 === 0 ? 20 : -20
+    node.position.y += 10
+  })
+  logEvent('programmatic-batch-move', {
+    count: workflowGraph.value.nodes.length
+  })
+}
+
+function addNodeDirectly() {
+  const newNode: WorkflowNode = {
+    id: `node-${Date.now()}-programmatic`,
+    kind: 'action',
+    position: {
+      x: Math.random() * 500 + 50,
+      y: Math.random() * 300 + 50
+    },
+    data: {
+      title: 'Programmatically Added Node',
+      description: 'This node was added by directly modifying the graph data',
+      createdAt: new Date().toISOString()
+    }
+  }
+  workflowGraph.value.nodes.push(newNode)
+  logEvent('programmatic-add-node', {
+    nodeId: newNode.id,
+    position: newNode.position
+  })
+}
+
+function resizeFirstGroup() {
+  if (workflowGraph.value.groups.length > 0) {
+    const group = workflowGraph.value.groups[0]
+    group.size.w += 50
+    group.size.h += 30
+    logEvent('programmatic-resize-group', {
+      groupId: group.id,
+      newSize: { w: group.size.w, h: group.size.h }
+    })
+  }
+}
+
+function updateGroupData() {
+  const timestamp = new Date().toISOString()
+  workflowGraph.value.groups.forEach((group) => {
+    group.data = {
+      ...(group.data as any),
+      lastModified: timestamp,
+      programmaticallyUpdated: true
+    }
+  })
+  logEvent('programmatic-update-groups', {
+    count: workflowGraph.value.groups.length,
+    timestamp
+  })
+}
+
+// Per-node definition override functions
+function makeFirstNodeTitleReadonly() {
+  if (workflowGraph.value.nodes.length > 0) {
+    const node = workflowGraph.value.nodes[0]
+    const baseFields = nodeTypes[node.kind]?.fields || []
+
+    // Create a copy of base fields with title field set to readonly
+    const overrideFields = baseFields.map((field) =>
+      field.name === 'title' ? { ...field, readonly: true } : { ...field }
+    )
+
+    node.definition = {
+      ...node.definition,
+      fields: overrideFields
+    }
+
+    logEvent('make-field-readonly', { nodeId: node.id, field: 'title' })
+  }
+}
+
+function hideDescriptionForFirstNode() {
+  if (workflowGraph.value.nodes.length > 0) {
+    const node = workflowGraph.value.nodes[0]
+    const baseFields = nodeTypes[node.kind]?.fields || []
+
+    // Create a copy of base fields with description field hidden
+    const overrideFields = baseFields.map((field) =>
+      field.name === 'description' ? { ...field, visible: false } : { ...field }
+    )
+
+    node.definition = {
+      ...node.definition,
+      fields: overrideFields
+    }
+    logEvent('hide-field', { nodeId: node.id, field: 'description' })
+  }
+}
+
+function customizeLabelForFirstNode() {
+  if (workflowGraph.value.nodes.length > 0) {
+    const node = workflowGraph.value.nodes[0]
+    const baseFields = nodeTypes[node.kind]?.fields || []
+
+    // Create a copy of base fields with title field customized
+    const overrideFields = baseFields.map((field) =>
+      field.name === 'title'
+        ? {
+            ...field,
+            label: 'Custom Title Label',
+            placeholder: 'Enter custom title here',
+            required: true
+          }
+        : { ...field }
+    )
+
+    node.definition = {
+      ...node.definition,
+      fields: overrideFields
+    }
+    logEvent('customize-field-label', { nodeId: node.id, field: 'title' })
+  }
+}
+
+function makeMultipleFieldsReadonly() {
+  if (workflowGraph.value.nodes.length > 0) {
+    const node = workflowGraph.value.nodes[0]
+    const baseFields = nodeTypes[node.kind]?.fields || []
+
+    // Create a copy of base fields with multiple fields set to readonly
+    const readonlyFields = ['title', 'description', 'event']
+    const overrideFields = baseFields.map((field) =>
+      readonlyFields.includes(field.name)
+        ? { ...field, readonly: true }
+        : { ...field }
+    )
+
+    node.definition = {
+      ...node.definition,
+      fields: overrideFields
+    }
+    logEvent('make-multiple-fields-readonly', { nodeId: node.id })
+  }
+}
+
+function makeFirstGroupFieldsReadonly() {
+  if (workflowGraph.value.groups.length > 0) {
+    const group = workflowGraph.value.groups[0]
+    const baseFields = groupTypes[group.kind]?.fields || []
+
+    // Create a copy of base fields with multiple fields set to readonly
+    const readonlyFields = ['description', 'priority']
+    const overrideFields = baseFields.map((field) =>
+      readonlyFields.includes(field.name)
+        ? { ...field, readonly: true }
+        : { ...field }
+    )
+
+    group.definition = {
+      ...group.definition,
+      fields: overrideFields
+    }
+    logEvent('make-group-fields-readonly', { groupId: group.id })
+  }
+}
+
+function resetFieldConfigs() {
+  workflowGraph.value.nodes.forEach((node) => {
+    if (node.definition) {
+      node.definition = undefined
+    }
+  })
+  workflowGraph.value.groups.forEach((group) => {
+    if (group.definition) {
+      group.definition = undefined
+    }
+  })
+  logEvent('reset-field-configs', {
+    nodesReset: workflowGraph.value.nodes.length,
+    groupsReset: workflowGraph.value.groups.length
+  })
+}
+
+// Custom label functions
+function setNodeLabel() {
+  if (workflowGraph.value.nodes.length > 0) {
+    const node = workflowGraph.value.nodes[0]
+    node.definition = {
+      ...node.definition,
+      label: 'Custom Node Label via definition.label'
+    }
+    logEvent('set-node-label', { nodeId: node.id })
+  }
+}
+
+function setGroupLabel() {
+  if (workflowGraph.value.groups.length > 0) {
+    const group = workflowGraph.value.groups[0]
+    group.definition = {
+      ...group.definition,
+      label: 'Custom Group Label via definition.label'
+    }
+    logEvent('set-group-label', { groupId: group.id })
+  }
+}
+
+function clearNodeLabel() {
+  if (workflowGraph.value.nodes.length > 0) {
+    const node = workflowGraph.value.nodes[0]
+    if (node.definition?.label) {
+      const { label, ...rest } = node.definition
+      node.definition = Object.keys(rest).length > 0 ? rest : undefined
+      logEvent('clear-node-label', { nodeId: node.id })
+    }
+  }
+}
+
+function clearGroupLabel() {
+  if (workflowGraph.value.groups.length > 0) {
+    const group = workflowGraph.value.groups[0]
+    if (group.definition?.label) {
+      const { label, ...rest } = group.definition
+      group.definition = Object.keys(rest).length > 0 ? rest : undefined
+      logEvent('clear-group-label', { groupId: group.id })
+    }
+  }
+}
+
+function setCustomNestedConfig() {
+  if (workflowGraph.value.groups.length > 0) {
+    const group = workflowGraph.value.groups[0]
+    group.nested = {
+      label: 'Custom Nested Group',
+      placeholder: 'Custom placeholder text',
+      fields: [
+        {
+          name: 'customField',
+          type: 'text',
+          label: 'Custom Field',
+          placeholder: 'Enter custom value'
+        }
+      ]
+    }
+    logEvent('set-nested-config', { groupId: group.id })
+  }
+}
+
+function clearNestedConfig() {
+  if (workflowGraph.value.groups.length > 0) {
+    const group = workflowGraph.value.groups[0]
+    if (group.nested) {
+      delete group.nested
+      logEvent('clear-nested-config', { groupId: group.id })
+    }
+  }
+}
+
+// Separate Panel/Tile Labels functions
+function setSeparateLabels() {
+  if (workflowGraph.value.nodes.length > 0) {
+    const node = workflowGraph.value.nodes[0]
+    node.definition = {
+      ...node.definition,
+      configPanelLabel: 'Detailed Configuration Panel Label',
+      tileLabel: 'Short Tile'
+    }
+    logEvent('set-separate-labels', { nodeId: node.id })
+  }
+}
+
+function clearSeparateLabels() {
+  if (workflowGraph.value.nodes.length > 0) {
+    const node = workflowGraph.value.nodes[0]
+    if (node.definition) {
+      const { configPanelLabel, tileLabel, ...rest } = node.definition
+      node.definition = Object.keys(rest).length > 0 ? rest : undefined
+      logEvent('clear-separate-labels', { nodeId: node.id })
+    }
+  }
+}
+
+// Hide Hover Menu functions
+function enableHideMenuForFirstNode() {
+  if (workflowGraph.value.nodes.length > 0) {
+    const node = workflowGraph.value.nodes[0]
+    node.hideAddNodeWhenNotEmpty = true
+    logEvent('enable-hide-menu-node', { nodeId: node.id })
+  }
+}
+
+function enableHideMenuForFirstGroup() {
+  if (workflowGraph.value.groups.length > 0) {
+    const group = workflowGraph.value.groups[0]
+    group.hideAddNodeWhenNotEmpty = true
+    logEvent('enable-hide-menu-group', { groupId: group.id })
+  }
+}
+
+function disableHideMenu() {
+  workflowGraph.value.nodes.forEach((node) => {
+    node.hideAddNodeWhenNotEmpty = undefined
+  })
+  workflowGraph.value.groups.forEach((group) => {
+    group.hideAddNodeWhenNotEmpty = undefined
+  })
+  logEvent('disable-hide-menu', {
+    nodesReset: workflowGraph.value.nodes.length,
+    groupsReset: workflowGraph.value.groups.length
+  })
+}
+
+// Group Field Visibility functions
+function hideGroupTypeField() {
+  if (workflowGraph.value.groups.length > 0) {
+    const group = workflowGraph.value.groups[0]
+    group.definition = {
+      ...group.definition,
+      showTypeField: false
+    }
+    logEvent('hide-group-type-field', { groupId: group.id })
+  }
+}
+
+function hideGroupTitleField() {
+  if (workflowGraph.value.groups.length > 0) {
+    const group = workflowGraph.value.groups[0]
+    group.definition = {
+      ...group.definition,
+      showTitleField: false
+    }
+    logEvent('hide-group-title-field', { groupId: group.id })
+  }
+}
+
+function showAllGroupFields() {
+  if (workflowGraph.value.groups.length > 0) {
+    const group = workflowGraph.value.groups[0]
+    if (group.definition) {
+      const { showTypeField, showTitleField, ...rest } = group.definition
+      group.definition = Object.keys(rest).length > 0 ? rest : undefined
+      logEvent('show-all-group-fields', { groupId: group.id })
+    }
+  }
+}
+
+// Per-Group Max Depth functions
+function setGroupMaxDepth() {
+  if (workflowGraph.value.groups.length > 0) {
+    const group = workflowGraph.value.groups[0]
+    group.maxDepth = 1
+    logEvent('set-group-max-depth', { groupId: group.id, maxDepth: 1 })
+  }
+}
+
+function clearGroupMaxDepth() {
+  if (workflowGraph.value.groups.length > 0) {
+    const group = workflowGraph.value.groups[0]
+    group.maxDepth = null
+    logEvent('clear-group-max-depth', { groupId: group.id })
+  }
 }
 
 // Event log for demonstrating all emits
@@ -584,7 +1275,7 @@ function handleNodeAdd(node: WorkflowNode) {
 }
 
 function handleGroupAdd(group: WorkflowGroup) {
-  logEvent('group-add', { id: group.id, title: group.title })
+  logEvent('group-add', { id: group.id, label: group.label })
 }
 
 function handleEdgeAdd(edge: WorkflowEdge) {
@@ -635,7 +1326,16 @@ function handleGroupDelete(groupId: string) {
 }
 
 function handleGroupUpdate(group: WorkflowGroup) {
-  logEvent('group-update', { id: group.id, title: group.title })
+  // Sync lockParent from data to top-level property
+  if (group.data && 'lockParent' in group.data) {
+    group.lockParent = group.data.lockParent as boolean
+  }
+
+  logEvent('group-update', {
+    id: group.id,
+    label: group.label,
+    lockParent: group.lockParent
+  })
 }
 
 function handleGroupResizeStart(groupId: string) {
@@ -663,7 +1363,74 @@ function handleEntityMovedToGroup(entityId: string, groupId: string | null) {
 .demo-actions {
   display: flex;
   gap: 12px;
-  margin: 20px 0;
+  margin: 20px 10px;
+  flex-wrap: wrap;
+}
+
+.demo-section {
+  margin: 10px 0;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  background: #f9f9f9;
+}
+
+.demo-section summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 16px;
+  color: #333;
+  border-radius: 6px 6px 0 0;
+  background: #f0f0f0;
+  user-select: none;
+  list-style: none;
+}
+
+.demo-section summary::-webkit-details-marker {
+  display: none;
+}
+
+.demo-section summary::before {
+  content: '▶';
+  display: inline-block;
+  margin-right: 8px;
+  transition: transform 0.2s;
+}
+
+.demo-section[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.demo-section[open] summary {
+  margin-bottom: 16px;
+  border-bottom: 2px solid #e0e0e0;
+  border-radius: 6px 6px 0 0;
+}
+
+.demo-section summary:hover {
+  background: #e8e8e8;
+}
+
+.demo-section h3 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  color: #333;
+}
+
+.demo-description {
+  padding: 0 10px;
+  margin-bottom: 16px;
+  color: #666;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.demo-description code {
+  background: #fff;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: monospace;
+  color: #d63384;
+  border: 1px solid #e0e0e0;
 }
 
 .controls {
@@ -683,6 +1450,12 @@ function handleEntityMovedToGroup(entityId: string, groupId: string | null) {
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 14px;
+}
+
+.control-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
 }
 
 .state-info {

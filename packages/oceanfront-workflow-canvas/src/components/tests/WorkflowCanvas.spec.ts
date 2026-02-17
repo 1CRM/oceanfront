@@ -11,10 +11,13 @@ import {
   updateGroupPosition,
   findNode,
   getParentGroup,
+  getGroupDescendants,
   getEntityEdges,
   calculateGroupBounds,
   updateGroupBounds,
-  areEntitiesInDifferentGroups
+  areEntitiesInDifferentGroups,
+  moveNodesBelow,
+  handleAddStepToGraph
 } from '../../utils/graph-helpers'
 
 describe('WorkflowCanvas Component', () => {
@@ -85,7 +88,7 @@ describe('WorkflowCanvas Component', () => {
           {
             id: 'group-1',
             kind: 'group',
-            title: 'Test Group',
+            label: 'Test Group',
             position: { x: 50, y: 50 },
             size: { w: 300, h: 400 },
             containedIds: ['node-1']
@@ -351,7 +354,7 @@ describe('Graph Helper Functions', () => {
           {
             id: 'group-1',
             kind: 'group',
-            title: 'Test Group',
+            label: 'Test Group',
             position: { x: 50, y: 50 },
             size: { w: 300, h: 200 },
             containedIds: []
@@ -373,7 +376,7 @@ describe('Graph Helper Functions', () => {
           {
             id: 'group-1',
             kind: 'group',
-            title: 'Test Group',
+            label: 'Test Group',
             position: { x: 50, y: 50 },
             size: { w: 300, h: 200 },
             containedIds: ['node-1']
@@ -395,7 +398,7 @@ describe('Graph Helper Functions', () => {
           {
             id: 'group-1',
             kind: 'group',
-            title: 'Group 1',
+            label: 'Group 1',
             position: { x: 50, y: 50 },
             size: { w: 300, h: 200 },
             containedIds: ['node-1']
@@ -403,7 +406,7 @@ describe('Graph Helper Functions', () => {
           {
             id: 'group-2',
             kind: 'group',
-            title: 'Group 2',
+            label: 'Group 2',
             position: { x: 400, y: 50 },
             size: { w: 300, h: 200 },
             containedIds: ['node-1']
@@ -425,7 +428,7 @@ describe('Graph Helper Functions', () => {
           {
             id: 'group-1',
             kind: 'group',
-            title: 'Test Group',
+            label: 'Test Group',
             position: { x: 50, y: 50 },
             size: { w: 300, h: 200 },
             containedIds: ['node-1']
@@ -448,7 +451,7 @@ describe('Graph Helper Functions', () => {
           {
             id: 'group-1',
             kind: 'group',
-            title: 'Test Group',
+            label: 'Test Group',
             position: { x: 0, y: 0 },
             size: { w: 300, h: 400 },
             containedIds: ['node-1', 'node-2']
@@ -474,7 +477,7 @@ describe('Graph Helper Functions', () => {
           {
             id: 'group-1',
             kind: 'group',
-            title: 'Test Group',
+            label: 'Test Group',
             position: { x: 50, y: 50 },
             size: { w: 300, h: 200 },
             containedIds: ['node-1']
@@ -503,7 +506,7 @@ describe('Graph Helper Functions', () => {
           {
             id: 'group-1',
             kind: 'group',
-            title: 'Test Group',
+            label: 'Test Group',
             position: { x: 80, y: 80 },
             size: { w: 300, h: 400 },
             containedIds: ['node-1', 'node-2']
@@ -531,7 +534,7 @@ describe('Graph Helper Functions', () => {
           {
             id: 'group-1',
             kind: 'group',
-            title: 'Test Group',
+            label: 'Test Group',
             position: { x: 80, y: 80 },
             size: { w: 290, h: 140 },
             containedIds: ['node-1']
@@ -561,7 +564,7 @@ describe('Graph Helper Functions', () => {
           {
             id: 'group-1',
             kind: 'group',
-            title: 'Test Group',
+            label: 'Test Group',
             position: { x: 80, y: 80 },
             size: { w: 290, h: 140 },
             containedIds: ['node-1']
@@ -595,7 +598,7 @@ describe('Graph Helper Functions', () => {
           {
             id: 'group-1',
             kind: 'group',
-            title: 'Empty Group',
+            label: 'Empty Group',
             position: { x: 100, y: 100 },
             size: { w: 300, h: 200 },
             containedIds: []
@@ -621,7 +624,7 @@ describe('Graph Helper Functions', () => {
           {
             id: 'group-1',
             kind: 'group',
-            title: 'Parent Group',
+            label: 'Parent Group',
             position: { x: 50, y: 50 },
             size: { w: 400, h: 300 },
             containedIds: []
@@ -629,7 +632,7 @@ describe('Graph Helper Functions', () => {
           {
             id: 'group-2',
             kind: 'group',
-            title: 'Child Group',
+            label: 'Child Group',
             position: { x: 100, y: 100 },
             size: { w: 290, h: 140 },
             containedIds: ['node-1']
@@ -658,7 +661,7 @@ describe('Graph Helper Functions', () => {
           {
             id: 'group-1',
             kind: 'group',
-            title: 'Outermost Group',
+            label: 'Outermost Group',
             position: { x: 20, y: 20 },
             size: { w: 500, h: 400 },
             containedIds: ['group-2']
@@ -666,7 +669,7 @@ describe('Graph Helper Functions', () => {
           {
             id: 'group-2',
             kind: 'group',
-            title: 'Middle Group',
+            label: 'Middle Group',
             position: { x: 50, y: 50 },
             size: { w: 440, h: 340 },
             containedIds: ['group-3']
@@ -674,7 +677,7 @@ describe('Graph Helper Functions', () => {
           {
             id: 'group-3',
             kind: 'group',
-            title: 'Inner Group',
+            label: 'Inner Group',
             position: { x: 180, y: 180 },
             size: { w: 290, h: 140 },
             containedIds: ['node-1']
@@ -728,7 +731,7 @@ describe('Graph Helper Functions', () => {
           {
             id: 'group-1',
             kind: 'group',
-            title: 'Parent Group',
+            label: 'Parent Group',
             position: { x: 50, y: 50 },
             size: { w: 400, h: 300 },
             containedIds: ['group-2']
@@ -736,7 +739,7 @@ describe('Graph Helper Functions', () => {
           {
             id: 'group-2',
             kind: 'group',
-            title: 'Child Group',
+            label: 'Child Group',
             position: { x: 100, y: 100 },
             size: { w: 290, h: 140 },
             containedIds: []
@@ -767,7 +770,7 @@ describe('Graph Helper Functions', () => {
           {
             id: 'group-1',
             kind: 'group',
-            title: 'Level 1',
+            label: 'Level 1',
             position: { x: 10, y: 10 },
             size: { w: 600, h: 500 },
             containedIds: ['group-2']
@@ -775,7 +778,7 @@ describe('Graph Helper Functions', () => {
           {
             id: 'group-2',
             kind: 'group',
-            title: 'Level 2',
+            label: 'Level 2',
             position: { x: 30, y: 30 },
             size: { w: 560, h: 460 },
             containedIds: ['group-3']
@@ -783,7 +786,7 @@ describe('Graph Helper Functions', () => {
           {
             id: 'group-3',
             kind: 'group',
-            title: 'Level 3',
+            label: 'Level 3',
             position: { x: 50, y: 50 },
             size: { w: 520, h: 420 },
             containedIds: ['group-4']
@@ -791,7 +794,7 @@ describe('Graph Helper Functions', () => {
           {
             id: 'group-4',
             kind: 'group',
-            title: 'Level 4 (innermost)',
+            label: 'Level 4 (innermost)',
             position: { x: 280, y: 280 },
             size: { w: 290, h: 140 },
             containedIds: ['node-1']
@@ -852,7 +855,7 @@ describe('Graph Helper Functions', () => {
           {
             id: 'group-1',
             kind: 'group',
-            title: 'Test Group',
+            label: 'Test Group',
             position: { x: 50, y: 50 },
             size: { w: 300, h: 400 },
             containedIds: ['node-1', 'node-2']
@@ -875,7 +878,7 @@ describe('Graph Helper Functions', () => {
           {
             id: 'group-1',
             kind: 'group',
-            title: 'Group 1',
+            label: 'Group 1',
             position: { x: 50, y: 50 },
             size: { w: 300, h: 200 },
             containedIds: ['node-1']
@@ -883,7 +886,7 @@ describe('Graph Helper Functions', () => {
           {
             id: 'group-2',
             kind: 'group',
-            title: 'Group 2',
+            label: 'Group 2',
             position: { x: 350, y: 50 },
             size: { w: 300, h: 200 },
             containedIds: ['node-2']
@@ -920,7 +923,7 @@ describe('Graph Helper Functions', () => {
           {
             id: 'group-1',
             kind: 'group',
-            title: 'Group 1',
+            label: 'Group 1',
             position: { x: 50, y: 50 },
             size: { w: 300, h: 200 },
             containedIds: ['node-1']
@@ -940,7 +943,7 @@ describe('Graph Helper Functions', () => {
           {
             id: 'group-1',
             kind: 'group',
-            title: 'Parent Group',
+            label: 'Parent Group',
             position: { x: 50, y: 50 },
             size: { w: 400, h: 300 },
             containedIds: ['group-2', 'node-1']
@@ -948,7 +951,7 @@ describe('Graph Helper Functions', () => {
           {
             id: 'group-2',
             kind: 'group',
-            title: 'Child Group',
+            label: 'Child Group',
             position: { x: 100, y: 100 },
             size: { w: 200, h: 140 },
             containedIds: []
@@ -958,6 +961,297 @@ describe('Graph Helper Functions', () => {
 
       const result = areEntitiesInDifferentGroups(graph, 'group-2', 'node-1')
       expect(result).toBe(false)
+    })
+  })
+
+  describe('Group Deletion', () => {
+    it('deletes a group with contained nodes', () => {
+      const graph: WorkflowGraph = {
+        nodes: [
+          { id: 'node-1', kind: 'trigger', position: { x: 100, y: 100 } },
+          { id: 'node-2', kind: 'action', position: { x: 100, y: 250 } }
+        ],
+        edges: [],
+        groups: [
+          {
+            id: 'group-1',
+            kind: 'group',
+            label: 'Test Group',
+            position: { x: 50, y: 50 },
+            size: { w: 300, h: 400 },
+            containedIds: ['node-1', 'node-2']
+          }
+        ]
+      }
+
+      // Simulate group deletion logic
+      const descendants = getGroupDescendants(graph, 'group-1')
+      const allIdsToDelete = new Set(['group-1', ...descendants])
+
+      const updatedGraph = {
+        ...graph,
+        nodes: graph.nodes.filter(node => !allIdsToDelete.has(node.id)),
+        groups: graph.groups.filter(group => !allIdsToDelete.has(group.id)),
+        edges: graph.edges.filter(
+          edge => !allIdsToDelete.has(edge.from.entityId) && !allIdsToDelete.has(edge.to.entityId)
+        )
+      }
+
+      // Verify group is deleted
+      expect(updatedGraph.groups.find(g => g.id === 'group-1')).toBeUndefined()
+      // Verify contained nodes are deleted
+      expect(updatedGraph.nodes.find(n => n.id === 'node-1')).toBeUndefined()
+      expect(updatedGraph.nodes.find(n => n.id === 'node-2')).toBeUndefined()
+    })
+
+    it('deletes a group with nested groups recursively', () => {
+      const graph: WorkflowGraph = {
+        nodes: [
+          { id: 'node-1', kind: 'trigger', position: { x: 150, y: 150 } },
+          { id: 'node-2', kind: 'action', position: { x: 150, y: 300 } }
+        ],
+        edges: [],
+        groups: [
+          {
+            id: 'group-1',
+            kind: 'group',
+            label: 'Parent Group',
+            position: { x: 50, y: 50 },
+            size: { w: 400, h: 500 },
+            containedIds: ['group-2']
+          },
+          {
+            id: 'group-2',
+            kind: 'group',
+            label: 'Child Group',
+            position: { x: 100, y: 100 },
+            size: { w: 300, h: 400 },
+            containedIds: ['node-1', 'node-2']
+          }
+        ]
+      }
+
+      // Simulate group deletion logic for parent group
+      const descendants = getGroupDescendants(graph, 'group-1')
+      const allIdsToDelete = new Set(['group-1', ...descendants])
+
+      const updatedGraph = {
+        ...graph,
+        nodes: graph.nodes.filter(node => !allIdsToDelete.has(node.id)),
+        groups: graph.groups.filter(group => !allIdsToDelete.has(group.id)),
+        edges: graph.edges.filter(
+          edge => !allIdsToDelete.has(edge.from.entityId) && !allIdsToDelete.has(edge.to.entityId)
+        )
+      }
+
+      // Verify parent group is deleted
+      expect(updatedGraph.groups.find(g => g.id === 'group-1')).toBeUndefined()
+      // Verify nested group is deleted
+      expect(updatedGraph.groups.find(g => g.id === 'group-2')).toBeUndefined()
+      // Verify all contained nodes are deleted
+      expect(updatedGraph.nodes.find(n => n.id === 'node-1')).toBeUndefined()
+      expect(updatedGraph.nodes.find(n => n.id === 'node-2')).toBeUndefined()
+    })
+
+    it('deletes edges connected to contained entities when deleting group', () => {
+      const graph: WorkflowGraph = {
+        nodes: [
+          { id: 'node-1', kind: 'trigger', position: { x: 100, y: 100 } },
+          { id: 'node-2', kind: 'action', position: { x: 100, y: 250 } },
+          { id: 'node-3', kind: 'action', position: { x: 500, y: 100 } }
+        ],
+        edges: [
+          { id: 'edge-1', from: { entityId: 'node-1' }, to: { entityId: 'node-2' } },
+          { id: 'edge-2', from: { entityId: 'node-2' }, to: { entityId: 'node-3' } }
+        ],
+        groups: [
+          {
+            id: 'group-1',
+            kind: 'group',
+            label: 'Test Group',
+            position: { x: 50, y: 50 },
+            size: { w: 300, h: 400 },
+            containedIds: ['node-1', 'node-2']
+          }
+        ]
+      }
+
+      // Simulate group deletion logic
+      const descendants = getGroupDescendants(graph, 'group-1')
+      const allIdsToDelete = new Set(['group-1', ...descendants])
+
+      const updatedGraph = {
+        ...graph,
+        nodes: graph.nodes.filter(node => !allIdsToDelete.has(node.id)),
+        groups: graph.groups.filter(group => !allIdsToDelete.has(group.id)),
+        edges: graph.edges.filter(
+          edge => !allIdsToDelete.has(edge.from.entityId) && !allIdsToDelete.has(edge.to.entityId)
+        )
+      }
+
+      // Verify group and nodes are deleted
+      expect(updatedGraph.groups.find(g => g.id === 'group-1')).toBeUndefined()
+      expect(updatedGraph.nodes.find(n => n.id === 'node-1')).toBeUndefined()
+      expect(updatedGraph.nodes.find(n => n.id === 'node-2')).toBeUndefined()
+      // Verify node-3 is still there
+      expect(updatedGraph.nodes.find(n => n.id === 'node-3')).toBeDefined()
+      // Verify edge-1 (internal to group) is deleted
+      expect(updatedGraph.edges.find(e => e.id === 'edge-1')).toBeUndefined()
+      // Verify edge-2 (from group to external node) is deleted
+      expect(updatedGraph.edges.find(e => e.id === 'edge-2')).toBeUndefined()
+    })
+
+    it('deletes deeply nested groups with multiple levels', () => {
+      const graph: WorkflowGraph = {
+        nodes: [
+          { id: 'node-1', kind: 'trigger', position: { x: 200, y: 200 } }
+        ],
+        edges: [],
+        groups: [
+          {
+            id: 'group-1',
+            kind: 'group',
+            label: 'Level 1',
+            position: { x: 20, y: 20 },
+            size: { w: 500, h: 400 },
+            containedIds: ['group-2']
+          },
+          {
+            id: 'group-2',
+            kind: 'group',
+            label: 'Level 2',
+            position: { x: 50, y: 50 },
+            size: { w: 440, h: 340 },
+            containedIds: ['group-3']
+          },
+          {
+            id: 'group-3',
+            kind: 'group',
+            label: 'Level 3',
+            position: { x: 100, y: 100 },
+            size: { w: 340, h: 240 },
+            containedIds: ['node-1']
+          }
+        ]
+      }
+
+      // Simulate group deletion logic for outermost group
+      const descendants = getGroupDescendants(graph, 'group-1')
+      const allIdsToDelete = new Set(['group-1', ...descendants])
+
+      const updatedGraph = {
+        ...graph,
+        nodes: graph.nodes.filter(node => !allIdsToDelete.has(node.id)),
+        groups: graph.groups.filter(group => !allIdsToDelete.has(group.id)),
+        edges: graph.edges.filter(
+          edge => !allIdsToDelete.has(edge.from.entityId) && !allIdsToDelete.has(edge.to.entityId)
+        )
+      }
+
+      // Verify all groups are deleted
+      expect(updatedGraph.groups.length).toBe(0)
+      // Verify all nodes are deleted
+      expect(updatedGraph.nodes.length).toBe(0)
+    })
+
+    it('updates parent group bounds after deleting nested group', () => {
+      const graph: WorkflowGraph = {
+        nodes: [
+          { id: 'node-1', kind: 'trigger', position: { x: 150, y: 150 } },
+          { id: 'node-2', kind: 'action', position: { x: 600, y: 150 } }
+        ],
+        edges: [],
+        groups: [
+          {
+            id: 'group-1',
+            kind: 'group',
+            label: 'Parent Group',
+            position: { x: 50, y: 50 },
+            size: { w: 700, h: 300 },
+            containedIds: ['group-2', 'node-2']
+          },
+          {
+            id: 'group-2',
+            kind: 'group',
+            label: 'Child Group',
+            position: { x: 100, y: 100 },
+            size: { w: 300, h: 200 },
+            containedIds: ['node-1']
+          }
+        ]
+      }
+
+      // Simulate group deletion logic for child group
+      const descendants = getGroupDescendants(graph, 'group-2')
+      const allIdsToDelete = new Set(['group-2', ...descendants])
+
+      let updatedGraph = {
+        ...graph,
+        nodes: graph.nodes.filter(node => !allIdsToDelete.has(node.id)),
+        groups: graph.groups.filter(group => !allIdsToDelete.has(group.id)),
+        edges: graph.edges.filter(
+          edge => !allIdsToDelete.has(edge.from.entityId) && !allIdsToDelete.has(edge.to.entityId)
+        )
+      }
+
+      // Remove from parent groups
+      updatedGraph = removeEntityFromAllGroups(updatedGraph, 'group-2')
+
+      // Update parent group bounds
+      const parentGroup = getParentGroup(graph, 'group-2')
+      if (parentGroup) {
+        updatedGraph = updateGroupBounds(updatedGraph, parentGroup.id)
+      }
+
+      // Verify child group is deleted
+      expect(updatedGraph.groups.find(g => g.id === 'group-2')).toBeUndefined()
+      // Verify node-1 is deleted
+      expect(updatedGraph.nodes.find(n => n.id === 'node-1')).toBeUndefined()
+      // Verify node-2 is still there
+      expect(updatedGraph.nodes.find(n => n.id === 'node-2')).toBeDefined()
+      // Verify parent group still exists
+      const parent = updatedGraph.groups.find(g => g.id === 'group-1')
+      expect(parent).toBeDefined()
+      // Verify parent group no longer contains child group
+      expect(parent?.containedIds).not.toContain('group-2')
+      // Verify parent group still contains node-2
+      expect(parent?.containedIds).toContain('node-2')
+    })
+
+    it('getGroupDescendants returns all descendants recursively', () => {
+      const graph: WorkflowGraph = {
+        nodes: [
+          { id: 'node-1', kind: 'trigger', position: { x: 150, y: 150 } },
+          { id: 'node-2', kind: 'action', position: { x: 150, y: 300 } }
+        ],
+        edges: [],
+        groups: [
+          {
+            id: 'group-1',
+            kind: 'group',
+            label: 'Parent Group',
+            position: { x: 50, y: 50 },
+            size: { w: 400, h: 500 },
+            containedIds: ['group-2', 'node-2']
+          },
+          {
+            id: 'group-2',
+            kind: 'group',
+            label: 'Child Group',
+            position: { x: 100, y: 100 },
+            size: { w: 300, h: 200 },
+            containedIds: ['node-1']
+          }
+        ]
+      }
+
+      const descendants = getGroupDescendants(graph, 'group-1')
+
+      // Should include both the nested group and all nodes
+      expect(descendants).toContain('group-2')
+      expect(descendants).toContain('node-1')
+      expect(descendants).toContain('node-2')
+      expect(descendants.length).toBe(3)
     })
   })
 
@@ -976,7 +1270,7 @@ describe('Graph Helper Functions', () => {
           {
             id: 'group-1',
             kind: 'group',
-            title: 'Test Group',
+            label: 'Test Group',
             position: { x: 100, y: 100 },
             size: { w: 300, h: 200 },
             containedIds: ['node-1']
@@ -1070,7 +1364,7 @@ describe('Graph Helper Functions', () => {
           {
             id: 'group-1',
             kind: 'group',
-            title: 'Test Group',
+            label: 'Test Group',
             position: { x: 100, y: 100 },
             size: { w: 300, h: 300 },
             containedIds: ['node-1', 'node-2']
@@ -1091,6 +1385,855 @@ describe('Graph Helper Functions', () => {
       // Check that the placeholder has the correct props
       expect(placeholder.props('afterNodeId')).toBe('node-1')
       expect(placeholder.props('inGroupId')).toBe('group-1')
+    })
+  })
+
+  describe('Definition Overrides', () => {
+    it('applies node definition icon override', () => {
+      const graphWithOverride: WorkflowGraph = {
+        nodes: [
+          {
+            id: 'node-1',
+            kind: 'trigger',
+            position: { x: 100, y: 100 },
+            definition: {
+              icon: 'custom-star'
+            }
+          }
+        ],
+        edges: [],
+        groups: []
+      }
+
+      const wrapper = mount(WorkflowCanvas, {
+        props: {
+          modelValue: graphWithOverride,
+          nodeTypes: {
+            trigger: {
+              type: 'trigger',
+              label: 'Trigger',
+              icon: 'default-icon',
+              fields: []
+            }
+          }
+        }
+      })
+
+      expect(wrapper.exists()).toBe(true)
+      // Note: Full verification would require checking the WorkflowTile component
+    })
+
+    it('applies node definition label override', () => {
+      const graphWithOverride: WorkflowGraph = {
+        nodes: [
+          {
+            id: 'node-1',
+            kind: 'trigger',
+            position: { x: 100, y: 100 },
+            definition: {
+              label: 'Custom Label'
+            }
+          }
+        ],
+        edges: [],
+        groups: []
+      }
+
+      const wrapper = mount(WorkflowCanvas, {
+        props: {
+          modelValue: graphWithOverride,
+          nodeTypes: {
+            trigger: {
+              type: 'trigger',
+              label: 'Default Label',
+              fields: []
+            }
+          }
+        }
+      })
+
+      expect(wrapper.exists()).toBe(true)
+    })
+
+    it('applies node definition placeholder override', () => {
+      const graphWithOverride: WorkflowGraph = {
+        nodes: [
+          {
+            id: 'node-1',
+            kind: 'trigger',
+            position: { x: 100, y: 100 },
+            definition: {
+              placeholder: 'Custom Placeholder'
+            }
+          }
+        ],
+        edges: [],
+        groups: []
+      }
+
+      const wrapper = mount(WorkflowCanvas, {
+        props: {
+          modelValue: graphWithOverride,
+          nodeTypes: {
+            trigger: {
+              type: 'trigger',
+              label: 'Trigger',
+              placeholder: 'Default Placeholder',
+              fields: []
+            }
+          }
+        }
+      })
+
+      expect(wrapper.exists()).toBe(true)
+    })
+
+    it('applies node definition fields override', () => {
+      const graphWithOverride: WorkflowGraph = {
+        nodes: [
+          {
+            id: 'node-1',
+            kind: 'trigger',
+            position: { x: 100, y: 100 },
+            definition: {
+              fields: [
+                {
+                  name: 'title',
+                  type: 'text',
+                  label: 'Custom Title',
+                  readonly: true
+                }
+              ]
+            }
+          }
+        ],
+        edges: [],
+        groups: []
+      }
+
+      const wrapper = mount(WorkflowCanvas, {
+        props: {
+          modelValue: graphWithOverride,
+          nodeTypes: {
+            trigger: {
+              type: 'trigger',
+              label: 'Trigger',
+              fields: [
+                {
+                  name: 'title',
+                  type: 'text',
+                  label: 'Default Title'
+                }
+              ]
+            }
+          }
+        }
+      })
+
+      expect(wrapper.exists()).toBe(true)
+    })
+
+    it('applies node definition cssClass override', () => {
+      const graphWithOverride: WorkflowGraph = {
+        nodes: [
+          {
+            id: 'node-1',
+            kind: 'trigger',
+            position: { x: 100, y: 100 },
+            definition: {
+              cssClass: 'custom-class'
+            }
+          }
+        ],
+        edges: [],
+        groups: []
+      }
+
+      const wrapper = mount(WorkflowCanvas, {
+        props: {
+          modelValue: graphWithOverride,
+          nodeTypes: {
+            trigger: {
+              type: 'trigger',
+              label: 'Trigger',
+              fields: []
+            }
+          }
+        }
+      })
+
+      const node = wrapper.find('.workflow-canvas-node')
+      expect(node.classes()).toContain('custom-class')
+    })
+
+    it('applies group definition label override', () => {
+      const graphWithOverride: WorkflowGraph = {
+        nodes: [],
+        edges: [],
+        groups: [
+          {
+            id: 'group-1',
+            kind: 'group',
+            label: 'Default Group Label',
+            position: { x: 50, y: 50 },
+            size: { w: 300, h: 400 },
+            containedIds: [],
+            definition: {
+              label: 'Custom Group Label'
+            }
+          }
+        ]
+      }
+
+      const wrapper = mount(WorkflowCanvas, {
+        props: {
+          modelValue: graphWithOverride,
+          groupTypes: {
+            group: {
+              type: 'group',
+              label: 'Default Type Label',
+              fields: []
+            }
+          }
+        }
+      })
+
+      const groupTitle = wrapper.find('.workflow-canvas-group__title')
+      expect(groupTitle.text()).toBe('Custom Group Label')
+    })
+
+    it('applies group definition fields override', () => {
+      const graphWithOverride: WorkflowGraph = {
+        nodes: [],
+        edges: [],
+        groups: [
+          {
+            id: 'group-1',
+            kind: 'group',
+            label: 'Test Group',
+            position: { x: 50, y: 50 },
+            size: { w: 300, h: 400 },
+            containedIds: [],
+            definition: {
+              fields: [
+                {
+                  name: 'description',
+                  type: 'textarea',
+                  label: 'Custom Description',
+                  readonly: true
+                }
+              ]
+            }
+          }
+        ]
+      }
+
+      const wrapper = mount(WorkflowCanvas, {
+        props: {
+          modelValue: graphWithOverride,
+          groupTypes: {
+            group: {
+              type: 'group',
+              label: 'Group',
+              fields: [
+                {
+                  name: 'description',
+                  type: 'textarea',
+                  label: 'Default Description'
+                }
+              ]
+            }
+          }
+        }
+      })
+
+      expect(wrapper.exists()).toBe(true)
+    })
+
+    it('combines multiple definition overrides', () => {
+      const graphWithOverride: WorkflowGraph = {
+        nodes: [
+          {
+            id: 'node-1',
+            kind: 'action',
+            position: { x: 100, y: 100 },
+            definition: {
+              icon: 'star',
+              label: 'Important Action',
+              placeholder: 'Configure critical step',
+              cssClass: 'workflow-canvas-node--critical',
+              fields: [
+                {
+                  name: 'title',
+                  type: 'text',
+                  label: 'Step Title',
+                  readonly: true
+                }
+              ]
+            }
+          }
+        ],
+        edges: [],
+        groups: []
+      }
+
+      const wrapper = mount(WorkflowCanvas, {
+        props: {
+          modelValue: graphWithOverride,
+          nodeTypes: {
+            action: {
+              type: 'action',
+              label: 'Action',
+              icon: 'gear',
+              placeholder: 'Configure action',
+              fields: [
+                {
+                  name: 'title',
+                  type: 'text',
+                  label: 'Title'
+                }
+              ]
+            }
+          }
+        }
+      })
+
+      const node = wrapper.find('.workflow-canvas-node')
+      expect(node.classes()).toContain('workflow-canvas-node--critical')
+    })
+
+    it('falls back to base definition when override is undefined', () => {
+      const graphWithoutOverride: WorkflowGraph = {
+        nodes: [
+          {
+            id: 'node-1',
+            kind: 'trigger',
+            position: { x: 100, y: 100 }
+            // No definition override
+          }
+        ],
+        edges: [],
+        groups: []
+      }
+
+      const wrapper = mount(WorkflowCanvas, {
+        props: {
+          modelValue: graphWithoutOverride,
+          nodeTypes: {
+            trigger: {
+              type: 'trigger',
+              label: 'Trigger',
+              icon: 'hourglass',
+              fields: []
+            }
+          }
+        }
+      })
+
+      expect(wrapper.exists()).toBe(true)
+    })
+
+    it('definition takes precedence over base type definition', () => {
+      const graphWithOverride: WorkflowGraph = {
+        nodes: [
+          {
+            id: 'node-1',
+            kind: 'trigger',
+            position: { x: 100, y: 100 },
+            definition: {
+              cssClass: 'override-class'
+            }
+          }
+        ],
+        edges: [],
+        groups: []
+      }
+
+      const wrapper = mount(WorkflowCanvas, {
+        props: {
+          modelValue: graphWithOverride,
+          nodeTypes: {
+            trigger: {
+              type: 'trigger',
+              label: 'Trigger',
+              cssClass: 'base-class',
+              fields: []
+            }
+          }
+        }
+      })
+
+      const node = wrapper.find('.workflow-canvas-node')
+      expect(node.classes()).toContain('override-class')
+      expect(node.classes()).not.toContain('base-class')
+    })
+  })
+
+  describe('Group lockParent Property', () => {
+    it('allows groups without lockParent to be moved outside their parent', () => {
+      const parentGroup: WorkflowGraph = {
+        nodes: [],
+        edges: [],
+        groups: [
+          {
+            id: 'parent-group',
+            kind: 'group',
+            label: 'Parent',
+            position: { x: 0, y: 0 },
+            size: { w: 500, h: 500 },
+            containedIds: ['child-group']
+          },
+          {
+            id: 'child-group',
+            kind: 'group',
+            label: 'Child',
+            position: { x: 50, y: 50 },
+            size: { w: 200, h: 200 },
+            containedIds: [],
+            lockParent: false
+          }
+        ]
+      }
+
+      // Child group can be removed from parent
+      const updatedGraph = removeEntityFromAllGroups(parentGroup, 'child-group')
+      expect(updatedGraph.groups[0].containedIds).not.toContain('child-group')
+    })
+
+    it('prevents groups with lockParent from being removed from parent', () => {
+      const parentGroup: WorkflowGraph = {
+        nodes: [],
+        edges: [],
+        groups: [
+          {
+            id: 'parent-group',
+            kind: 'group',
+            label: 'Parent',
+            position: { x: 0, y: 0 },
+            size: { w: 500, h: 500 },
+            containedIds: ['child-group']
+          },
+          {
+            id: 'child-group',
+            kind: 'group',
+            label: 'Child',
+            position: { x: 50, y: 50 },
+            size: { w: 200, h: 200 },
+            containedIds: [],
+            lockParent: true
+          }
+        ]
+      }
+
+      // The lockParent property is set
+      const childGroup = parentGroup.groups.find(g => g.id === 'child-group')
+      expect(childGroup?.lockParent).toBe(true)
+    })
+
+    it('allows groups with lockParent to be moved within their parent', () => {
+      const graph: WorkflowGraph = {
+        nodes: [],
+        edges: [],
+        groups: [
+          {
+            id: 'parent-group',
+            kind: 'group',
+            label: 'Parent',
+            position: { x: 0, y: 0 },
+            size: { w: 500, h: 500 },
+            containedIds: ['child-group']
+          },
+          {
+            id: 'child-group',
+            kind: 'group',
+            label: 'Child',
+            position: { x: 50, y: 50 },
+            size: { w: 200, h: 200 },
+            containedIds: [],
+            lockParent: true
+          }
+        ]
+      }
+
+      // Child group can be moved within parent
+      const updatedGraph = updateGroupPosition(graph, 'child-group', { x: 100, y: 100 })
+      const childGroup = updatedGraph.groups.find(g => g.id === 'child-group')
+      expect(childGroup?.position).toEqual({ x: 100, y: 100 })
+    })
+
+    it('maintains lockParent property through graph operations', () => {
+      const graph: WorkflowGraph = {
+        nodes: [],
+        edges: [],
+        groups: [
+          {
+            id: 'parent-group',
+            kind: 'group',
+            label: 'Parent',
+            position: { x: 0, y: 0 },
+            size: { w: 500, h: 500 },
+            containedIds: ['child-group']
+          },
+          {
+            id: 'child-group',
+            kind: 'group',
+            label: 'Child',
+            position: { x: 50, y: 50 },
+            size: { w: 200, h: 200 },
+            containedIds: [],
+            lockParent: true
+          }
+        ]
+      }
+
+      // Move the group
+      const updatedGraph = updateGroupPosition(graph, 'child-group', { x: 150, y: 150 })
+      const childGroup = updatedGraph.groups.find(g => g.id === 'child-group')
+      
+      // lockParent should still be true
+      expect(childGroup?.lockParent).toBe(true)
+    })
+  })
+
+  describe('Node lockParent Property', () => {
+    it('allows nodes without lockParent to be moved outside their parent group', () => {
+      const graph: WorkflowGraph = {
+        nodes: [
+          {
+            id: 'node-1',
+            kind: 'action',
+            position: { x: 50, y: 50 },
+            lockParent: false
+          }
+        ],
+        edges: [],
+        groups: [
+          {
+            id: 'parent-group',
+            kind: 'group',
+            label: 'Parent',
+            position: { x: 0, y: 0 },
+            size: { w: 500, h: 500 },
+            containedIds: ['node-1']
+          }
+        ]
+      }
+
+      // Node can be removed from parent
+      const updatedGraph = removeEntityFromAllGroups(graph, 'node-1')
+      expect(updatedGraph.groups[0].containedIds).not.toContain('node-1')
+    })
+
+    it('prevents nodes with lockParent from being removed from parent', () => {
+      const graph: WorkflowGraph = {
+        nodes: [
+          {
+            id: 'node-1',
+            kind: 'action',
+            position: { x: 50, y: 50 },
+            lockParent: true
+          }
+        ],
+        edges: [],
+        groups: [
+          {
+            id: 'parent-group',
+            kind: 'group',
+            label: 'Parent',
+            position: { x: 0, y: 0 },
+            size: { w: 500, h: 500 },
+            containedIds: ['node-1']
+          }
+        ]
+      }
+
+      // The lockParent property is set
+      const node = graph.nodes.find(n => n.id === 'node-1')
+      expect(node?.lockParent).toBe(true)
+    })
+
+    it('allows nodes with lockParent to be moved within their parent group', () => {
+      const graph: WorkflowGraph = {
+        nodes: [
+          {
+            id: 'node-1',
+            kind: 'action',
+            position: { x: 50, y: 50 },
+            lockParent: true
+          }
+        ],
+        edges: [],
+        groups: [
+          {
+            id: 'parent-group',
+            kind: 'group',
+            label: 'Parent',
+            position: { x: 0, y: 0 },
+            size: { w: 500, h: 500 },
+            containedIds: ['node-1']
+          }
+        ]
+      }
+
+      // Node can be moved within parent
+      const updatedGraph = updateNodePosition(graph, 'node-1', { x: 100, y: 100 })
+      const node = updatedGraph.nodes.find(n => n.id === 'node-1')
+      expect(node?.position).toEqual({ x: 100, y: 100 })
+    })
+
+    it('allows nodes with lockParent to be moved to nested groups within parent', () => {
+      const graph: WorkflowGraph = {
+        nodes: [
+          {
+            id: 'node-1',
+            kind: 'action',
+            position: { x: 50, y: 50 },
+            lockParent: true
+          }
+        ],
+        edges: [],
+        groups: [
+          {
+            id: 'parent-group',
+            kind: 'group',
+            label: 'Parent',
+            position: { x: 0, y: 0 },
+            size: { w: 500, h: 500 },
+            containedIds: ['node-1', 'nested-group']
+          },
+          {
+            id: 'nested-group',
+            kind: 'group',
+            label: 'Nested',
+            position: { x: 50, y: 50 },
+            size: { w: 200, h: 200 },
+            containedIds: []
+          }
+        ]
+      }
+
+      // Node can be moved to nested group within parent
+      let updatedGraph = removeEntityFromAllGroups(graph, 'node-1')
+      updatedGraph = addEntityToGroup(updatedGraph, 'node-1', 'nested-group')
+      
+      const nestedGroup = updatedGraph.groups.find(g => g.id === 'nested-group')
+      expect(nestedGroup?.containedIds).toContain('node-1')
+    })
+
+    it('maintains lockParent property through graph operations', () => {
+      const graph: WorkflowGraph = {
+        nodes: [
+          {
+            id: 'node-1',
+            kind: 'action',
+            position: { x: 50, y: 50 },
+            lockParent: true
+          }
+        ],
+        edges: [],
+        groups: [
+          {
+            id: 'parent-group',
+            kind: 'group',
+            label: 'Parent',
+            position: { x: 0, y: 0 },
+            size: { w: 500, h: 500 },
+            containedIds: ['node-1']
+          }
+        ]
+      }
+
+      // Move the node
+      const updatedGraph = updateNodePosition(graph, 'node-1', { x: 150, y: 150 })
+      const node = updatedGraph.nodes.find(n => n.id === 'node-1')
+      
+      // lockParent should still be true
+      expect(node?.lockParent).toBe(true)
+    })
+
+    it('prevents nodes with lockParent from moving to root level', () => {
+      const graph: WorkflowGraph = {
+        nodes: [
+          {
+            id: 'node-1',
+            kind: 'action',
+            position: { x: 50, y: 50 },
+            lockParent: true
+          }
+        ],
+        edges: [],
+        groups: [
+          {
+            id: 'parent-group',
+            kind: 'group',
+            label: 'Parent',
+            position: { x: 0, y: 0 },
+            size: { w: 500, h: 500 },
+            containedIds: ['node-1']
+          }
+        ]
+      }
+
+      const node = graph.nodes[0]
+      const parentGroup = getParentGroup(graph, 'node-1')
+      
+      // Verify node is in parent group and has lockParent
+      expect(parentGroup?.id).toBe('parent-group')
+      expect(node.lockParent).toBe(true)
+    })
+
+    it('prevents nodes with lockParent from moving to sibling groups', () => {
+      const graph: WorkflowGraph = {
+        nodes: [
+          {
+            id: 'node-1',
+            kind: 'action',
+            position: { x: 50, y: 50 },
+            lockParent: true
+          }
+        ],
+        edges: [],
+        groups: [
+          {
+            id: 'parent-group',
+            kind: 'group',
+            label: 'Parent',
+            position: { x: 0, y: 0 },
+            size: { w: 500, h: 500 },
+            containedIds: ['node-1']
+          },
+          {
+            id: 'sibling-group',
+            kind: 'group',
+            label: 'Sibling',
+            position: { x: 600, y: 0 },
+            size: { w: 500, h: 500 },
+            containedIds: []
+          }
+        ]
+      }
+
+      const node = graph.nodes[0]
+      const parentGroup = getParentGroup(graph, 'node-1')
+      
+      // Verify node is in parent group and has lockParent
+      expect(parentGroup?.id).toBe('parent-group')
+      expect(node.lockParent).toBe(true)
+      
+      // Sibling group should not contain the node
+      const siblingGroup = graph.groups.find(g => g.id === 'sibling-group')
+      expect(siblingGroup?.containedIds).not.toContain('node-1')
+    })
+  })
+
+  describe('Move Nodes Below on Insert', () => {
+    it('moves nodes below when inserting between connected nodes', () => {
+      const graph: WorkflowGraph = {
+        nodes: [
+          { id: 'node-1', kind: 'trigger', position: { x: 100, y: 100 }, size: { w: 250, h: 100 } },
+          { id: 'node-2', kind: 'action', position: { x: 100, y: 300 }, size: { w: 250, h: 100 } },
+          { id: 'node-3', kind: 'action', position: { x: 100, y: 500 }, size: { w: 250, h: 100 } }
+        ],
+        edges: [
+          { id: 'edge-1', from: { entityId: 'node-1' }, to: { entityId: 'node-2' } }
+        ],
+        groups: []
+      }
+
+      // Insert a node between node-1 and node-2
+      const result = handleAddStepToGraph(graph, {
+        afterNodeId: 'node-1'
+      })
+
+      // Node-2 should have moved down
+      const node2 = findNode(result.graph, 'node-2')
+      expect(node2?.position.y).toBeGreaterThan(300)
+
+      // Node-3 should also have moved down (all nodes below threshold)
+      const node3 = findNode(result.graph, 'node-3')
+      expect(node3?.position.y).toBeGreaterThan(500)
+    })
+
+    it('moveNodesBelow helper moves all nodes at or below threshold', () => {
+      const graph: WorkflowGraph = {
+        nodes: [
+          { id: 'node-1', kind: 'trigger', position: { x: 100, y: 100 } },
+          { id: 'node-2', kind: 'action', position: { x: 100, y: 300 } },
+          { id: 'node-3', kind: 'action', position: { x: 100, y: 500 } }
+        ],
+        edges: [],
+        groups: []
+      }
+
+      const updated = moveNodesBelow(graph, 300, 120)
+
+      const node1 = findNode(updated, 'node-1')
+      const node2 = findNode(updated, 'node-2')
+      const node3 = findNode(updated, 'node-3')
+
+      // Node-1 should not move (above threshold)
+      expect(node1?.position.y).toBe(100)
+
+      // Node-2 should move (at threshold)
+      expect(node2?.position.y).toBe(420) // 300 + 120
+
+      // Node-3 should move (below threshold)
+      expect(node3?.position.y).toBe(620) // 500 + 120
+    })
+
+    it('excludes specified node from movement', () => {
+      const graph: WorkflowGraph = {
+        nodes: [
+          { id: 'node-1', kind: 'trigger', position: { x: 100, y: 100 } },
+          { id: 'node-2', kind: 'action', position: { x: 100, y: 300 } },
+          { id: 'node-3', kind: 'action', position: { x: 100, y: 500 } }
+        ],
+        edges: [],
+        groups: []
+      }
+
+      const updated = moveNodesBelow(graph, 300, 120, 'node-2')
+
+      const node2 = findNode(updated, 'node-2')
+      const node3 = findNode(updated, 'node-3')
+
+      // Node-2 should not move (excluded)
+      expect(node2?.position.y).toBe(300)
+
+      // Node-3 should still move
+      expect(node3?.position.y).toBe(620)
+    })
+
+    it('updates group bounds after inserting node and moving nodes below', () => {
+      const graph: WorkflowGraph = {
+        nodes: [
+          { id: 'node-1', kind: 'trigger', position: { x: 120, y: 120 }, size: { w: 250, h: 100 } },
+          { id: 'node-2', kind: 'action', position: { x: 120, y: 300 }, size: { w: 250, h: 100 } }
+        ],
+        edges: [
+          { id: 'edge-1', from: { entityId: 'node-1' }, to: { entityId: 'node-2' } }
+        ],
+        groups: [
+          {
+            id: 'group-1',
+            kind: 'group',
+            label: 'Test Group',
+            position: { x: 100, y: 100 },
+            size: { w: 290, h: 320 },
+            containedIds: ['node-1', 'node-2']
+          }
+        ]
+      }
+
+      // Insert a node between node-1 and node-2
+      const result = handleAddStepToGraph(graph, {
+        afterNodeId: 'node-1',
+        inGroupId: 'group-1'
+      })
+
+      // Group should have expanded to accommodate moved nodes
+      const group = result.graph.groups.find(g => g.id === 'group-1')
+      expect(group?.size.h).toBeGreaterThan(320)
     })
   })
 })

@@ -8,6 +8,7 @@
   --wf-border: var(--of-border, #e0e0e0);
   --wf-border-secondary: var(--of-border, #ccc);
   --wf-primary: var(--of-color-primary-light, #2196f3);
+  --wf-error: var(--of-color-error-light, #dc3545);
   --wf-text-primary: var(--of-text-primary, #333);
   --wf-text-secondary: var(--of-text-secondary, #666);
   --wf-grid-line: rgba(0, 0, 0, 0.05);
@@ -18,6 +19,7 @@
   --wf-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   --wf-shadow-selected: 0 4px 12px rgba(0, 0, 0, 0.3);
   --wf-shadow-dragging: 0 8px 16px rgba(0, 0, 0, 0.2);
+  --wf-sidebar-width: 400px;
 }
 
 .-of-theme-dark {
@@ -27,6 +29,7 @@
   --wf-border: var(--of-color-outline-dark, #8e9384);
   --wf-border-secondary: var(--of-color-outline-dark, #666);
   --wf-primary: var(--of-color-primary-dark, #77d7ea);
+  --wf-error: var(--of-color-error-dark, #ef4444);
   --wf-text-primary: var(--of-color-on-surface-dark, #e1e4dd);
   --wf-text-secondary: var(--of-color-on-surface-variant-dark, #c4c9bd);
   --wf-grid-line: rgba(255, 255, 255, 0.08);
@@ -51,6 +54,29 @@
     flex-shrink: 0;
     height: 100%;
     padding: 0;
+    width: var(--wf-sidebar-width);
+  }
+
+  // View mode styles - remove grid and disable interactions
+  &--view-mode {
+    .workflow-canvas {
+      background-image: none;
+      cursor: default;
+    }
+
+    // Ensure all interactive elements have default cursor
+    .workflow-canvas-node,
+    .workflow-canvas-group {
+      cursor: default;
+      pointer-events: none;
+    }
+
+    // Allow viewing but no interaction
+    .workflow-canvas-node,
+    .workflow-canvas-group,
+    .workflow-canvas-connector {
+      pointer-events: none;
+    }
   }
 }
 
@@ -69,6 +95,20 @@
     position: relative;
     min-width: 100%;
     min-height: 100%;
+  }
+
+  // When dragging a group, disable pointer events on all other groups to prevent interference
+  &__nodes-layer:has(.workflow-canvas-group--dragging) {
+    .workflow-canvas-group:not(.workflow-canvas-group--dragging) {
+      pointer-events: none;
+    }
+  }
+
+  // When dragging a node, disable pointer events on all groups to prevent interference
+  &__nodes-layer:has(.workflow-canvas-node--dragging) {
+    .workflow-canvas-group {
+      pointer-events: none;
+    }
   }
 
   &__svg-layer {
@@ -144,6 +184,7 @@
     margin-top: 24px;
     padding-top: 16px;
     border-top: 1px solid var(--wf-border);
+    text-align: right;
   }
 }
 
@@ -185,6 +226,12 @@
     border-color: var(--wf-primary);
   }
 
+  // Hover menu should only show on direct hover, not when child is hovered
+  &:hover .workflow-canvas-group__hover-menu {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
   &--selected {
     border-color: var(--wf-primary);
     background-color: var(--wf-group-bg-hover);
@@ -223,6 +270,16 @@
     }
   }
 
+  &--invalid-dropzone {
+    background-color: color-mix(in srgb, var(--wf-error) 15%, transparent) !important;
+    border-color: var(--wf-error) !important;
+    border-width: 2px;
+
+    &.workflow-canvas-group--nested {
+      background-color: color-mix(in srgb, var(--wf-error) 12%, transparent) !important;
+    }
+  }
+
   &__title {
     position: absolute;
     top: -13px;
@@ -234,6 +291,69 @@
     color: var(--wf-text-secondary);
     pointer-events: none;
     border-radius: 8px;
+  }
+
+  &__label-right {
+    position: absolute;
+    top: -13px;
+    right: 8px;
+    background-color: var(--wf-surface-2);
+    padding: 2px 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--wf-text-secondary);
+    pointer-events: none;
+    border-radius: 8px;
+    max-width: calc(100% - 16px);
+    text-align: right;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__hover-menu {
+    position: absolute;
+    right: 0;
+    top: 27px;
+    transform: translate(calc(100% + 4px), -27px);
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    opacity: 0;
+    z-index: 10;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+
+  &__hover-menu-button {
+    text-transform: uppercase;
+    width: auto;
+    height: 26px;
+    border-radius: 8px;
+    background: var(--wf-surface-2);
+    color: var(--wf-border-secondary);
+    border: 1px solid var(--wf-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 10px;
+    font-weight: 400;
+    line-height: 1;
+    padding: 0 10px;
+    white-space: nowrap;
+
+    &:hover:not(:disabled) {
+      color: var(--wf-primary);
+      border-color: var(--wf-primary);
+      background: var(--wf-surface-2);
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.3;
+    }
   }
 
   &__handle {
@@ -467,7 +587,55 @@
       justify-content: center;
       transition: all 0.2s;
       bottom: -6px;
+      // background-color: transparent;
+      // color: var(--wf-border-secondary);
+      // border: 1px solid var(--wf-primary);
     }
+  }
+
+  &__hover-menu {
+    position: absolute;
+    right: 0;
+    top: 27px;
+    transform: translate(calc(100% + 1px), -27px);
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    opacity: 0;
+    z-index: 10;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+
+  &__hover-menu-button {
+    text-transform: uppercase;
+    width: auto;
+    height: 26px;
+    border-radius: 8px;
+    background: var(--wf-surface-2);
+    color: var(--wf-border-secondary);
+    border: 1px solid var(--wf-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 10px;
+    font-weight: 400;
+    line-height: 1;
+    padding: 0 12px;
+    white-space: nowrap;
+
+    &:hover {
+      background: var(--wf-primary);
+      color: var(--wf-surface-2);
+      border-color: var(--wf-primary);
+    }
+  }
+
+  &:hover &__hover-menu {
+    opacity: 1;
+    pointer-events: auto;
   }
 }
 
@@ -628,32 +796,6 @@
   }
 }
 
-.workflow-canvas-empty-group-add {
-  position: absolute;
-  z-index: 5;
-
-  &__button {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: var(--wf-surface-2);
-    color: var(--wf-border-secondary);
-    border: 1px solid var(--wf-border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-size: 24px;
-    font-weight: 300;
-
-    &:hover {
-      color: var(--wf-primary);
-      border-color: var(--wf-primary);
-    }
-  }
-}
-
 // Type-specific node classes
 .workflow-canvas-node--type-trigger {
   // Default styling for trigger type nodes
@@ -672,7 +814,7 @@
 
 // Invalid connection visual feedback
 .workflow-canvas-connector--invalid {
-  stroke: #ef4444;
+  stroke: var(--wf-error);
   stroke-dasharray: 5, 5;
   opacity: 0.6;
 }
