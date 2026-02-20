@@ -42,40 +42,109 @@ export function getGroupDisplayLabelRight(group: WorkflowGroup): string {
   return ''
 }
 
-export function shouldHideGroupHoverMenu(
+export function shouldHideGroupAddNode(
   group: WorkflowGroup,
   groupTypes: GroupTypeConfig
 ): boolean {
   // Check instance-level property first
-  if (group.hideAddNodeWhenNotEmpty !== undefined) {
-    return group.hideAddNodeWhenNotEmpty && group.containedIds.length > 0
+  if (group.hideAddNode !== undefined) {
+    return group.hideAddNode
   }
 
   // Fall back to type-level property
   const groupTypeDef = groupTypes?.[group.kind]
-  if (groupTypeDef?.hideAddNodeWhenNotEmpty !== undefined) {
-    return groupTypeDef.hideAddNodeWhenNotEmpty && group.containedIds.length > 0
+  if (groupTypeDef?.hideAddNode !== undefined) {
+    return groupTypeDef.hideAddNode
   }
 
   return false
 }
 
-export function shouldHideNodeHoverMenu(
-  node: WorkflowNode,
-  nodeTypes: NodeTypeConfig,
-  edges: Array<{ from: { entityId: string } }>
+export function shouldHideGroupAddGroup(
+  group: WorkflowGroup,
+  groupTypes: GroupTypeConfig
 ): boolean {
   // Check instance-level property first
-  if (node.hideAddNodeWhenNotEmpty !== undefined) {
-    const hasOutgoingConnection = edges.some(edge => edge.from.entityId === node.id)
-    return node.hideAddNodeWhenNotEmpty && hasOutgoingConnection
+  if (group.hideAddGroup !== undefined) {
+    return group.hideAddGroup
+  }
+
+  // Fall back to type-level property
+  const groupTypeDef = groupTypes?.[group.kind]
+  if (groupTypeDef?.hideAddGroup !== undefined) {
+    return groupTypeDef.hideAddGroup
+  }
+
+  return false
+}
+
+export function shouldHideGroupNestedAddNode(
+  group: WorkflowGroup,
+  groupTypes: GroupTypeConfig
+): boolean {
+  // Check instance-level property first
+  if (group.hideNestedAddNode !== undefined) {
+    return group.hideNestedAddNode
+  }
+
+  // Fall back to type-level property
+  const groupTypeDef = groupTypes?.[group.kind]
+  if (groupTypeDef?.hideNestedAddNode !== undefined) {
+    return groupTypeDef.hideNestedAddNode
+  }
+
+  return false
+}
+
+export function shouldHideGroupNestedAddGroup(
+  group: WorkflowGroup,
+  groupTypes: GroupTypeConfig
+): boolean {
+  // Check instance-level property first
+  if (group.hideNestedAddGroup !== undefined) {
+    return group.hideNestedAddGroup
+  }
+
+  // Fall back to type-level property
+  const groupTypeDef = groupTypes?.[group.kind]
+  if (groupTypeDef?.hideNestedAddGroup !== undefined) {
+    return groupTypeDef.hideNestedAddGroup
+  }
+
+  return false
+}
+
+export function shouldHideNodeAddNode(
+  node: WorkflowNode,
+  nodeTypes: NodeTypeConfig
+): boolean {
+  // Check instance-level property first
+  if (node.hideAddNode !== undefined) {
+    return node.hideAddNode
   }
 
   // Fall back to type-level property
   const nodeTypeDef = nodeTypes?.[node.kind]
-  if (nodeTypeDef?.hideAddNodeWhenNotEmpty !== undefined) {
-    const hasOutgoingConnection = edges.some(edge => edge.from.entityId === node.id)
-    return nodeTypeDef.hideAddNodeWhenNotEmpty && hasOutgoingConnection
+  if (nodeTypeDef?.hideAddNode !== undefined) {
+    return nodeTypeDef.hideAddNode
+  }
+
+  return false
+}
+
+export function shouldHideNodeAddGroup(
+  node: WorkflowNode,
+  nodeTypes: NodeTypeConfig
+): boolean {
+  // Check instance-level property first
+  if (node.hideAddGroup !== undefined) {
+    return node.hideAddGroup
+  }
+
+  // Fall back to type-level property
+  const nodeTypeDef = nodeTypes?.[node.kind]
+  if (nodeTypeDef?.hideAddGroup !== undefined) {
+    return nodeTypeDef.hideAddGroup
   }
 
   return false

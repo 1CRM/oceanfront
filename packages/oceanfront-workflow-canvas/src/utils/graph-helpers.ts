@@ -8,7 +8,8 @@ import type {
   AddStepEvent,
   ConnectEvent,
   Size,
-  NodeTypeConfig
+  NodeTypeConfig,
+  ConnectedEntities
 } from '../types/workflow'
 
 /**
@@ -243,6 +244,32 @@ export const getEntityEdges = (graph: WorkflowGraph, entityId: string): Workflow
   graph.edges.filter(e => e.from.entityId === entityId || e.to.entityId === entityId)
 
 /**
+ * Get connected entities for a node or group
+ * Returns entities that have edges pointing TO this entity (incoming) and
+ * entities that this entity has edges pointing TO (outgoing)
+ */
+export function getConnectedEntities(graph: WorkflowGraph, entityId: string): ConnectedEntities {
+  const incoming: (WorkflowNode | WorkflowGroup)[] = []
+  const outgoing: (WorkflowNode | WorkflowGroup)[] = []
+
+  // Find all edges connected to this entity
+  graph.edges.forEach(edge => {
+    if (edge.to.entityId === entityId) {
+      // This is an incoming edge
+      const entity = findNode(graph, edge.from.entityId) || findGroup(graph, edge.from.entityId)
+      if (entity) incoming.push(entity)
+    }
+    if (edge.from.entityId === entityId) {
+      // This is an outgoing edge
+      const entity = findNode(graph, edge.to.entityId) || findGroup(graph, edge.to.entityId)
+      if (entity) outgoing.push(entity)
+    }
+  })
+
+  return { incoming, outgoing }
+}
+
+/**
  * Get the parent group that contains an entity (node or group)
  */
 export const getParentGroup = (graph: WorkflowGraph, entityId: string): WorkflowGroup | undefined =>
@@ -420,10 +447,10 @@ export function updateGroupBounds(
     groups: graph.groups.map(g =>
       g.id === groupId
         ? {
-          ...g,
-          position: { x: newBounds.x, y: newBounds.y },
-          size: { w: newBounds.w, h: newBounds.h }
-        }
+            ...g,
+            position: { x: newBounds.x, y: newBounds.y },
+            size: { w: newBounds.w, h: newBounds.h }
+          }
         : g
     )
   }
@@ -710,6 +737,7 @@ export function handleConnectNodes(
   event: ConnectEvent,
   options?: {
     edgeIdGenerator?: () => string
+    edgeLocked?: boolean
   }
 ): WorkflowGraph {
   const edgeIdGenerator = options?.edgeIdGenerator || defaultIdGenerator('edge')
@@ -717,7 +745,8 @@ export function handleConnectNodes(
   return addEdge(graph, {
     id: edgeIdGenerator(),
     from: { entityId: event.fromNodeId },
-    to: { entityId: event.toNodeId }
+    to: { entityId: event.toNodeId },
+    ...(options?.edgeLocked !== undefined && { locked: options.edgeLocked })
   })
 }
 

@@ -99,28 +99,71 @@
               {{ getGroupDisplayLabelRight(group) }}
             </div>
 
-            <!-- Hover menu with add node and add group options -->
+            <!-- Connection hover menu (for adding connected nodes/groups after) -->
             <div
-              v-if="!isViewMode && !readonly && !shouldHideHoverMenu(group)"
-              class="workflow-canvas-group__hover-menu"
+              v-if="!isViewMode && !readonly"
+              class="workflow-canvas-group__hover-menu-connection"
             >
               <button
+                v-if="!shouldHideGroupAddNode(group)"
                 class="workflow-canvas-group__hover-menu-button"
-                @click.stop="handleAddNodeToGroup(group.id)"
+                @click.stop="handleAddNodeAfterGroup(group.id)"
                 type="button"
-                :title="mergedLabels.addNodeToGroupButton"
+                :title="mergedLabels.addNodeAfterNodeButton"
               >
                 {{ getGroupAddNodeButtonText(group) }}
               </button>
               <button
-                v-if="!wouldExceedMaxDepth('', group.id)"
+                v-if="!shouldHideGroupAddGroup(group)"
                 class="workflow-canvas-group__hover-menu-button"
-                @click.stop="handleAddNestedGroup(group.id)"
+                @click.stop="handleAddGroupAfterGroup(group.id)"
                 type="button"
-                :title="mergedLabels.addNestedGroupButton"
+                :title="mergedLabels.addGroupAfterNodeButton"
               >
                 {{ getGroupAddGroupButtonText(group) }}
               </button>
+            </div>
+
+            <!-- Empty group menu with centered + button -->
+            <div
+              v-if="!isViewMode && !readonly && group.containedIds.length === 0"
+              class="workflow-canvas-group__empty-container"
+            >
+              <div class="workflow-canvas-group__empty-plus">
+                <button
+                  class="workflow-canvas-group__empty-plus-button"
+                  type="button"
+                  @mousedown.stop
+                  @click.stop="handleEmptyPlusClick(group)"
+                >
+                  +
+                </button>
+                <div
+                  v-if="getEmptyMenuVisibleActions(group).length > 1"
+                  class="workflow-canvas-group__empty-menu"
+                >
+                  <button
+                    v-if="!shouldHideGroupNestedAddNode(group)"
+                    class="workflow-canvas-group__hover-menu-button"
+                    @click.stop="handleAddNodeToGroup(group.id)"
+                    type="button"
+                    :title="mergedLabels.addNodeToGroupButton"
+                  >
+                    {{ getGroupAddNodeButtonText(group) }}
+                  </button>
+                  <button
+                    v-if="
+                      !wouldExceedMaxDepth('', group.id) && !shouldHideGroupNestedAddGroup(group)
+                    "
+                    class="workflow-canvas-group__hover-menu-button"
+                    @click.stop="handleAddNestedGroup(group.id)"
+                    type="button"
+                    :title="mergedLabels.addNestedGroupButton"
+                  >
+                    {{ getGroupAddGroupButtonText(group) }}
+                  </button>
+                </div>
+              </div>
             </div>
 
             <!-- Output handle -->
@@ -234,11 +277,9 @@
             </slot>
 
             <!-- Hover menu with add node and add group options -->
-            <div
-              v-if="!isViewMode && !readonly && !shouldHideNodeHoverMenu(node)"
-              class="workflow-canvas-node__hover-menu"
-            >
+            <div v-if="!isViewMode && !readonly" class="workflow-canvas-node__hover-menu">
               <button
+                v-if="!shouldHideNodeAddNode(node)"
                 class="workflow-canvas-node__hover-menu-button"
                 @click.stop="handleAddNodeAfterNode(node.id)"
                 type="button"
@@ -247,6 +288,7 @@
                 {{ getNodeAddNodeButtonText(node) }}
               </button>
               <button
+                v-if="!shouldHideNodeAddGroup(node)"
                 class="workflow-canvas-node__hover-menu-button"
                 @click.stop="handleAddGroupAfterNode(node.id)"
                 type="button"
@@ -329,7 +371,8 @@ import type {
   WorkflowCanvasLabels,
   NodeTypeConfig,
   GroupTypeConfig,
-  WorkflowCanvasMode
+  WorkflowCanvasMode,
+  EdgeAddPayload
 } from '../types/workflow'
 import {
   findNode,
@@ -344,7 +387,8 @@ import {
   addNode,
   addGroup,
   addEntityToGroup,
-  handleConnectNodes
+  handleConnectNodes,
+  getConnectedEntities
 } from '../utils/graph-helpers'
 import { DEFAULT_LABELS } from '../constants/labels'
 import WorkflowTile from './WorkflowTile.vue'
@@ -418,15 +462,19 @@ import { useCanvas } from '../composables/useCanvas'
  *
  * @prop {WorkflowCanvasMode} mode - Canvas mode: 'view' for read-only display or 'edit' for full interactivity (default: 'view')
  *
+ * @prop {boolean} edgesLocked - If true, all edges are locked and cannot be disconnected or deleted.
+ *   This combines with individual edge.locked properties (edges are locked if either is true).
+ *   When enabled, newly created edges will automatically have their locked property set to true. (default: false)
+ *
  * @emits update:modelValue - Emitted when the graph changes (nodes moved, added, deleted, etc.)
  * @emits update:selectedId - Emitted when selection changes
  * @emits node-add - Emitted when a node is added
- * @emits node-delete - Emitted when a node is deleted
+ * @emits node-delete - Emitted when a node is deleted with full entity information (node, parentGroup, connectedEntities)
  * @emits node-update - Emitted when a node is updated
  * @emits group-add - Emitted when a group is added
  * @emits group-delete - Emitted when a group is deleted
  * @emits group-update - Emitted when a group is updated
- * @emits edge-add - Emitted when an edge is added
+ * @emits edge-add - Emitted when an edge is added with full entity information (edge, from, to)
  * @emits edge-delete - Emitted when an edge is deleted
  */
 export default defineComponent({
@@ -492,6 +540,10 @@ export default defineComponent({
     mode: {
       type: String as () => WorkflowCanvasMode,
       default: 'view'
+    },
+    edgesLocked: {
+      type: Boolean,
+      default: false
     }
   },
   emits: [
@@ -647,6 +699,21 @@ export default defineComponent({
       }
     }
 
+    const createEdgeAddPayload = (graph: WorkflowGraph, edge: WorkflowEdge): EdgeAddPayload => {
+      const fromEntity = findNode(graph, edge.from.entityId) || findGroup(graph, edge.from.entityId)
+      const toEntity = findNode(graph, edge.to.entityId) || findGroup(graph, edge.to.entityId)
+
+      if (!fromEntity || !toEntity) {
+        throw new Error('Edge references non-existent entities')
+      }
+
+      return {
+        edge,
+        from: fromEntity,
+        to: toEntity
+      }
+    }
+
     const expandGroupIfNeeded = (
       graph: WorkflowGraph,
       groupId: string,
@@ -704,20 +771,26 @@ export default defineComponent({
       wouldExceedMaxDepth,
       onGraphUpdate: graph => emit('update:modelValue', graph),
       onNodeDragStart: nodeId => emit('node-drag-start', nodeId),
-      onNodeDragEnd: (nodeId, position) => emit('node-drag-end', nodeId, position),
+      onNodeDragEnd: (nodeId, position, parentGroup, connected) =>
+        emit('node-drag-end', nodeId, position, parentGroup, connected),
       onGroupDragStart: groupId => emit('group-drag-start', groupId),
-      onGroupDragEnd: (groupId, position) => emit('group-drag-end', groupId, position),
+      onGroupDragEnd: (groupId, position, parentGroup, connected) =>
+        emit('group-drag-end', groupId, position, parentGroup, connected),
       onEntityMovedToGroup: (entityId, groupId) => emit('entity-moved-to-group', entityId, groupId)
     })
 
     const connections = useConnections({
       graph: toRef(props, 'modelValue'),
       readonly: toRef(props, 'readonly'),
+      edgesLocked: toRef(props, 'edgesLocked'),
       canvasRef,
       getEntityCenter: canvas.getEntityCenter,
       getEntityDimensions: canvas.getEntityDimensions,
       onGraphUpdate: graph => emit('update:modelValue', graph),
-      onEdgeAdd: edge => emit('edge-add', edge),
+      onEdgeAdd: edge => {
+        const payload = createEdgeAddPayload(props.modelValue, edge)
+        emit('edge-add', payload)
+      },
       onEdgeDelete: edgeId => emit('edge-delete', edgeId),
       nodeTypes: toRef(props, 'nodeTypes')
     })
@@ -846,37 +919,105 @@ export default defineComponent({
       return ''
     }
 
-    function shouldHideHoverMenu(group: WorkflowGroup): boolean {
+    function shouldHideGroupAddNode(group: WorkflowGroup): boolean {
       // Check instance-level property first
-      if (group.hideAddNodeWhenNotEmpty !== undefined) {
-        return group.hideAddNodeWhenNotEmpty && group.containedIds.length > 0
+      if (group.hideAddNode !== undefined) {
+        return group.hideAddNode
       }
 
       // Fall back to type-level property
       const groupTypeDef = props.groupTypes?.[group.kind]
-      if (groupTypeDef?.hideAddNodeWhenNotEmpty !== undefined) {
-        return groupTypeDef.hideAddNodeWhenNotEmpty && group.containedIds.length > 0
+      if (groupTypeDef?.hideAddNode !== undefined) {
+        return groupTypeDef.hideAddNode
       }
 
       return false
     }
 
-    function shouldHideNodeHoverMenu(node: WorkflowNode): boolean {
+    function shouldHideGroupAddGroup(group: WorkflowGroup): boolean {
       // Check instance-level property first
-      if (node.hideAddNodeWhenNotEmpty !== undefined) {
-        const hasOutgoingConnection = props.modelValue.edges.some(
-          edge => edge.from.entityId === node.id
-        )
-        return node.hideAddNodeWhenNotEmpty && hasOutgoingConnection
+      if (group.hideAddGroup !== undefined) {
+        return group.hideAddGroup
+      }
+
+      // Fall back to type-level property
+      const groupTypeDef = props.groupTypes?.[group.kind]
+      if (groupTypeDef?.hideAddGroup !== undefined) {
+        return groupTypeDef.hideAddGroup
+      }
+
+      return false
+    }
+
+    function shouldHideGroupNestedAddNode(group: WorkflowGroup): boolean {
+      // Check instance-level property first
+      if (group.hideNestedAddNode !== undefined) {
+        return group.hideNestedAddNode
+      }
+
+      // Fall back to type-level property
+      const groupTypeDef = props.groupTypes?.[group.kind]
+      if (groupTypeDef?.hideNestedAddNode !== undefined) {
+        return groupTypeDef.hideNestedAddNode
+      }
+
+      return false
+    }
+
+    function shouldHideGroupNestedAddGroup(group: WorkflowGroup): boolean {
+      // Check instance-level property first
+      if (group.hideNestedAddGroup !== undefined) {
+        return group.hideNestedAddGroup
+      }
+
+      // Fall back to type-level property
+      const groupTypeDef = props.groupTypes?.[group.kind]
+      if (groupTypeDef?.hideNestedAddGroup !== undefined) {
+        return groupTypeDef.hideNestedAddGroup
+      }
+
+      return false
+    }
+
+    function shouldHideNodeAddNode(node: WorkflowNode): boolean {
+      // Check instance-level property first
+      if (node.hideAddNode !== undefined) {
+        return node.hideAddNode
       }
 
       // Fall back to type-level property
       const nodeTypeDef = props.nodeTypes?.[node.kind]
-      if (nodeTypeDef?.hideAddNodeWhenNotEmpty !== undefined) {
-        const hasOutgoingConnection = props.modelValue.edges.some(
-          edge => edge.from.entityId === node.id
-        )
-        return nodeTypeDef.hideAddNodeWhenNotEmpty && hasOutgoingConnection
+      if (nodeTypeDef?.hideAddNode !== undefined) {
+        return nodeTypeDef.hideAddNode
+      }
+
+      return false
+    }
+
+    function getEmptyMenuVisibleActions(group: WorkflowGroup): ('addNode' | 'addGroup')[] {
+      const actions: ('addNode' | 'addGroup')[] = []
+
+      if (!shouldHideGroupNestedAddNode(group)) {
+        actions.push('addNode')
+      }
+
+      if (!wouldExceedMaxDepth('', group.id) && !shouldHideGroupNestedAddGroup(group)) {
+        actions.push('addGroup')
+      }
+
+      return actions
+    }
+
+    function shouldHideNodeAddGroup(node: WorkflowNode): boolean {
+      // Check instance-level property first
+      if (node.hideAddGroup !== undefined) {
+        return node.hideAddGroup
+      }
+
+      // Fall back to type-level property
+      const nodeTypeDef = props.nodeTypes?.[node.kind]
+      if (nodeTypeDef?.hideAddGroup !== undefined) {
+        return nodeTypeDef.hideAddGroup
       }
 
       return false
@@ -966,17 +1107,25 @@ export default defineComponent({
       }
 
       // Create edge connecting source node to new node
-      updatedGraph = handleConnectNodes(updatedGraph, {
-        fromNodeId: nodeId,
-        toNodeId: result.newNodeId
-      })
+      updatedGraph = handleConnectNodes(
+        updatedGraph,
+        {
+          fromNodeId: nodeId,
+          toNodeId: result.newNodeId
+        },
+        {
+          edgeLocked: props.edgesLocked
+        }
+      )
 
       emit('update:modelValue', updatedGraph)
       emit('update:selectedId', result.newNodeId)
       const newNode = updatedGraph.nodes.find(n => n.id === result.newNodeId)!
-      emit('node-add', newNode)
+      const connectedEntities = getConnectedEntities(updatedGraph, result.newNodeId)
+      emit('node-add', newNode, parentGroup || null, connectedEntities)
       const newEdge = updatedGraph.edges[updatedGraph.edges.length - 1]
-      emit('edge-add', newEdge)
+      const payload = createEdgeAddPayload(updatedGraph, newEdge)
+      emit('edge-add', payload)
     }
 
     function handleAddGroupAfterNode(nodeId: string) {
@@ -1028,17 +1177,25 @@ export default defineComponent({
       }
 
       // Create edge connecting source node to new group
-      updatedGraph = handleConnectNodes(updatedGraph, {
-        fromNodeId: nodeId,
-        toNodeId: result.newGroupId
-      })
+      updatedGraph = handleConnectNodes(
+        updatedGraph,
+        {
+          fromNodeId: nodeId,
+          toNodeId: result.newGroupId
+        },
+        {
+          edgeLocked: props.edgesLocked
+        }
+      )
 
       emit('update:modelValue', updatedGraph)
       emit('update:selectedId', result.newGroupId)
       const newGroup = updatedGraph.groups.find(g => g.id === result.newGroupId)!
-      emit('group-add', newGroup)
+      const connectedEntities = getConnectedEntities(updatedGraph, result.newGroupId)
+      emit('group-add', newGroup, parentGroup || null, connectedEntities)
       const newEdge = updatedGraph.edges[updatedGraph.edges.length - 1]
-      emit('edge-add', newEdge)
+      const payload = createEdgeAddPayload(updatedGraph, newEdge)
+      emit('edge-add', payload)
     }
 
     function handleCanvasClick(event: MouseEvent) {
@@ -1070,6 +1227,9 @@ export default defineComponent({
         }
       }
 
+      // Track edge count before adding step to determine how many edges were created
+      const beforeEdgeCount = props.modelValue.edges.length
+
       // Also handle it internally by default
       const result = handleAddStepToGraph(props.modelValue, event, {
         defaultKind
@@ -1091,7 +1251,17 @@ export default defineComponent({
       emit('update:modelValue', updatedGraph)
       emit('update:selectedId', result.newNodeId)
       const newNode = updatedGraph.nodes.find(n => n.id === result.newNodeId)!
-      emit('node-add', newNode)
+      const parentGroup = event.inGroupId ? findGroup(updatedGraph, event.inGroupId) : null
+      const connectedEntities = getConnectedEntities(updatedGraph, result.newNodeId)
+      emit('node-add', newNode, parentGroup, connectedEntities)
+
+      // Emit edge-add for all newly created edges
+      // handleAddStepToGraph creates 1 edge (no existing edge) or 2 edges (splits existing edge)
+      const edgesAdded = updatedGraph.edges.slice(beforeEdgeCount)
+      edgesAdded.forEach(edge => {
+        const payload = createEdgeAddPayload(updatedGraph, edge)
+        emit('edge-add', payload)
+      })
     }
 
     const closePanel = () => emit('update:selectedId', null)
@@ -1107,7 +1277,6 @@ export default defineComponent({
         inGroupId: parentGroup?.id
       })
     }
-
 
     function handleAddNodeToGroup(groupId: string) {
       const group = findGroup(props.modelValue, groupId)
@@ -1181,7 +1350,9 @@ export default defineComponent({
       emit('update:modelValue', updatedGraph)
       emit('update:selectedId', result.newNodeId)
       const newNode = updatedGraph.nodes.find(n => n.id === result.newNodeId)!
-      emit('node-add', newNode)
+      const parentGroup = findGroup(updatedGraph, groupId)
+      const connectedEntities = getConnectedEntities(updatedGraph, result.newNodeId)
+      emit('node-add', newNode, parentGroup || null, connectedEntities)
     }
 
     function handleAddNestedGroup(parentGroupId: string) {
@@ -1289,7 +1460,167 @@ export default defineComponent({
       emit('update:modelValue', updatedGraph)
       emit('update:selectedId', result.newGroupId)
       const newGroup = updatedGraph.groups.find(g => g.id === result.newGroupId)!
-      emit('group-add', newGroup)
+      // parentGroup is already defined above, reuse it for emit
+      const connectedEntities = getConnectedEntities(updatedGraph, result.newGroupId)
+      emit('group-add', newGroup, parentGroup || null, connectedEntities)
+    }
+
+    function handleEmptyPlusClick(group: WorkflowGroup) {
+      const visibleActions = getEmptyMenuVisibleActions(group)
+
+      if (visibleActions.length === 1) {
+        if (visibleActions[0] === 'addNode') {
+          handleAddNodeToGroup(group.id)
+        } else if (visibleActions[0] === 'addGroup') {
+          handleAddNestedGroup(group.id)
+        }
+      }
+    }
+
+    function handleAddNodeAfterGroup(groupId: string) {
+      const sourceGroup = findGroup(props.modelValue, groupId)
+      if (!sourceGroup) return
+
+      const parentGroup = getParentGroup(props.modelValue, groupId)
+
+      // Determine node kind from parent group if available
+      let nodeKind = ''
+      if (parentGroup && parentGroup.kind && props.nodeTypes[parentGroup.kind]) {
+        nodeKind = parentGroup.kind
+      }
+
+      // Calculate position: place new node below and aligned with group
+      const nodeWidth = 250
+      const nodeHeight = 100
+      const groupHeight = sourceGroup.size.h
+      const spacing = 20
+      const newX = sourceGroup.position.x
+      const newY = sourceGroup.position.y + groupHeight + spacing
+
+      // Expand parent group if needed
+      let graphWithExpandedGroup = props.modelValue
+      if (parentGroup) {
+        graphWithExpandedGroup = expandGroupIfNeeded(
+          props.modelValue,
+          parentGroup.id,
+          { x: newX, y: newY },
+          { w: nodeWidth, h: nodeHeight }
+        )
+      }
+
+      // Create new node at calculated position
+      const result = addNode(graphWithExpandedGroup, {
+        position: { x: newX, y: newY },
+        kind: nodeKind
+      })
+
+      // Add node to parent group if source group is in a parent group
+      let updatedGraph = result.graph
+      if (parentGroup) {
+        updatedGraph = addEntityToGroup(updatedGraph, result.newNodeId, parentGroup.id)
+      }
+
+      // Apply lockParent default from node type definition
+      const nodeTypeDef = nodeKind ? props.nodeTypes?.[nodeKind] : undefined
+      if (nodeTypeDef?.lockParent !== undefined) {
+        updatedGraph = {
+          ...updatedGraph,
+          nodes: updatedGraph.nodes.map(n =>
+            n.id === result.newNodeId ? { ...n, lockParent: nodeTypeDef.lockParent } : n
+          )
+        }
+      }
+
+      // Create edge connecting source group to new node
+      updatedGraph = handleConnectNodes(
+        updatedGraph,
+        {
+          fromNodeId: groupId,
+          toNodeId: result.newNodeId
+        },
+        {
+          edgeLocked: props.edgesLocked
+        }
+      )
+
+      emit('update:modelValue', updatedGraph)
+      emit('update:selectedId', result.newNodeId)
+      const newNode = updatedGraph.nodes.find(n => n.id === result.newNodeId)!
+      const connectedEntities = getConnectedEntities(updatedGraph, result.newNodeId)
+      emit('node-add', newNode, parentGroup || null, connectedEntities)
+      const newEdge = updatedGraph.edges[updatedGraph.edges.length - 1]
+      const payload = createEdgeAddPayload(updatedGraph, newEdge)
+      emit('edge-add', payload)
+    }
+
+    function handleAddGroupAfterGroup(groupId: string) {
+      const sourceGroup = findGroup(props.modelValue, groupId)
+      if (!sourceGroup) return
+
+      const parentGroup = getParentGroup(props.modelValue, groupId)
+
+      // Calculate position below source group
+      const groupHeight = sourceGroup.size.h
+      const spacing = 20
+      const defaultGroupSize = { w: 290, h: 140 }
+      const newX = sourceGroup.position.x
+      const newY = sourceGroup.position.y + groupHeight + spacing
+
+      // Expand parent group if needed
+      let graphWithExpandedGroup = props.modelValue
+      if (parentGroup) {
+        graphWithExpandedGroup = expandGroupIfNeeded(
+          props.modelValue,
+          parentGroup.id,
+          { x: newX, y: newY },
+          defaultGroupSize
+        )
+      }
+
+      // Create new group - use same kind as parent group if available
+      const groupKind = parentGroup?.kind || mergedLabels.value.defaultGroupKind
+      const result = addGroup(graphWithExpandedGroup, {
+        position: { x: newX, y: newY },
+        kind: groupKind
+      })
+
+      // Add group to parent group if source group is in a parent group
+      let updatedGraph = result.graph
+      if (parentGroup) {
+        updatedGraph = addEntityToGroup(updatedGraph, result.newGroupId, parentGroup.id)
+      }
+
+      // Apply lockParent default from group type definition if available
+      const groupTypeDef = props.groupTypes?.[groupKind]
+      if (groupTypeDef?.lockParent !== undefined) {
+        updatedGraph = {
+          ...updatedGraph,
+          groups: updatedGraph.groups.map(g =>
+            g.id === result.newGroupId ? { ...g, lockParent: groupTypeDef.lockParent } : g
+          )
+        }
+      }
+
+      // Create edge connecting source group to new group
+      updatedGraph = handleConnectNodes(
+        updatedGraph,
+        {
+          fromNodeId: groupId,
+          toNodeId: result.newGroupId
+        },
+        {
+          edgeLocked: props.edgesLocked
+        }
+      )
+
+      emit('update:modelValue', updatedGraph)
+      emit('update:selectedId', result.newGroupId)
+      const newGroup = updatedGraph.groups.find(g => g.id === result.newGroupId)!
+      const connectedEntities = getConnectedEntities(updatedGraph, result.newGroupId)
+      emit('group-add', newGroup, parentGroup || null, connectedEntities)
+      const newEdge = updatedGraph.edges[updatedGraph.edges.length - 1]
+      const payload = createEdgeAddPayload(updatedGraph, newEdge)
+      emit('edge-add', payload)
     }
 
     function handleDeleteNode() {
@@ -1297,7 +1628,9 @@ export default defineComponent({
       if (!nodeId) return
       if (selectedNode.value?.locked) return
 
+      const nodeToDelete = selectedNode.value
       const parentGroup = getParentGroup(props.modelValue, nodeId)
+      const connectedEntities = getConnectedEntities(props.modelValue, nodeId)
 
       const updatedGraph = {
         ...props.modelValue,
@@ -1315,7 +1648,7 @@ export default defineComponent({
 
       emit('update:selectedId', null)
       emit('update:modelValue', graphWithoutNode)
-      emit('node-delete', nodeId)
+      emit('node-delete', nodeToDelete, parentGroup || null, connectedEntities)
     }
 
     function handleDeleteGroup() {
@@ -1356,8 +1689,10 @@ export default defineComponent({
         nodes: props.modelValue.nodes.map(node => (node.id === updatedNode.id ? updatedNode : node))
       }
 
+      const parentGroup = getParentGroup(updatedGraph, updatedNode.id)
+      const connectedEntities = getConnectedEntities(updatedGraph, updatedNode.id)
       emit('update:modelValue', updatedGraph)
-      emit('node-update', updatedNode)
+      emit('node-update', updatedNode, parentGroup || null, connectedEntities)
     }
 
     function handleUpdateGroup(updatedGroup: WorkflowGroup) {
@@ -1368,8 +1703,10 @@ export default defineComponent({
         )
       }
 
+      const parentGroup = getParentGroup(updatedGraph, updatedGroup.id)
+      const connectedEntities = getConnectedEntities(updatedGraph, updatedGroup.id)
       emit('update:modelValue', updatedGraph)
-      emit('group-update', updatedGroup)
+      emit('group-update', updatedGroup, parentGroup || null, connectedEntities)
     }
 
     function handleKeyDown(event: KeyboardEvent) {
@@ -1460,7 +1797,8 @@ export default defineComponent({
       emit('update:modelValue', updatedGraph)
       emit('update:selectedId', result.newNodeId)
       const newNode = updatedGraph.nodes.find(n => n.id === result.newNodeId)!
-      emit('node-add', newNode)
+      const connectedEntities = getConnectedEntities(updatedGraph, result.newNodeId)
+      emit('node-add', newNode, null, connectedEntities)
     }
 
     function addNewGroup(options?: { type?: string; label?: string }) {
@@ -1485,7 +1823,8 @@ export default defineComponent({
       emit('update:modelValue', updatedGraph)
       emit('update:selectedId', result.newGroupId)
       const newGroup = updatedGraph.groups.find(g => g.id === result.newGroupId)!
-      emit('group-add', newGroup)
+      const connectedEntities = getConnectedEntities(updatedGraph, result.newGroupId)
+      emit('group-add', newGroup, null, connectedEntities)
     }
 
     expose({
@@ -1512,8 +1851,13 @@ export default defineComponent({
       getNodeCssClass,
       getGroupDisplayLabel,
       getGroupDisplayLabelRight,
-      shouldHideHoverMenu,
-      shouldHideNodeHoverMenu,
+      shouldHideGroupAddNode,
+      shouldHideGroupAddGroup,
+      shouldHideGroupNestedAddNode,
+      shouldHideGroupNestedAddGroup,
+      shouldHideNodeAddNode,
+      shouldHideNodeAddGroup,
+      getEmptyMenuVisibleActions,
       getNodeAddNodeButtonText,
       getNodeAddGroupButtonText,
       getGroupAddNodeButtonText,
@@ -1527,8 +1871,11 @@ export default defineComponent({
       handleFreeOutputClick,
       handleAddNodeToGroup,
       handleAddNestedGroup,
+      handleEmptyPlusClick,
       handleAddNodeAfterNode,
       handleAddGroupAfterNode,
+      handleAddNodeAfterGroup,
+      handleAddGroupAfterGroup,
       handleDeleteNode,
       handleDeleteGroup,
       handleUpdateNode,

@@ -87,7 +87,8 @@ export interface NodeTypeDefinition {
   fields: NodeFieldDefinition[] // Fields for this type
   cssClass?: string // Custom CSS class (defaults to `workflow-canvas-node--type-${type}`)
   lockParent?: boolean // If true, nodes of this type are locked to parent by default
-  hideAddNodeWhenNotEmpty?: boolean // If true, hides hover menu when node has outgoing connection
+  hideAddNode?: boolean // If true, hides "+ node" button in hover menu
+  hideAddGroup?: boolean // If true, hides "+ group" button in hover menu
   addNodeButtonText?: string // Custom text for "+ node" button in hover menu (defaults to "+ node")
   addGroupButtonText?: string // Custom text for "+ group" button in hover menu (defaults to "+ group")
 }
@@ -153,7 +154,10 @@ export interface GroupTypeDefinition {
   showTypeField?: boolean // Control visibility of type field in config panel (default: true)
   showTitleField?: boolean // Control visibility of title field in config panel (default: true)
   lockParent?: boolean // If true, groups of this type are locked to parent by default
-  hideAddNodeWhenNotEmpty?: boolean // If true, hides hover menu when group contains items
+  hideAddNode?: boolean // If true, hides "+ node" button in connection hover menu
+  hideAddGroup?: boolean // If true, hides "+ group" button in connection hover menu
+  hideNestedAddNode?: boolean // If true, hides "+ node" button in empty group "+" menu
+  hideNestedAddGroup?: boolean // If true, hides "+ group" button in empty group "+" menu
   addNodeButtonText?: string // Custom text for "+ node" button in group hover menu (defaults to "+ node")
   addGroupButtonText?: string // Custom text for "+ group" button in group hover menu (defaults to "+ group")
 }
@@ -185,7 +189,8 @@ export interface WorkflowNode {
   locked?: boolean // if true, prevents deletion
   readonly?: boolean // if true, prevents editing (hides menu and config panel)
   lockParent?: boolean // if true, prevents moving outside parent group
-  hideAddNodeWhenNotEmpty?: boolean // if true, hides hover menu when node has outgoing connection
+  hideAddNode?: boolean // if true, hides "+ node" button in hover menu
+  hideAddGroup?: boolean // if true, hides "+ group" button in hover menu
 }
 
 /**
@@ -196,6 +201,15 @@ export interface WorkflowEdge {
   from: Port
   to: Port
   locked?: boolean // if true, prevents disconnection/deletion
+}
+
+/**
+ * Payload emitted when an edge is added
+ */
+export interface EdgeAddPayload {
+  edge: WorkflowEdge
+  from: WorkflowNode | WorkflowGroup
+  to: WorkflowNode | WorkflowGroup
 }
 
 /**
@@ -215,7 +229,10 @@ export interface WorkflowGroup {
   readonly?: boolean // if true, prevents editing (hides config panel)
   lockParent?: boolean // if true, prevents moving outside parent group
   maxDepth?: number | null // if set, overrides global maxGroupDepth for this group
-  hideAddNodeWhenNotEmpty?: boolean // if true, hides "+ node" button when group contains items
+  hideAddNode?: boolean // if true, hides "+ node" button in connection hover menu
+  hideAddGroup?: boolean // if true, hides "+ group" button in connection hover menu
+  hideNestedAddNode?: boolean // if true, hides "+ node" button in empty group "+" menu
+  hideNestedAddGroup?: boolean // if true, hides "+ group" button in empty group "+" menu
   nested?: NestedGroupConfig // Per-instance override for nested group configuration
 }
 
@@ -226,6 +243,14 @@ export interface WorkflowGraph {
   nodes: WorkflowNode[]
   edges: WorkflowEdge[]
   groups: WorkflowGroup[]
+}
+
+/**
+ * Connected entities for a node or group
+ */
+export interface ConnectedEntities {
+  incoming: (WorkflowNode | WorkflowGroup)[] // Entities that have edges pointing to this entity
+  outgoing: (WorkflowNode | WorkflowGroup)[] // Entities that this entity has edges pointing to
 }
 
 /**

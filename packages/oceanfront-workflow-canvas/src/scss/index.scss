@@ -226,12 +226,6 @@
     border-color: var(--wf-primary);
   }
 
-  // Hover menu should only show on direct hover, not when child is hovered
-  &:hover .workflow-canvas-group__hover-menu {
-    opacity: 1;
-    pointer-events: auto;
-  }
-
   &--selected {
     border-color: var(--wf-primary);
     background-color: var(--wf-group-bg-hover);
@@ -323,6 +317,8 @@
     z-index: 10;
     pointer-events: none;
     transition: opacity 0.2s;
+    height: 100%;
+    cursor: default;
   }
 
   &__hover-menu-button {
@@ -354,6 +350,109 @@
       cursor: not-allowed;
       opacity: 0.3;
     }
+  }
+
+  &__hover-menu-connection {
+    position: absolute;
+    right: 0;
+    top: 27px;
+    transform: translate(calc(100% + 4px), -27px);
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    opacity: 0;
+    z-index: 10;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    height: 100%;
+    cursor: default;
+
+    &::before {
+      content: '';
+      position: absolute;
+      right: 100%;
+      top: 0;
+      width: 5px;
+      height: 100%;
+    }
+  }
+
+  &:hover &__hover-menu-connection {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  &:has(&__empty-plus:hover) &__hover-menu-connection {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  &__empty-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 15;
+    pointer-events: auto;
+  }
+
+  &__empty-plus {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__empty-plus-button {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--wf-surface-2);
+    color: var(--wf-border-secondary);
+    border: 1px solid var(--wf-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 20px;
+    font-weight: 300;
+    line-height: 1;
+
+    &:hover {
+      color: var(--wf-primary);
+      border-color: var(--wf-primary);
+    }
+  }
+
+  &__empty-menu {
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    transform: translate(8px, -50%);
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    white-space: nowrap;
+
+    &::before {
+      content: '';
+      position: absolute;
+      right: 100%;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 8px;
+      height: 100%;
+      min-height: 40px;
+    }
+  }
+
+  &__empty-plus:hover &__empty-menu {
+    opacity: 1;
+    pointer-events: auto;
   }
 
   &__handle {
@@ -605,6 +704,17 @@
     z-index: 10;
     pointer-events: none;
     transition: opacity 0.2s;
+    height: 100%;
+    cursor: default;
+
+    &::before {
+      content: '';
+      position: absolute;
+      right: 100%;
+      top: 0;
+      width: 2px;
+      height: 100%;
+    }
   }
 
   &__hover-menu-button {

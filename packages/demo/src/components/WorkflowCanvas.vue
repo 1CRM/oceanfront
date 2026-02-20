@@ -3,10 +3,10 @@
     <h1>Workflow Canvas</h1>
 
     <div class="demo-actions">
-      <of-button @click="workflowCanvasRef?.addNewNode()" variant="filled">
+      <of-button @click="addNewNodeWrapper" variant="filled">
         + Add New Node
       </of-button>
-      <of-button @click="workflowCanvasRef?.addNewGroup()" variant="filled">
+      <of-button @click="addNewGroupWrapper" variant="filled">
         + Add New Group
       </of-button>
       <of-button @click="resetCanvas" variant="outlined">
@@ -59,6 +59,17 @@
           />
           <span style="margin-left: 8px; color: #666; font-size: 13px">
             (hides input/output handles when they have no connections)
+          </span>
+        </div>
+        <div class="control-item">
+          <strong>Lock All Edges:</strong>
+          <input
+            type="checkbox"
+            v-model="edgesLocked"
+            style="margin-left: 8px"
+          />
+          <span style="margin-left: 8px; color: #666; font-size: 13px">
+            (prevents disconnection/deletion of all edges)
           </span>
         </div>
       </div>
@@ -228,6 +239,34 @@
       </div>
     </details>
 
+    <details class="demo-section">
+      <summary>Hide Hover Menu Buttons Demo</summary>
+      <p class="demo-description">
+        These buttons demonstrate independent control of hover menu buttons
+        using
+        <code>hideAddNode</code> and <code>hideAddGroup</code>. These are simple
+        boolean flags that can be set at instance level or type level. When
+        true, the corresponding button is hidden from the hover menu.
+      </p>
+      <div class="demo-actions">
+        <of-button @click="hideAddNodeForFirstNode" variant="outlined">
+          Hide "+ node" for First Node
+        </of-button>
+        <of-button @click="hideAddGroupForFirstNode" variant="outlined">
+          Hide "+ group" for First Node
+        </of-button>
+        <of-button @click="hideAddNodeForFirstGroup" variant="outlined">
+          Hide "+ node" for First Group
+        </of-button>
+        <of-button @click="hideAddGroupForFirstGroup" variant="outlined">
+          Hide "+ group" for First Group
+        </of-button>
+        <of-button @click="showAllButtons" variant="outlined">
+          Show All Buttons
+        </of-button>
+      </div>
+    </details>
+
     <div class="workflow-demo">
       <WorkflowCanvas
         ref="workflowCanvasRef"
@@ -238,6 +277,7 @@
         :height="600"
         :max-group-depth="maxGroupDepth"
         :hide-empty-handles="hideEmptyHandles"
+        :edges-locked="edgesLocked"
         :node-types="nodeTypes"
         :group-types="groupTypes"
         @node-add="handleNodeAdd"
@@ -302,11 +342,12 @@ import {
   WorkflowCanvas,
   type WorkflowGraph,
   type WorkflowNode,
-  type WorkflowEdge,
   type WorkflowGroup,
   type NodeTypeConfig,
   type GroupTypeConfig,
-  type WorkflowCanvasMode
+  type WorkflowCanvasMode,
+  type ConnectedEntities,
+  type EdgeAddPayload
 } from 'oceanfront-workflow-canvas'
 import 'oceanfront-workflow-canvas/css'
 
@@ -847,10 +888,26 @@ const workflowGraph = ref<WorkflowGraph>(
 )
 
 const selectedId = ref<string | null>(null)
-const workflowCanvasRef = ref<InstanceType<typeof WorkflowCanvas> | null>(null)
+const workflowCanvasRef = ref<
+  | (InstanceType<typeof WorkflowCanvas> & {
+      addNewNode?: () => void
+      addNewGroup?: (options?: { type?: string; label?: string }) => void
+    })
+  | null
+>(null)
 const maxGroupDepth = ref<number | null>(null)
 const hideEmptyHandles = ref(true)
+const edgesLocked = ref(false)
 const canvasMode = ref<WorkflowCanvasMode>('edit')
+
+// Wrapper functions for component methods
+function addNewNodeWrapper() {
+  workflowCanvasRef.value?.addNewNode?.()
+}
+
+function addNewGroupWrapper() {
+  workflowCanvasRef.value?.addNewGroup?.()
+}
 
 function resetCanvas() {
   workflowGraph.value = JSON.parse(JSON.stringify(initialWorkflowGraph))
@@ -1096,7 +1153,7 @@ function clearNodeLabel() {
   if (workflowGraph.value.nodes.length > 0) {
     const node = workflowGraph.value.nodes[0]
     if (node.definition?.label) {
-      const { label, ...rest } = node.definition
+      const { label: _label, ...rest } = node.definition
       node.definition = Object.keys(rest).length > 0 ? rest : undefined
       logEvent('clear-node-label', { nodeId: node.id })
     }
@@ -1107,7 +1164,7 @@ function clearGroupLabel() {
   if (workflowGraph.value.groups.length > 0) {
     const group = workflowGraph.value.groups[0]
     if (group.definition?.label) {
-      const { label, ...rest } = group.definition
+      const { label: _label, ...rest } = group.definition
       group.definition = Object.keys(rest).length > 0 ? rest : undefined
       logEvent('clear-group-label', { groupId: group.id })
     }
@@ -1160,7 +1217,11 @@ function clearSeparateLabels() {
   if (workflowGraph.value.nodes.length > 0) {
     const node = workflowGraph.value.nodes[0]
     if (node.definition) {
-      const { configPanelLabel, tileLabel, ...rest } = node.definition
+      const {
+        configPanelLabel: _configPanelLabel,
+        tileLabel: _tileLabel,
+        ...rest
+      } = node.definition
       node.definition = Object.keys(rest).length > 0 ? rest : undefined
       logEvent('clear-separate-labels', { nodeId: node.id })
     }
@@ -1168,30 +1229,48 @@ function clearSeparateLabels() {
 }
 
 // Hide Hover Menu functions
-function enableHideMenuForFirstNode() {
+function hideAddNodeForFirstNode() {
   if (workflowGraph.value.nodes.length > 0) {
     const node = workflowGraph.value.nodes[0]
-    node.hideAddNodeWhenNotEmpty = true
-    logEvent('enable-hide-menu-node', { nodeId: node.id })
+    node.hideAddNode = true
+    logEvent('hide-add-node-button', { nodeId: node.id })
   }
 }
 
-function enableHideMenuForFirstGroup() {
+function hideAddGroupForFirstNode() {
+  if (workflowGraph.value.nodes.length > 0) {
+    const node = workflowGraph.value.nodes[0]
+    node.hideAddGroup = true
+    logEvent('hide-add-group-button', { nodeId: node.id })
+  }
+}
+
+function hideAddNodeForFirstGroup() {
   if (workflowGraph.value.groups.length > 0) {
     const group = workflowGraph.value.groups[0]
-    group.hideAddNodeWhenNotEmpty = true
-    logEvent('enable-hide-menu-group', { groupId: group.id })
+    group.hideAddNode = true
+    logEvent('hide-add-node-button-group', { groupId: group.id })
   }
 }
 
-function disableHideMenu() {
+function hideAddGroupForFirstGroup() {
+  if (workflowGraph.value.groups.length > 0) {
+    const group = workflowGraph.value.groups[0]
+    group.hideAddGroup = true
+    logEvent('hide-add-group-button-group', { groupId: group.id })
+  }
+}
+
+function showAllButtons() {
   workflowGraph.value.nodes.forEach((node) => {
-    node.hideAddNodeWhenNotEmpty = undefined
+    node.hideAddNode = undefined
+    node.hideAddGroup = undefined
   })
   workflowGraph.value.groups.forEach((group) => {
-    group.hideAddNodeWhenNotEmpty = undefined
+    group.hideAddNode = undefined
+    group.hideAddGroup = undefined
   })
-  logEvent('disable-hide-menu', {
+  logEvent('show-all-buttons', {
     nodesReset: workflowGraph.value.nodes.length,
     groupsReset: workflowGraph.value.groups.length
   })
@@ -1224,7 +1303,11 @@ function showAllGroupFields() {
   if (workflowGraph.value.groups.length > 0) {
     const group = workflowGraph.value.groups[0]
     if (group.definition) {
-      const { showTypeField, showTitleField, ...rest } = group.definition
+      const {
+        showTypeField: _showTypeField,
+        showTitleField: _showTitleField,
+        ...rest
+      } = group.definition
       group.definition = Object.keys(rest).length > 0 ? rest : undefined
       logEvent('show-all-group-fields', { groupId: group.id })
     }
@@ -1270,40 +1353,137 @@ function logEvent(name: string, data: any) {
   }
 }
 
-function handleNodeAdd(node: WorkflowNode) {
-  logEvent('node-add', { id: node.id, kind: node.kind })
-}
-
-function handleGroupAdd(group: WorkflowGroup) {
-  logEvent('group-add', { id: group.id, label: group.label })
-}
-
-function handleEdgeAdd(edge: WorkflowEdge) {
-  logEvent('edge-add', {
-    id: edge.id,
-    from: edge.from.entityId,
-    to: edge.to.entityId
+function handleNodeAdd(
+  node: WorkflowNode,
+  parent: WorkflowGroup | null,
+  connected: ConnectedEntities
+) {
+  logEvent('node-add', {
+    id: node.id,
+    kind: node.kind,
+    parent: parent
+      ? { id: parent.id, label: parent.label, kind: parent.kind }
+      : null,
+    connected: {
+      incoming: connected.incoming.map((e: WorkflowNode | WorkflowGroup) => ({
+        id: e.id,
+        kind: 'kind' in e ? e.kind : 'group'
+      })),
+      outgoing: connected.outgoing.map((e: WorkflowNode | WorkflowGroup) => ({
+        id: e.id,
+        kind: 'kind' in e ? e.kind : 'group'
+      }))
+    }
   })
+}
+
+function handleGroupAdd(
+  group: WorkflowGroup,
+  parent: WorkflowGroup | null,
+  connected: ConnectedEntities
+) {
+  logEvent('group-add', {
+    id: group.id,
+    label: group.label,
+    parent: parent
+      ? { id: parent.id, label: parent.label, kind: parent.kind }
+      : null,
+    connected: {
+      incoming: connected.incoming.map((e: WorkflowNode | WorkflowGroup) => ({
+        id: e.id,
+        kind: 'kind' in e ? e.kind : 'group'
+      })),
+      outgoing: connected.outgoing.map((e: WorkflowNode | WorkflowGroup) => ({
+        id: e.id,
+        kind: 'kind' in e ? e.kind : 'group'
+      }))
+    }
+  })
+}
+
+function handleEdgeAdd(payload: EdgeAddPayload) {
+  logEvent('edge-add', payload)
 }
 
 function handleNodeDragStart(nodeId: string) {
   logEvent('node-drag-start', { nodeId })
 }
 
-function handleNodeDragEnd(nodeId: string, position: { x: number; y: number }) {
-  logEvent('node-drag-end', { nodeId, position })
+function handleNodeDragEnd(
+  nodeId: string,
+  position: { x: number; y: number },
+  parent: WorkflowGroup | null,
+  connected: ConnectedEntities
+) {
+  logEvent('node-drag-end', {
+    nodeId,
+    position,
+    parent: parent
+      ? { id: parent.id, label: parent.label, kind: parent.kind }
+      : null,
+    connected: {
+      incoming: connected.incoming.map((e: WorkflowNode | WorkflowGroup) => ({
+        id: e.id,
+        kind: 'kind' in e ? e.kind : 'group'
+      })),
+      outgoing: connected.outgoing.map((e: WorkflowNode | WorkflowGroup) => ({
+        id: e.id,
+        kind: 'kind' in e ? e.kind : 'group'
+      }))
+    }
+  })
 }
 
 function handleNodeClick(nodeId: string) {
   logEvent('node-click', { nodeId })
 }
 
-function handleNodeDelete(nodeId: string) {
-  logEvent('node-delete', { nodeId })
+function handleNodeDelete(
+  node: WorkflowNode,
+  parent: WorkflowGroup | null,
+  connected: ConnectedEntities
+) {
+  logEvent('node-delete', {
+    id: node.id,
+    kind: node.kind,
+    parent: parent
+      ? { id: parent.id, label: parent.label, kind: parent.kind }
+      : null,
+    connected: {
+      incoming: connected.incoming.map((e: WorkflowNode | WorkflowGroup) => ({
+        id: e.id,
+        kind: 'kind' in e ? e.kind : 'group'
+      })),
+      outgoing: connected.outgoing.map((e: WorkflowNode | WorkflowGroup) => ({
+        id: e.id,
+        kind: 'kind' in e ? e.kind : 'group'
+      }))
+    }
+  })
 }
 
-function handleNodeUpdate(node: WorkflowNode) {
-  logEvent('node-update', { id: node.id, kind: node.kind })
+function handleNodeUpdate(
+  node: WorkflowNode,
+  parent: WorkflowGroup | null,
+  connected: ConnectedEntities
+) {
+  logEvent('node-update', {
+    id: node.id,
+    kind: node.kind,
+    parent: parent
+      ? { id: parent.id, label: parent.label, kind: parent.kind }
+      : null,
+    connected: {
+      incoming: connected.incoming.map((e: WorkflowNode | WorkflowGroup) => ({
+        id: e.id,
+        kind: 'kind' in e ? e.kind : 'group'
+      })),
+      outgoing: connected.outgoing.map((e: WorkflowNode | WorkflowGroup) => ({
+        id: e.id,
+        kind: 'kind' in e ? e.kind : 'group'
+      }))
+    }
+  })
 }
 
 function handleGroupDragStart(groupId: string) {
@@ -1312,9 +1492,27 @@ function handleGroupDragStart(groupId: string) {
 
 function handleGroupDragEnd(
   groupId: string,
-  position: { x: number; y: number }
+  position: { x: number; y: number },
+  parent: WorkflowGroup | null,
+  connected: ConnectedEntities
 ) {
-  logEvent('group-drag-end', { groupId, position })
+  logEvent('group-drag-end', {
+    groupId,
+    position,
+    parent: parent
+      ? { id: parent.id, label: parent.label, kind: parent.kind }
+      : null,
+    connected: {
+      incoming: connected.incoming.map((e: WorkflowNode | WorkflowGroup) => ({
+        id: e.id,
+        kind: 'kind' in e ? e.kind : 'group'
+      })),
+      outgoing: connected.outgoing.map((e: WorkflowNode | WorkflowGroup) => ({
+        id: e.id,
+        kind: 'kind' in e ? e.kind : 'group'
+      }))
+    }
+  })
 }
 
 function handleGroupClick(groupId: string) {
@@ -1325,16 +1523,38 @@ function handleGroupDelete(groupId: string) {
   logEvent('group-delete', { groupId })
 }
 
-function handleGroupUpdate(group: WorkflowGroup) {
+function handleGroupUpdate(
+  group: WorkflowGroup,
+  parent: WorkflowGroup | null,
+  connected: ConnectedEntities
+) {
   // Sync lockParent from data to top-level property
-  if (group.data && 'lockParent' in group.data) {
+  if (
+    group.data &&
+    typeof group.data === 'object' &&
+    Object.keys(group.data).length > 0 &&
+    'lockParent' in group.data
+  ) {
     group.lockParent = group.data.lockParent as boolean
   }
 
   logEvent('group-update', {
     id: group.id,
     label: group.label,
-    lockParent: group.lockParent
+    lockParent: group.lockParent,
+    parent: parent
+      ? { id: parent.id, label: parent.label, kind: parent.kind }
+      : null,
+    connected: {
+      incoming: connected.incoming.map((e: WorkflowNode | WorkflowGroup) => ({
+        id: e.id,
+        kind: 'kind' in e ? e.kind : 'group'
+      })),
+      outgoing: connected.outgoing.map((e: WorkflowNode | WorkflowGroup) => ({
+        id: e.id,
+        kind: 'kind' in e ? e.kind : 'group'
+      }))
+    }
   })
 }
 

@@ -4,7 +4,8 @@ import type {
   WorkflowGraph,
   WorkflowNode,
   WorkflowGroup,
-  NodeTypeConfig
+  NodeTypeConfig,
+  ConnectedEntities
 } from '../types/workflow'
 import {
   updateNodePosition,
@@ -18,7 +19,8 @@ import {
   findGroupAtPosition,
   getAutoAssignedNodeKind,
   isEntityTypeCompatibleWithGroup,
-  isGroupDescendantOf
+  isGroupDescendantOf,
+  getConnectedEntities
 } from '../utils/graph-helpers'
 
 export interface UseDraggingOptions {
@@ -31,9 +33,19 @@ export interface UseDraggingOptions {
   wouldExceedMaxDepth: (entityId: string, targetGroupId: string) => boolean
   onGraphUpdate: (graph: WorkflowGraph) => void
   onNodeDragStart: (nodeId: string) => void
-  onNodeDragEnd: (nodeId: string, position: Position) => void
+  onNodeDragEnd: (
+    nodeId: string,
+    position: Position,
+    parentGroup: WorkflowGroup | null,
+    connected: ConnectedEntities
+  ) => void
   onGroupDragStart: (groupId: string) => void
-  onGroupDragEnd: (groupId: string, position: Position) => void
+  onGroupDragEnd: (
+    groupId: string,
+    position: Position,
+    parentGroup: WorkflowGroup | null,
+    connected: ConnectedEntities
+  ) => void
   onEntityMovedToGroup: (entityId: string, groupId: string | null) => void
 }
 
@@ -195,7 +207,10 @@ export function useDragging(options: UseDraggingOptions) {
     if (node.lockParent && originalParent) {
       // Node must stay within original parent or its descendants
       const targetGroupId = targetGroup?.id || null
-      if (targetGroupId !== originalParent && !isGroupDescendantOf(updatedGraph, targetGroupId || '', originalParent)) {
+      if (
+        targetGroupId !== originalParent &&
+        !isGroupDescendantOf(updatedGraph, targetGroupId || '', originalParent)
+      ) {
         isInvalid = true
         validTargetGroup = undefined
       }
@@ -390,7 +405,13 @@ export function useDragging(options: UseDraggingOptions) {
             onGraphUpdate(updatedGraph)
           }
 
-          onGroupDragEnd(groupId, group.position)
+          const connectedEntities = getConnectedEntities(updatedGraph, groupId)
+          onGroupDragEnd(
+            groupId,
+            group.position,
+            getParentGroup(updatedGraph, groupId) || null,
+            connectedEntities
+          )
         }
 
         draggingGroupId.value = null
@@ -418,9 +439,10 @@ export function useDragging(options: UseDraggingOptions) {
           // Check if node with lockParent is being moved outside its parent
           if (node.lockParent && originalGroup) {
             const targetGroupId = targetGroup?.id || null
-            const isMovingOutsideParent = targetGroupId !== originalGroup && 
+            const isMovingOutsideParent =
+              targetGroupId !== originalGroup &&
               !isGroupDescendantOf(updatedGraph, targetGroupId || '', originalGroup)
-            
+
             if (isMovingOutsideParent) {
               // Restore original position
               if (draggedEntityOriginalPosition.value) {
@@ -432,8 +454,14 @@ export function useDragging(options: UseDraggingOptions) {
               }
               updatedGraph = updateGroupBounds(updatedGraph, originalGroup)
               onGraphUpdate(updatedGraph)
-              onNodeDragEnd(nodeId, node.position)
-              
+              const connectedEntities = getConnectedEntities(updatedGraph, nodeId)
+              onNodeDragEnd(
+                nodeId,
+                node.position,
+                getParentGroup(updatedGraph, nodeId) || null,
+                connectedEntities
+              )
+
               draggingNodeId.value = null
               draggedNodeOriginalGroup.value = null
               draggedEntityOriginalPosition.value = null
@@ -490,7 +518,13 @@ export function useDragging(options: UseDraggingOptions) {
             onEntityMovedToGroup(nodeId, null)
           }
 
-          onNodeDragEnd(nodeId, node.position)
+          const connectedEntities = getConnectedEntities(updatedGraph, nodeId)
+          onNodeDragEnd(
+            nodeId,
+            node.position,
+            getParentGroup(updatedGraph, nodeId) || null,
+            connectedEntities
+          )
         }
 
         draggingNodeId.value = null

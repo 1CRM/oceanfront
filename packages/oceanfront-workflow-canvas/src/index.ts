@@ -16,6 +16,7 @@ export type {
   NodeData,
   AddStepEvent,
   ConnectEvent,
+  ConnectedEntities,
   WorkflowCanvasLabels,
   WorkflowCanvasMode,
   NodeTypeConfig,
@@ -26,7 +27,8 @@ export type {
   GroupTypeDefinition,
   GroupTypeFieldDefinition,
   GroupDefinitionOverride,
-  NestedGroupConfig
+  NestedGroupConfig,
+  EdgeAddPayload
 } from './types/workflow'
 
 // Constants
@@ -59,8 +61,25 @@ export {
   addGroup,
   isEntityTypeCompatibleWithGroup,
   isGroupDescendantOf,
-  moveNodesBelow
+  moveNodesBelow,
+  getConnectedEntities
 } from './utils/graph-helpers'
+
+export {
+  getNodeCssClass,
+  getGroupDisplayLabel,
+  getGroupDisplayLabelRight,
+  shouldHideGroupAddNode,
+  shouldHideGroupAddGroup,
+  shouldHideGroupNestedAddNode,
+  shouldHideGroupNestedAddGroup,
+  shouldHideNodeAddNode,
+  shouldHideNodeAddGroup,
+  getNodeAddNodeButtonText,
+  getNodeAddGroupButtonText,
+  getGroupAddNodeButtonText,
+  getGroupAddGroupButtonText
+} from './utils/display-helpers'
 
 // Components
 export { WorkflowCanvas, WorkflowTile, WorkflowPlusPlaceholder }

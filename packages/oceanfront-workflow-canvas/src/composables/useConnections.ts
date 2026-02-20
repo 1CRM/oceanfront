@@ -16,6 +16,7 @@ import {
 export interface UseConnectionsOptions {
   graph: Ref<WorkflowGraph>
   readonly: Ref<boolean>
+  edgesLocked: Ref<boolean>
   canvasRef: Ref<HTMLElement | undefined>
   getEntityCenter: (entity: WorkflowNode | WorkflowGroup) => Position
   getEntityDimensions: (entity: WorkflowNode | WorkflowGroup) => { width: number; height: number }
@@ -29,6 +30,7 @@ export function useConnections(options: UseConnectionsOptions) {
   const {
     graph,
     readonly,
+    edgesLocked,
     canvasRef: _canvasRef,
     getEntityCenter,
     getEntityDimensions,
@@ -59,7 +61,7 @@ export function useConnections(options: UseConnectionsOptions) {
 
     if (port === 'input') {
       const existingEdge = graph.value.edges.find(edge => edge.to.entityId === entityId)
-      if (existingEdge && !existingEdge.locked) {
+      if (existingEdge && !existingEdge.locked && !edgesLocked.value) {
         connectionDragStart.value = { nodeId: entityId, port: 'input' }
         disconnectingEdge.value = existingEdge
         return
@@ -68,7 +70,7 @@ export function useConnections(options: UseConnectionsOptions) {
 
     if (port === 'output') {
       const existingEdge = graph.value.edges.find(edge => edge.from.entityId === entityId)
-      if (existingEdge && !existingEdge.locked) {
+      if (existingEdge && !existingEdge.locked && !edgesLocked.value) {
         connectionDragStart.value = { nodeId: entityId, port: 'output' }
         disconnectingEdge.value = existingEdge
         return
@@ -185,10 +187,16 @@ export function useConnections(options: UseConnectionsOptions) {
           }
         }
 
-        const updatedGraph = handleConnectNodes(baseGraph, {
-          fromNodeId: fromEntityId,
-          toNodeId: toEntityId
-        })
+        const updatedGraph = handleConnectNodes(
+          baseGraph,
+          {
+            fromNodeId: fromEntityId,
+            toNodeId: toEntityId
+          },
+          {
+            edgeLocked: edgesLocked.value
+          }
+        )
         onGraphUpdate(updatedGraph)
         const newEdge = updatedGraph.edges[updatedGraph.edges.length - 1]
         onEdgeAdd(newEdge)
@@ -203,7 +211,7 @@ export function useConnections(options: UseConnectionsOptions) {
 
   const handleMouseUp = () => {
     if (connectionDragStart.value) {
-      if (disconnectingEdge.value && !disconnectingEdge.value.locked) {
+      if (disconnectingEdge.value && !disconnectingEdge.value.locked && !edgesLocked.value) {
         const edgeId = disconnectingEdge.value.id
         const updatedGraph = {
           ...graph.value,
