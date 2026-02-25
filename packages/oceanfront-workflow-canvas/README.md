@@ -38,8 +38,11 @@ yarn add oceanfront-workflow-canvas
   <WorkflowCanvas
     v-model="workflowGraph"
     v-model:selectedId="selectedId"
+    :record="record"
+    mode="edit"
     @add-step="handleAddStep"
-    @connect="handleConnect"
+    @node-add="handleNodeAdd"
+    @edge-add="handleEdgeAdd"
     style="height: 600px; overflow: hidden;"
   >
     <!-- Optional: Custom node rendering -->
@@ -56,7 +59,7 @@ yarn add oceanfront-workflow-canvas
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { WorkflowCanvas, type WorkflowGraph } from 'oceanfront-workflow-canvas'
+import { WorkflowCanvas, type WorkflowGraph, type EdgeAddPayload } from 'oceanfront-workflow-canvas'
 import { makeRecord } from 'oceanfront'
 import 'oceanfront-workflow-canvas/css'
 
@@ -83,8 +86,12 @@ function handleAddStep(event) {
   // Add new node to graph
 }
 
-function handleConnect(event) {
-  // Add new edge to graph
+function handleNodeAdd(node, parentGroup, connectedEntities) {
+  // Node was added to the graph
+}
+
+function handleEdgeAdd(payload: EdgeAddPayload) {
+  // Edge was added to the graph
 }
 </script>
 ```
@@ -551,32 +558,33 @@ Respond to user interactions:
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import type { WorkflowNode, WorkflowEdge, WorkflowGroup } from 'oceanfront-workflow-canvas'
+import type {
+  WorkflowNode,
+  WorkflowGroup,
+  ConnectedEntities,
+  EdgeAddPayload
+} from 'oceanfront-workflow-canvas'
 
 const workflowGraph = ref({ nodes: [], edges: [], groups: [] })
 const selectedId = ref<string | null>(null)
 
-function handleNodeAdd(node: WorkflowNode) {
-  console.log('Node added:', node.id)
-  // Save to backend, update analytics, etc.
+function handleNodeAdd(node: WorkflowNode, parentGroup: WorkflowGroup | null, connectedEntities: ConnectedEntities) {
+  console.log('Node added:', node.id, 'in group:', parentGroup?.id)
 }
 
-function handleNodeUpdate(node: WorkflowNode) {
+function handleNodeUpdate(node: WorkflowNode, parentGroup: WorkflowGroup | null, connectedEntities: ConnectedEntities) {
   console.log('Node updated:', node.id)
-  // Access node data from record using flat keys: record.value[`${node.id}-fieldName`]
-  // Validate changes, save to backend
 }
 
-function handleNodeDelete(nodeId: string) {
-  console.log('Node deleted:', nodeId)
-  // Update backend, show confirmation
+function handleNodeDelete(node: WorkflowNode, parentGroup: WorkflowGroup | null, connectedEntities: ConnectedEntities) {
+  console.log('Node deleted:', node.id)
 }
 
-function handleEdgeAdd(edge: WorkflowEdge) {
-  console.log('Connection created:', edge.from.entityId, '->', edge.to.entityId)
+function handleEdgeAdd(payload: EdgeAddPayload) {
+  console.log('Connection created:', payload.edge.from.entityId, '->', payload.edge.to.entityId)
 }
 
-function handleGroupAdd(group: WorkflowGroup) {
+function handleGroupAdd(group: WorkflowGroup, parentGroup: WorkflowGroup | null, connectedEntities: ConnectedEntities) {
   console.log('Group created:', group.id)
 }
 </script>
@@ -629,7 +637,12 @@ Main canvas component that renders the workflow graph.
 - `selectedId?: string | null` - Currently selected node/group ID (v-model:selectedId)
 - `width?: number` - Initial canvas width in pixels (default: `1000`)
 - `height?: number` - Initial canvas height in pixels (default: `1000`)
+- `maxGroupDepth?: number | null` - Maximum nesting depth for groups. `null` means unlimited (default: `null`)
+- `nodeTypes?: NodeTypeConfig` - Configuration for different node types with custom fields (default: `{}`)
+- `groupTypes?: GroupTypeConfig` - Configuration for different group types with custom fields (default: `{}`)
 - `hideEmptyHandles?: boolean` - Hide input/output handles when they have no connections (default: `false`)
+- `edgesLocked?: boolean` - If true, all edges are locked and cannot be disconnected or deleted. Newly created edges will automatically have their `locked` property set to true (default: `false`)
+- `labels?: Partial<WorkflowCanvasLabels>` - Custom labels for internationalization
 
 **Events:**
 
@@ -637,32 +650,38 @@ Core events:
 
 - `update:modelValue` - Emitted when graph changes (node drag, group operations, edge disconnection)
 - `update:selectedId` - Emitted when selection changes (node click, group click, canvas click)
-- `add-step` - Emitted when + button clicked: `{ afterNodeId?: string, inGroupId?: string }`
-- `connect` - Emitted when nodes connected: `{ fromNodeId: string, toNodeId: string }`
+- `add-step` - Emitted when + button clicked: `(event: AddStepEvent)` where `AddStepEvent = { afterNodeId?: string, inGroupId?: string }`
 
 Node events:
 
+- `node-add` - Emitted when a node is added: `(node: WorkflowNode, parentGroup: WorkflowGroup | null, connectedEntities: ConnectedEntities)`
 - `node-drag-start` - Emitted when node drag begins: `(nodeId: string)`
-- `node-drag-end` - Emitted when node drag ends: `(nodeId: string, position: Position)`
+- `node-drag-end` - Emitted when node drag ends: `(nodeId: string, position: Position, parentGroup: WorkflowGroup | null, connectedEntities: ConnectedEntities)`
 - `node-click` - Emitted when node is clicked: `(nodeId: string)`
-- `node-delete` - Emitted when node is deleted: `(nodeId: string)`
-- `node-update` - Emitted when node is updated: `(node: WorkflowNode)`
+- `node-delete` - Emitted when node is deleted: `(node: WorkflowNode, parentGroup: WorkflowGroup | null, connectedEntities: ConnectedEntities)`
+- `node-update` - Emitted when node is updated: `(node: WorkflowNode, parentGroup: WorkflowGroup | null, connectedEntities: ConnectedEntities)`
 
 Group events:
 
+- `group-add` - Emitted when a group is added: `(group: WorkflowGroup, parentGroup: WorkflowGroup | null, connectedEntities: ConnectedEntities)`
 - `group-drag-start` - Emitted when group drag begins: `(groupId: string)`
-- `group-drag-end` - Emitted when group drag ends: `(groupId: string, position: Position)`
+- `group-drag-end` - Emitted when group drag ends: `(groupId: string, position: Position, parentGroup: WorkflowGroup | null, connectedEntities: ConnectedEntities)`
 - `group-click` - Emitted when group is clicked: `(groupId: string)`
 - `group-delete` - Emitted when group is deleted: `(groupId: string)`
-- `group-update` - Emitted when group is updated: `(group: WorkflowGroup)`
+- `group-update` - Emitted when group is updated: `(group: WorkflowGroup, parentGroup: WorkflowGroup | null, connectedEntities: ConnectedEntities)`
 - `group-resize-start` - Emitted when group resize begins: `(groupId: string)`
 - `group-resize-end` - Emitted when group resize ends: `(groupId: string, size: { w: number; h: number })`
 
+Edge events:
+
+- `edge-add` - Emitted when an edge is added: `(payload: EdgeAddPayload)` where `EdgeAddPayload = { edge: WorkflowEdge, from: WorkflowNode | WorkflowGroup, to: WorkflowNode | WorkflowGroup }`
+- `edge-delete` - Emitted when edge is deleted: `(edgeId: string)`
+
 Other events:
 
-- `edge-delete` - Emitted when edge is deleted: `(edgeId: string)`
 - `canvas-click` - Emitted when canvas background is clicked
 - `entity-moved-to-group` - Emitted when entity is moved to/from a group: `(entityId: string, groupId: string | null)`
+- `fullscreen-toggle` - Emitted when full-width toggle button is clicked: `(isFullWidth: boolean)`
 
 **Slots:**
 
@@ -679,9 +698,13 @@ Default tile component for rendering nodes.
 
 **Props:**
 
-- `node: WorkflowNode` - The node to render
-- `selected?: boolean` - Whether the node is selected
-- `dragging?: boolean` - Whether the node is being dragged
+- `node: WorkflowNode` (required) - The node to render
+- `record: FormRecord` (required) - Form record containing node data
+- `selected?: boolean` - Whether the node is selected (default: `false`)
+- `dragging?: boolean` - Whether the node is being dragged (default: `false`)
+- `nodeTypes?: NodeTypeConfig` - Node type configuration for resolving icons, titles, and fields (default: `{}`)
+- `labels?: WorkflowCanvasLabels` - Custom labels for internationalization
+- `viewMode?: boolean` - If true, hides interactive elements like the menu button (default: `false`)
 
 ### WorkflowPlusPlaceholder
 
@@ -698,42 +721,59 @@ interface WorkflowGraph {
 
 interface WorkflowNode {
   id: string
-  kind: string // e.g., 'trigger', 'action', 'condition'
+  kind: string // consumer-defined type (e.g., 'trigger', 'action', 'condition')
+  label?: string
+  labelRight?: string
   position: Position
   size?: Size
-  data?: unknown // consumer-owned data
+  definition?: NodeDefinitionOverride // overrides for NodeTypeDefinition
   locked?: boolean // if true, prevents deletion
   readonly?: boolean // if true, prevents editing (hides menu and config panel)
   lockParent?: boolean // if true, prevents moving outside parent group
+  hideAddNode?: boolean // if true, hides "+ node" button in hover menu
+  hideAddGroup?: boolean // if true, hides "+ group" button in hover menu
 }
 
 interface WorkflowEdge {
   id: string
   from: Port
   to: Port
+  locked?: boolean // if true, prevents disconnection/deletion
+}
+
+interface Port {
+  entityId: string // Can refer to either a node or a group
+}
+
+interface EdgeAddPayload {
+  edge: WorkflowEdge
+  from: WorkflowNode | WorkflowGroup
+  to: WorkflowNode | WorkflowGroup
 }
 
 interface WorkflowGroup {
   id: string
   kind: string // Type of group (e.g., 'group', 'swimlane', 'phase')
   label?: string
-  labelRight?: string // Optional title displayed on the right side of the group border
+  labelRight?: string
   position: Position
   size: Size
   containedIds: string[] // Contains both node IDs and group IDs
-  data?: unknown // consumer-owned data
   definition?: GroupDefinitionOverride // overrides for GroupTypeDefinition
   locked?: boolean // if true, prevents deletion
   readonly?: boolean // if true, prevents editing (hides config panel)
   lockParent?: boolean // if true, prevents moving outside parent group
   maxDepth?: number | null // if set, overrides global maxGroupDepth for this group
-  hideAddNodeWhenNotEmpty?: boolean // if true, hides hover menu (both "+ node" and "+ group" buttons) when group contains items
+  hideAddNode?: boolean // if true, hides "+ node" button in connection hover menu
+  hideAddGroup?: boolean // if true, hides "+ group" button in connection hover menu
+  hideNestedAddNode?: boolean // if true, hides "+ node" button in empty group "+" menu
+  hideNestedAddGroup?: boolean // if true, hides "+ group" button in empty group "+" menu
+  nested?: NestedGroupConfig // Per-instance override for nested group configuration
 }
 
-interface NodeData {
-  icon?: string
-  title?: string
-  description?: string
+interface ConnectedEntities {
+  incoming: (WorkflowNode | WorkflowGroup)[] // Entities with edges pointing to this entity
+  outgoing: (WorkflowNode | WorkflowGroup)[] // Entities this entity has edges pointing to
 }
 ```
 
@@ -818,6 +858,8 @@ Each node type definition supports the following properties:
 - `placeholder?: string` - Placeholder text to display in tile when node is not configured
 - `cssClass?: string` - Custom CSS class (defaults to `workflow-canvas-node--type-${type}`)
 - `lockParent?: boolean` - If true, nodes of this type are locked to parent by default
+- `hideAddNode?: boolean` - If true, hides the "+ node" button in the hover menu
+- `hideAddGroup?: boolean` - If true, hides the "+ group" button in the hover menu
 - `addNodeButtonText?: string` - Custom text for the "+ node" button in the hover menu (defaults to "+ node")
 - `addGroupButtonText?: string` - Custom text for the "+ group" button in the hover menu (defaults to "+ group")
 
@@ -1003,6 +1045,15 @@ import {
   addNode,
   addGroup,
 
+  // Ancestry and relationship helpers
+  getGroupDescendants,
+  isGroupDescendantOf,
+  getConnectedEntities,
+  isEntityTypeCompatibleWithGroup,
+
+  // Layout helpers
+  moveNodesBelow,
+
   // Utility functions
   isPointInRect
 } from 'oceanfront-workflow-canvas'
@@ -1051,15 +1102,15 @@ The `addEdge` utility enforces a **single connection per port** rule:
 // Initial state: node-1 -> node-2
 const graph = {
   nodes: [...],
-  edges: [{ id: 'e1', from: { nodeId: 'node-1' }, to: { nodeId: 'node-2' } }],
+  edges: [{ id: 'e1', from: { entityId: 'node-1' }, to: { entityId: 'node-2' } }],
   groups: []
 }
 
 // Connect node-1 to node-3 instead
 const updated = addEdge(graph, {
   id: 'e2',
-  from: { nodeId: 'node-1' },
-  to: { nodeId: 'node-3' }
+  from: { entityId: 'node-1' },
+  to: { entityId: 'node-3' }
 })
 
 // Result: edge 'e1' is removed, only 'e2' remains (node-1 -> node-3)
@@ -1155,6 +1206,102 @@ if (canConnect) {
 
 Note: The `WorkflowCanvas` component automatically enforces this validation when connecting nodes interactively.
 
+### Ancestry and Relationship Helpers
+
+**`getGroupDescendants(graph, groupId)`** - Get all descendant entity IDs of a group (recursive)
+
+```typescript
+const descendants = getGroupDescendants(graph, 'parent-group')
+// Returns: ['child-group', 'node-1', 'node-2', ...]
+```
+
+**`isGroupDescendantOf(graph, groupId, ancestorId)`** - Check if a group is a descendant of another group
+
+```typescript
+const isNested = isGroupDescendantOf(graph, 'child-group', 'parent-group')
+```
+
+**`getConnectedEntities(graph, entityId)`** - Get all entities connected to an entity via edges
+
+```typescript
+const connected = getConnectedEntities(graph, 'node-1')
+// Returns: { incoming: [WorkflowNode | WorkflowGroup, ...], outgoing: [...] }
+```
+
+**`isEntityTypeCompatibleWithGroup(entityKind, group, groupTypes)`** - Check if an entity type can be placed in a group
+
+```typescript
+import type { GroupTypeConfig } from 'oceanfront-workflow-canvas'
+
+const compatible = isEntityTypeCompatibleWithGroup('action', targetGroup, groupTypes)
+```
+
+### Layout Helpers
+
+**`moveNodesBelow(graph, yThreshold, deltaY)`** - Move all nodes below a Y threshold by a delta amount
+
+```typescript
+const updated = moveNodesBelow(graph, 300, 150)
+// All nodes with position.y >= 300 are moved down by 150px
+```
+
+### Graph Construction Helpers
+
+**`addNode(graph, node)`** - Add a new node to the graph
+
+```typescript
+const updated = addNode(graph, {
+  id: 'new-node',
+  kind: 'action',
+  position: { x: 100, y: 200 }
+})
+```
+
+**`addGroup(graph, group)`** - Add a new group to the graph
+
+```typescript
+const updated = addGroup(graph, {
+  id: 'new-group',
+  kind: 'group',
+  label: 'My Group',
+  position: { x: 50, y: 50 },
+  size: { w: 300, h: 200 },
+  containedIds: []
+})
+```
+
+**`handleConnectNodes(graph, fromEntityId, toEntityId)`** - Connect two entities with a new edge
+
+```typescript
+const updated = handleConnectNodes(graph, 'node-1', 'node-2')
+```
+
+### Display Helpers
+
+The library also exports display helper functions for resolving display-related properties (labels, CSS classes, button texts) for nodes and groups, considering definition overrides and fallbacks:
+
+```typescript
+import {
+  getNodeCssClass,
+  getNodeDisplayLabel,
+  getNodeDisplayLabelRight,
+  getGroupDisplayLabel,
+  getGroupDisplayLabelRight,
+  shouldHideGroupAddNode,
+  shouldHideGroupAddGroup,
+  shouldHideGroupNestedAddNode,
+  shouldHideGroupNestedAddGroup,
+  shouldHideNodeAddNode,
+  shouldHideNodeAddGroup,
+  getNodeAddNodeButtonText,
+  getNodeAddGroupButtonText,
+  getGroupAddNodeButtonText,
+  getGroupAddGroupButtonText
+} from 'oceanfront-workflow-canvas'
+```
+
+These functions take the entity, type config, and/or labels as parameters and resolve the correct display value following the priority chain: instance override > type definition > fallback default.
+
 ## Configuration Panel
 
 The canvas includes an integrated right-side panel that automatically appears when a node or group is selected. You can customize the panel content using the `panel` slot:
@@ -1204,14 +1351,15 @@ If no `panel` slot is provided, a default panel (`WorkflowConfigPanel`) shows:
 - **Remove from Group**: Drag a node out of a group
 - **Delete**: Select a group and click the delete button in the configuration panel
 - **Lock to Parent**: Set `lockParent: true` on a group to prevent it from being moved outside its parent group. The group can still be moved within the parent or to nested groups inside the parent, but cannot be moved to the root level or to sibling groups.
-- **Hide Hover Menu**: Set `hideAddNodeWhenNotEmpty: true` on a group to hide the entire hover menu (both "+ node" and "+ group" buttons) when the group contains items. The hover menu will only appear when the group is empty, useful for groups that should only allow a single node or have restricted content after initial population.
+- **Hide Add Buttons**: Use `hideAddNode`, `hideAddGroup`, `hideNestedAddNode`, and `hideNestedAddGroup` properties on groups to control which add buttons are visible.
 
 ```typescript
-// Hide hover menu when group has content
 const group = workflowGraph.value.groups.find(g => g.id === 'group-1')
 if (group) {
-  group.hideAddNodeWhenNotEmpty = true
-  // Now the hover menu will only show when the group is empty
+  group.hideAddNode = true // Hides "+ node" button in connection hover menu
+  group.hideAddGroup = true // Hides "+ group" button in connection hover menu
+  group.hideNestedAddNode = true // Hides "+ node" button in empty group "+" menu
+  group.hideNestedAddGroup = true // Hides "+ group" button in empty group "+" menu
 }
 ```
 
@@ -1283,15 +1431,6 @@ import { WorkflowCanvas, addEdge, type WorkflowGraph } from 'oceanfront-workflow
 const graph = ref<WorkflowGraph>({ nodes: [], edges: [], groups: [] })
 const selectedId = ref<string | null>(null)
 
-function handleConnect(event: { fromNodeId: string; toNodeId: string }) {
-  // Add edge with automatic single-connection enforcement
-  graph.value = addEdge(graph.value, {
-    id: `edge-${Date.now()}`,
-    from: { nodeId: event.fromNodeId },
-    to: { nodeId: event.toNodeId }
-  })
-}
-
 function handleAddStep(event: { afterNodeId?: string; inGroupId?: string }) {
   // Create new node
   const newNode = {
@@ -1312,8 +1451,8 @@ function handleAddStep(event: { afterNodeId?: string; inGroupId?: string }) {
   if (event.afterNodeId) {
     graph.value = addEdge(graph.value, {
       id: `edge-${Date.now()}`,
-      from: { nodeId: event.afterNodeId },
-      to: { nodeId: newNode.id }
+      from: { entityId: event.afterNodeId },
+      to: { entityId: newNode.id }
     })
   }
 }
@@ -1353,6 +1492,7 @@ import type {
   WorkflowGraph,
   WorkflowNode,
   WorkflowGroup,
+  ConnectedEntities,
   Position
 } from 'oceanfront-workflow-canvas'
 
@@ -1362,27 +1502,22 @@ const selectedId = ref<string | null>(null)
 // Node events
 function onNodeDragStart(nodeId: string) {
   console.log('Node drag started:', nodeId)
-  // Track drag state, show indicators, etc.
 }
 
-function onNodeDragEnd(nodeId: string, position: Position) {
-  console.log('Node drag ended:', nodeId, position)
-  // Save position to backend, log analytics, etc.
+function onNodeDragEnd(nodeId: string, position: Position, parentGroup: WorkflowGroup | null, connectedEntities: ConnectedEntities) {
+  console.log('Node drag ended:', nodeId, position, 'in group:', parentGroup?.id)
 }
 
 function onNodeClick(nodeId: string) {
   console.log('Node clicked:', nodeId)
-  // Additional click handling beyond selection
 }
 
-function onNodeDelete(nodeId: string) {
-  console.log('Node deleted:', nodeId)
-  // Sync with backend, show notification, etc.
+function onNodeDelete(node: WorkflowNode, parentGroup: WorkflowGroup | null, connectedEntities: ConnectedEntities) {
+  console.log('Node deleted:', node.id)
 }
 
-function onNodeUpdate(node: WorkflowNode) {
+function onNodeUpdate(node: WorkflowNode, parentGroup: WorkflowGroup | null, connectedEntities: ConnectedEntities) {
   console.log('Node updated:', node)
-  // Sync changes to backend
 }
 
 // Group events
@@ -1390,7 +1525,7 @@ function onGroupDragStart(groupId: string) {
   console.log('Group drag started:', groupId)
 }
 
-function onGroupDragEnd(groupId: string, position: Position) {
+function onGroupDragEnd(groupId: string, position: Position, parentGroup: WorkflowGroup | null, connectedEntities: ConnectedEntities) {
   console.log('Group drag ended:', groupId, position)
 }
 
@@ -1402,7 +1537,7 @@ function onGroupDelete(groupId: string) {
   console.log('Group deleted:', groupId)
 }
 
-function onGroupUpdate(group: WorkflowGroup) {
+function onGroupUpdate(group: WorkflowGroup, parentGroup: WorkflowGroup | null, connectedEntities: ConnectedEntities) {
   console.log('Group updated:', group)
 }
 
@@ -1417,17 +1552,14 @@ function onGroupResizeEnd(groupId: string, size: { w: number; h: number }) {
 // Other events
 function onEdgeDelete(edgeId: string) {
   console.log('Edge deleted:', edgeId)
-  // Sync with backend
 }
 
 function onCanvasClick() {
   console.log('Canvas clicked')
-  // Clear selections, close panels, etc.
 }
 
 function onEntityMovedToGroup(entityId: string, groupId: string | null) {
   console.log('Entity moved to group:', entityId, groupId)
-  // groupId is null if entity was removed from all groups
 }
 </script>
 ```
@@ -1905,7 +2037,11 @@ if (record.value[`${node.id}-status`] === 'error') {
 // Per-node type definition overrides
 export interface NodeDefinitionOverride {
   icon?: string
+  title?: string
+  configPanelTitle?: string
+  tileTitle?: string
   label?: string
+  labelRight?: string
   placeholder?: string
   fields?: NodeFieldDefinition[]
   cssClass?: string
@@ -1916,6 +2052,9 @@ export interface GroupDefinitionOverride {
   label?: string
   labelRight?: string
   fields?: GroupTypeFieldDefinition[]
+  placeholder?: string
+  showTypeField?: boolean
+  showTitleField?: boolean
 }
 
 // Usage in nodes
@@ -1923,7 +2062,6 @@ interface WorkflowNode {
   id: string
   kind: string
   position: Position
-  data?: unknown // Your custom data
   definition?: NodeDefinitionOverride // Type definition overrides
   // ... other properties
 }
@@ -1934,7 +2072,6 @@ interface WorkflowGroup {
   kind: string
   position: Position
   size: Size
-  data?: unknown // Your custom data
   definition?: GroupDefinitionOverride // Type definition overrides
   // ... other properties
 }
@@ -2076,7 +2213,10 @@ export interface GroupTypeDefinition {
   showTypeField?: boolean // Control visibility of type field in config panel (default: true)
   showTitleField?: boolean // Control visibility of title field in config panel (default: true)
   lockParent?: boolean // If true, groups of this type are locked to parent by default
-  hideAddNodeWhenNotEmpty?: boolean // If true, hides hover menu when group contains items
+  hideAddNode?: boolean // If true, hides "+ node" button in connection hover menu
+  hideAddGroup?: boolean // If true, hides "+ group" button in connection hover menu
+  hideNestedAddNode?: boolean // If true, hides "+ node" button in empty group "+" menu
+  hideNestedAddGroup?: boolean // If true, hides "+ group" button in empty group "+" menu
   addNodeButtonText?: string // Custom text for "+ node" button in group hover menu (defaults to "+ node")
   addGroupButtonText?: string // Custom text for "+ group" button in group hover menu (defaults to "+ group")
 }
@@ -2309,13 +2449,16 @@ The `lockParent` value is resolved in this order:
 2. **Type default**: `groupTypes[kind].lockParent` (applied when group is created)
 3. **Global default**: `undefined` (no locking)
 
-### Group Type Hide Hover Menu
+### Group Add Button Visibility
 
-You can configure groups of a specific type to hide the hover menu (containing "+ node" and "+ group" buttons) when they contain items using the `hideAddNodeWhenNotEmpty` property in `GroupTypeDefinition`. This is useful for groups that should only allow a single node or have restricted content after initial population.
+You can control the visibility of individual add buttons on groups using four separate properties. These can be set at both the type level and instance level:
+
+- `hideAddNode` - Hides the "+ node" button in the connection hover menu
+- `hideAddGroup` - Hides the "+ group" button in the connection hover menu
+- `hideNestedAddNode` - Hides the "+ node" button in the empty group "+" menu
+- `hideNestedAddGroup` - Hides the "+ group" button in the empty group "+" menu
 
 #### Type-Level Configuration
-
-Set a default `hideAddNodeWhenNotEmpty` value for all groups of a specific type:
 
 ```typescript
 const groupTypes: GroupTypeConfig = {
@@ -2323,20 +2466,22 @@ const groupTypes: GroupTypeConfig = {
     type: 'singleNode',
     label: 'Single Node Container',
     fields: [],
-    hideAddNodeWhenNotEmpty: true // Hide hover menu when group contains any items
+    hideAddGroup: true, // Hide "+ group" button in connection hover menu
+    hideNestedAddGroup: true // Hide "+ group" button in empty group menu
   },
-  standard: {
-    type: 'standard',
-    label: 'Standard Group',
+  nodesOnly: {
+    type: 'nodesOnly',
+    label: 'Nodes Only Group',
     fields: [],
-    hideAddNodeWhenNotEmpty: false // Always show hover menu (default behavior)
+    hideAddGroup: true,
+    hideNestedAddGroup: true
   }
 }
 ```
 
 #### Instance-Level Override
 
-Individual groups can override the type-level default by setting `hideAddNodeWhenNotEmpty` directly on the group instance:
+Individual groups can override the type-level defaults:
 
 ```typescript
 const group: WorkflowGroup = {
@@ -2346,36 +2491,18 @@ const group: WorkflowGroup = {
   position: { x: 100, y: 100 },
   size: { w: 400, h: 300 },
   containedIds: [],
-  hideAddNodeWhenNotEmpty: false // Override type-level setting to always show hover menu
-}
-```
-
-#### Behavior
-
-When `hideAddNodeWhenNotEmpty` is `true`:
-
-- The entire hover menu (both "+ node" and "+ group" buttons) is hidden when the group contains any items
-- The hover menu only appears when the group is empty
-- This applies regardless of whether the contained items are nodes or nested groups
-
-#### Programmatic Example
-
-```typescript
-// Hide hover menu when group has content
-const group = workflowGraph.value.groups.find(g => g.id === 'group-456')
-if (group) {
-  group.hideAddNodeWhenNotEmpty = true
-  // Hover menu will now only show when the group is empty
+  hideAddNode: true, // Override: also hide "+ node" button in hover menu
+  hideNestedAddNode: true // Override: also hide "+ node" button in empty group menu
 }
 ```
 
 #### Priority Resolution
 
-The `hideAddNodeWhenNotEmpty` value is resolved in this order:
+Each property is resolved independently in this order:
 
-1. **Instance value**: `group.hideAddNodeWhenNotEmpty` (if explicitly set)
-2. **Type default**: `groupTypes[kind].hideAddNodeWhenNotEmpty` (checked at runtime)
-3. **Global default**: `false` (always show hover menu)
+1. **Instance value**: `group.hideAddNode` (if explicitly set)
+2. **Type default**: `groupTypes[kind].hideAddNode` (checked at runtime)
+3. **Global default**: `false` (buttons are visible by default)
 
 ## Architecture
 

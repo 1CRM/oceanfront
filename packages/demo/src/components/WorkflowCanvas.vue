@@ -952,11 +952,8 @@ function resizeFirstGroup() {
 function updateGroupData() {
   const timestamp = new Date().toISOString()
   workflowGraph.value.groups.forEach((group) => {
-    record.value[group.id] = {
-      ...(record.value[group.id] || {}),
-      lastModified: timestamp,
-      programmaticallyUpdated: true
-    }
+    record.value[`${group.id}-lastModified`] = timestamp
+    record.value[`${group.id}-programmaticallyUpdated`] = true
   })
   logEvent('programmatic-update-groups', {
     count: workflowGraph.value.groups.length,

@@ -6,13 +6,7 @@
       'workflow-canvas-wrapper--full-width': isFullWidth
     }"
   >
-    <div
-      class="workflow-canvas"
-      ref="canvasRef"
-      @click="handleCanvasClick"
-      @mouseenter="isCanvasHovered = true"
-      @mouseleave="isCanvasHovered = false"
-    >
+    <div class="workflow-canvas" ref="canvasRef" @click="handleCanvasClick">
       <div class="workflow-canvas__container" :style="canvas.containerStyle.value">
         <!-- SVG layer for connectors -->
         <svg
@@ -244,10 +238,7 @@
               {{ getNodeDisplayLabel(node) }}
             </div>
 
-            <div
-              v-if="getNodeDisplayLabelRight(node)"
-              class="workflow-canvas-node__label-right"
-            >
+            <div v-if="getNodeDisplayLabelRight(node)" class="workflow-canvas-node__label-right">
               {{ getNodeDisplayLabelRight(node) }}
             </div>
 
@@ -430,6 +421,23 @@ import {
   getConnectedEntities
 } from '../utils/graph-helpers'
 import { DEFAULT_LABELS } from '../constants/labels'
+import {
+  getNodeCssClass as _getNodeCssClass,
+  getNodeDisplayLabel as _getNodeDisplayLabel,
+  getNodeDisplayLabelRight as _getNodeDisplayLabelRight,
+  getGroupDisplayLabel as _getGroupDisplayLabel,
+  getGroupDisplayLabelRight as _getGroupDisplayLabelRight,
+  shouldHideGroupAddNode as _shouldHideGroupAddNode,
+  shouldHideGroupAddGroup as _shouldHideGroupAddGroup,
+  shouldHideGroupNestedAddNode as _shouldHideGroupNestedAddNode,
+  shouldHideGroupNestedAddGroup as _shouldHideGroupNestedAddGroup,
+  shouldHideNodeAddNode as _shouldHideNodeAddNode,
+  shouldHideNodeAddGroup as _shouldHideNodeAddGroup,
+  getNodeAddNodeButtonText as _getNodeAddNodeButtonText,
+  getNodeAddGroupButtonText as _getNodeAddGroupButtonText,
+  getGroupAddNodeButtonText as _getGroupAddNodeButtonText,
+  getGroupAddGroupButtonText as _getGroupAddGroupButtonText
+} from '../utils/display-helpers'
 import WorkflowTile from './WorkflowTile.vue'
 import WorkflowConfigPanel from './WorkflowConfigPanel.vue'
 import WorkflowPlusPlaceholder from './WorkflowPlusPlaceholder.vue'
@@ -632,7 +640,6 @@ export default defineComponent({
     const canvasRef = ref<HTMLElement>()
     const nodeElements = ref<Map<string, HTMLElement>>(new Map())
     const isFullWidth = ref(false)
-    const isCanvasHovered = ref(false)
 
     // Helper functions for composables
     const findEntity = (entityId: string): WorkflowNode | WorkflowGroup | undefined => {
@@ -923,146 +930,32 @@ export default defineComponent({
       return `M ${fromPos.x},${fromPos.y} C ${fromPos.x},${fromPos.y + controlOffset} ${toPos.x},${toPos.y - controlOffset} ${toPos.x},${toPos.y}`
     }
 
-    function getNodeCssClass(node: WorkflowNode): string {
-      const typeDef = props.nodeTypes?.[node.kind]
-      return (
-        node.definition?.cssClass ?? typeDef?.cssClass ?? `workflow-canvas-node--type-${node.kind}`
-      )
-    }
-
-    function getNodeDisplayLabel(node: WorkflowNode): string {
-      if (node.definition?.label && node.definition.label.trim() !== '') {
-        return node.definition.label
-      }
-
-      if (node.label && node.label.trim() !== '') {
-        return node.label
-      }
-
-      return ''
-    }
-
-    function getNodeDisplayLabelRight(node: WorkflowNode): string {
-      if (node.definition?.labelRight && node.definition.labelRight.trim() !== '') {
-        return node.definition.labelRight
-      }
-
-      if (node.labelRight && node.labelRight.trim() !== '') {
-        return node.labelRight
-      }
-
-      return ''
-    }
-
-    function getGroupDisplayLabel(group: WorkflowGroup): string {
-      // Priority 1: definition override label
-      if (group.definition?.label && group.definition.label.trim() !== '') {
-        return group.definition.label
-      }
-
-      // Priority 2: group.label
-      if (group.label && group.label.trim() !== '') {
-        return group.label
-      }
-
-      // Priority 3: type definition label
-      const groupTypeDef = props.groupTypes?.[group.kind]
-      if (groupTypeDef?.label) {
-        return groupTypeDef.label
-      }
-
-      // Priority 4: kind as fallback
-      return group.kind
-    }
-
-    function getGroupDisplayLabelRight(group: WorkflowGroup): string {
-      // Priority 1: definition override labelRight
-      if (group.definition?.labelRight && group.definition.labelRight.trim() !== '') {
-        return group.definition.labelRight
-      }
-
-      // Priority 2: group.labelRight
-      if (group.labelRight && group.labelRight.trim() !== '') {
-        return group.labelRight
-      }
-
-      return ''
-    }
-
-    function shouldHideGroupAddNode(group: WorkflowGroup): boolean {
-      // Check instance-level property first
-      if (group.hideAddNode !== undefined) {
-        return group.hideAddNode
-      }
-
-      // Fall back to type-level property
-      const groupTypeDef = props.groupTypes?.[group.kind]
-      if (groupTypeDef?.hideAddNode !== undefined) {
-        return groupTypeDef.hideAddNode
-      }
-
-      return false
-    }
-
-    function shouldHideGroupAddGroup(group: WorkflowGroup): boolean {
-      // Check instance-level property first
-      if (group.hideAddGroup !== undefined) {
-        return group.hideAddGroup
-      }
-
-      // Fall back to type-level property
-      const groupTypeDef = props.groupTypes?.[group.kind]
-      if (groupTypeDef?.hideAddGroup !== undefined) {
-        return groupTypeDef.hideAddGroup
-      }
-
-      return false
-    }
-
-    function shouldHideGroupNestedAddNode(group: WorkflowGroup): boolean {
-      // Check instance-level property first
-      if (group.hideNestedAddNode !== undefined) {
-        return group.hideNestedAddNode
-      }
-
-      // Fall back to type-level property
-      const groupTypeDef = props.groupTypes?.[group.kind]
-      if (groupTypeDef?.hideNestedAddNode !== undefined) {
-        return groupTypeDef.hideNestedAddNode
-      }
-
-      return false
-    }
-
-    function shouldHideGroupNestedAddGroup(group: WorkflowGroup): boolean {
-      // Check instance-level property first
-      if (group.hideNestedAddGroup !== undefined) {
-        return group.hideNestedAddGroup
-      }
-
-      // Fall back to type-level property
-      const groupTypeDef = props.groupTypes?.[group.kind]
-      if (groupTypeDef?.hideNestedAddGroup !== undefined) {
-        return groupTypeDef.hideNestedAddGroup
-      }
-
-      return false
-    }
-
-    function shouldHideNodeAddNode(node: WorkflowNode): boolean {
-      // Check instance-level property first
-      if (node.hideAddNode !== undefined) {
-        return node.hideAddNode
-      }
-
-      // Fall back to type-level property
-      const nodeTypeDef = props.nodeTypes?.[node.kind]
-      if (nodeTypeDef?.hideAddNode !== undefined) {
-        return nodeTypeDef.hideAddNode
-      }
-
-      return false
-    }
+    const getNodeCssClass = (node: WorkflowNode) => _getNodeCssClass(node, props.nodeTypes)
+    const getNodeDisplayLabel = (node: WorkflowNode) => _getNodeDisplayLabel(node)
+    const getNodeDisplayLabelRight = (node: WorkflowNode) => _getNodeDisplayLabelRight(node)
+    const getGroupDisplayLabel = (group: WorkflowGroup) =>
+      _getGroupDisplayLabel(group, props.groupTypes)
+    const getGroupDisplayLabelRight = (group: WorkflowGroup) => _getGroupDisplayLabelRight(group)
+    const shouldHideGroupAddNode = (group: WorkflowGroup) =>
+      _shouldHideGroupAddNode(group, props.groupTypes)
+    const shouldHideGroupAddGroup = (group: WorkflowGroup) =>
+      _shouldHideGroupAddGroup(group, props.groupTypes)
+    const shouldHideGroupNestedAddNode = (group: WorkflowGroup) =>
+      _shouldHideGroupNestedAddNode(group, props.groupTypes)
+    const shouldHideGroupNestedAddGroup = (group: WorkflowGroup) =>
+      _shouldHideGroupNestedAddGroup(group, props.groupTypes)
+    const shouldHideNodeAddNode = (node: WorkflowNode) =>
+      _shouldHideNodeAddNode(node, props.nodeTypes)
+    const shouldHideNodeAddGroup = (node: WorkflowNode) =>
+      _shouldHideNodeAddGroup(node, props.nodeTypes)
+    const getNodeAddNodeButtonText = (node: WorkflowNode) =>
+      _getNodeAddNodeButtonText(node, props.nodeTypes, mergedLabels.value)
+    const getNodeAddGroupButtonText = (node: WorkflowNode) =>
+      _getNodeAddGroupButtonText(node, props.nodeTypes, mergedLabels.value)
+    const getGroupAddNodeButtonText = (group: WorkflowGroup) =>
+      _getGroupAddNodeButtonText(group, props.groupTypes, mergedLabels.value)
+    const getGroupAddGroupButtonText = (group: WorkflowGroup) =>
+      _getGroupAddGroupButtonText(group, props.groupTypes, mergedLabels.value)
 
     function getEmptyMenuVisibleActions(group: WorkflowGroup): ('addNode' | 'addGroup')[] {
       const actions: ('addNode' | 'addGroup')[] = []
@@ -1076,41 +969,6 @@ export default defineComponent({
       }
 
       return actions
-    }
-
-    function shouldHideNodeAddGroup(node: WorkflowNode): boolean {
-      // Check instance-level property first
-      if (node.hideAddGroup !== undefined) {
-        return node.hideAddGroup
-      }
-
-      // Fall back to type-level property
-      const nodeTypeDef = props.nodeTypes?.[node.kind]
-      if (nodeTypeDef?.hideAddGroup !== undefined) {
-        return nodeTypeDef.hideAddGroup
-      }
-
-      return false
-    }
-
-    function getNodeAddNodeButtonText(node: WorkflowNode): string {
-      const typeConfig = props.nodeTypes?.[node.kind]
-      return typeConfig?.addNodeButtonText ?? mergedLabels.value.addNodeButtonTextFallback
-    }
-
-    function getNodeAddGroupButtonText(node: WorkflowNode): string {
-      const typeConfig = props.nodeTypes?.[node.kind]
-      return typeConfig?.addGroupButtonText ?? mergedLabels.value.addGroupButtonTextFallback
-    }
-
-    function getGroupAddNodeButtonText(group: WorkflowGroup): string {
-      const typeConfig = props.groupTypes?.[group.kind]
-      return typeConfig?.addNodeButtonText ?? mergedLabels.value.addNodeButtonTextFallback
-    }
-
-    function getGroupAddGroupButtonText(group: WorkflowGroup): string {
-      const typeConfig = props.groupTypes?.[group.kind]
-      return typeConfig?.addGroupButtonText ?? mergedLabels.value.addGroupButtonTextFallback
     }
 
     function shouldShowInputHandle(entityId: string): boolean {
@@ -1912,7 +1770,6 @@ export default defineComponent({
       emit,
       isViewMode,
       isFullWidth,
-      isCanvasHovered,
       mergedLabels,
       selectedNode,
       selectedGroup,
