@@ -124,9 +124,9 @@ export default defineComponent({
 
       return {
         icon: override?.icon ?? base?.icon,
-        label: override?.label ?? base?.label,
-        configPanelLabel: override?.configPanelLabel ?? base?.configPanelLabel,
-        tileLabel: override?.tileLabel ?? base?.tileLabel,
+        title: override?.title ?? base?.title,
+        configPanelTitle: override?.configPanelTitle ?? base?.configPanelTitle,
+        tileTitle: override?.tileTitle ?? base?.tileTitle,
         placeholder: override?.placeholder ?? base?.placeholder,
         fields: override?.fields ?? base?.fields ?? [],
         cssClass: override?.cssClass ?? base?.cssClass
@@ -177,19 +177,19 @@ export default defineComponent({
         return title
       }
 
-      // Priority 4: tileLabel
-      if (mergedDefinition.value.tileLabel) {
-        return mergedDefinition.value.tileLabel
+      // Priority 4: tileTitle
+      if (mergedDefinition.value.tileTitle) {
+        return mergedDefinition.value.tileTitle
       }
 
-      // Priority 5: configPanelLabel
-      if (mergedDefinition.value.configPanelLabel) {
-        return mergedDefinition.value.configPanelLabel
+      // Priority 5: configPanelTitle
+      if (mergedDefinition.value.configPanelTitle) {
+        return mergedDefinition.value.configPanelTitle
       }
 
-      // Priority 6: label
-      if (mergedDefinition.value.label) {
-        return mergedDefinition.value.label
+      // Priority 6: title
+      if (mergedDefinition.value.title) {
+        return mergedDefinition.value.title
       }
 
       // Priority 7: kind

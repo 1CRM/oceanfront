@@ -437,10 +437,10 @@ Define custom node types with configuration fields:
 const nodeTypes: NodeTypeConfig = {
   emailAction: {
     type: 'emailAction',
-    label: 'Send Email',
+    title: 'Send Email',
     icon: 'mail',
-    tileLabel: 'Email',
-    configPanelLabel: 'Email Configuration',
+    tileTitle: 'Email',
+    configPanelTitle: 'Email Configuration',
     fields: [
       {
         name: 'recipient',
@@ -749,9 +749,9 @@ Node types are defined via the `nodeTypes` prop on the `WorkflowCanvas` componen
 const nodeTypes: NodeTypeConfig = {
   trigger: {
     type: 'trigger',
-    label: 'Trigger',
-    configPanelLabel: 'Workflow Trigger Configuration',
-    tileLabel: 'Trigger',
+    title: 'Trigger',
+    configPanelTitle: 'Workflow Trigger Configuration',
+    tileTitle: 'Trigger',
     icon: 'hourglass',
     fields: [
       {
@@ -775,9 +775,9 @@ const nodeTypes: NodeTypeConfig = {
   },
   action: {
     type: 'action',
-    label: 'Action',
-    configPanelLabel: 'Action Step Configuration',
-    tileLabel: 'Action',
+    title: 'Action',
+    configPanelTitle: 'Action Step Configuration',
+    tileTitle: 'Action',
     icon: 'gear',
     fields: [
       {
@@ -803,14 +803,14 @@ Each node type definition supports the following properties:
 **Required Properties:**
 
 - `type: string` - Type identifier (e.g., 'trigger', 'action', 'condition')
-- `label: string` - Display name used as fallback for both panel and tile
+- `title: string` - Display name used as fallback for both panel and tile
 - `fields: NodeFieldDefinition[]` - Array of field definitions for this node type
 
-**Label Properties:**
+**Title Properties:**
 
-- `configPanelLabel?: string` - Label shown in the configuration panel header when a node of this type is selected
-- `tileLabel?: string` - Label shown in the tile display for nodes of this type
-- **Fallback behavior:** If `configPanelLabel` is missing, it falls back to `tileLabel`, then to `label`. If `tileLabel` is missing, it falls back to `configPanelLabel`, then to `label`.
+- `configPanelTitle?: string` - Title shown in the configuration panel header when a node of this type is selected
+- `tileTitle?: string` - Title shown in the tile display for nodes of this type
+- **Fallback behavior:** If `configPanelTitle` is missing, it falls back to `tileTitle`, then to `title`. If `tileTitle` is missing, it falls back to `configPanelTitle`, then to `title`.
 
 **Optional Properties:**
 
@@ -848,54 +848,54 @@ When these properties are not specified, the buttons default to displaying "+ no
 
 ### Separate Labels for Panel and Tile
 
-The workflow canvas supports separate labels for the configuration panel header and tile display. This is useful when you want a more verbose label in the config panel but a shorter label in the tile:
+The workflow canvas supports separate titles for the configuration panel header and tile display. This is useful when you want a more verbose title in the config panel but a shorter title in the tile:
 
 ```typescript
 {
   type: 'email',
-  label: 'Email',
-  configPanelLabel: 'Email Notification Configuration',
-  tileLabel: 'Email',
+  title: 'Email',
+  configPanelTitle: 'Email Notification Configuration',
+  tileTitle: 'Email',
   icon: 'envelope',
   fields: [...]
 }
 ```
 
-**Using the same label for both:**
+**Using the same title for both:**
 
 ```typescript
 {
   type: 'action',
-  label: 'Action',
-  // Both configPanelLabel and tileLabel will fall back to 'Action'
+  title: 'Action',
+  // Both configPanelTitle and tileTitle will fall back to 'Action'
   icon: 'gear',
   fields: [...]
 }
 ```
 
-**Different labels for panel and tile:**
+**Different titles for panel and tile:**
 
 ```typescript
 {
   type: 'condition',
-  label: 'Condition',
-  configPanelLabel: 'Conditional Branch Configuration',
-  tileLabel: 'If/Then',
+  title: 'Condition',
+  configPanelTitle: 'Conditional Branch Configuration',
+  tileTitle: 'If/Then',
   icon: 'help circle',
   fields: [...]
 }
 ```
 
-### Per-Node Label Overrides
+### Per-Node Title Overrides
 
-Individual nodes can override their type's labels using `node.definition`:
+Individual nodes can override their type's titles using `node.definition`:
 
 ```typescript
 const node = workflowGraph.value.nodes.find(n => n.id === 'node-123')
 if (node) {
   node.definition = {
-    configPanelLabel: 'Critical Email Step',
-    tileLabel: 'Alert'
+    configPanelTitle: 'Critical Email Step',
+    tileTitle: 'Alert'
   }
 }
 ```
@@ -1881,19 +1881,19 @@ node.definition = {
 **Dynamic Icon and Label Based on State:**
 
 ```typescript
-// Update icon and labels based on node status
+// Update icon and titles based on node status
 if (record.value[`${node.id}-status`] === 'error') {
   node.definition = {
     icon: 'exclamation triangle',
-    configPanelLabel: 'Failed Action - Review Required',
-    tileLabel: 'Error',
+    configPanelTitle: 'Failed Action - Review Required',
+    tileTitle: 'Error',
     cssClass: 'workflow-canvas-node--error'
   }
 } else if (record.value[`${node.id}-status`] === 'success') {
   node.definition = {
     icon: 'check circle',
-    configPanelLabel: 'Completed Action',
-    tileLabel: 'Done',
+    configPanelTitle: 'Completed Action',
+    tileTitle: 'Done',
     cssClass: 'workflow-canvas-node--success'
   }
 }

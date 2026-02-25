@@ -229,9 +229,9 @@ export default defineComponent({
 
       return {
         icon: override?.icon ?? base?.icon,
-        label: override?.label ?? base?.label,
-        configPanelLabel: override?.configPanelLabel ?? base?.configPanelLabel,
-        tileLabel: override?.tileLabel ?? base?.tileLabel,
+        title: override?.title ?? base?.title,
+        configPanelTitle: override?.configPanelTitle ?? base?.configPanelTitle,
+        tileTitle: override?.tileTitle ?? base?.tileTitle,
         placeholder: override?.placeholder ?? base?.placeholder,
         fields: override?.fields ?? base?.fields ?? [],
         cssClass: override?.cssClass ?? base?.cssClass
@@ -285,7 +285,7 @@ export default defineComponent({
     const typeOptions = computed(() => {
       return Object.values(props.nodeTypes).map(def => ({
         value: def.type,
-        text: def.label
+        text: def.title
       }))
     })
 
@@ -293,19 +293,19 @@ export default defineComponent({
       if (!props.selectedNode) return ''
 
       if (hasNodeType.value) {
-        // Priority 1: configPanelLabel
-        if (mergedNodeDefinition.value.configPanelLabel) {
-          return mergedNodeDefinition.value.configPanelLabel
+        // Priority 1: configPanelTitle
+        if (mergedNodeDefinition.value.configPanelTitle) {
+          return mergedNodeDefinition.value.configPanelTitle
         }
 
-        // Priority 2: tileLabel
-        if (mergedNodeDefinition.value.tileLabel) {
-          return mergedNodeDefinition.value.tileLabel
+        // Priority 2: tileTitle
+        if (mergedNodeDefinition.value.tileTitle) {
+          return mergedNodeDefinition.value.tileTitle
         }
 
-        // Priority 3: label
-        if (mergedNodeDefinition.value.label) {
-          return mergedNodeDefinition.value.label
+        // Priority 3: title
+        if (mergedNodeDefinition.value.title) {
+          return mergedNodeDefinition.value.title
         }
 
         // Priority 4: kind

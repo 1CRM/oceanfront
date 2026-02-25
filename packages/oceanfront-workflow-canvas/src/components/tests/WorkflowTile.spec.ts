@@ -9,9 +9,9 @@ describe('WorkflowTile', () => {
   const mockNodeTypes: NodeTypeConfig = {
     trigger: {
       type: 'trigger',
-      label: 'Trigger',
+      title: 'Trigger',
       icon: 'hourglass',
-      tileLabel: 'Workflow Trigger',
+      tileTitle: 'Workflow Trigger',
       fields: [
         {
           name: 'title',
@@ -29,7 +29,7 @@ describe('WorkflowTile', () => {
     },
     action: {
       type: 'action',
-      label: 'Action',
+      title: 'Action',
       icon: 'gear',
       fields: []
     }
@@ -208,7 +208,7 @@ describe('WorkflowTile', () => {
       const nodeTypes: NodeTypeConfig = {
         action: {
           type: 'action',
-          label: 'Action',
+          title: 'Action',
           fields: [
             {
               name: 'title',
@@ -295,13 +295,13 @@ describe('WorkflowTile', () => {
       expect(wrapper.text()).toContain('Custom Placeholder')
     })
 
-    it('uses definition label override', () => {
+    it('uses definition title override', () => {
       const node: WorkflowNode = {
         id: 'node-1',
         kind: 'trigger',
         position: { x: 0, y: 0 },
         definition: {
-          label: 'Custom Label'
+          title: 'Custom Label'
         }
       }
 
@@ -462,7 +462,7 @@ describe('WorkflowTile', () => {
       expect(wrapper.text()).toContain('Data Title')
     })
 
-    it('uses tileLabel when no data.title', () => {
+    it('uses tileTitle when no data.title', () => {
       const node: WorkflowNode = {
         id: 'node-1',
         kind: 'trigger',

@@ -2,18 +2,6 @@
   <div class="container">
     <h1>Workflow Canvas</h1>
 
-    <div class="demo-actions">
-      <of-button @click="addNewNodeWrapper" variant="filled">
-        + Add New Node
-      </of-button>
-      <of-button @click="addNewGroupWrapper" variant="filled">
-        + Add New Group
-      </of-button>
-      <of-button @click="resetCanvas" variant="outlined">
-        Reset Canvas
-      </of-button>
-    </div>
-
     <details class="demo-section">
       <summary>Canvas Basics</summary>
 
@@ -183,11 +171,11 @@
     <details class="demo-section">
       <summary>Separate Panel/Tile Labels Demo</summary>
       <p class="demo-description">
-        These buttons demonstrate separate labels for config panel vs tile
-        display. Use <code>node.definition.configPanelLabel</code> for the panel
-        header and <code>node.definition.tileLabel</code> for the tile. Both
-        fall back to <code>label</code> if not specified. Select a node after
-        clicking to see the different labels in action.
+        These buttons demonstrate separate titles for config panel vs tile
+        display. Use <code>node.definition.configPanelTitle</code> for the panel
+        header and <code>node.definition.tileTitle</code> for the tile. Both
+        fall back to <code>title</code> if not specified. Select a node after
+        clicking to see the different titles in action.
       </p>
       <div class="demo-actions">
         <of-button @click="setSeparateLabels" variant="outlined">
@@ -266,6 +254,18 @@
         </of-button>
       </div>
     </details>
+
+    <div class="demo-actions">
+      <of-button @click="addNewNodeWrapper" variant="filled">
+        + Add New Node
+      </of-button>
+      <of-button @click="addNewGroupWrapper" variant="filled">
+        + Add New Group
+      </of-button>
+      <of-button @click="resetCanvas" variant="outlined">
+        Reset Canvas
+      </of-button>
+    </div>
 
     <div class="workflow-demo">
       <WorkflowCanvas
@@ -357,9 +357,9 @@ import 'oceanfront-workflow-canvas/css'
 const nodeTypes: NodeTypeConfig = {
   trigger: {
     type: 'trigger',
-    label: 'Trigger',
-    configPanelLabel: 'Workflow Trigger Configuration',
-    tileLabel: 'Trigger',
+    title: 'Trigger',
+    configPanelTitle: 'Workflow Trigger Configuration',
+    tileTitle: 'Trigger',
     icon: 'hourglass',
     addNodeButtonText: '+ action',
     addGroupButtonText: '+ group',
@@ -393,9 +393,9 @@ const nodeTypes: NodeTypeConfig = {
   },
   action: {
     type: 'action',
-    label: 'Action',
-    configPanelLabel: 'Action Step Configuration',
-    tileLabel: 'Action',
+    title: 'Action',
+    configPanelTitle: 'Action Step Configuration',
+    tileTitle: 'Action',
     icon: 'gear',
     addNodeButtonText: '+ next',
     addGroupButtonText: '+ group',
@@ -436,7 +436,7 @@ const nodeTypes: NodeTypeConfig = {
   },
   condition: {
     type: 'condition',
-    label: 'Condition',
+    title: 'Condition',
     icon: 'help circle',
     fields: [
       {
@@ -1111,7 +1111,7 @@ function setNodeLabel() {
     const node = workflowGraph.value.nodes[0]
     node.definition = {
       ...node.definition,
-      label: 'Custom Node Label via definition.label'
+      title: 'Custom Node Label via definition.title'
     }
     logEvent('set-node-label', { nodeId: node.id })
   }
@@ -1131,8 +1131,8 @@ function setGroupLabel() {
 function clearNodeLabel() {
   if (workflowGraph.value.nodes.length > 0) {
     const node = workflowGraph.value.nodes[0]
-    if (node.definition?.label) {
-      const { label: _label, ...rest } = node.definition
+    if (node.definition?.title) {
+      const { title: _title, ...rest } = node.definition
       node.definition = Object.keys(rest).length > 0 ? rest : undefined
       logEvent('clear-node-label', { nodeId: node.id })
     }
@@ -1185,8 +1185,8 @@ function setSeparateLabels() {
     const node = workflowGraph.value.nodes[0]
     node.definition = {
       ...node.definition,
-      configPanelLabel: 'Detailed Configuration Panel Label',
-      tileLabel: 'Short Tile'
+      configPanelTitle: 'Detailed Configuration Panel Title',
+      tileTitle: 'Short Tile'
     }
     logEvent('set-separate-labels', { nodeId: node.id })
   }
@@ -1197,8 +1197,8 @@ function clearSeparateLabels() {
     const node = workflowGraph.value.nodes[0]
     if (node.definition) {
       const {
-        configPanelLabel: _configPanelLabel,
-        tileLabel: _tileLabel,
+        configPanelTitle: _configPanelTitle,
+        tileTitle: _tileTitle,
         ...rest
       } = node.definition
       node.definition = Object.keys(rest).length > 0 ? rest : undefined

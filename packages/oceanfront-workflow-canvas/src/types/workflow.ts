@@ -57,18 +57,18 @@ export interface NodeFieldDefinition {
  * @example
  * node.definition = {
  *   icon: 'custom-icon',
- *   label: 'Custom Label',
- *   configPanelLabel: 'Detailed Label for Panel',
- *   tileLabel: 'Short Label',
+ *   title: 'Custom Title',
+ *   configPanelTitle: 'Detailed Title for Panel',
+ *   tileTitle: 'Short Title',
  *   placeholder: 'Custom placeholder',
  *   fields: [...]
  * }
  */
 export interface NodeDefinitionOverride {
   icon?: string
-  label?: string
-  configPanelLabel?: string
-  tileLabel?: string
+  title?: string
+  configPanelTitle?: string
+  tileTitle?: string
   placeholder?: string
   fields?: NodeFieldDefinition[]
   cssClass?: string
@@ -79,9 +79,9 @@ export interface NodeDefinitionOverride {
  */
 export interface NodeTypeDefinition {
   type: string // Type identifier (e.g., 'trigger', 'action')
-  label: string // Display name (e.g., 'Trigger') - used as fallback for both panel and tile
-  configPanelLabel?: string // Label shown in config panel header (falls back to tileLabel, then label)
-  tileLabel?: string // Label shown in tile display (falls back to configPanelLabel, then label)
+  title: string // Display name (e.g., 'Trigger') - used as fallback for both panel and tile
+  configPanelTitle?: string // Title shown in config panel header (falls back to tileTitle, then title)
+  tileTitle?: string // Title shown in tile display (falls back to configPanelTitle, then title)
   icon?: string // Default icon for this type
   placeholder?: string // Placeholder text to display in tile
   fields: NodeFieldDefinition[] // Fields for this type

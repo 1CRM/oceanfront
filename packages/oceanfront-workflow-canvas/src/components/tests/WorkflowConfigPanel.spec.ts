@@ -15,8 +15,8 @@ describe('WorkflowConfigPanel', () => {
   const mockNodeTypes: NodeTypeConfig = {
     trigger: {
       type: 'trigger',
-      label: 'Trigger',
-      configPanelLabel: 'Trigger Configuration',
+      title: 'Trigger',
+      configPanelTitle: 'Trigger Configuration',
       fields: [
         {
           name: 'title',
@@ -190,7 +190,7 @@ describe('WorkflowConfigPanel', () => {
       expect(wrapper.text()).toContain('Description')
     })
 
-    it('uses configPanelLabel for panel title', () => {
+    it('uses configPanelTitle for panel title', () => {
       const node: WorkflowNode = {
         id: 'node-1',
         kind: 'trigger',

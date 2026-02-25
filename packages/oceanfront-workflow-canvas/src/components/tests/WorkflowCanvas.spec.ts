@@ -26,8 +26,8 @@ function createMockRecord(): FormRecord {
     initialValue: {},
     value: {},
     metadata: {},
-    reset: () => {},
-    reinit: () => {},
+    reset: () => { },
+    reinit: () => { },
     lock: () => null
   }
 }
@@ -1437,7 +1437,7 @@ describe('Graph Helper Functions', () => {
           nodeTypes: {
             trigger: {
               type: 'trigger',
-              label: 'Trigger',
+              title: 'Trigger',
               icon: 'default-icon',
               fields: []
             }
@@ -1458,7 +1458,7 @@ describe('Graph Helper Functions', () => {
             kind: 'trigger',
             position: { x: 100, y: 100 },
             definition: {
-              label: 'Custom Label'
+              title: 'Custom Label'
             }
           }
         ],
@@ -1472,7 +1472,7 @@ describe('Graph Helper Functions', () => {
           nodeTypes: {
             trigger: {
               type: 'trigger',
-              label: 'Default Label',
+              title: 'Default Label',
               fields: []
             }
           },
@@ -1505,7 +1505,7 @@ describe('Graph Helper Functions', () => {
           nodeTypes: {
             trigger: {
               type: 'trigger',
-              label: 'Trigger',
+              title: 'Trigger',
               placeholder: 'Default Placeholder',
               fields: []
             }
@@ -1546,7 +1546,7 @@ describe('Graph Helper Functions', () => {
           nodeTypes: {
             trigger: {
               type: 'trigger',
-              label: 'Trigger',
+              title: 'Trigger',
               fields: [
                 {
                   name: 'title',
@@ -1585,7 +1585,7 @@ describe('Graph Helper Functions', () => {
           nodeTypes: {
             trigger: {
               type: 'trigger',
-              label: 'Trigger',
+              title: 'Trigger',
               fields: []
             }
           },
@@ -1692,7 +1692,7 @@ describe('Graph Helper Functions', () => {
             position: { x: 100, y: 100 },
             definition: {
               icon: 'star',
-              label: 'Important Action',
+              title: 'Important Action',
               placeholder: 'Configure critical step',
               cssClass: 'workflow-canvas-node--critical',
               fields: [
@@ -1716,7 +1716,7 @@ describe('Graph Helper Functions', () => {
           nodeTypes: {
             action: {
               type: 'action',
-              label: 'Action',
+              title: 'Action',
               icon: 'gear',
               placeholder: 'Configure action',
               fields: [
@@ -1756,7 +1756,7 @@ describe('Graph Helper Functions', () => {
           nodeTypes: {
             trigger: {
               type: 'trigger',
-              label: 'Trigger',
+              title: 'Trigger',
               icon: 'hourglass',
               fields: []
             }
@@ -1790,7 +1790,7 @@ describe('Graph Helper Functions', () => {
           nodeTypes: {
             trigger: {
               type: 'trigger',
-              label: 'Trigger',
+              title: 'Trigger',
               cssClass: 'base-class',
               fields: []
             }
