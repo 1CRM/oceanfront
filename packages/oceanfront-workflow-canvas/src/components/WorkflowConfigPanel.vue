@@ -43,14 +43,22 @@
           </template>
 
           <div class="workflow-canvas__panel-actions">
-            <of-button
-              v-if="!selectedNode.locked"
-              @click="emit('delete-node')"
-              variant="filled"
-              tint="secondary"
+            <slot
+              name="panel-actions"
+              :selected-node="selectedNode"
+              :selected-group="null"
+              :on-delete="() => emit('delete-node')"
+              :on-close="() => emit('close')"
             >
-              {{ effectiveLabels.deleteNodeButton }}
-            </of-button>
+              <of-button
+                v-if="!selectedNode.locked"
+                @click="emit('delete-node')"
+                variant="filled"
+                tint="secondary"
+              >
+                {{ effectiveLabels.deleteNodeButton }}
+              </of-button>
+            </slot>
           </div>
         </div>
         <div v-if="selectedGroup">
@@ -91,14 +99,21 @@
           </template>
 
           <div class="workflow-canvas__panel-actions">
-            <of-button
-              v-if="!selectedGroup.locked"
-              @click="emit('delete-group')"
-              variant="filled"
-              tint="secondary"
+            <slot
+              name="panel-actions"
+              :selected-node="null"
+              :selected-group="selectedGroup"
+              :on-delete="() => emit('delete-group')"
             >
-              {{ effectiveLabels.deleteGroupButton }}
-            </of-button>
+              <of-button
+                v-if="!selectedGroup.locked"
+                @click="emit('delete-group')"
+                variant="filled"
+                tint="secondary"
+              >
+                {{ effectiveLabels.deleteGroupButton }}
+              </of-button>
+            </slot>
           </div>
         </div>
       </div>

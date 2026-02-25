@@ -386,7 +386,11 @@
           @delete-group="handleDeleteGroup"
           @update-node="handleUpdateNode"
           @update-group="handleUpdateGroup"
-        />
+        >
+          <template #panel-actions="slotProps">
+            <slot name="panel-actions" v-bind="slotProps" />
+          </template>
+        </WorkflowConfigPanel>
       </slot>
     </template>
   </div>
