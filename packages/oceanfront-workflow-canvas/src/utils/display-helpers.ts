@@ -11,6 +11,30 @@ export function getNodeCssClass(node: WorkflowNode, nodeTypes: NodeTypeConfig): 
   return node.definition?.cssClass ?? typeDef?.cssClass ?? `workflow-canvas-node--type-${node.kind}`
 }
 
+export function getNodeDisplayLabel(node: WorkflowNode): string {
+  if (node.definition?.label && node.definition.label.trim() !== '') {
+    return node.definition.label
+  }
+
+  if (node.label && node.label.trim() !== '') {
+    return node.label
+  }
+
+  return ''
+}
+
+export function getNodeDisplayLabelRight(node: WorkflowNode): string {
+  if (node.definition?.labelRight && node.definition.labelRight.trim() !== '') {
+    return node.definition.labelRight
+  }
+
+  if (node.labelRight && node.labelRight.trim() !== '') {
+    return node.labelRight
+  }
+
+  return ''
+}
+
 export function getGroupDisplayLabel(group: WorkflowGroup, groupTypes: GroupTypeConfig): string {
   // Priority 1: definition override label
   if (group.definition?.label && group.definition.label.trim() !== '') {

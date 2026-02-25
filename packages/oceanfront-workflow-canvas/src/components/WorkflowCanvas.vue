@@ -231,6 +231,17 @@
             @mouseenter="dragging.handleNodeMouseEnter(node)"
             @mouseleave="dragging.handleNodeMouseLeave"
           >
+            <div v-if="getNodeDisplayLabel(node)" class="workflow-canvas-node__label">
+              {{ getNodeDisplayLabel(node) }}
+            </div>
+
+            <div
+              v-if="getNodeDisplayLabelRight(node)"
+              class="workflow-canvas-node__label-right"
+            >
+              {{ getNodeDisplayLabelRight(node) }}
+            </div>
+
             <!-- Input handle -->
             <div
               v-if="!isViewMode && !readonly && shouldShowInputHandle(node.id)"
@@ -888,6 +899,30 @@ export default defineComponent({
       return (
         node.definition?.cssClass ?? typeDef?.cssClass ?? `workflow-canvas-node--type-${node.kind}`
       )
+    }
+
+    function getNodeDisplayLabel(node: WorkflowNode): string {
+      if (node.definition?.label && node.definition.label.trim() !== '') {
+        return node.definition.label
+      }
+
+      if (node.label && node.label.trim() !== '') {
+        return node.label
+      }
+
+      return ''
+    }
+
+    function getNodeDisplayLabelRight(node: WorkflowNode): string {
+      if (node.definition?.labelRight && node.definition.labelRight.trim() !== '') {
+        return node.definition.labelRight
+      }
+
+      if (node.labelRight && node.labelRight.trim() !== '') {
+        return node.labelRight
+      }
+
+      return ''
     }
 
     function getGroupDisplayLabel(group: WorkflowGroup): string {
@@ -1855,6 +1890,8 @@ export default defineComponent({
       setNodeRef,
       getEdgePath,
       getNodeCssClass,
+      getNodeDisplayLabel,
+      getNodeDisplayLabelRight,
       getGroupDisplayLabel,
       getGroupDisplayLabelRight,
       shouldHideGroupAddNode,

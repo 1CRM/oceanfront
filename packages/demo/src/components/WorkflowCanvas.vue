@@ -125,32 +125,6 @@
     </details>
 
     <details class="demo-section">
-      <summary>Custom Label Demo (definition.label)</summary>
-      <p class="demo-description">
-        These buttons demonstrate the label override feature. Use
-        <code>node.definition.label</code> or
-        <code>group.definition.label</code>
-        to override the displayed title in tiles, group headers, and config
-        panel headers. Select a node or group after clicking to see the custom
-        label in action.
-      </p>
-      <div class="demo-actions">
-        <of-button @click="setNodeLabel" variant="outlined">
-          Set Custom Node Label
-        </of-button>
-        <of-button @click="setGroupLabel" variant="outlined">
-          Set Custom Group Label
-        </of-button>
-        <of-button @click="clearNodeLabel" variant="outlined">
-          Clear Node Label
-        </of-button>
-        <of-button @click="clearGroupLabel" variant="outlined">
-          Clear Group Label
-        </of-button>
-      </div>
-    </details>
-
-    <details class="demo-section">
       <summary>Nested Group Configuration Demo</summary>
       <p class="demo-description">
         These buttons demonstrate nested group configuration with custom labels
@@ -657,6 +631,10 @@ const initialWorkflowGraph: WorkflowGraph = {
       position: {
         x: 49,
         y: 39
+      },
+      definition: {
+        label: 'Label',
+        labelRight: 'Label Right'
       }
     },
     {
@@ -1103,51 +1081,6 @@ function resetFieldConfigs() {
     nodesReset: workflowGraph.value.nodes.length,
     groupsReset: workflowGraph.value.groups.length
   })
-}
-
-// Custom label functions
-function setNodeLabel() {
-  if (workflowGraph.value.nodes.length > 0) {
-    const node = workflowGraph.value.nodes[0]
-    node.definition = {
-      ...node.definition,
-      title: 'Custom Node Label via definition.title'
-    }
-    logEvent('set-node-label', { nodeId: node.id })
-  }
-}
-
-function setGroupLabel() {
-  if (workflowGraph.value.groups.length > 0) {
-    const group = workflowGraph.value.groups[0]
-    group.definition = {
-      ...group.definition,
-      label: 'Custom Group Label via definition.label'
-    }
-    logEvent('set-group-label', { groupId: group.id })
-  }
-}
-
-function clearNodeLabel() {
-  if (workflowGraph.value.nodes.length > 0) {
-    const node = workflowGraph.value.nodes[0]
-    if (node.definition?.title) {
-      const { title: _title, ...rest } = node.definition
-      node.definition = Object.keys(rest).length > 0 ? rest : undefined
-      logEvent('clear-node-label', { nodeId: node.id })
-    }
-  }
-}
-
-function clearGroupLabel() {
-  if (workflowGraph.value.groups.length > 0) {
-    const group = workflowGraph.value.groups[0]
-    if (group.definition?.label) {
-      const { label: _label, ...rest } = group.definition
-      group.definition = Object.keys(rest).length > 0 ? rest : undefined
-      logEvent('clear-group-label', { groupId: group.id })
-    }
-  }
 }
 
 function setCustomNestedConfig() {

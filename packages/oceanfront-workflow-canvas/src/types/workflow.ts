@@ -69,6 +69,8 @@ export interface NodeDefinitionOverride {
   title?: string
   configPanelTitle?: string
   tileTitle?: string
+  label?: string
+  labelRight?: string
   placeholder?: string
   fields?: NodeFieldDefinition[]
   cssClass?: string
@@ -182,6 +184,8 @@ export interface Port {
 export interface WorkflowNode {
   id: string
   kind: string // consumer-defined type (e.g., 'condition', 'action', 'trigger')
+  label?: string
+  labelRight?: string
   position: Position
   size?: Size
   definition?: NodeDefinitionOverride // overrides for NodeTypeDefinition

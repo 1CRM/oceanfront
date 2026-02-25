@@ -67,6 +67,8 @@ export {
 
 export {
   getNodeCssClass,
+  getNodeDisplayLabel,
+  getNodeDisplayLabelRight,
   getGroupDisplayLabel,
   getGroupDisplayLabelRight,
   shouldHideGroupAddNode,
