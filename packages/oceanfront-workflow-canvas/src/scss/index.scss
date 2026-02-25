@@ -346,7 +346,7 @@
     background-color: var(--wf-surface-2);
     padding: 2px 8px;
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 500;
     color: var(--wf-text-secondary);
     pointer-events: none;
     border-radius: 8px;
@@ -360,7 +360,7 @@
     background-color: var(--wf-surface-2);
     padding: 2px 8px;
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 500;
     color: var(--wf-text-secondary);
     pointer-events: none;
     border-radius: 8px;
@@ -711,26 +711,27 @@
 
   &__label {
     position: absolute;
-    top: -13px;
+    top: -11px;
     left: 8px;
     background-color: var(--wf-surface-2);
     padding: 2px 8px;
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 300;
     color: var(--wf-text-secondary);
     pointer-events: none;
     border-radius: 8px;
     border: 1px solid var(--wf-border-tertiary);
+    z-index: 20;
   }
 
   &__label-right {
     position: absolute;
-    top: -13px;
+    top: -11px;
     right: 8px;
     background-color: var(--wf-surface-2);
     padding: 2px 8px;
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 300;
     color: var(--wf-text-secondary);
     pointer-events: none;
     border-radius: 8px;
@@ -740,6 +741,7 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     border: 1px solid var(--wf-border-tertiary);
+    z-index: 20;
   }
 
   &__handle {
