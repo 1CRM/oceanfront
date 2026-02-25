@@ -1,9 +1,18 @@
 <template>
   <div
     class="workflow-canvas-wrapper"
-    :class="{ 'workflow-canvas-wrapper--view-mode': isViewMode }"
+    :class="{
+      'workflow-canvas-wrapper--view-mode': isViewMode,
+      'workflow-canvas-wrapper--full-width': isFullWidth
+    }"
   >
-    <div class="workflow-canvas" ref="canvasRef" @click="handleCanvasClick">
+    <div
+      class="workflow-canvas"
+      ref="canvasRef"
+      @click="handleCanvasClick"
+      @mouseenter="isCanvasHovered = true"
+      @mouseleave="isCanvasHovered = false"
+    >
       <div class="workflow-canvas__container" :style="canvas.containerStyle.value">
         <!-- SVG layer for connectors -->
         <svg
@@ -341,6 +350,18 @@
           </template>
         </div>
       </div>
+
+      <!-- Full width toggle -->
+      <button
+        v-if="!isViewMode"
+        class="workflow-canvas__fullwidth-toggle"
+        :class="{ 'workflow-canvas__fullwidth-toggle--active': isFullWidth }"
+        type="button"
+        title="Toggle full width"
+        @click.stop="isFullWidth = !isFullWidth"
+      >
+        <of-icon :name="isFullWidth ? 'expand close' : 'expand open'" scale="sm" />
+      </button>
     </div>
 
     <!-- Configuration panel -->
@@ -604,6 +625,8 @@ export default defineComponent({
 
     const canvasRef = ref<HTMLElement>()
     const nodeElements = ref<Map<string, HTMLElement>>(new Map())
+    const isFullWidth = ref(false)
+    const isCanvasHovered = ref(false)
 
     // Helper functions for composables
     const findEntity = (entityId: string): WorkflowNode | WorkflowGroup | undefined => {
@@ -1877,6 +1900,8 @@ export default defineComponent({
       props,
       emit,
       isViewMode,
+      isFullWidth,
+      isCanvasHovered,
       mergedLabels,
       selectedNode,
       selectedGroup,
