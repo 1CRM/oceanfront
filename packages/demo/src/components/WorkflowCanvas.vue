@@ -273,6 +273,9 @@
         @edge-delete="handleEdgeDelete"
         @canvas-click="handleCanvasClick"
         @entity-moved-to-group="handleEntityMovedToGroup"
+        @fullscreen-toggle="
+          (isFullscreen: boolean) => console.log('Fullscreen:', isFullscreen)
+        "
       />
     </div>
 

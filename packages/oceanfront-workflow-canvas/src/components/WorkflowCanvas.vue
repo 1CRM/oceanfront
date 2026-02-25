@@ -358,7 +358,7 @@
         :class="{ 'workflow-canvas__fullwidth-toggle--active': isFullWidth }"
         type="button"
         title="Toggle full width"
-        @click.stop="isFullWidth = !isFullWidth"
+        @click.stop="handleFullWidthToggle"
       >
         <of-icon :name="isFullWidth ? 'expand close' : 'expand open'" scale="sm" />
       </button>
@@ -511,6 +511,7 @@ import { useCanvas } from '../composables/useCanvas'
  * @emits group-update - Emitted when a group is updated
  * @emits edge-add - Emitted when an edge is added with full entity information (edge, from, to)
  * @emits edge-delete - Emitted when an edge is deleted
+ * @emits fullscreen-toggle - Emitted when the full-width toggle button is clicked, with a boolean indicating the new state (true = fullscreen, false = normal)
  */
 export default defineComponent({
   name: 'WorkflowCanvas',
@@ -605,7 +606,8 @@ export default defineComponent({
     'group-resize-end',
     'edge-delete',
     'canvas-click',
-    'entity-moved-to-group'
+    'entity-moved-to-group',
+    'fullscreen-toggle'
   ],
   setup(props, { emit, expose }) {
     const isViewMode = computed(() => props.mode === 'view')
@@ -1773,6 +1775,11 @@ export default defineComponent({
       emit('group-update', updatedGroup, parentGroup || null, connectedEntities)
     }
 
+    function handleFullWidthToggle() {
+      isFullWidth.value = !isFullWidth.value
+      emit('fullscreen-toggle', isFullWidth.value)
+    }
+
     function handleKeyDown(event: KeyboardEvent) {
       if (isViewMode.value || props.readonly || !props.selectedId) return
 
@@ -1948,6 +1955,7 @@ export default defineComponent({
       handleDeleteGroup,
       handleUpdateNode,
       handleUpdateGroup,
+      handleFullWidthToggle,
       getParentGroup,
       findNode,
       getGroupDepth,
