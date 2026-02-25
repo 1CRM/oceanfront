@@ -37,10 +37,12 @@ export function useConnections(options: UseConnectionsOptions) {
     onGraphUpdate,
     onEdgeAdd,
     onEdgeDelete,
-    nodeTypes
+    nodeTypes: _nodeTypes
   } = options
 
-  const connectionPreview = ref<{ path: string; fromNodeId: string; isInvalid?: boolean } | null>(null)
+  const connectionPreview = ref<{ path: string; fromNodeId: string; isInvalid?: boolean } | null>(
+    null
+  )
   const connectionDragStart = ref<{ nodeId: string; port: string } | null>(null)
   const connectionDragMoved = ref(false)
   const disconnectingEdge = ref<WorkflowEdge | null>(null)

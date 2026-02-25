@@ -61,12 +61,8 @@
 
 <script lang="ts">
 import { defineComponent, computed } from 'vue'
-import type {
-  WorkflowNode,
-  NodeData,
-  WorkflowCanvasLabels,
-  NodeTypeConfig
-} from '../types/workflow'
+import type { WorkflowNode, WorkflowCanvasLabels, NodeTypeConfig } from '../types/workflow'
+import type { FormRecord } from 'oceanfront'
 import { DEFAULT_LABELS } from '../constants/labels'
 
 export default defineComponent({
@@ -95,6 +91,10 @@ export default defineComponent({
     viewMode: {
       type: Boolean,
       default: false
+    },
+    record: {
+      type: Object as () => FormRecord,
+      required: true
     }
   },
   emits: ['menu-click'],
@@ -134,8 +134,17 @@ export default defineComponent({
     })
 
     const nodeData = computed(() => {
-      const data = props.node.data as Record<string, any> | undefined
-      return data || {}
+      const prefix = `${props.node.id}-`
+      const data: Record<string, any> = {}
+
+      Object.keys(props.record.value).forEach(key => {
+        if (key.startsWith(prefix)) {
+          const fieldName = key.substring(prefix.length)
+          data[fieldName] = props.record.value[key]
+        }
+      })
+
+      return data
     })
 
     const displayIcon = computed(() => {
@@ -152,8 +161,6 @@ export default defineComponent({
     })
 
     const displayTitle = computed(() => {
-      const data = props.node.data as Record<string, any> | undefined
-
       // Priority 1: placeholder from merged definition
       if (mergedDefinition.value.placeholder) {
         return mergedDefinition.value.placeholder
@@ -165,8 +172,9 @@ export default defineComponent({
       }
 
       // Priority 3: data.title
-      if (data?.title) {
-        return data.title
+      const title = props.record.value[`${props.node.id}-title`]
+      if (title) {
+        return title
       }
 
       // Priority 4: tileLabel
@@ -196,7 +204,7 @@ export default defineComponent({
     })
 
     const getFieldValue = (fieldName: string) => {
-      return nodeData.value[fieldName] ?? ''
+      return props.record.value[`${props.node.id}-${fieldName}`] ?? ''
     }
 
     const handleMenuClick = () => emit('menu-click')

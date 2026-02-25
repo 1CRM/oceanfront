@@ -265,6 +265,7 @@
                 :labels="mergedLabels"
                 :node-types="props.nodeTypes"
                 :view-mode="isViewMode"
+                :record="props.record"
                 @menu-click="
                   () => {
                     if (!node.readonly) {
@@ -347,6 +348,7 @@
           :labels="mergedLabels"
           :node-types="props.nodeTypes"
           :group-types="props.groupTypes"
+          :record="props.record"
           @close="closePanel"
           @delete-node="handleDeleteNode"
           @delete-group="handleDeleteGroup"
@@ -374,6 +376,7 @@ import type {
   WorkflowCanvasMode,
   EdgeAddPayload
 } from '../types/workflow'
+import type { FormRecord } from 'oceanfront'
 import {
   findNode,
   findGroup,
@@ -433,7 +436,7 @@ import { useCanvas } from '../composables/useCanvas'
  * // Batch updates
  * function updateAllNodes() {
  *   workflowGraph.value.nodes.forEach(node => {
- *     node.data = { ...node.data, updated: true }
+ *     node.position.x += 10
  *   })
  * }
  *
@@ -491,7 +494,6 @@ export default defineComponent({
      *
      * You can directly modify this object to programmatically update the canvas:
      * - Change node positions: node.position.x = newX
-     * - Update node data: node.data = { ...newData }
      * - Add/remove nodes: graph.nodes.push(newNode) or filter
      * - Modify groups: group.size.w = newWidth
      *
@@ -544,6 +546,10 @@ export default defineComponent({
     edgesLocked: {
       type: Boolean,
       default: false
+    },
+    record: {
+      type: Object as () => FormRecord,
+      required: true
     }
   },
   emits: [

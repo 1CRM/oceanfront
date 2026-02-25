@@ -34,11 +34,7 @@
 
     <!-- Edges -->
     <g v-for="edge in edges" :key="edge.id">
-      <path
-        :d="getEdgePath(edge)"
-        class="workflow-canvas-connector"
-        marker-end="url(#arrowhead)"
-      />
+      <path :d="getEdgePath(edge)" class="workflow-canvas-connector" marker-end="url(#arrowhead)" />
     </g>
 
     <!-- Preview connection while dragging -->
@@ -54,7 +50,6 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
 import type { WorkflowEdge, WorkflowGroup, WorkflowNode, Position } from '../types/workflow'
 
 interface Props {

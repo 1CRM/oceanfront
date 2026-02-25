@@ -140,7 +140,9 @@ describe('useCanvas', () => {
   describe('getNodeDimensions', () => {
     it('returns node size from node.size property', () => {
       const graph = ref<WorkflowGraph>({
-        nodes: [{ id: 'node-1', kind: 'action', position: { x: 0, y: 0 }, size: { w: 300, h: 150 } }],
+        nodes: [
+          { id: 'node-1', kind: 'action', position: { x: 0, y: 0 }, size: { w: 300, h: 150 } }
+        ],
         edges: [],
         groups: []
       })

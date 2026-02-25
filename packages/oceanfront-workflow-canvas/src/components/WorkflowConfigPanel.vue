@@ -117,6 +117,7 @@ import type {
   NodeFieldDefinition,
   GroupTypeConfig
 } from '../types/workflow'
+import type { FormRecord } from 'oceanfront'
 import { getGroupDepth } from '../utils/graph-helpers'
 import { DEFAULT_LABELS } from '../constants/labels'
 
@@ -146,6 +147,10 @@ export default defineComponent({
     groupTypes: {
       type: Object as () => GroupTypeConfig,
       default: () => ({})
+    },
+    record: {
+      type: Object as () => FormRecord,
+      required: true
     }
   },
   emits: ['close', 'delete-node', 'delete-group', 'update-node', 'update-group'],
@@ -176,10 +181,33 @@ export default defineComponent({
       return getGroupDepth(props.graph, props.selectedGroup.id)
     })
 
-    const getNodeData = (node: WorkflowNode) => (node.data as Record<string, any> | undefined) || {}
+    const getNodeData = (node: WorkflowNode) => {
+      const prefix = `${node.id}-`
+      const data: Record<string, any> = {}
 
-    const getGroupData = (group: WorkflowGroup) =>
-      (group.data as Record<string, any> | undefined) || {}
+      Object.keys(props.record.value).forEach(key => {
+        if (key.startsWith(prefix)) {
+          const fieldName = key.substring(prefix.length)
+          data[fieldName] = props.record.value[key]
+        }
+      })
+
+      return data
+    }
+
+    const getGroupData = (group: WorkflowGroup) => {
+      const prefix = `${group.id}-`
+      const data: Record<string, any> = {}
+
+      Object.keys(props.record.value).forEach(key => {
+        if (key.startsWith(prefix)) {
+          const fieldName = key.substring(prefix.length)
+          data[fieldName] = props.record.value[key]
+        }
+      })
+
+      return data
+    }
 
     const hasNodeType = computed(() => {
       return props.selectedNode && props.selectedNode.kind && props.selectedNode.kind !== ''
@@ -326,29 +354,33 @@ export default defineComponent({
 
     const updateNodeKind = (value: string) => {
       if (!props.selectedNode) return
+      // Clear all fields for this node when type changes
+      const prefix = `${props.selectedNode.id}-`
+      Object.keys(props.record.value).forEach(key => {
+        if (key.startsWith(prefix)) {
+          // eslint-disable-next-line vue/no-mutating-props
+          delete props.record.value[key]
+        }
+      })
       emit('update-node', {
         ...props.selectedNode,
-        kind: value,
-        data: {} // Reset data when type changes
+        kind: value
       })
     }
 
     const updateNodeField = (fieldName: string, value: any) => {
       if (!props.selectedNode) return
-      const currentData = getNodeData(props.selectedNode)
+      // FormRecord is designed to be mutated directly
+      // eslint-disable-next-line vue/no-mutating-props
+      props.record.value[`${props.selectedNode.id}-${fieldName}`] = value
       emit('update-node', {
-        ...props.selectedNode,
-        data: {
-          ...currentData,
-          [fieldName]: value
-        }
+        ...props.selectedNode
       })
     }
 
     const getFieldValue = (fieldName: string) => {
       if (!props.selectedNode) return ''
-      const data = getNodeData(props.selectedNode)
-      return data[fieldName] ?? ''
+      return props.record.value[`${props.selectedNode.id}-${fieldName}`] ?? ''
     }
 
     const getSelectItems = (field: NodeFieldDefinition) => {
@@ -377,20 +409,17 @@ export default defineComponent({
 
     const updateGroupTypeField = (fieldName: string, value: any) => {
       if (!props.selectedGroup) return
-      const currentData = getGroupData(props.selectedGroup)
+      // FormRecord is designed to be mutated directly
+      // eslint-disable-next-line vue/no-mutating-props
+      props.record.value[`${props.selectedGroup.id}-${fieldName}`] = value
       emit('update-group', {
-        ...props.selectedGroup,
-        data: {
-          ...currentData,
-          [fieldName]: value
-        }
+        ...props.selectedGroup
       })
     }
 
     const getGroupTypeFieldValue = (fieldName: string) => {
       if (!props.selectedGroup) return ''
-      const data = getGroupData(props.selectedGroup)
-      return data[fieldName] ?? ''
+      return props.record.value[`${props.selectedGroup.id}-${fieldName}`] ?? ''
     }
 
     return {

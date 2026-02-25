@@ -1,7 +1,14 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { makeRecord } from 'oceanfront'
 import WorkflowConfigPanel from '../WorkflowConfigPanel.vue'
-import type { WorkflowNode, WorkflowGroup, WorkflowGraph, NodeTypeConfig, GroupTypeConfig } from '../../types/workflow'
+import type {
+  WorkflowNode,
+  WorkflowGroup,
+  WorkflowGraph,
+  NodeTypeConfig,
+  GroupTypeConfig
+} from '../../types/workflow'
 import { DEFAULT_LABELS } from '../../constants/labels'
 
 describe('WorkflowConfigPanel', () => {
@@ -55,7 +62,8 @@ describe('WorkflowConfigPanel', () => {
           graph: mockGraph,
           labels: DEFAULT_LABELS,
           nodeTypes: mockNodeTypes,
-          groupTypes: mockGroupTypes
+          groupTypes: mockGroupTypes,
+          record: makeRecord()
         }
       })
 
@@ -76,7 +84,8 @@ describe('WorkflowConfigPanel', () => {
           graph: mockGraph,
           labels: DEFAULT_LABELS,
           nodeTypes: mockNodeTypes,
-          groupTypes: mockGroupTypes
+          groupTypes: mockGroupTypes,
+          record: makeRecord()
         }
       })
 
@@ -100,7 +109,8 @@ describe('WorkflowConfigPanel', () => {
           graph: mockGraph,
           labels: DEFAULT_LABELS,
           nodeTypes: mockNodeTypes,
-          groupTypes: mockGroupTypes
+          groupTypes: mockGroupTypes,
+          record: makeRecord()
         }
       })
 
@@ -122,7 +132,8 @@ describe('WorkflowConfigPanel', () => {
           graph: mockGraph,
           labels: DEFAULT_LABELS,
           nodeTypes: mockNodeTypes,
-          groupTypes: mockGroupTypes
+          groupTypes: mockGroupTypes,
+          record: makeRecord()
         }
       })
 
@@ -145,7 +156,8 @@ describe('WorkflowConfigPanel', () => {
           graph: mockGraph,
           labels: DEFAULT_LABELS,
           nodeTypes: mockNodeTypes,
-          groupTypes: mockGroupTypes
+          groupTypes: mockGroupTypes,
+          record: makeRecord()
         }
       })
 
@@ -158,8 +170,7 @@ describe('WorkflowConfigPanel', () => {
       const node: WorkflowNode = {
         id: 'node-1',
         kind: 'trigger',
-        position: { x: 0, y: 0 },
-        data: {}
+        position: { x: 0, y: 0 }
       }
 
       const wrapper = mount(WorkflowConfigPanel, {
@@ -169,7 +180,8 @@ describe('WorkflowConfigPanel', () => {
           graph: mockGraph,
           labels: DEFAULT_LABELS,
           nodeTypes: mockNodeTypes,
-          groupTypes: mockGroupTypes
+          groupTypes: mockGroupTypes,
+          record: makeRecord()
         }
       })
 
@@ -192,7 +204,8 @@ describe('WorkflowConfigPanel', () => {
           graph: mockGraph,
           labels: DEFAULT_LABELS,
           nodeTypes: mockNodeTypes,
-          groupTypes: mockGroupTypes
+          groupTypes: mockGroupTypes,
+          record: makeRecord()
         }
       })
 
@@ -213,7 +226,8 @@ describe('WorkflowConfigPanel', () => {
           graph: mockGraph,
           labels: DEFAULT_LABELS,
           nodeTypes: mockNodeTypes,
-          groupTypes: mockGroupTypes
+          groupTypes: mockGroupTypes,
+          record: makeRecord()
         }
       })
 
@@ -236,7 +250,8 @@ describe('WorkflowConfigPanel', () => {
           graph: mockGraph,
           labels: DEFAULT_LABELS,
           nodeTypes: mockNodeTypes,
-          groupTypes: mockGroupTypes
+          groupTypes: mockGroupTypes,
+          record: makeRecord()
         }
       })
 
@@ -258,7 +273,8 @@ describe('WorkflowConfigPanel', () => {
           graph: mockGraph,
           labels: DEFAULT_LABELS,
           nodeTypes: mockNodeTypes,
-          groupTypes: mockGroupTypes
+          groupTypes: mockGroupTypes,
+          record: makeRecord()
         }
       })
 
@@ -285,7 +301,8 @@ describe('WorkflowConfigPanel', () => {
           graph: mockGraph,
           labels: DEFAULT_LABELS,
           nodeTypes: mockNodeTypes,
-          groupTypes: mockGroupTypes
+          groupTypes: mockGroupTypes,
+          record: makeRecord()
         }
       })
 
@@ -309,7 +326,8 @@ describe('WorkflowConfigPanel', () => {
           graph: mockGraph,
           labels: DEFAULT_LABELS,
           nodeTypes: mockNodeTypes,
-          groupTypes: mockGroupTypes
+          groupTypes: mockGroupTypes,
+          record: makeRecord()
         }
       })
 
@@ -333,7 +351,8 @@ describe('WorkflowConfigPanel', () => {
           graph: mockGraph,
           labels: DEFAULT_LABELS,
           nodeTypes: mockNodeTypes,
-          groupTypes: mockGroupTypes
+          groupTypes: mockGroupTypes,
+          record: makeRecord()
         }
       })
 
@@ -359,7 +378,8 @@ describe('WorkflowConfigPanel', () => {
           graph: mockGraph,
           labels: DEFAULT_LABELS,
           nodeTypes: mockNodeTypes,
-          groupTypes: mockGroupTypes
+          groupTypes: mockGroupTypes,
+          record: makeRecord()
         }
       })
 
@@ -393,7 +413,8 @@ describe('WorkflowConfigPanel', () => {
           graph: mockGraph,
           labels: DEFAULT_LABELS,
           nodeTypes: mockNodeTypes,
-          groupTypes: mockGroupTypes
+          groupTypes: mockGroupTypes,
+          record: makeRecord()
         }
       })
 
@@ -430,7 +451,8 @@ describe('WorkflowConfigPanel', () => {
           graph: mockGraph,
           labels: DEFAULT_LABELS,
           nodeTypes: mockNodeTypes,
-          groupTypes: mockGroupTypes
+          groupTypes: mockGroupTypes,
+          record: makeRecord()
         }
       })
 
@@ -454,7 +476,8 @@ describe('WorkflowConfigPanel', () => {
           graph: mockGraph,
           labels: DEFAULT_LABELS,
           nodeTypes: mockNodeTypes,
-          groupTypes: mockGroupTypes
+          groupTypes: mockGroupTypes,
+          record: makeRecord()
         }
       })
 

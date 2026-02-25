@@ -45,6 +45,7 @@ describe('useConnections', () => {
       const connections = useConnections({
         graph: ref(mockGraph),
         readonly: ref(false),
+        edgesLocked: ref(false),
         canvasRef: mockCanvasRef,
         getEntityCenter: mockGetEntityCenter,
         getEntityDimensions: mockGetEntityDimensions,
@@ -57,13 +58,12 @@ describe('useConnections', () => {
     })
 
     it('returns false when node has an outgoing edge', () => {
-      mockGraph.edges = [
-        { id: 'edge-1', from: { entityId: 'node-1' }, to: { entityId: 'node-2' } }
-      ]
+      mockGraph.edges = [{ id: 'edge-1', from: { entityId: 'node-1' }, to: { entityId: 'node-2' } }]
 
       const connections = useConnections({
         graph: ref(mockGraph),
         readonly: ref(false),
+        edgesLocked: ref(false),
         canvasRef: mockCanvasRef,
         getEntityCenter: mockGetEntityCenter,
         getEntityDimensions: mockGetEntityDimensions,
@@ -82,6 +82,7 @@ describe('useConnections', () => {
       const connections = useConnections({
         graph: ref(mockGraph),
         readonly: ref(false),
+        edgesLocked: ref(false),
         canvasRef: mockCanvasRef,
         getEntityCenter: mockGetEntityCenter,
         getEntityDimensions: mockGetEntityDimensions,
@@ -94,13 +95,12 @@ describe('useConnections', () => {
     })
 
     it('returns true when node has an incoming edge', () => {
-      mockGraph.edges = [
-        { id: 'edge-1', from: { entityId: 'node-1' }, to: { entityId: 'node-2' } }
-      ]
+      mockGraph.edges = [{ id: 'edge-1', from: { entityId: 'node-1' }, to: { entityId: 'node-2' } }]
 
       const connections = useConnections({
         graph: ref(mockGraph),
         readonly: ref(false),
+        edgesLocked: ref(false),
         canvasRef: mockCanvasRef,
         getEntityCenter: mockGetEntityCenter,
         getEntityDimensions: mockGetEntityDimensions,
@@ -119,6 +119,7 @@ describe('useConnections', () => {
       const connections = useConnections({
         graph: ref(mockGraph),
         readonly: ref(false),
+        edgesLocked: ref(false),
         canvasRef: mockCanvasRef,
         getEntityCenter: mockGetEntityCenter,
         getEntityDimensions: mockGetEntityDimensions,
@@ -155,6 +156,7 @@ describe('useConnections', () => {
       const connections = useConnections({
         graph: ref(mockGraph),
         readonly: ref(false),
+        edgesLocked: ref(false),
         canvasRef: mockCanvasRef,
         getEntityCenter: mockGetEntityCenter,
         getEntityDimensions: mockGetEntityDimensions,
@@ -185,6 +187,7 @@ describe('useConnections', () => {
       const connections = useConnections({
         graph: ref(mockGraph),
         readonly: ref(false),
+        edgesLocked: ref(false),
         canvasRef: mockCanvasRef,
         getEntityCenter: mockGetEntityCenter,
         getEntityDimensions: mockGetEntityDimensions,
@@ -213,6 +216,7 @@ describe('useConnections', () => {
       const connections = useConnections({
         graph: ref(mockGraph),
         readonly: ref(false),
+        edgesLocked: ref(false),
         canvasRef: mockCanvasRef,
         getEntityCenter: mockGetEntityCenter,
         getEntityDimensions: mockGetEntityDimensions,
@@ -257,6 +261,7 @@ describe('useConnections', () => {
       const connections = useConnections({
         graph: ref(mockGraph),
         readonly: ref(false),
+        edgesLocked: ref(false),
         canvasRef: mockCanvasRef,
         getEntityCenter: mockGetEntityCenter,
         getEntityDimensions: mockGetEntityDimensions,
@@ -281,13 +286,12 @@ describe('useConnections', () => {
 
   describe('edge deletion', () => {
     it('deletes edge when dragging from input and releasing', () => {
-      mockGraph.edges = [
-        { id: 'edge-1', from: { entityId: 'node-1' }, to: { entityId: 'node-2' } }
-      ]
+      mockGraph.edges = [{ id: 'edge-1', from: { entityId: 'node-1' }, to: { entityId: 'node-2' } }]
 
       const connections = useConnections({
         graph: ref(mockGraph),
         readonly: ref(false),
+        edgesLocked: ref(false),
         canvasRef: mockCanvasRef,
         getEntityCenter: mockGetEntityCenter,
         getEntityDimensions: mockGetEntityDimensions,
@@ -320,6 +324,7 @@ describe('useConnections', () => {
       const connections = useConnections({
         graph: ref(mockGraph),
         readonly: ref(false),
+        edgesLocked: ref(false),
         canvasRef: mockCanvasRef,
         getEntityCenter: mockGetEntityCenter,
         getEntityDimensions: mockGetEntityDimensions,
@@ -346,6 +351,7 @@ describe('useConnections', () => {
       const connections = useConnections({
         graph: ref(mockGraph),
         readonly: ref(true),
+        edgesLocked: ref(false),
         canvasRef: mockCanvasRef,
         getEntityCenter: mockGetEntityCenter,
         getEntityDimensions: mockGetEntityDimensions,

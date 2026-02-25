@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import WorkflowCanvas from '../WorkflowCanvas.vue'
 import type { WorkflowGraph } from '../../types/workflow'
+import type { FormRecord } from '../../../../oceanfront/src/lib/records'
 import {
   addEdge,
   updateNodePosition,
@@ -20,8 +21,20 @@ import {
   handleAddStepToGraph
 } from '../../utils/graph-helpers'
 
+function createMockRecord(): FormRecord {
+  return {
+    initialValue: {},
+    value: {},
+    metadata: {},
+    reset: () => {},
+    reinit: () => {},
+    lock: () => null
+  }
+}
+
 describe('WorkflowCanvas Component', () => {
   let mockGraph: WorkflowGraph
+  let mockRecord: FormRecord
 
   beforeEach(() => {
     mockGraph = {
@@ -40,13 +53,16 @@ describe('WorkflowCanvas Component', () => {
       edges: [],
       groups: []
     }
+
+    mockRecord = createMockRecord()
   })
 
   describe('Rendering', () => {
     it('renders without errors', () => {
       const wrapper = mount(WorkflowCanvas, {
         props: {
-          modelValue: mockGraph
+          modelValue: mockGraph,
+          record: mockRecord
         }
       })
 
@@ -56,7 +72,8 @@ describe('WorkflowCanvas Component', () => {
     it('renders all nodes', () => {
       const wrapper = mount(WorkflowCanvas, {
         props: {
-          modelValue: mockGraph
+          modelValue: mockGraph,
+          record: mockRecord
         }
       })
 
@@ -73,7 +90,8 @@ describe('WorkflowCanvas Component', () => {
 
       const wrapper = mount(WorkflowCanvas, {
         props: {
-          modelValue: graphWithEdge
+          modelValue: graphWithEdge,
+          record: mockRecord
         }
       })
 
@@ -98,7 +116,8 @@ describe('WorkflowCanvas Component', () => {
 
       const wrapper = mount(WorkflowCanvas, {
         props: {
-          modelValue: graphWithGroup
+          modelValue: graphWithGroup,
+          record: mockRecord
         }
       })
 
@@ -113,7 +132,8 @@ describe('WorkflowCanvas Component', () => {
       // This test is skipped as the behavior has changed
       const wrapper = mount(WorkflowCanvas, {
         props: {
-          modelValue: mockGraph
+          modelValue: mockGraph,
+          record: mockRecord
         }
       })
 
@@ -127,7 +147,8 @@ describe('WorkflowCanvas Component', () => {
       const wrapper = mount(WorkflowCanvas, {
         props: {
           modelValue: mockGraph,
-          selectedId: 'node-1'
+          selectedId: 'node-1',
+          record: mockRecord
         }
       })
 
@@ -139,7 +160,8 @@ describe('WorkflowCanvas Component', () => {
       const wrapper = mount(WorkflowCanvas, {
         props: {
           modelValue: mockGraph,
-          selectedId: 'node-1'
+          selectedId: 'node-1',
+          record: mockRecord
         }
       })
 
@@ -157,7 +179,8 @@ describe('WorkflowCanvas Component', () => {
       const wrapper = mount(WorkflowCanvas, {
         props: {
           modelValue: mockGraph,
-          readonly: true
+          readonly: true,
+          record: mockRecord
         }
       })
 
@@ -175,7 +198,8 @@ describe('WorkflowCanvas Component', () => {
       const wrapper = mount(WorkflowCanvas, {
         props: {
           modelValue: graphWithEdge,
-          readonly: true
+          readonly: true,
+          record: mockRecord
         }
       })
 
@@ -188,7 +212,8 @@ describe('WorkflowCanvas Component', () => {
     it('renders custom node slot content', () => {
       const wrapper = mount(WorkflowCanvas, {
         props: {
-          modelValue: mockGraph
+          modelValue: mockGraph,
+          record: mockRecord
         },
         slots: {
           node: '<div class="custom-node">Custom Node</div>'
@@ -1103,9 +1128,7 @@ describe('Graph Helper Functions', () => {
 
     it('deletes deeply nested groups with multiple levels', () => {
       const graph: WorkflowGraph = {
-        nodes: [
-          { id: 'node-1', kind: 'trigger', position: { x: 200, y: 200 } }
-        ],
+        nodes: [{ id: 'node-1', kind: 'trigger', position: { x: 200, y: 200 } }],
         edges: [],
         groups: [
           {
@@ -1280,7 +1303,8 @@ describe('Graph Helper Functions', () => {
 
       const wrapper = mount(WorkflowCanvas, {
         props: {
-          modelValue: graph
+          modelValue: graph,
+          record: createMockRecord()
         }
       })
 
@@ -1317,7 +1341,8 @@ describe('Graph Helper Functions', () => {
 
       const wrapper = mount(WorkflowCanvas, {
         props: {
-          modelValue: graph
+          modelValue: graph,
+          record: createMockRecord()
         }
       })
 
@@ -1374,7 +1399,8 @@ describe('Graph Helper Functions', () => {
 
       const wrapper = mount(WorkflowCanvas, {
         props: {
-          modelValue: graph
+          modelValue: graph,
+          record: createMockRecord()
         }
       })
 
@@ -1415,7 +1441,8 @@ describe('Graph Helper Functions', () => {
               icon: 'default-icon',
               fields: []
             }
-          }
+          },
+          record: createMockRecord()
         }
       })
 
@@ -1448,7 +1475,8 @@ describe('Graph Helper Functions', () => {
               label: 'Default Label',
               fields: []
             }
-          }
+          },
+          record: createMockRecord()
         }
       })
 
@@ -1481,7 +1509,8 @@ describe('Graph Helper Functions', () => {
               placeholder: 'Default Placeholder',
               fields: []
             }
-          }
+          },
+          record: createMockRecord()
         }
       })
 
@@ -1526,7 +1555,8 @@ describe('Graph Helper Functions', () => {
                 }
               ]
             }
-          }
+          },
+          record: createMockRecord()
         }
       })
 
@@ -1558,7 +1588,8 @@ describe('Graph Helper Functions', () => {
               label: 'Trigger',
               fields: []
             }
-          }
+          },
+          record: createMockRecord()
         }
       })
 
@@ -1594,7 +1625,8 @@ describe('Graph Helper Functions', () => {
               label: 'Default Type Label',
               fields: []
             }
-          }
+          },
+          record: createMockRecord()
         }
       })
 
@@ -1643,7 +1675,8 @@ describe('Graph Helper Functions', () => {
                 }
               ]
             }
-          }
+          },
+          record: createMockRecord()
         }
       })
 
@@ -1694,7 +1727,8 @@ describe('Graph Helper Functions', () => {
                 }
               ]
             }
-          }
+          },
+          record: createMockRecord()
         }
       })
 
@@ -1726,7 +1760,8 @@ describe('Graph Helper Functions', () => {
               icon: 'hourglass',
               fields: []
             }
-          }
+          },
+          record: createMockRecord()
         }
       })
 
@@ -1759,7 +1794,8 @@ describe('Graph Helper Functions', () => {
               cssClass: 'base-class',
               fields: []
             }
-          }
+          },
+          record: createMockRecord()
         }
       })
 
@@ -1889,7 +1925,7 @@ describe('Graph Helper Functions', () => {
       // Move the group
       const updatedGraph = updateGroupPosition(graph, 'child-group', { x: 150, y: 150 })
       const childGroup = updatedGraph.groups.find(g => g.id === 'child-group')
-      
+
       // lockParent should still be true
       expect(childGroup?.lockParent).toBe(true)
     })
@@ -2015,7 +2051,7 @@ describe('Graph Helper Functions', () => {
       // Node can be moved to nested group within parent
       let updatedGraph = removeEntityFromAllGroups(graph, 'node-1')
       updatedGraph = addEntityToGroup(updatedGraph, 'node-1', 'nested-group')
-      
+
       const nestedGroup = updatedGraph.groups.find(g => g.id === 'nested-group')
       expect(nestedGroup?.containedIds).toContain('node-1')
     })
@@ -2046,7 +2082,7 @@ describe('Graph Helper Functions', () => {
       // Move the node
       const updatedGraph = updateNodePosition(graph, 'node-1', { x: 150, y: 150 })
       const node = updatedGraph.nodes.find(n => n.id === 'node-1')
-      
+
       // lockParent should still be true
       expect(node?.lockParent).toBe(true)
     })
@@ -2076,7 +2112,7 @@ describe('Graph Helper Functions', () => {
 
       const node = graph.nodes[0]
       const parentGroup = getParentGroup(graph, 'node-1')
-      
+
       // Verify node is in parent group and has lockParent
       expect(parentGroup?.id).toBe('parent-group')
       expect(node.lockParent).toBe(true)
@@ -2115,11 +2151,11 @@ describe('Graph Helper Functions', () => {
 
       const node = graph.nodes[0]
       const parentGroup = getParentGroup(graph, 'node-1')
-      
+
       // Verify node is in parent group and has lockParent
       expect(parentGroup?.id).toBe('parent-group')
       expect(node.lockParent).toBe(true)
-      
+
       // Sibling group should not contain the node
       const siblingGroup = graph.groups.find(g => g.id === 'sibling-group')
       expect(siblingGroup?.containedIds).not.toContain('node-1')
@@ -2134,9 +2170,7 @@ describe('Graph Helper Functions', () => {
           { id: 'node-2', kind: 'action', position: { x: 100, y: 300 }, size: { w: 250, h: 100 } },
           { id: 'node-3', kind: 'action', position: { x: 100, y: 500 }, size: { w: 250, h: 100 } }
         ],
-        edges: [
-          { id: 'edge-1', from: { entityId: 'node-1' }, to: { entityId: 'node-2' } }
-        ],
+        edges: [{ id: 'edge-1', from: { entityId: 'node-1' }, to: { entityId: 'node-2' } }],
         groups: []
       }
 
@@ -2210,9 +2244,7 @@ describe('Graph Helper Functions', () => {
           { id: 'node-1', kind: 'trigger', position: { x: 120, y: 120 }, size: { w: 250, h: 100 } },
           { id: 'node-2', kind: 'action', position: { x: 120, y: 300 }, size: { w: 250, h: 100 } }
         ],
-        edges: [
-          { id: 'edge-1', from: { entityId: 'node-1' }, to: { entityId: 'node-2' } }
-        ],
+        edges: [{ id: 'edge-1', from: { entityId: 'node-1' }, to: { entityId: 'node-2' } }],
         groups: [
           {
             id: 'group-1',

@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { makeRecord } from 'oceanfront'
 import WorkflowTile from '../WorkflowTile.vue'
 import type { WorkflowNode, NodeTypeConfig } from '../../types/workflow'
 import { DEFAULT_LABELS } from '../../constants/labels'
@@ -39,8 +40,7 @@ describe('WorkflowTile', () => {
       const node: WorkflowNode = {
         id: 'node-1',
         kind: 'trigger',
-        position: { x: 0, y: 0 },
-        data: { title: 'Test Node' }
+        position: { x: 0, y: 0 }
       }
 
       const wrapper = mount(WorkflowTile, {
@@ -50,7 +50,8 @@ describe('WorkflowTile', () => {
           dragging: false,
           labels: DEFAULT_LABELS,
           nodeTypes: mockNodeTypes,
-          viewMode: false
+          viewMode: false,
+          record: makeRecord({ 'node-1-title': 'Test Node' })
         }
       })
 
@@ -72,7 +73,8 @@ describe('WorkflowTile', () => {
           dragging: false,
           labels: DEFAULT_LABELS,
           nodeTypes: mockNodeTypes,
-          viewMode: false
+          viewMode: false,
+          record: makeRecord()
         }
       })
 
@@ -84,8 +86,7 @@ describe('WorkflowTile', () => {
       const node: WorkflowNode = {
         id: 'node-1',
         kind: 'trigger',
-        position: { x: 0, y: 0 },
-        data: { title: 'My Custom Title' }
+        position: { x: 0, y: 0 }
       }
 
       const wrapper = mount(WorkflowTile, {
@@ -95,7 +96,8 @@ describe('WorkflowTile', () => {
           dragging: false,
           labels: DEFAULT_LABELS,
           nodeTypes: mockNodeTypes,
-          viewMode: false
+          viewMode: false,
+          record: makeRecord({ 'node-1-title': 'My Custom Title' })
         }
       })
 
@@ -116,7 +118,8 @@ describe('WorkflowTile', () => {
           dragging: false,
           labels: DEFAULT_LABELS,
           nodeTypes: mockNodeTypes,
-          viewMode: false
+          viewMode: false,
+          record: makeRecord()
         }
       })
 
@@ -138,7 +141,8 @@ describe('WorkflowTile', () => {
           dragging: false,
           labels: DEFAULT_LABELS,
           nodeTypes: mockNodeTypes,
-          viewMode: false
+          viewMode: false,
+          record: makeRecord()
         }
       })
 
@@ -161,7 +165,8 @@ describe('WorkflowTile', () => {
           dragging: true,
           labels: DEFAULT_LABELS,
           nodeTypes: mockNodeTypes,
-          viewMode: false
+          viewMode: false,
+          record: makeRecord()
         }
       })
 
@@ -176,11 +181,7 @@ describe('WorkflowTile', () => {
       const node: WorkflowNode = {
         id: 'node-1',
         kind: 'trigger',
-        position: { x: 0, y: 0 },
-        data: {
-          title: 'Test Title',
-          description: 'Test Description'
-        }
+        position: { x: 0, y: 0 }
       }
 
       const wrapper = mount(WorkflowTile, {
@@ -190,7 +191,11 @@ describe('WorkflowTile', () => {
           dragging: false,
           labels: DEFAULT_LABELS,
           nodeTypes: mockNodeTypes,
-          viewMode: false
+          viewMode: false,
+          record: makeRecord({
+            'node-1-title': 'Test Title',
+            'node-1-description': 'Test Description'
+          })
         }
       })
 
@@ -218,8 +223,7 @@ describe('WorkflowTile', () => {
       const node: WorkflowNode = {
         id: 'node-1',
         kind: 'action',
-        position: { x: 0, y: 0 },
-        data: { title: 'Hidden Title' }
+        position: { x: 0, y: 0 }
       }
 
       const wrapper = mount(WorkflowTile, {
@@ -229,7 +233,8 @@ describe('WorkflowTile', () => {
           dragging: false,
           labels: DEFAULT_LABELS,
           nodeTypes,
-          viewMode: false
+          viewMode: false,
+          record: makeRecord({ 'node-1-title': 'Hidden Title' })
         }
       })
 
@@ -256,7 +261,8 @@ describe('WorkflowTile', () => {
           dragging: false,
           labels: DEFAULT_LABELS,
           nodeTypes: mockNodeTypes,
-          viewMode: false
+          viewMode: false,
+          record: makeRecord()
         }
       })
 
@@ -281,7 +287,8 @@ describe('WorkflowTile', () => {
           dragging: false,
           labels: DEFAULT_LABELS,
           nodeTypes: mockNodeTypes,
-          viewMode: false
+          viewMode: false,
+          record: makeRecord()
         }
       })
 
@@ -305,7 +312,8 @@ describe('WorkflowTile', () => {
           dragging: false,
           labels: DEFAULT_LABELS,
           nodeTypes: mockNodeTypes,
-          viewMode: false
+          viewMode: false,
+          record: makeRecord()
         }
       })
 
@@ -328,7 +336,8 @@ describe('WorkflowTile', () => {
           dragging: false,
           labels: DEFAULT_LABELS,
           nodeTypes: mockNodeTypes,
-          viewMode: false
+          viewMode: false,
+          record: makeRecord()
         }
       })
 
@@ -349,7 +358,8 @@ describe('WorkflowTile', () => {
           dragging: false,
           labels: DEFAULT_LABELS,
           nodeTypes: mockNodeTypes,
-          viewMode: true
+          viewMode: true,
+          record: makeRecord()
         }
       })
 
@@ -371,7 +381,8 @@ describe('WorkflowTile', () => {
           dragging: false,
           labels: DEFAULT_LABELS,
           nodeTypes: mockNodeTypes,
-          viewMode: false
+          viewMode: false,
+          record: makeRecord()
         }
       })
 
@@ -392,7 +403,8 @@ describe('WorkflowTile', () => {
           dragging: false,
           labels: DEFAULT_LABELS,
           nodeTypes: mockNodeTypes,
-          viewMode: false
+          viewMode: false,
+          record: makeRecord()
         }
       })
 
@@ -407,7 +419,6 @@ describe('WorkflowTile', () => {
         id: 'node-1',
         kind: 'trigger',
         position: { x: 0, y: 0 },
-        data: { title: 'Data Title' },
         definition: {
           placeholder: 'Placeholder Text'
         }
@@ -420,7 +431,8 @@ describe('WorkflowTile', () => {
           dragging: false,
           labels: DEFAULT_LABELS,
           nodeTypes: mockNodeTypes,
-          viewMode: false
+          viewMode: false,
+          record: makeRecord({ 'node-1-title': 'Data Title' })
         }
       })
 
@@ -432,8 +444,7 @@ describe('WorkflowTile', () => {
       const node: WorkflowNode = {
         id: 'node-1',
         kind: 'trigger',
-        position: { x: 0, y: 0 },
-        data: { title: 'Data Title' }
+        position: { x: 0, y: 0 }
       }
 
       const wrapper = mount(WorkflowTile, {
@@ -443,7 +454,8 @@ describe('WorkflowTile', () => {
           dragging: false,
           labels: DEFAULT_LABELS,
           nodeTypes: mockNodeTypes,
-          viewMode: false
+          viewMode: false,
+          record: makeRecord({ 'node-1-title': 'Data Title' })
         }
       })
 
@@ -464,7 +476,8 @@ describe('WorkflowTile', () => {
           dragging: false,
           labels: DEFAULT_LABELS,
           nodeTypes: mockNodeTypes,
-          viewMode: false
+          viewMode: false,
+          record: makeRecord()
         }
       })
 

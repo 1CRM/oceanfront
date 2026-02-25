@@ -57,6 +57,7 @@ yarn add oceanfront-workflow-canvas
 <script setup lang="ts">
 import { ref } from 'vue'
 import { WorkflowCanvas, type WorkflowGraph } from 'oceanfront-workflow-canvas'
+import { makeRecord } from 'oceanfront'
 import 'oceanfront-workflow-canvas/css'
 
 const workflowGraph = ref<WorkflowGraph>({
@@ -64,12 +65,16 @@ const workflowGraph = ref<WorkflowGraph>({
     {
       id: 'node-1',
       kind: 'trigger',
-      position: { x: 100, y: 100 },
-      data: { title: 'Start', description: 'Workflow trigger' }
+      position: { x: 100, y: 100 }
     }
   ],
   edges: [],
   groups: []
+})
+
+const record = makeRecord({
+  'node-1-title': 'Start',
+  'node-1-description': 'Workflow trigger'
 })
 
 const selectedId = ref<string | null>(null)
@@ -96,12 +101,135 @@ node.position.y += 50
 // Example: Add titles to groups (shown on left and right sides of group border)
 const group = workflowGraph.value.groups[0]
 if (group) {
-  group.label = 'Planning Phase'  // Shown on left side
-  group.labelRight = 'Week 1'     // Shown on right side
+  group.label = 'Planning Phase' // Shown on left side
+  group.labelRight = 'Week 1' // Shown on right side
 }
 ```
 
 See [Programmatic Graph Manipulation](#programmatic-graph-manipulation) for more examples.
+
+## Working with FormRecord
+
+The WorkflowCanvas uses a `FormRecord` from the Oceanfront library to manage all node and group data. This provides a centralized, reactive data store with built-in validation support. The record uses a flat structure where each field is stored with a key formatted as `{entityId}-{fieldName}`.
+
+### Setting Up FormRecord
+
+```vue
+<script setup lang="ts">
+import { ref } from 'vue'
+import { makeRecord } from 'oceanfront'
+import { WorkflowCanvas } from 'oceanfront-workflow-canvas'
+
+// Create the workflow graph structure
+const workflowGraph = ref({
+  nodes: [
+    { id: 'node-1', kind: 'action', position: { x: 100, y: 100 } },
+    { id: 'node-2', kind: 'action', position: { x: 100, y: 250 } }
+  ],
+  edges: [{ id: 'edge-1', from: { entityId: 'node-1' }, to: { entityId: 'node-2' } }],
+  groups: []
+})
+
+// Create a FormRecord with flat keys: {entityId}-{fieldName}
+const record = makeRecord({
+  'node-1-title': 'Send Email',
+  'node-1-description': 'Send notification email to user',
+  'node-1-emailAddress': 'user@example.com',
+  'node-2-title': 'Update Database',
+  'node-2-description': 'Mark notification as sent',
+  'node-2-status': 'pending'
+})
+</script>
+
+<template>
+  <WorkflowCanvas v-model="workflowGraph" :record="record" mode="edit" />
+</template>
+```
+
+### Accessing Node/Group Data
+
+Data for each node or group is accessed using flat keys with the format `{entityId}-{fieldName}`:
+
+```typescript
+// Read data
+const nodeTitle = record.value['node-1-title']
+console.log(nodeTitle) // "Send Email"
+
+// Update data
+record.value['node-1-title'] = 'Send Welcome Email'
+record.value['node-1-emailAddress'] = 'newuser@example.com'
+
+// Add data for a new node
+record.value['node-3-title'] = 'New Action'
+record.value['node-3-description'] = 'Description here'
+```
+
+### Migration from node.data
+
+**Before (deprecated):**
+
+```typescript
+// Old approach - data stored on each node
+const workflowGraph = ref({
+  nodes: [
+    {
+      id: 'node-1',
+      kind: 'action',
+      position: { x: 100, y: 100 },
+      data: { title: 'Send Email', emailAddress: 'user@example.com' }
+    }
+  ],
+  edges: [],
+  groups: []
+})
+
+// Access data
+const title = workflowGraph.value.nodes[0].data.title
+
+// Update data
+workflowGraph.value.nodes[0].data = {
+  ...workflowGraph.value.nodes[0].data,
+  title: 'New Title'
+}
+```
+
+**After (current):**
+
+```typescript
+// New approach - flat keys in FormRecord
+const workflowGraph = ref({
+  nodes: [
+    {
+      id: 'node-1',
+      kind: 'action',
+      position: { x: 100, y: 100 }
+      // No data property
+    }
+  ],
+  edges: [],
+  groups: []
+})
+
+const record = makeRecord({
+  'node-1-title': 'Send Email',
+  'node-1-emailAddress': 'user@example.com'
+})
+
+// Access data
+const title = record.value['node-1-title']
+
+// Update data
+record.value['node-1-title'] = 'New Title'
+```
+
+### Benefits of FormRecord
+
+- **Centralized Data Management**: All entity data in one place
+- **Reactive Updates**: Changes automatically trigger UI updates
+- **Validation Support**: Built-in field validation capabilities
+- **Type Safety**: Full TypeScript support with typed record values
+- **Separation of Concerns**: Graph structure separate from business data
+- **Flat Structure**: Simple key-value pairs, no nested objects
 
 ## Canvas Modes
 
@@ -113,15 +241,12 @@ View mode provides a read-only display of the workflow with no interactive eleme
 
 ```vue
 <template>
-  <WorkflowCanvas
-    v-model="workflowGraph"
-    mode="view"
-    style="height: 600px; overflow: hidden;"
-  />
+  <WorkflowCanvas v-model="workflowGraph" mode="view" style="height: 600px; overflow: hidden;" />
 </template>
 ```
 
 **View Mode Features:**
+
 - No grid background (solid surface color)
 - No connection handles visible
 - No hover menus (+ node, + group buttons)
@@ -149,6 +274,7 @@ Edit mode provides full interactive editing capabilities:
 ```
 
 **Edit Mode Features:**
+
 - Grid background for alignment
 - Connection handles for creating edges
 - Hover menus for adding nodes and groups
@@ -167,7 +293,7 @@ You can dynamically switch between modes:
     <button @click="canvasMode = canvasMode === 'view' ? 'edit' : 'view'">
       Toggle Mode (Current: {{ canvasMode }})
     </button>
-    
+
     <WorkflowCanvas
       v-model="workflowGraph"
       :mode="canvasMode"
@@ -178,7 +304,11 @@ You can dynamically switch between modes:
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { WorkflowCanvas, type WorkflowGraph, type WorkflowCanvasMode } from 'oceanfront-workflow-canvas'
+import {
+  WorkflowCanvas,
+  type WorkflowGraph,
+  type WorkflowCanvasMode
+} from 'oceanfront-workflow-canvas'
 
 const canvasMode = ref<WorkflowCanvasMode>('view')
 const workflowGraph = ref<WorkflowGraph>({ nodes: [], edges: [], groups: [] })
@@ -193,6 +323,7 @@ Create a basic workflow with sequential steps:
 
 ```typescript
 import { ref } from 'vue'
+import { makeRecord } from 'oceanfront'
 import type { WorkflowGraph } from 'oceanfront-workflow-canvas'
 
 const workflowGraph = ref<WorkflowGraph>({
@@ -200,20 +331,17 @@ const workflowGraph = ref<WorkflowGraph>({
     {
       id: 'start',
       kind: 'trigger',
-      position: { x: 100, y: 100 },
-      data: { title: 'Start Workflow', description: 'Triggered on form submission' }
+      position: { x: 100, y: 100 }
     },
     {
       id: 'validate',
       kind: 'action',
-      position: { x: 100, y: 250 },
-      data: { title: 'Validate Data', description: 'Check required fields' }
+      position: { x: 100, y: 250 }
     },
     {
       id: 'save',
       kind: 'action',
-      position: { x: 100, y: 400 },
-      data: { title: 'Save to Database', description: 'Store validated data' }
+      position: { x: 100, y: 400 }
     }
   ],
   edges: [
@@ -221,6 +349,15 @@ const workflowGraph = ref<WorkflowGraph>({
     { id: 'edge-2', from: { entityId: 'validate' }, to: { entityId: 'save' } }
   ],
   groups: []
+})
+
+const record = makeRecord({
+  'start-title': 'Start Workflow',
+  'start-description': 'Triggered on form submission',
+  'validate-title': 'Validate Data',
+  'validate-description': 'Check required fields',
+  'save-title': 'Save to Database',
+  'save-description': 'Store validated data'
 })
 ```
 
@@ -234,19 +371,15 @@ const workflowGraph = ref<WorkflowGraph>({
     {
       id: 'validate',
       kind: 'action',
-      position: { x: 120, y: 120 },
-      data: { title: 'Validate Input' }
+      position: { x: 120, y: 120 }
     },
     {
       id: 'sanitize',
       kind: 'action',
-      position: { x: 120, y: 240 },
-      data: { title: 'Sanitize Data' }
+      position: { x: 120, y: 240 }
     }
   ],
-  edges: [
-    { id: 'edge-1', from: { entityId: 'validate' }, to: { entityId: 'sanitize' } }
-  ],
+  edges: [{ id: 'edge-1', from: { entityId: 'validate' }, to: { entityId: 'sanitize' } }],
   groups: [
     {
       id: 'processing',
@@ -259,6 +392,11 @@ const workflowGraph = ref<WorkflowGraph>({
     }
   ]
 })
+
+const record = makeRecord({
+  'validate-title': 'Validate Input',
+  'sanitize-title': 'Sanitize Data'
+})
 ```
 
 ### Example 3: Programmatic Node Creation
@@ -270,15 +408,15 @@ function addValidationStep() {
   const newNode = {
     id: `node-${Date.now()}`,
     kind: 'action',
-    position: { x: 100, y: 300 },
-    data: {
-      title: 'New Validation',
-      description: 'Custom validation rule'
-    }
+    position: { x: 100, y: 300 }
   }
-  
+
+  // Add node data using flat keys
+  record.value[`${newNode.id}-title`] = 'New Validation'
+  record.value[`${newNode.id}-description`] = 'Custom validation rule'
+
   workflowGraph.value.nodes.push(newNode)
-  
+
   // Connect to previous node if exists
   const lastNode = workflowGraph.value.nodes[workflowGraph.value.nodes.length - 2]
   if (lastNode) {
@@ -343,12 +481,7 @@ Display a workflow without editing capabilities:
 <template>
   <div class="workflow-viewer">
     <h2>Approval Workflow</h2>
-    <WorkflowCanvas
-      v-model="workflowGraph"
-      mode="view"
-      :width="800"
-      :height="600"
-    />
+    <WorkflowCanvas v-model="workflowGraph" mode="view" :width="800" :height="600" />
   </div>
 </template>
 
@@ -368,12 +501,10 @@ Create hierarchical workflow structures:
 ```typescript
 const workflowGraph = ref<WorkflowGraph>({
   nodes: [
-    { id: 'step1', kind: 'action', position: { x: 140, y: 140 }, data: { title: 'Step 1' } },
-    { id: 'step2', kind: 'action', position: { x: 140, y: 260 }, data: { title: 'Step 2' } }
+    { id: 'step1', kind: 'action', position: { x: 140, y: 140 } },
+    { id: 'step2', kind: 'action', position: { x: 140, y: 260 } }
   ],
-  edges: [
-    { id: 'edge-1', from: { entityId: 'step1' }, to: { entityId: 'step2' } }
-  ],
+  edges: [{ id: 'edge-1', from: { entityId: 'step1' }, to: { entityId: 'step2' } }],
   groups: [
     {
       id: 'parent',
@@ -392,6 +523,11 @@ const workflowGraph = ref<WorkflowGraph>({
       containedIds: ['step1', 'step2']
     }
   ]
+})
+
+const record = makeRecord({
+  'step1-title': 'Step 1',
+  'step2-title': 'Step 2'
 })
 ```
 
@@ -426,7 +562,8 @@ function handleNodeAdd(node: WorkflowNode) {
 }
 
 function handleNodeUpdate(node: WorkflowNode) {
-  console.log('Node updated:', node.id, node.data)
+  console.log('Node updated:', node.id)
+  // Access node data from record using flat keys: record.value[`${node.id}-fieldName`]
   // Validate changes, save to backend
 }
 
@@ -453,23 +590,23 @@ Apply custom styles to specific node types:
 <style>
 /* Custom styling for email nodes */
 .workflow-canvas-node--type-emailAction {
-  border-color: #4CAF50;
-  background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
+  border-color: #4caf50;
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
 }
 
 .workflow-canvas-node--type-emailAction.workflow-canvas-node--selected {
-  border-color: #2E7D32;
+  border-color: #2e7d32;
   box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.3);
 }
 
 /* Custom styling for groups */
 .workflow-canvas-group {
-  border: 2px dashed #2196F3;
+  border: 2px dashed #2196f3;
   background: rgba(33, 150, 243, 0.05);
 }
 
 .workflow-canvas-group--selected {
-  border-color: #1976D2;
+  border-color: #1976d2;
   background: rgba(33, 150, 243, 0.1);
 }
 </style>
@@ -484,6 +621,7 @@ Main canvas component that renders the workflow graph.
 **Props:**
 
 - `modelValue: WorkflowGraph` - The workflow graph (v-model)
+- `record: FormRecord` (required) - Form record containing all node and group data, keyed by entity ID
 - `mode?: 'view' | 'edit'` - Canvas mode (default: `'view'`)
   - `'view'`: Read-only display mode with no grid background and all interactions disabled
   - `'edit'`: Full interactive editing mode with all features enabled
@@ -1159,9 +1297,11 @@ function handleAddStep(event: { afterNodeId?: string; inGroupId?: string }) {
   const newNode = {
     id: `node-${Date.now()}`,
     kind: 'action',
-    position: { x: 100, y: 100 },
-    data: { title: 'New Step' }
+    position: { x: 100, y: 100 }
   }
+
+  // Add node data using flat keys
+  record.value[`${newNode.id}-title`] = 'New Step'
 
   graph.value = {
     ...graph.value,
@@ -1298,10 +1438,7 @@ You can hide input and output handles when they have no connections by setting t
 
 ```vue
 <template>
-  <WorkflowCanvas
-    v-model="graph"
-    :hide-empty-handles="hideEmptyHandles"
-  />
+  <WorkflowCanvas v-model="graph" :hide-empty-handles="hideEmptyHandles" />
 </template>
 
 <script setup lang="ts">
@@ -1313,9 +1450,7 @@ const graph = ref<WorkflowGraph>({
     { id: 'node-1', kind: 'trigger', position: { x: 100, y: 100 } },
     { id: 'node-2', kind: 'action', position: { x: 100, y: 250 } }
   ],
-  edges: [
-    { id: 'edge-1', from: { entityId: 'node-1' }, to: { entityId: 'node-2' } }
-  ],
+  edges: [{ id: 'edge-1', from: { entityId: 'node-1' }, to: { entityId: 'node-2' } }],
   groups: []
 })
 
@@ -1328,8 +1463,9 @@ const hideEmptyHandles = ref(true)
 ```
 
 **Behavior:**
+
 - When `hideEmptyHandles` is `false` (default): All handles are visible
-- When `hideEmptyHandles` is `true`: 
+- When `hideEmptyHandles` is `true`:
   - Input handles are hidden if the entity has no incoming connections
   - Output handles are hidden if the entity has no outgoing connections
   - Handles appear/disappear automatically as connections are added/removed
@@ -1345,8 +1481,8 @@ const hideEmptyHandles = ref(true)
           <component :is="getIconForKind(node.kind)" />
         </div>
         <div class="custom-node__content">
-          <h4>{{ node.data.title }}</h4>
-          <p>{{ node.data.description }}</p>
+          <h4>{{ record.value[`${node.id}-title`] }}</h4>
+          <p>{{ record.value[`${node.id}-description`] }}</p>
         </div>
       </div>
     </template>
@@ -1389,11 +1525,8 @@ function moveNodeProgrammatically() {
 function updateNodeData() {
   const node = workflowGraph.value.nodes.find(n => n.id === 'node-1')
   if (node) {
-    node.data = {
-      ...node.data,
-      title: 'Updated Title',
-      lastModified: new Date().toISOString()
-    }
+    record.value[`${node.id}-title`] = 'Updated Title'
+    record.value[`${node.id}-lastModified`] = new Date().toISOString()
   }
 }
 
@@ -1407,12 +1540,14 @@ function moveAllNodes() {
 
 // Add node directly
 function addNewNode() {
-  workflowGraph.value.nodes.push({
+  const newNode = {
     id: `node-${Date.now()}`,
     kind: 'action',
-    position: { x: 100, y: 100 },
-    data: { title: 'New Node' }
-  })
+    position: { x: 100, y: 100 }
+  }
+  workflowGraph.value.nodes.push(newNode)
+  // Add data using flat keys
+  record.value[`${newNode.id}-title`] = 'New Node'
 }
 
 // Resize group
@@ -1428,11 +1563,8 @@ function resizeGroup() {
 function updateGroupData() {
   const group = workflowGraph.value.groups.find(g => g.id === 'group-1')
   if (group) {
-    group.data = {
-      ...group.data,
-      priority: 'high',
-      lastModified: new Date().toISOString()
-    }
+    record.value[`${group.id}-priority`] = 'high'
+    record.value[`${group.id}-lastModified`] = new Date().toISOString()
   }
 }
 
@@ -1562,7 +1694,7 @@ const group = workflowGraph.value.groups.find(g => g.id === 'group-123')
 if (group) {
   // Set directly on group
   group.labelRight = 'Phase 1'
-  
+
   // Or via definition override (takes priority)
   group.definition = {
     labelRight: 'Phase 1 - Planning'
@@ -1750,14 +1882,14 @@ node.definition = {
 
 ```typescript
 // Update icon and labels based on node status
-if (node.data.status === 'error') {
+if (record.value[`${node.id}-status`] === 'error') {
   node.definition = {
     icon: 'exclamation triangle',
     configPanelLabel: 'Failed Action - Review Required',
     tileLabel: 'Error',
     cssClass: 'workflow-canvas-node--error'
   }
-} else if (node.data.status === 'success') {
+} else if (record.value[`${node.id}-status`] === 'success') {
   node.definition = {
     icon: 'check circle',
     configPanelLabel: 'Completed Action',

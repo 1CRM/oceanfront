@@ -1,10 +1,14 @@
-import type { WorkflowNode, WorkflowGroup, NodeTypeConfig, GroupTypeConfig, WorkflowCanvasLabels } from '../types/workflow'
+import type {
+  WorkflowNode,
+  WorkflowGroup,
+  NodeTypeConfig,
+  GroupTypeConfig,
+  WorkflowCanvasLabels
+} from '../types/workflow'
 
 export function getNodeCssClass(node: WorkflowNode, nodeTypes: NodeTypeConfig): string {
   const typeDef = nodeTypes?.[node.kind]
-  return (
-    node.definition?.cssClass ?? typeDef?.cssClass ?? `workflow-canvas-node--type-${node.kind}`
-  )
+  return node.definition?.cssClass ?? typeDef?.cssClass ?? `workflow-canvas-node--type-${node.kind}`
 }
 
 export function getGroupDisplayLabel(group: WorkflowGroup, groupTypes: GroupTypeConfig): string {
@@ -42,10 +46,7 @@ export function getGroupDisplayLabelRight(group: WorkflowGroup): string {
   return ''
 }
 
-export function shouldHideGroupAddNode(
-  group: WorkflowGroup,
-  groupTypes: GroupTypeConfig
-): boolean {
+export function shouldHideGroupAddNode(group: WorkflowGroup, groupTypes: GroupTypeConfig): boolean {
   // Check instance-level property first
   if (group.hideAddNode !== undefined) {
     return group.hideAddNode
@@ -114,10 +115,7 @@ export function shouldHideGroupNestedAddGroup(
   return false
 }
 
-export function shouldHideNodeAddNode(
-  node: WorkflowNode,
-  nodeTypes: NodeTypeConfig
-): boolean {
+export function shouldHideNodeAddNode(node: WorkflowNode, nodeTypes: NodeTypeConfig): boolean {
   // Check instance-level property first
   if (node.hideAddNode !== undefined) {
     return node.hideAddNode
@@ -132,10 +130,7 @@ export function shouldHideNodeAddNode(
   return false
 }
 
-export function shouldHideNodeAddGroup(
-  node: WorkflowNode,
-  nodeTypes: NodeTypeConfig
-): boolean {
+export function shouldHideNodeAddGroup(node: WorkflowNode, nodeTypes: NodeTypeConfig): boolean {
   // Check instance-level property first
   if (node.hideAddGroup !== undefined) {
     return node.hideAddGroup

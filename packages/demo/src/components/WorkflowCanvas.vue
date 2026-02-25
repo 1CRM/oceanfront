@@ -272,6 +272,7 @@
         ref="workflowCanvasRef"
         v-model="workflowGraph"
         v-model:selected-id="selectedId"
+        :record="record"
         :mode="canvasMode"
         :width="1000"
         :height="600"
@@ -338,6 +339,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { makeRecord } from 'oceanfront'
 import {
   WorkflowCanvas,
   type WorkflowGraph,
@@ -587,6 +589,65 @@ const groupTypes: GroupTypeConfig = {
   }
 }
 
+// Initial workflow data (separate from graph structure) - flat format
+const initialRecordData = {
+  'node-trigger-1-title': 'Quote Created',
+  'node-trigger-1-description':
+    'Triggered when a new quote is created in the system',
+  'node-trigger-1-event': 'new_quote',
+  'node-action-1-title': 'Validate Quote',
+  'node-action-1-description': 'Check if quote meets minimum requirements',
+  'node-action-1-actionType': 'update',
+  'node-action-1-enabled': true,
+  'node-condition-1-title': 'Amount > $10,000?',
+  'node-condition-1-description': 'Check if quote amount exceeds threshold',
+  'node-condition-1-operator': 'greater_than',
+  'node-condition-1-threshold': 10000,
+  'node-action-2-title': 'Notify Sales Manager',
+  'node-action-2-description': 'Send notification for high-value quotes',
+  'node-action-2-actionType': 'email',
+  'node-action-2-enabled': true,
+  'node-action-3-title': 'Create Approval Task',
+  'node-action-3-description': 'Require manager approval for large quotes',
+  'node-action-3-actionType': 'create',
+  'node-action-3-enabled': true,
+  'node-action-4-title': 'Auto-Approve Quote',
+  'node-action-4-description': 'Automatically approve standard quotes',
+  'node-action-4-actionType': 'update',
+  'node-action-4-enabled': true,
+  'node-action-5-title': 'Update CRM',
+  'node-action-5-description': 'Sync quote data to CRM system',
+  'node-action-5-actionType': 'update',
+  'node-action-5-enabled': true,
+  'node-action-6-title': 'Generate PDF',
+  'node-action-6-description': 'Create PDF document for quote',
+  'node-action-6-actionType': 'create',
+  'node-action-6-enabled': true,
+  'node-action-7-title': 'Email Customer',
+  'node-action-7-description': 'Send quote to customer email',
+  'node-action-7-actionType': 'email',
+  'node-action-7-enabled': true,
+  'node-action-8-title': 'Log Activity',
+  'node-action-8-description': 'Record quote activity in audit log',
+  'node-action-8-actionType': 'create',
+  'node-action-8-enabled': true,
+  'node-action-9-title': 'Archive Old Quotes',
+  'node-action-9-description': 'Move expired quotes to archive',
+  'node-action-9-actionType': 'update',
+  'node-action-9-enabled': false,
+  'group-processing-main-description':
+    'Main processing phase for quote handling',
+  'group-processing-main-duration': 2,
+  'group-processing-main-status': 'in_progress',
+  'group-processing-main-lockParent': true,
+  'group-processing-sub-description': 'Handle all customer notifications',
+  'group-processing-sub-priority': 'high',
+  'group-processing-sub-owner': 'Sales Team',
+  'group-admin-description': 'Background administrative operations',
+  'group-admin-priority': 'low',
+  'group-admin-owner': 'System Admin'
+}
+
 // Initial workflow graph state - Comprehensive demo showcasing various features
 const initialWorkflowGraph: WorkflowGraph = {
   nodes: [
@@ -596,11 +657,6 @@ const initialWorkflowGraph: WorkflowGraph = {
       position: {
         x: 49,
         y: 39
-      },
-      data: {
-        title: 'Quote Created',
-        description: 'Triggered when a new quote is created in the system',
-        event: 'new_quote'
       }
     },
     {
@@ -609,12 +665,6 @@ const initialWorkflowGraph: WorkflowGraph = {
       position: {
         x: 48,
         y: 232
-      },
-      data: {
-        title: 'Validate Quote',
-        description: 'Check if quote meets minimum requirements',
-        actionType: 'update',
-        enabled: true
       }
     },
     {
@@ -623,12 +673,6 @@ const initialWorkflowGraph: WorkflowGraph = {
       position: {
         x: 48,
         y: 451
-      },
-      data: {
-        title: 'Amount > $10,000?',
-        description: 'Check if quote amount exceeds threshold',
-        operator: 'greater_than',
-        threshold: 10000
       }
     },
     {
@@ -637,12 +681,6 @@ const initialWorkflowGraph: WorkflowGraph = {
       position: {
         x: 50,
         y: 651
-      },
-      data: {
-        title: 'Notify Sales Manager',
-        description: 'Send notification for high-value quotes',
-        actionType: 'email',
-        enabled: true
       }
     },
     {
@@ -651,12 +689,6 @@ const initialWorkflowGraph: WorkflowGraph = {
       position: {
         x: 50,
         y: 878
-      },
-      data: {
-        title: 'Create Approval Task',
-        description: 'Require manager approval for large quotes',
-        actionType: 'create',
-        enabled: true
       }
     },
     {
@@ -665,12 +697,6 @@ const initialWorkflowGraph: WorkflowGraph = {
       position: {
         x: 340,
         y: 651
-      },
-      data: {
-        title: 'Auto-Approve Quote',
-        description: 'Automatically approve standard quotes',
-        actionType: 'update',
-        enabled: true
       }
     },
     {
@@ -679,12 +705,6 @@ const initialWorkflowGraph: WorkflowGraph = {
       position: {
         x: 421,
         y: 85
-      },
-      data: {
-        title: 'Update CRM',
-        description: 'Sync quote data to CRM system',
-        actionType: 'update',
-        enabled: true
       }
     },
     {
@@ -693,12 +713,6 @@ const initialWorkflowGraph: WorkflowGraph = {
       position: {
         x: 422,
         y: 284
-      },
-      data: {
-        title: 'Generate PDF',
-        description: 'Create PDF document for quote',
-        actionType: 'create',
-        enabled: true
       }
     },
     {
@@ -707,12 +721,6 @@ const initialWorkflowGraph: WorkflowGraph = {
       position: {
         x: 771,
         y: 80
-      },
-      data: {
-        title: 'Email Customer',
-        description: 'Send quote to customer email',
-        actionType: 'email',
-        enabled: true
       }
     },
     {
@@ -721,12 +729,6 @@ const initialWorkflowGraph: WorkflowGraph = {
       position: {
         x: 773,
         y: 273
-      },
-      data: {
-        title: 'Log Activity',
-        description: 'Record quote activity in audit log',
-        actionType: 'create',
-        enabled: true
       }
     },
     {
@@ -735,12 +737,6 @@ const initialWorkflowGraph: WorkflowGraph = {
       position: {
         x: 792,
         y: 651
-      },
-      data: {
-        title: 'Archive Old Quotes',
-        description: 'Move expired quotes to archive',
-        actionType: 'update',
-        enabled: false
       }
     }
   ],
@@ -832,13 +828,7 @@ const initialWorkflowGraph: WorkflowGraph = {
         w: 662,
         h: 445
       },
-      containedIds: ['group-processing-sub', 'node-action-5', 'node-action-6'],
-      data: {
-        description: 'Main processing phase for quote handling',
-        duration: 2,
-        status: 'in_progress',
-        lockParent: true
-      }
+      containedIds: ['group-processing-sub', 'node-action-5', 'node-action-6']
     },
     {
       id: 'group-processing-sub',
@@ -852,12 +842,7 @@ const initialWorkflowGraph: WorkflowGraph = {
         w: 298,
         h: 405
       },
-      containedIds: ['node-action-7', 'node-action-8'],
-      data: {
-        description: 'Handle all customer notifications',
-        priority: 'high',
-        owner: 'Sales Team'
-      }
+      containedIds: ['node-action-7', 'node-action-8']
     },
     {
       id: 'group-admin',
@@ -872,12 +857,7 @@ const initialWorkflowGraph: WorkflowGraph = {
         h: 207
       },
       maxDepth: 0,
-      containedIds: [],
-      data: {
-        description: 'Background administrative operations',
-        priority: 'low',
-        owner: 'System Admin'
-      }
+      containedIds: []
     }
   ]
 }
@@ -886,6 +866,9 @@ const initialWorkflowGraph: WorkflowGraph = {
 const workflowGraph = ref<WorkflowGraph>(
   JSON.parse(JSON.stringify(initialWorkflowGraph))
 )
+
+// Create FormRecord with initial data
+const record = makeRecord(JSON.parse(JSON.stringify(initialRecordData)))
 
 const selectedId = ref<string | null>(null)
 const workflowCanvasRef = ref<
@@ -911,6 +894,8 @@ function addNewGroupWrapper() {
 
 function resetCanvas() {
   workflowGraph.value = JSON.parse(JSON.stringify(initialWorkflowGraph))
+  // Reset record data as well
+  record.value = JSON.parse(JSON.stringify(initialRecordData))
   selectedId.value = null
 }
 
@@ -929,17 +914,11 @@ function moveFirstNodeProgrammatically() {
 
 function updateAllNodeData() {
   const timestamp = new Date().toISOString()
-  workflowGraph.value = {
-    ...workflowGraph.value,
-    nodes: workflowGraph.value.nodes.map((node) => ({
-      ...node,
-      data: {
-        ...(node.data as any),
-        lastUpdated: timestamp,
-        programmaticallyModified: true
-      }
-    }))
-  }
+  // Update data in record using flat keys
+  workflowGraph.value.nodes.forEach((node) => {
+    record.value[`${node.id}-lastUpdated`] = timestamp
+    record.value[`${node.id}-programmaticallyModified`] = true
+  })
   logEvent('programmatic-update-all', {
     count: workflowGraph.value.nodes.length,
     timestamp
@@ -963,13 +942,13 @@ function addNodeDirectly() {
     position: {
       x: Math.random() * 500 + 50,
       y: Math.random() * 300 + 50
-    },
-    data: {
-      title: 'Programmatically Added Node',
-      description: 'This node was added by directly modifying the graph data',
-      createdAt: new Date().toISOString()
     }
   }
+  // Add data to record using flat keys
+  record.value[`${newNode.id}-title`] = 'Programmatically Added Node'
+  record.value[`${newNode.id}-description`] =
+    'This node was added by directly modifying the graph data'
+  record.value[`${newNode.id}-createdAt`] = new Date().toISOString()
   workflowGraph.value.nodes.push(newNode)
   logEvent('programmatic-add-node', {
     nodeId: newNode.id,
@@ -992,8 +971,8 @@ function resizeFirstGroup() {
 function updateGroupData() {
   const timestamp = new Date().toISOString()
   workflowGraph.value.groups.forEach((group) => {
-    group.data = {
-      ...(group.data as any),
+    record.value[group.id] = {
+      ...(record.value[group.id] || {}),
       lastModified: timestamp,
       programmaticallyUpdated: true
     }
@@ -1528,14 +1507,15 @@ function handleGroupUpdate(
   parent: WorkflowGroup | null,
   connected: ConnectedEntities
 ) {
-  // Sync lockParent from data to top-level property
+  // Sync lockParent from record to top-level property
+  const groupData = record.value[group.id]
   if (
-    group.data &&
-    typeof group.data === 'object' &&
-    Object.keys(group.data).length > 0 &&
-    'lockParent' in group.data
+    groupData &&
+    typeof groupData === 'object' &&
+    Object.keys(groupData).length > 0 &&
+    'lockParent' in groupData
   ) {
-    group.lockParent = group.data.lockParent as boolean
+    group.lockParent = groupData.lockParent as boolean
   }
 
   logEvent('group-update', {

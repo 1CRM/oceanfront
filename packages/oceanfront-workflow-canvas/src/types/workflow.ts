@@ -184,7 +184,6 @@ export interface WorkflowNode {
   kind: string // consumer-defined type (e.g., 'condition', 'action', 'trigger')
   position: Position
   size?: Size
-  data?: unknown // consumer-owned data
   definition?: NodeDefinitionOverride // overrides for NodeTypeDefinition
   locked?: boolean // if true, prevents deletion
   readonly?: boolean // if true, prevents editing (hides menu and config panel)
@@ -223,7 +222,6 @@ export interface WorkflowGroup {
   position: Position
   size: Size
   containedIds: string[] // Contains both node IDs and group IDs
-  data?: unknown // consumer-owned data
   definition?: GroupDefinitionOverride // overrides for GroupTypeDefinition
   locked?: boolean // if true, prevents deletion
   readonly?: boolean // if true, prevents editing (hides config panel)

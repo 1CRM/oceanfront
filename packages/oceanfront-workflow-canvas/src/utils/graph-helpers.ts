@@ -598,7 +598,6 @@ export function handleAddStepToGraph(
 ): { graph: WorkflowGraph; newNodeId: string } {
   const nodeIdGenerator = options?.nodeIdGenerator || defaultIdGenerator('node')
   const edgeIdGenerator = options?.edgeIdGenerator || defaultIdGenerator('edge')
-  const defaultNodeData = options?.defaultNodeData || {}
   const defaultKind = options?.defaultKind || ''
 
   const newNodeId = nodeIdGenerator()
@@ -653,8 +652,7 @@ export function handleAddStepToGraph(
   const newNode: WorkflowNode = {
     id: newNodeId,
     kind: defaultKind,
-    position,
-    data: defaultNodeData
+    position
   }
 
   let updatedGraph: WorkflowGraph = {
@@ -766,7 +764,6 @@ export function addNode(
   }
 ): { graph: WorkflowGraph; newNodeId: string } {
   const nodeIdGenerator = options?.nodeIdGenerator || defaultIdGenerator('node')
-  const defaultNodeData = options?.nodeData || {}
   const defaultKind = options?.kind || ''
 
   const newNodeId = nodeIdGenerator()
@@ -790,8 +787,7 @@ export function addNode(
   const newNode: WorkflowNode = {
     id: newNodeId,
     kind: defaultKind,
-    position,
-    data: defaultNodeData
+    position
   }
 
   const updatedGraph: WorkflowGraph = {

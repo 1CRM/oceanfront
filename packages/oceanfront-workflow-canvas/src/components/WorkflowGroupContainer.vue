@@ -30,10 +30,7 @@
     </div>
 
     <!-- Hover menu with add node and add group options -->
-    <div
-      v-if="!viewMode && !readonly && !hideHoverMenu"
-      class="workflow-canvas-group__hover-menu"
-    >
+    <div v-if="!viewMode && !readonly && !hideHoverMenu" class="workflow-canvas-group__hover-menu">
       <button
         class="workflow-canvas-group__hover-menu-button"
         @click.stop="$emit('add-node-to-group', group.id)"
@@ -104,11 +101,7 @@
 </template>
 
 <script setup lang="ts">
-import type {
-  WorkflowGroup,
-  WorkflowCanvasLabels,
-  GroupTypeConfig
-} from '../types/workflow'
+import type { WorkflowGroup, WorkflowCanvasLabels, GroupTypeConfig } from '../types/workflow'
 
 interface Props {
   group: WorkflowGroup
@@ -138,8 +131,8 @@ interface Props {
 defineProps<Props>()
 
 defineEmits<{
-  'mousedown': [event: MouseEvent, group: WorkflowGroup]
-  'click': [groupId: string]
+  mousedown: [event: MouseEvent, group: WorkflowGroup]
+  click: [groupId: string]
   'handle-mousedown': [event: MouseEvent, entityId: string, port: string]
   'handle-mouseup': [entityId: string, port: string]
   'add-node-to-group': [groupId: string]

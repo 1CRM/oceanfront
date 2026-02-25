@@ -23,12 +23,7 @@
     ></div>
 
     <!-- Node content (slot or default tile) -->
-    <slot
-      name="node"
-      :node="node"
-      :selected="selected"
-      :on-menu-click="handleMenuClick"
-    >
+    <slot name="node" :node="node" :selected="selected" :on-menu-click="handleMenuClick">
       <WorkflowTile
         :node="node"
         :selected="selected"
@@ -41,10 +36,7 @@
     </slot>
 
     <!-- Hover menu with add node and add group options -->
-    <div
-      v-if="!viewMode && !readonly && !hideHoverMenu"
-      class="workflow-canvas-node__hover-menu"
-    >
+    <div v-if="!viewMode && !readonly && !hideHoverMenu" class="workflow-canvas-node__hover-menu">
       <button
         class="workflow-canvas-node__hover-menu-button"
         @click.stop="$emit('add-node-after', node.id)"
@@ -74,16 +66,12 @@
       @mouseleave="$emit('handle-mouseleave')"
       @click.stop="$emit('free-output-click', node.id)"
     >
-      <span
-        v-if="isOutputFree"
-        class="workflow-canvas-node__handle-plus"
-      ></span>
+      <span v-if="isOutputFree" class="workflow-canvas-node__handle-plus"></span>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
 import type {
   WorkflowNode,
   WorkflowGroup,
@@ -114,9 +102,9 @@ interface Props {
 const props = defineProps<Props>()
 
 const emit = defineEmits<{
-  'mousedown': [event: MouseEvent, node: WorkflowNode]
-  'mouseenter': [node: WorkflowNode]
-  'mouseleave': []
+  mousedown: [event: MouseEvent, node: WorkflowNode]
+  mouseenter: [node: WorkflowNode]
+  mouseleave: []
   'menu-click': [nodeId: string]
   'handle-mousedown': [event: MouseEvent, entityId: string, port: string]
   'handle-mouseup': [entityId: string, port: string]
