@@ -1,5 +1,11 @@
 <template>
-  <of-sidebar v-if="isOpen" :model-value="true" :embed="true" class="workflow-canvas__sidebar">
+  <of-sidebar
+    v-if="isOpen"
+    :model-value="true"
+    :embed="true"
+    class="workflow-canvas__sidebar"
+    :class="{ 'workflow-canvas__sidebar--overlay': isFullscreen }"
+  >
     <div class="workflow-canvas__panel-default">
       <div class="workflow-canvas__panel-header">
         <h3>
@@ -166,6 +172,10 @@ export default defineComponent({
     record: {
       type: Object as () => FormRecord,
       required: true
+    },
+    isFullscreen: {
+      type: Boolean,
+      default: false
     }
   },
   emits: ['close', 'delete-node', 'delete-group', 'update-node', 'update-group'],

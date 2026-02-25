@@ -344,7 +344,6 @@
 
       <!-- Full width toggle -->
       <button
-        v-if="!isViewMode"
         class="workflow-canvas__fullwidth-toggle"
         :class="{ 'workflow-canvas__fullwidth-toggle--active': isFullWidth }"
         type="button"
@@ -356,7 +355,7 @@
     </div>
 
     <!-- Configuration panel -->
-    <template v-if="!isViewMode">
+    <template v-if="!isViewMode || isFullWidth">
       <slot
         name="panel"
         :selected-node="selectedNode"
@@ -372,6 +371,7 @@
           :node-types="props.nodeTypes"
           :group-types="props.groupTypes"
           :record="props.record"
+          :is-fullscreen="isFullWidth"
           @close="closePanel"
           @delete-node="handleDeleteNode"
           @delete-group="handleDeleteGroup"

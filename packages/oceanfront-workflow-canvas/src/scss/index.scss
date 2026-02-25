@@ -78,6 +78,11 @@
     .workflow-canvas-connector {
       pointer-events: none;
     }
+
+    // Keep fullscreen toggle interactive in view mode
+    .workflow-canvas__fullwidth-toggle {
+      pointer-events: auto;
+    }
   }
 
   &--full-width {
@@ -95,8 +100,19 @@
       min-width: 0;
     }
 
-    .workflow-canvas__sidebar {
+    .workflow-canvas__sidebar:not(.workflow-canvas__sidebar--overlay) {
       display: none;
+    }
+
+    .workflow-canvas__sidebar--overlay {
+      position: fixed;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: var(--wf-sidebar-width);
+      z-index: 1001;
+      box-shadow: -4px 0 12px rgba(0, 0, 0, 0.15);
+      background: var(--wf-surface-2);
     }
   }
 }
