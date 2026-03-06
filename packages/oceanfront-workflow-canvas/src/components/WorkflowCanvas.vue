@@ -861,6 +861,7 @@ export default defineComponent({
       canvasRef,
       getEntityCenter: canvas.getEntityCenter,
       getEntityDimensions: canvas.getEntityDimensions,
+      getEntityConnectionPoint: canvas.getEntityConnectionPoint,
       onGraphUpdate: graph => emit('update:modelValue', graph),
       onEdgeAdd: edge => {
         const payload = createEdgeAddPayload(props.modelValue, edge)

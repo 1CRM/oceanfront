@@ -8,6 +8,7 @@ describe('useConnections', () => {
   let mockCanvasRef: any
   let mockGetEntityCenter: any
   let mockGetEntityDimensions: any
+  let mockGetEntityConnectionPoint: any
   let onGraphUpdate: any
   let onEdgeAdd: any
   let onEdgeDelete: any
@@ -35,6 +36,26 @@ describe('useConnections', () => {
 
     mockGetEntityDimensions = vi.fn(() => ({ width: 250, height: 100 }))
 
+    mockGetEntityConnectionPoint = vi.fn((entity: any, position: string) => {
+      const width = 250
+      const height = 100
+      const baseX = entity.position.x
+      const baseY = entity.position.y
+
+      switch (position) {
+        case 'top':
+          return { x: baseX + width / 2, y: baseY }
+        case 'bottom':
+          return { x: baseX + width / 2, y: baseY + height }
+        case 'left':
+          return { x: baseX, y: baseY + height / 2 }
+        case 'right':
+          return { x: baseX + width, y: baseY + height / 2 }
+        default:
+          return { x: baseX + width / 2, y: baseY + height }
+      }
+    })
+
     onGraphUpdate = vi.fn()
     onEdgeAdd = vi.fn()
     onEdgeDelete = vi.fn()
@@ -49,6 +70,7 @@ describe('useConnections', () => {
         canvasRef: mockCanvasRef,
         getEntityCenter: mockGetEntityCenter,
         getEntityDimensions: mockGetEntityDimensions,
+        getEntityConnectionPoint: mockGetEntityConnectionPoint,
         onGraphUpdate,
         onEdgeAdd,
         onEdgeDelete
@@ -67,6 +89,7 @@ describe('useConnections', () => {
         canvasRef: mockCanvasRef,
         getEntityCenter: mockGetEntityCenter,
         getEntityDimensions: mockGetEntityDimensions,
+        getEntityConnectionPoint: mockGetEntityConnectionPoint,
         onGraphUpdate,
         onEdgeAdd,
         onEdgeDelete
@@ -86,6 +109,7 @@ describe('useConnections', () => {
         canvasRef: mockCanvasRef,
         getEntityCenter: mockGetEntityCenter,
         getEntityDimensions: mockGetEntityDimensions,
+        getEntityConnectionPoint: mockGetEntityConnectionPoint,
         onGraphUpdate,
         onEdgeAdd,
         onEdgeDelete
@@ -104,6 +128,7 @@ describe('useConnections', () => {
         canvasRef: mockCanvasRef,
         getEntityCenter: mockGetEntityCenter,
         getEntityDimensions: mockGetEntityDimensions,
+        getEntityConnectionPoint: mockGetEntityConnectionPoint,
         onGraphUpdate,
         onEdgeAdd,
         onEdgeDelete
@@ -123,6 +148,7 @@ describe('useConnections', () => {
         canvasRef: mockCanvasRef,
         getEntityCenter: mockGetEntityCenter,
         getEntityDimensions: mockGetEntityDimensions,
+        getEntityConnectionPoint: mockGetEntityConnectionPoint,
         onGraphUpdate,
         onEdgeAdd,
         onEdgeDelete
@@ -160,6 +186,7 @@ describe('useConnections', () => {
         canvasRef: mockCanvasRef,
         getEntityCenter: mockGetEntityCenter,
         getEntityDimensions: mockGetEntityDimensions,
+        getEntityConnectionPoint: mockGetEntityConnectionPoint,
         onGraphUpdate,
         onEdgeAdd,
         onEdgeDelete,
@@ -191,6 +218,7 @@ describe('useConnections', () => {
         canvasRef: mockCanvasRef,
         getEntityCenter: mockGetEntityCenter,
         getEntityDimensions: mockGetEntityDimensions,
+        getEntityConnectionPoint: mockGetEntityConnectionPoint,
         onGraphUpdate,
         onEdgeAdd,
         onEdgeDelete
@@ -220,6 +248,7 @@ describe('useConnections', () => {
         canvasRef: mockCanvasRef,
         getEntityCenter: mockGetEntityCenter,
         getEntityDimensions: mockGetEntityDimensions,
+        getEntityConnectionPoint: mockGetEntityConnectionPoint,
         onGraphUpdate,
         onEdgeAdd,
         onEdgeDelete
@@ -265,6 +294,7 @@ describe('useConnections', () => {
         canvasRef: mockCanvasRef,
         getEntityCenter: mockGetEntityCenter,
         getEntityDimensions: mockGetEntityDimensions,
+        getEntityConnectionPoint: mockGetEntityConnectionPoint,
         onGraphUpdate,
         onEdgeAdd,
         onEdgeDelete
@@ -295,6 +325,7 @@ describe('useConnections', () => {
         canvasRef: mockCanvasRef,
         getEntityCenter: mockGetEntityCenter,
         getEntityDimensions: mockGetEntityDimensions,
+        getEntityConnectionPoint: mockGetEntityConnectionPoint,
         onGraphUpdate,
         onEdgeAdd,
         onEdgeDelete
@@ -328,6 +359,7 @@ describe('useConnections', () => {
         canvasRef: mockCanvasRef,
         getEntityCenter: mockGetEntityCenter,
         getEntityDimensions: mockGetEntityDimensions,
+        getEntityConnectionPoint: mockGetEntityConnectionPoint,
         onGraphUpdate,
         onEdgeAdd,
         onEdgeDelete
@@ -355,6 +387,7 @@ describe('useConnections', () => {
         canvasRef: mockCanvasRef,
         getEntityCenter: mockGetEntityCenter,
         getEntityDimensions: mockGetEntityDimensions,
+        getEntityConnectionPoint: mockGetEntityConnectionPoint,
         onGraphUpdate,
         onEdgeAdd,
         onEdgeDelete

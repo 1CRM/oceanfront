@@ -20,6 +20,10 @@ export interface UseConnectionsOptions {
   canvasRef: Ref<HTMLElement | undefined>
   getEntityCenter: (entity: WorkflowNode | WorkflowGroup) => Position
   getEntityDimensions: (entity: WorkflowNode | WorkflowGroup) => { width: number; height: number }
+  getEntityConnectionPoint: (
+    entity: WorkflowNode | WorkflowGroup,
+    position: 'top' | 'bottom' | 'left' | 'right'
+  ) => Position
   onGraphUpdate: (graph: WorkflowGraph) => void
   onEdgeAdd: (edge: WorkflowEdge) => void
   onEdgeDelete: (edgeId: string) => void
@@ -32,8 +36,9 @@ export function useConnections(options: UseConnectionsOptions) {
     readonly,
     edgesLocked,
     canvasRef: _canvasRef,
-    getEntityCenter,
-    getEntityDimensions,
+    getEntityCenter: _getEntityCenter,
+    getEntityDimensions: _getEntityDimensions,
+    getEntityConnectionPoint,
     onGraphUpdate,
     onEdgeAdd,
     onEdgeDelete,
@@ -103,26 +108,57 @@ export function useConnections(options: UseConnectionsOptions) {
     const dragEntity = findEntity(connectionDragStart.value.nodeId)
     if (!dragEntity) return true
 
-    const dragPos = getEntityCenter(dragEntity)
-    const dragDimensions = getEntityDimensions(dragEntity)
-
     let startPos: Position
     let endPos: Position = mousePos
-    let startControlY: number
-    let endControlY: number
+    let path: string
 
-    if (connectionDragStart.value.port === 'input') {
-      startPos = { x: dragPos.x, y: dragPos.y - dragDimensions.height / 2 }
-      const dy = endPos.y - startPos.y
-      const controlOffset = Math.abs(dy) / 2
-      startControlY = startPos.y - controlOffset
-      endControlY = endPos.y + controlOffset
+    // Determine the edge position - use stored position if available, otherwise check for existing edges
+    let edgePosition: 'top' | 'bottom' | 'left' | 'right'
+    if (connectionDragStart.value.position) {
+      edgePosition = connectionDragStart.value.position
     } else {
-      startPos = { x: dragPos.x, y: dragPos.y + dragDimensions.height / 2 }
+      // Check for existing edges to determine handle position
+      if (connectionDragStart.value.port === 'input') {
+        const incomingEdge = graph.value.edges.find(
+          edge => edge.to.entityId === connectionDragStart.value!.nodeId
+        )
+        edgePosition = incomingEdge?.to.position === 'left' ? 'left' : 'top'
+      } else {
+        const outgoingEdge = graph.value.edges.find(
+          edge => edge.from.entityId === connectionDragStart.value!.nodeId
+        )
+        edgePosition = outgoingEdge?.from.position === 'right' ? 'right' : 'bottom'
+      }
+    }
+
+    // Get the correct connection point based on the edge position
+    startPos = getEntityConnectionPoint(dragEntity, edgePosition)
+
+    // Determine if this is a horizontal or vertical edge
+    const isHorizontal = edgePosition === 'left' || edgePosition === 'right'
+
+    if (isHorizontal) {
+      // Horizontal edge (left/right)
+      const dx = endPos.x - startPos.x
+      const controlOffset = Math.abs(dx) / 2
+
+      if (edgePosition === 'right') {
+        path = `M ${startPos.x},${startPos.y} C ${startPos.x + controlOffset},${startPos.y} ${endPos.x - controlOffset},${endPos.y} ${endPos.x},${endPos.y}`
+      } else {
+        // left
+        path = `M ${startPos.x},${startPos.y} C ${startPos.x - controlOffset},${startPos.y} ${endPos.x + controlOffset},${endPos.y} ${endPos.x},${endPos.y}`
+      }
+    } else {
+      // Vertical edge (top/bottom)
       const dy = endPos.y - startPos.y
       const controlOffset = Math.abs(dy) / 2
-      startControlY = startPos.y + controlOffset
-      endControlY = endPos.y - controlOffset
+
+      if (edgePosition === 'bottom') {
+        path = `M ${startPos.x},${startPos.y} C ${startPos.x},${startPos.y + controlOffset} ${endPos.x},${endPos.y - controlOffset} ${endPos.x},${endPos.y}`
+      } else {
+        // top
+        path = `M ${startPos.x},${startPos.y} C ${startPos.x},${startPos.y - controlOffset} ${endPos.x},${endPos.y + controlOffset} ${endPos.x},${endPos.y}`
+      }
     }
 
     // Check if hovering over an incompatible node type
@@ -137,7 +173,7 @@ export function useConnections(options: UseConnectionsOptions) {
     }
 
     connectionPreview.value = {
-      path: `M ${startPos.x},${startPos.y} C ${startPos.x},${startControlY} ${endPos.x},${endControlY} ${endPos.x},${endPos.y}`,
+      path,
       fromNodeId: connectionDragStart.value.nodeId,
       isInvalid
     }
