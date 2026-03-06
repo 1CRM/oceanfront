@@ -1304,7 +1304,8 @@ describe('Graph Helper Functions', () => {
       const wrapper = mount(WorkflowCanvas, {
         props: {
           modelValue: graph,
-          record: createMockRecord()
+          record: createMockRecord(),
+          mode: 'edit'
         }
       })
 
@@ -1342,7 +1343,8 @@ describe('Graph Helper Functions', () => {
       const wrapper = mount(WorkflowCanvas, {
         props: {
           modelValue: graph,
-          record: createMockRecord()
+          record: createMockRecord(),
+          mode: 'edit'
         }
       })
 
@@ -1400,7 +1402,8 @@ describe('Graph Helper Functions', () => {
       const wrapper = mount(WorkflowCanvas, {
         props: {
           modelValue: graph,
-          record: createMockRecord()
+          record: createMockRecord(),
+          mode: 'edit'
         }
       })
 

@@ -182,6 +182,11 @@ describe('WorkflowConfigPanel', () => {
           nodeTypes: mockNodeTypes,
           groupTypes: mockGroupTypes,
           record: makeRecord()
+        },
+        global: {
+          stubs: {
+            'of-field': { template: '<label>{{ label }}</label>', props: ['label'] }
+          }
         }
       })
 
@@ -303,6 +308,11 @@ describe('WorkflowConfigPanel', () => {
           nodeTypes: mockNodeTypes,
           groupTypes: mockGroupTypes,
           record: makeRecord()
+        },
+        global: {
+          stubs: {
+            'of-text-field': { template: '<label>{{ label }}</label>', props: ['label'] }
+          }
         }
       })
 
@@ -328,6 +338,11 @@ describe('WorkflowConfigPanel', () => {
           nodeTypes: mockNodeTypes,
           groupTypes: mockGroupTypes,
           record: makeRecord()
+        },
+        global: {
+          stubs: {
+            'of-field': { template: '<label>{{ label }}</label>', props: ['label'] }
+          }
         }
       })
 
@@ -415,6 +430,11 @@ describe('WorkflowConfigPanel', () => {
           nodeTypes: mockNodeTypes,
           groupTypes: mockGroupTypes,
           record: makeRecord()
+        },
+        global: {
+          stubs: {
+            'of-field': { template: '<label>{{ label }}</label>', props: ['label'] }
+          }
         }
       })
 
@@ -453,6 +473,11 @@ describe('WorkflowConfigPanel', () => {
           nodeTypes: mockNodeTypes,
           groupTypes: mockGroupTypes,
           record: makeRecord()
+        },
+        global: {
+          stubs: {
+            'of-field': { template: '<label>{{ label }}</label>', props: ['label'] }
+          }
         }
       })
 

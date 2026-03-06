@@ -177,22 +177,32 @@ export default defineComponent({
         return title
       }
 
-      // Priority 4: tileTitle
+      // Priority 4: instance-level tileTitle override
+      if (props.node.definition?.tileTitle) {
+        return props.node.definition.tileTitle
+      }
+
+      // Priority 5: instance-level title override (takes precedence over base type tileTitle)
+      if (props.node.definition?.title) {
+        return props.node.definition.title
+      }
+
+      // Priority 6: base tileTitle
       if (mergedDefinition.value.tileTitle) {
         return mergedDefinition.value.tileTitle
       }
 
-      // Priority 5: configPanelTitle
+      // Priority 7: configPanelTitle
       if (mergedDefinition.value.configPanelTitle) {
         return mergedDefinition.value.configPanelTitle
       }
 
-      // Priority 6: title
+      // Priority 8: title
       if (mergedDefinition.value.title) {
         return mergedDefinition.value.title
       }
 
-      // Priority 7: kind
+      // Priority 9: kind
       return props.node.kind
     })
 
