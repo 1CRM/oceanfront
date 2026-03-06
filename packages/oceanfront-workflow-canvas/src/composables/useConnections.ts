@@ -43,7 +43,11 @@ export function useConnections(options: UseConnectionsOptions) {
   const connectionPreview = ref<{ path: string; fromNodeId: string; isInvalid?: boolean } | null>(
     null
   )
-  const connectionDragStart = ref<{ nodeId: string; port: string } | null>(null)
+  const connectionDragStart = ref<{
+    nodeId: string
+    port: string
+    position?: 'top' | 'bottom' | 'left' | 'right'
+  } | null>(null)
   const connectionDragMoved = ref(false)
   const disconnectingEdge = ref<WorkflowEdge | null>(null)
   const hoveredEntityId = ref<string | null>(null)
@@ -64,7 +68,11 @@ export function useConnections(options: UseConnectionsOptions) {
     if (port === 'input') {
       const existingEdge = graph.value.edges.find(edge => edge.to.entityId === entityId)
       if (existingEdge && !existingEdge.locked && !edgesLocked.value) {
-        connectionDragStart.value = { nodeId: entityId, port: 'input' }
+        connectionDragStart.value = {
+          nodeId: entityId,
+          port: 'input',
+          position: existingEdge.to.position
+        }
         disconnectingEdge.value = existingEdge
         return
       }
@@ -73,7 +81,11 @@ export function useConnections(options: UseConnectionsOptions) {
     if (port === 'output') {
       const existingEdge = graph.value.edges.find(edge => edge.from.entityId === entityId)
       if (existingEdge && !existingEdge.locked && !edgesLocked.value) {
-        connectionDragStart.value = { nodeId: entityId, port: 'output' }
+        connectionDragStart.value = {
+          nodeId: entityId,
+          port: 'output',
+          position: existingEdge.from.position
+        }
         disconnectingEdge.value = existingEdge
         return
       }
@@ -189,11 +201,22 @@ export function useConnections(options: UseConnectionsOptions) {
           }
         }
 
+        const fromPosition =
+          connectionDragStart.value.port === 'output'
+            ? connectionDragStart.value.position
+            : undefined
+        const toPosition =
+          connectionDragStart.value.port === 'input'
+            ? connectionDragStart.value.position
+            : undefined
+
         const updatedGraph = handleConnectNodes(
           baseGraph,
           {
             fromNodeId: fromEntityId,
-            toNodeId: toEntityId
+            toNodeId: toEntityId,
+            fromPosition,
+            toPosition
           },
           {
             edgeLocked: edgesLocked.value

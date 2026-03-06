@@ -1,8 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import type {
-  WorkflowGraph,
-  NodeTypeConfig
-} from '../../types/workflow'
+import type { WorkflowGraph, NodeTypeConfig } from '../../types/workflow'
 import {
   getConnectedEntities,
   isGroupDescendantOf,
@@ -45,9 +42,7 @@ describe('getConnectedEntities', () => {
 
   it('returns empty arrays for unconnected node', () => {
     const graph = makeGraph({
-      nodes: [
-        { id: 'n1', kind: 'action', position: { x: 0, y: 0 } }
-      ]
+      nodes: [{ id: 'n1', kind: 'action', position: { x: 0, y: 0 } }]
     })
 
     const result = getConnectedEntities(graph, 'n1')
@@ -57,15 +52,17 @@ describe('getConnectedEntities', () => {
 
   it('resolves groups as connected entities', () => {
     const graph = makeGraph({
-      nodes: [
-        { id: 'n1', kind: 'action', position: { x: 0, y: 0 } }
-      ],
+      nodes: [{ id: 'n1', kind: 'action', position: { x: 0, y: 0 } }],
       groups: [
-        { id: 'g1', kind: 'group', position: { x: 0, y: 0 }, size: { w: 300, h: 200 }, containedIds: [] }
+        {
+          id: 'g1',
+          kind: 'group',
+          position: { x: 0, y: 0 },
+          size: { w: 300, h: 200 },
+          containedIds: []
+        }
       ],
-      edges: [
-        { id: 'e1', from: { entityId: 'g1' }, to: { entityId: 'n1' } }
-      ]
+      edges: [{ id: 'e1', from: { entityId: 'g1' }, to: { entityId: 'n1' } }]
     })
 
     const result = getConnectedEntities(graph, 'n1')
@@ -98,8 +95,20 @@ describe('isGroupDescendantOf', () => {
   it('returns true for direct child', () => {
     const graph = makeGraph({
       groups: [
-        { id: 'parent', kind: 'group', position: { x: 0, y: 0 }, size: { w: 400, h: 400 }, containedIds: ['child'] },
-        { id: 'child', kind: 'group', position: { x: 20, y: 20 }, size: { w: 200, h: 200 }, containedIds: [] }
+        {
+          id: 'parent',
+          kind: 'group',
+          position: { x: 0, y: 0 },
+          size: { w: 400, h: 400 },
+          containedIds: ['child']
+        },
+        {
+          id: 'child',
+          kind: 'group',
+          position: { x: 20, y: 20 },
+          size: { w: 200, h: 200 },
+          containedIds: []
+        }
       ]
     })
 
@@ -109,9 +118,27 @@ describe('isGroupDescendantOf', () => {
   it('returns true for deeply nested descendant', () => {
     const graph = makeGraph({
       groups: [
-        { id: 'root', kind: 'group', position: { x: 0, y: 0 }, size: { w: 500, h: 500 }, containedIds: ['mid'] },
-        { id: 'mid', kind: 'group', position: { x: 20, y: 20 }, size: { w: 300, h: 300 }, containedIds: ['leaf'] },
-        { id: 'leaf', kind: 'group', position: { x: 40, y: 40 }, size: { w: 100, h: 100 }, containedIds: [] }
+        {
+          id: 'root',
+          kind: 'group',
+          position: { x: 0, y: 0 },
+          size: { w: 500, h: 500 },
+          containedIds: ['mid']
+        },
+        {
+          id: 'mid',
+          kind: 'group',
+          position: { x: 20, y: 20 },
+          size: { w: 300, h: 300 },
+          containedIds: ['leaf']
+        },
+        {
+          id: 'leaf',
+          kind: 'group',
+          position: { x: 40, y: 40 },
+          size: { w: 100, h: 100 },
+          containedIds: []
+        }
       ]
     })
 
@@ -121,8 +148,20 @@ describe('isGroupDescendantOf', () => {
   it('returns false for non-descendant', () => {
     const graph = makeGraph({
       groups: [
-        { id: 'g1', kind: 'group', position: { x: 0, y: 0 }, size: { w: 200, h: 200 }, containedIds: [] },
-        { id: 'g2', kind: 'group', position: { x: 300, y: 0 }, size: { w: 200, h: 200 }, containedIds: [] }
+        {
+          id: 'g1',
+          kind: 'group',
+          position: { x: 0, y: 0 },
+          size: { w: 200, h: 200 },
+          containedIds: []
+        },
+        {
+          id: 'g2',
+          kind: 'group',
+          position: { x: 300, y: 0 },
+          size: { w: 200, h: 200 },
+          containedIds: []
+        }
       ]
     })
 
@@ -132,8 +171,20 @@ describe('isGroupDescendantOf', () => {
   it('returns false for reverse relationship', () => {
     const graph = makeGraph({
       groups: [
-        { id: 'parent', kind: 'group', position: { x: 0, y: 0 }, size: { w: 400, h: 400 }, containedIds: ['child'] },
-        { id: 'child', kind: 'group', position: { x: 20, y: 20 }, size: { w: 200, h: 200 }, containedIds: [] }
+        {
+          id: 'parent',
+          kind: 'group',
+          position: { x: 0, y: 0 },
+          size: { w: 400, h: 400 },
+          containedIds: ['child']
+        },
+        {
+          id: 'child',
+          kind: 'group',
+          position: { x: 20, y: 20 },
+          size: { w: 200, h: 200 },
+          containedIds: []
+        }
       ]
     })
 
@@ -144,11 +195,15 @@ describe('isGroupDescendantOf', () => {
 describe('isEntityTypeCompatibleWithGroup', () => {
   it('allows nodes of any kind in any group', () => {
     const graph = makeGraph({
-      nodes: [
-        { id: 'n1', kind: 'action', position: { x: 0, y: 0 } }
-      ],
+      nodes: [{ id: 'n1', kind: 'action', position: { x: 0, y: 0 } }],
       groups: [
-        { id: 'g1', kind: 'phase', position: { x: 0, y: 0 }, size: { w: 300, h: 200 }, containedIds: [] }
+        {
+          id: 'g1',
+          kind: 'phase',
+          position: { x: 0, y: 0 },
+          size: { w: 300, h: 200 },
+          containedIds: []
+        }
       ]
     })
 
@@ -158,8 +213,20 @@ describe('isEntityTypeCompatibleWithGroup', () => {
   it('allows groups of same kind to nest', () => {
     const graph = makeGraph({
       groups: [
-        { id: 'g1', kind: 'phase', position: { x: 0, y: 0 }, size: { w: 400, h: 400 }, containedIds: [] },
-        { id: 'g2', kind: 'phase', position: { x: 20, y: 20 }, size: { w: 200, h: 200 }, containedIds: [] }
+        {
+          id: 'g1',
+          kind: 'phase',
+          position: { x: 0, y: 0 },
+          size: { w: 400, h: 400 },
+          containedIds: []
+        },
+        {
+          id: 'g2',
+          kind: 'phase',
+          position: { x: 20, y: 20 },
+          size: { w: 200, h: 200 },
+          containedIds: []
+        }
       ]
     })
 
@@ -169,8 +236,20 @@ describe('isEntityTypeCompatibleWithGroup', () => {
   it('rejects groups of different kinds', () => {
     const graph = makeGraph({
       groups: [
-        { id: 'g1', kind: 'phase', position: { x: 0, y: 0 }, size: { w: 400, h: 400 }, containedIds: [] },
-        { id: 'g2', kind: 'swimlane', position: { x: 20, y: 20 }, size: { w: 200, h: 200 }, containedIds: [] }
+        {
+          id: 'g1',
+          kind: 'phase',
+          position: { x: 0, y: 0 },
+          size: { w: 400, h: 400 },
+          containedIds: []
+        },
+        {
+          id: 'g2',
+          kind: 'swimlane',
+          position: { x: 20, y: 20 },
+          size: { w: 200, h: 200 },
+          containedIds: []
+        }
       ]
     })
 
@@ -179,9 +258,7 @@ describe('isEntityTypeCompatibleWithGroup', () => {
 
   it('allows when target group does not exist', () => {
     const graph = makeGraph({
-      nodes: [
-        { id: 'n1', kind: 'action', position: { x: 0, y: 0 } }
-      ]
+      nodes: [{ id: 'n1', kind: 'action', position: { x: 0, y: 0 } }]
     })
 
     expect(isEntityTypeCompatibleWithGroup(graph, 'n1', 'nonexistent')).toBe(true)
@@ -190,8 +267,20 @@ describe('isEntityTypeCompatibleWithGroup', () => {
   it('allows groups with empty kind', () => {
     const graph = makeGraph({
       groups: [
-        { id: 'g1', kind: '', position: { x: 0, y: 0 }, size: { w: 400, h: 400 }, containedIds: [] },
-        { id: 'g2', kind: 'phase', position: { x: 20, y: 20 }, size: { w: 200, h: 200 }, containedIds: [] }
+        {
+          id: 'g1',
+          kind: '',
+          position: { x: 0, y: 0 },
+          size: { w: 400, h: 400 },
+          containedIds: []
+        },
+        {
+          id: 'g2',
+          kind: 'phase',
+          position: { x: 20, y: 20 },
+          size: { w: 200, h: 200 },
+          containedIds: []
+        }
       ]
     })
 
@@ -233,9 +322,7 @@ describe('addNode', () => {
 
   it('places node below existing nodes when no position given', () => {
     const graph = makeGraph({
-      nodes: [
-        { id: 'n1', kind: 'action', position: { x: 100, y: 100 } }
-      ]
+      nodes: [{ id: 'n1', kind: 'action', position: { x: 100, y: 100 } }]
     })
 
     const result = addNode(graph)
@@ -323,9 +410,13 @@ describe('handleConnectNodes', () => {
       ]
     })
 
-    const result = handleConnectNodes(graph, { fromNodeId: 'n1', toNodeId: 'n2' }, {
-      edgeIdGenerator: () => 'e-custom'
-    })
+    const result = handleConnectNodes(
+      graph,
+      { fromNodeId: 'n1', toNodeId: 'n2' },
+      {
+        edgeIdGenerator: () => 'e-custom'
+      }
+    )
 
     expect(result.edges[0].id).toBe('e-custom')
   })
@@ -338,9 +429,13 @@ describe('handleConnectNodes', () => {
       ]
     })
 
-    const result = handleConnectNodes(graph, { fromNodeId: 'n1', toNodeId: 'n2' }, {
-      edgeLocked: true
-    })
+    const result = handleConnectNodes(
+      graph,
+      { fromNodeId: 'n1', toNodeId: 'n2' },
+      {
+        edgeLocked: true
+      }
+    )
 
     expect(result.edges[0].locked).toBe(true)
   })
@@ -352,9 +447,7 @@ describe('handleConnectNodes', () => {
         { id: 'n2', kind: 'action', position: { x: 0, y: 150 } },
         { id: 'n3', kind: 'action', position: { x: 0, y: 300 } }
       ],
-      edges: [
-        { id: 'e1', from: { entityId: 'n1' }, to: { entityId: 'n2' } }
-      ]
+      edges: [{ id: 'e1', from: { entityId: 'n1' }, to: { entityId: 'n2' } }]
     })
 
     const result = handleConnectNodes(graph, { fromNodeId: 'n1', toNodeId: 'n3' })
@@ -373,11 +466,15 @@ describe('getAutoAssignedNodeKind', () => {
 
   it('returns group kind when node has no kind and group kind exists in nodeTypes', () => {
     const graph = makeGraph({
-      nodes: [
-        { id: 'n1', kind: '', position: { x: 0, y: 0 } }
-      ],
+      nodes: [{ id: 'n1', kind: '', position: { x: 0, y: 0 } }],
       groups: [
-        { id: 'g1', kind: 'action', position: { x: 0, y: 0 }, size: { w: 300, h: 200 }, containedIds: ['n1'] }
+        {
+          id: 'g1',
+          kind: 'action',
+          position: { x: 0, y: 0 },
+          size: { w: 300, h: 200 },
+          containedIds: ['n1']
+        }
       ]
     })
 
@@ -386,11 +483,15 @@ describe('getAutoAssignedNodeKind', () => {
 
   it('returns null when node already has a kind', () => {
     const graph = makeGraph({
-      nodes: [
-        { id: 'n1', kind: 'trigger', position: { x: 0, y: 0 } }
-      ],
+      nodes: [{ id: 'n1', kind: 'trigger', position: { x: 0, y: 0 } }],
       groups: [
-        { id: 'g1', kind: 'action', position: { x: 0, y: 0 }, size: { w: 300, h: 200 }, containedIds: ['n1'] }
+        {
+          id: 'g1',
+          kind: 'action',
+          position: { x: 0, y: 0 },
+          size: { w: 300, h: 200 },
+          containedIds: ['n1']
+        }
       ]
     })
 
@@ -399,11 +500,15 @@ describe('getAutoAssignedNodeKind', () => {
 
   it('returns null when group kind is not in nodeTypes', () => {
     const graph = makeGraph({
-      nodes: [
-        { id: 'n1', kind: '', position: { x: 0, y: 0 } }
-      ],
+      nodes: [{ id: 'n1', kind: '', position: { x: 0, y: 0 } }],
       groups: [
-        { id: 'g1', kind: 'unknown', position: { x: 0, y: 0 }, size: { w: 300, h: 200 }, containedIds: ['n1'] }
+        {
+          id: 'g1',
+          kind: 'unknown',
+          position: { x: 0, y: 0 },
+          size: { w: 300, h: 200 },
+          containedIds: ['n1']
+        }
       ]
     })
 
@@ -413,7 +518,13 @@ describe('getAutoAssignedNodeKind', () => {
   it('returns null when node does not exist', () => {
     const graph = makeGraph({
       groups: [
-        { id: 'g1', kind: 'action', position: { x: 0, y: 0 }, size: { w: 300, h: 200 }, containedIds: [] }
+        {
+          id: 'g1',
+          kind: 'action',
+          position: { x: 0, y: 0 },
+          size: { w: 300, h: 200 },
+          containedIds: []
+        }
       ]
     })
 
@@ -422,9 +533,7 @@ describe('getAutoAssignedNodeKind', () => {
 
   it('returns null when group does not exist', () => {
     const graph = makeGraph({
-      nodes: [
-        { id: 'n1', kind: '', position: { x: 0, y: 0 } }
-      ]
+      nodes: [{ id: 'n1', kind: '', position: { x: 0, y: 0 } }]
     })
 
     expect(getAutoAssignedNodeKind(graph, 'n1', 'nonexistent', nodeTypes)).toBe(null)

@@ -793,6 +793,18 @@ const initialWorkflowGraph: WorkflowGraph = {
       to: {
         entityId: 'node-action-7'
       }
+    },
+    {
+      id: 'edge-1772605630434-0',
+      from: {
+        entityId: 'node-action-4',
+        position: 'right'
+      },
+      to: {
+        entityId: 'group-admin',
+        position: 'left'
+      },
+      locked: false
     }
   ],
   groups: [
@@ -1431,8 +1443,28 @@ function handleGroupClick(groupId: string) {
   logEvent('group-click', { groupId })
 }
 
-function handleGroupDelete(groupId: string) {
-  logEvent('group-delete', { groupId })
+function handleGroupDelete(
+  group: WorkflowGroup,
+  parent: WorkflowGroup | null,
+  connected: ConnectedEntities
+) {
+  logEvent('group-delete', {
+    id: group.id,
+    kind: group.kind,
+    parent: parent
+      ? { id: parent.id, label: parent.label, kind: parent.kind }
+      : null,
+    connected: {
+      incoming: connected.incoming.map((e: WorkflowNode | WorkflowGroup) => ({
+        id: e.id,
+        kind: 'kind' in e ? e.kind : 'group'
+      })),
+      outgoing: connected.outgoing.map((e: WorkflowNode | WorkflowGroup) => ({
+        id: e.id,
+        kind: 'kind' in e ? e.kind : 'group'
+      }))
+    }
+  })
 }
 
 function handleGroupUpdate(

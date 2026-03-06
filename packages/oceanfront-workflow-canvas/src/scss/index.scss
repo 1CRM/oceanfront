@@ -577,6 +577,27 @@
       bottom: -9px;
     }
 
+    &--left {
+      left: -7px;
+      top: 50%;
+      transform: translateY(calc(-50% - 2px));
+
+      &:hover {
+        transform: translateY(-50%) scale(1.2);
+      }
+    }
+
+    &--right {
+      right: -9px;
+      left: auto;
+      top: 50%;
+      transform: translateY(calc(-50% - 2px));
+
+      &:hover {
+        transform: translateY(-50%) scale(1.2);
+      }
+    }
+
     &--free {
       display: flex;
       align-items: center;
@@ -796,6 +817,27 @@
 
     &--output {
       bottom: -7px;
+    }
+
+    &--left {
+      left: -5px;
+      top: 50%;
+      transform: translateY(-50%);
+
+      &:hover {
+        transform: translateY(-50%) scale(1.15);
+      }
+    }
+
+    &--right {
+      right: -7px;
+      left: auto;
+      top: 50%;
+      transform: translateY(-50%);
+
+      &:hover {
+        transform: translateY(-50%) scale(1.15);
+      }
     }
 
     &--free {

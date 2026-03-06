@@ -26,8 +26,8 @@ function createMockRecord(): FormRecord {
     initialValue: {},
     value: {},
     metadata: {},
-    reset: () => { },
-    reinit: () => { },
+    reset: () => {},
+    reinit: () => {},
     lock: () => null
   }
 }

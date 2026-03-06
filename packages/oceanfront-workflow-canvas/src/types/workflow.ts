@@ -176,6 +176,7 @@ export interface GroupTypeConfig {
  */
 export interface Port {
   entityId: string // Can refer to either a node or a group
+  position?: 'top' | 'bottom' | 'left' | 'right' // Optional handle position (defaults: 'bottom' for output, 'top' for input)
 }
 
 /**
@@ -269,6 +270,8 @@ export interface AddStepEvent {
 export interface ConnectEvent {
   fromNodeId: string
   toNodeId: string
+  fromPosition?: 'top' | 'bottom' | 'left' | 'right'
+  toPosition?: 'top' | 'bottom' | 'left' | 'right'
 }
 
 /**

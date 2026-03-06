@@ -742,8 +742,14 @@ export function handleConnectNodes(
 
   return addEdge(graph, {
     id: edgeIdGenerator(),
-    from: { entityId: event.fromNodeId },
-    to: { entityId: event.toNodeId },
+    from: {
+      entityId: event.fromNodeId,
+      ...(event.fromPosition && { position: event.fromPosition })
+    },
+    to: {
+      entityId: event.toNodeId,
+      ...(event.toPosition && { position: event.toPosition })
+    },
     ...(options?.edgeLocked !== undefined && { locked: options.edgeLocked })
   })
 }

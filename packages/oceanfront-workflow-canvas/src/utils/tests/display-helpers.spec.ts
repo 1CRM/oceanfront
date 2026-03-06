@@ -3,8 +3,7 @@ import type {
   WorkflowNode,
   WorkflowGroup,
   NodeTypeConfig,
-  GroupTypeConfig,
-  WorkflowCanvasLabels
+  GroupTypeConfig
 } from '../../types/workflow'
 import { DEFAULT_LABELS } from '../../constants/labels'
 import {

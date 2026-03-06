@@ -89,7 +89,11 @@
             <!-- Input handle -->
             <div
               v-if="!isViewMode && !readonly && shouldShowInputHandle(group.id)"
-              class="workflow-canvas-group__handle workflow-canvas-group__handle--input"
+              class="workflow-canvas-group__handle"
+              :class="{
+                'workflow-canvas-group__handle--input': getInputHandlePosition(group.id) === 'top',
+                'workflow-canvas-group__handle--left': getInputHandlePosition(group.id) === 'left'
+              }"
               @mousedown.stop="connections.handleEntityHandleMouseDown($event, group.id, 'input')"
               @mouseup="connections.handleEntityHandleMouseUp(group.id, 'input')"
             ></div>
@@ -172,8 +176,14 @@
             <!-- Output handle -->
             <div
               v-if="!isViewMode && !readonly && shouldShowOutputHandle(group.id)"
-              class="workflow-canvas-group__handle workflow-canvas-group__handle--output"
-              :class="{ 'workflow-canvas-group__handle--free': connections.isOutputFree(group.id) }"
+              class="workflow-canvas-group__handle"
+              :class="{
+                'workflow-canvas-group__handle--output':
+                  getOutputHandlePosition(group.id) === 'bottom',
+                'workflow-canvas-group__handle--right':
+                  getOutputHandlePosition(group.id) === 'right',
+                'workflow-canvas-group__handle--free': connections.isOutputFree(group.id)
+              }"
               @mousedown.stop="connections.handleEntityHandleMouseDown($event, group.id, 'output')"
               @mouseup="connections.handleEntityHandleMouseUp(group.id, 'output')"
             ></div>
@@ -245,7 +255,11 @@
             <!-- Input handle -->
             <div
               v-if="!isViewMode && !readonly && shouldShowInputHandle(node.id)"
-              class="workflow-canvas-node__handle workflow-canvas-node__handle--input"
+              class="workflow-canvas-node__handle"
+              :class="{
+                'workflow-canvas-node__handle--input': getInputHandlePosition(node.id) === 'top',
+                'workflow-canvas-node__handle--left': getInputHandlePosition(node.id) === 'left'
+              }"
               @mousedown.stop="connections.handleEntityHandleMouseDown($event, node.id, 'input')"
               @mouseup="connections.handleEntityHandleMouseUp(node.id, 'input')"
               @mouseenter="connections.handleEntityHandleMouseEnter(node.id)"
@@ -313,8 +327,13 @@
             <!-- Output handle -->
             <div
               v-if="!isViewMode && !readonly && shouldShowOutputHandle(node.id)"
-              class="workflow-canvas-node__handle workflow-canvas-node__handle--output"
-              :class="{ 'workflow-canvas-node__handle--free': connections.isOutputFree(node.id) }"
+              class="workflow-canvas-node__handle"
+              :class="{
+                'workflow-canvas-node__handle--output':
+                  getOutputHandlePosition(node.id) === 'bottom',
+                'workflow-canvas-node__handle--right': getOutputHandlePosition(node.id) === 'right',
+                'workflow-canvas-node__handle--free': connections.isOutputFree(node.id)
+              }"
               @mousedown.stop="connections.handleEntityHandleMouseDown($event, node.id, 'output')"
               @mouseup="connections.handleEntityHandleMouseUp(node.id, 'output')"
               @mouseenter="connections.handleEntityHandleMouseEnter(node.id)"
@@ -519,7 +538,7 @@ import { useCanvas } from '../composables/useCanvas'
  * @emits node-delete - Emitted when a node is deleted with full entity information (node, parentGroup, connectedEntities)
  * @emits node-update - Emitted when a node is updated
  * @emits group-add - Emitted when a group is added
- * @emits group-delete - Emitted when a group is deleted
+ * @emits group-delete - Emitted when a group is deleted with full entity information (group, parentGroup, connectedEntities)
  * @emits group-update - Emitted when a group is updated
  * @emits edge-add - Emitted when an edge is added with full entity information (edge, from, to)
  * @emits edge-delete - Emitted when an edge is deleted
@@ -622,6 +641,9 @@ export default defineComponent({
     'fullscreen-toggle'
   ],
   setup(props, { emit, expose }) {
+    // Spacing between nodes/groups when adding new entities
+    const ENTITY_SPACING = 50
+
     const isViewMode = computed(() => props.mode === 'view')
 
     const mergedLabels = computed<WorkflowCanvasLabels>(() => ({
@@ -915,19 +937,34 @@ export default defineComponent({
 
       if (!fromEntity || !toEntity) return ''
 
-      const fromPos = canvas.getEntityCenter(fromEntity)
-      const toPos = canvas.getEntityCenter(toEntity)
+      const fromPosition = edge.from.position || 'bottom'
+      const toPosition = edge.to.position || 'top'
 
-      const fromDimensions = canvas.getEntityDimensions(fromEntity)
-      const toDimensions = canvas.getEntityDimensions(toEntity)
+      const fromPos = canvas.getEntityConnectionPoint(fromEntity, fromPosition)
+      const toPos = canvas.getEntityConnectionPoint(toEntity, toPosition)
 
-      fromPos.y += fromDimensions.height / 2
-      toPos.y -= toDimensions.height / 2
+      const isHorizontalFrom = fromPosition === 'left' || fromPosition === 'right'
+      const isHorizontalTo = toPosition === 'left' || toPosition === 'right'
 
-      const dy = toPos.y - fromPos.y
-      const controlOffset = Math.abs(dy) / 2
-
-      return `M ${fromPos.x},${fromPos.y} C ${fromPos.x},${fromPos.y + controlOffset} ${toPos.x},${toPos.y - controlOffset} ${toPos.x},${toPos.y}`
+      if (isHorizontalFrom && isHorizontalTo) {
+        const dx = toPos.x - fromPos.x
+        const controlOffset = Math.abs(dx) / 2
+        return `M ${fromPos.x},${fromPos.y} C ${fromPos.x + (fromPosition === 'right' ? controlOffset : -controlOffset)},${fromPos.y} ${toPos.x + (toPosition === 'right' ? controlOffset : -controlOffset)},${toPos.y} ${toPos.x},${toPos.y}`
+      } else if (isHorizontalFrom) {
+        const dx = Math.abs(toPos.x - fromPos.x)
+        const dy = Math.abs(toPos.y - fromPos.y)
+        const controlOffset = Math.max(dx, dy) / 2
+        return `M ${fromPos.x},${fromPos.y} C ${fromPos.x + (fromPosition === 'right' ? controlOffset : -controlOffset)},${fromPos.y} ${toPos.x},${toPos.y + (toPosition === 'bottom' ? controlOffset : -controlOffset)} ${toPos.x},${toPos.y}`
+      } else if (isHorizontalTo) {
+        const dx = Math.abs(toPos.x - fromPos.x)
+        const dy = Math.abs(toPos.y - fromPos.y)
+        const controlOffset = Math.max(dx, dy) / 2
+        return `M ${fromPos.x},${fromPos.y} C ${fromPos.x},${fromPos.y + (fromPosition === 'bottom' ? controlOffset : -controlOffset)} ${toPos.x + (toPosition === 'right' ? controlOffset : -controlOffset)},${toPos.y} ${toPos.x},${toPos.y}`
+      } else {
+        const dy = toPos.y - fromPos.y
+        const controlOffset = Math.abs(dy) / 2
+        return `M ${fromPos.x},${fromPos.y} C ${fromPos.x},${fromPos.y + controlOffset} ${toPos.x},${toPos.y - controlOffset} ${toPos.x},${toPos.y}`
+      }
     }
 
     const getNodeCssClass = (node: WorkflowNode) => _getNodeCssClass(node, props.nodeTypes)
@@ -981,6 +1018,16 @@ export default defineComponent({
       return !connections.isOutputFree(entityId)
     }
 
+    function getInputHandlePosition(entityId: string): 'top' | 'left' {
+      const incomingEdge = props.modelValue.edges.find(edge => edge.to.entityId === entityId)
+      return incomingEdge?.to.position === 'left' ? 'left' : 'top'
+    }
+
+    function getOutputHandlePosition(entityId: string): 'bottom' | 'right' {
+      const outgoingEdge = props.modelValue.edges.find(edge => edge.from.entityId === entityId)
+      return outgoingEdge?.from.position === 'right' ? 'right' : 'bottom'
+    }
+
     function handleAddNodeAfterNode(nodeId: string) {
       const sourceNode = findNode(props.modelValue, nodeId)
       if (!sourceNode) return
@@ -995,10 +1042,10 @@ export default defineComponent({
 
       // Calculate position: place new node below and to the right of source node
       const nodeWidth = sourceNode.size?.w || 250
+      const sourceHeight = canvas.getEntityDimensions(sourceNode).height
       const nodeHeight = sourceNode.size?.h || 100
-      const spacing = 20
       const newX = sourceNode.position.x
-      const newY = sourceNode.position.y + nodeHeight + spacing
+      const newY = sourceNode.position.y + sourceHeight + ENTITY_SPACING
 
       // Expand parent group if needed
       let graphWithExpandedGroup = props.modelValue
@@ -1063,11 +1110,10 @@ export default defineComponent({
       const parentGroup = getParentGroup(props.modelValue, nodeId)
 
       // Calculate position below source node
-      const nodeHeight = sourceNode.size?.h || 100
-      const spacing = 20
+      const sourceHeight = canvas.getEntityDimensions(sourceNode).height
       const defaultGroupSize = { w: 290, h: 140 }
       const newX = sourceNode.position.x
-      const newY = sourceNode.position.y + nodeHeight + spacing
+      const newY = sourceNode.position.y + sourceHeight + ENTITY_SPACING
 
       // Expand parent group if needed
       let graphWithExpandedGroup = props.modelValue
@@ -1224,7 +1270,6 @@ export default defineComponent({
       let newX: number, newY: number
       const nodeWidth = 250
       const nodeHeight = 100
-      const spacing = 20
 
       if (nodesInGroup.length === 0) {
         // No nodes: center the new node
@@ -1234,17 +1279,17 @@ export default defineComponent({
         // Find the bottommost node
         let bottomNode = nodesInGroup[0]
         nodesInGroup.forEach(node => {
-          const nodeY = node.position.y + (node.size?.h || nodeHeight)
-          const bottomY = bottomNode.position.y + (bottomNode.size?.h || nodeHeight)
+          const nodeY = node.position.y + canvas.getEntityDimensions(node).height
+          const bottomY = bottomNode.position.y + canvas.getEntityDimensions(bottomNode).height
           if (nodeY > bottomY) {
             bottomNode = node
           }
         })
 
         // Position below the bottommost node
-        const bottomNodeHeight = bottomNode.size?.h || nodeHeight
+        const bottomNodeHeight = canvas.getEntityDimensions(bottomNode).height
         newX = bottomNode.position.x
-        newY = bottomNode.position.y + bottomNodeHeight + spacing
+        newY = bottomNode.position.y + bottomNodeHeight + ENTITY_SPACING
       }
 
       // Expand group if needed to accommodate new node
@@ -1310,7 +1355,6 @@ export default defineComponent({
         .map(id => findEntity(id))
         .filter(Boolean) as (WorkflowNode | WorkflowGroup)[]
 
-      const spacing = 20
       const defaultGroupSize = { w: 290, h: 140 }
 
       let position: Position
@@ -1325,23 +1369,20 @@ export default defineComponent({
         // Find the bottommost entity
         let bottomEntity = allEntitiesInParent[0]
         allEntitiesInParent.forEach(entity => {
-          const entityBottom =
-            entity.position.y + ('containedIds' in entity ? entity.size.h : entity.size?.h || 100)
+          const entityBottom = entity.position.y + canvas.getEntityDimensions(entity).height
           const currentBottom =
-            bottomEntity.position.y +
-            ('containedIds' in bottomEntity ? bottomEntity.size.h : bottomEntity.size?.h || 100)
+            bottomEntity.position.y + canvas.getEntityDimensions(bottomEntity).height
           if (entityBottom > currentBottom) {
             bottomEntity = entity
           }
         })
 
         // Position below the bottommost entity
-        const bottomEntityHeight =
-          'containedIds' in bottomEntity ? bottomEntity.size.h : bottomEntity.size?.h || 100
+        const bottomEntityHeight = canvas.getEntityDimensions(bottomEntity).height
 
         position = {
           x: bottomEntity.position.x,
-          y: bottomEntity.position.y + bottomEntityHeight + spacing
+          y: bottomEntity.position.y + bottomEntityHeight + ENTITY_SPACING
         }
       }
 
@@ -1420,10 +1461,9 @@ export default defineComponent({
       // Calculate position: place new node below and aligned with group
       const nodeWidth = 250
       const nodeHeight = 100
-      const groupHeight = sourceGroup.size.h
-      const spacing = 20
+      const sourceHeight = canvas.getEntityDimensions(sourceGroup).height
       const newX = sourceGroup.position.x
-      const newY = sourceGroup.position.y + groupHeight + spacing
+      const newY = sourceGroup.position.y + sourceHeight + ENTITY_SPACING
 
       // Expand parent group if needed
       let graphWithExpandedGroup = props.modelValue
@@ -1488,11 +1528,10 @@ export default defineComponent({
       const parentGroup = getParentGroup(props.modelValue, groupId)
 
       // Calculate position below source group
-      const groupHeight = sourceGroup.size.h
-      const spacing = 20
+      const sourceHeight = canvas.getEntityDimensions(sourceGroup).height
       const defaultGroupSize = { w: 290, h: 140 }
       const newX = sourceGroup.position.x
-      const newY = sourceGroup.position.y + groupHeight + spacing
+      const newY = sourceGroup.position.y + sourceHeight + ENTITY_SPACING
 
       // Expand parent group if needed
       let graphWithExpandedGroup = props.modelValue
@@ -1584,6 +1623,10 @@ export default defineComponent({
       if (!groupId) return
       if (selectedGroup.value?.locked) return
 
+      const groupToDelete = selectedGroup.value
+      const parentGroup = getParentGroup(props.modelValue, groupId)
+      const connectedEntities = getConnectedEntities(props.modelValue, groupId)
+
       // Get all descendants (nodes and nested groups) recursively
       const descendants = getGroupDescendants(props.modelValue, groupId)
       const allIdsToDelete = new Set([groupId, ...descendants])
@@ -1601,14 +1644,13 @@ export default defineComponent({
       updatedGraph = removeEntityFromAllGroups(updatedGraph, groupId)
 
       // Update parent group bounds if nested
-      const parentGroup = getParentGroup(props.modelValue, groupId)
       if (parentGroup) {
         updatedGraph = updateGroupBounds(updatedGraph, parentGroup.id)
       }
 
       emit('update:selectedId', null)
       emit('update:modelValue', updatedGraph)
-      emit('group-delete', groupId)
+      emit('group-delete', groupToDelete, parentGroup || null, connectedEntities)
     }
 
     function handleUpdateNode(updatedNode: WorkflowNode) {
@@ -1800,6 +1842,8 @@ export default defineComponent({
       getGroupAddGroupButtonText,
       shouldShowInputHandle,
       shouldShowOutputHandle,
+      getInputHandlePosition,
+      getOutputHandlePosition,
       handleCanvasClick,
       handleGroupClick,
       handleAddStep,

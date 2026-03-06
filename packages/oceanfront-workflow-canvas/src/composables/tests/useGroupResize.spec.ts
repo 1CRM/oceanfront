@@ -7,7 +7,10 @@ function makeGraph(overrides: Partial<WorkflowGraph> = {}): WorkflowGraph {
   return { nodes: [], edges: [], groups: [], ...overrides }
 }
 
-function createMouseEvent(type: string, options: { button?: number; clientX?: number; clientY?: number } = {}): MouseEvent {
+function createMouseEvent(
+  type: string,
+  options: { button?: number; clientX?: number; clientY?: number } = {}
+): MouseEvent {
   const target = document.createElement('div')
   const event = new MouseEvent(type, {
     button: options.button ?? 0,
@@ -24,14 +27,26 @@ const MIN_SIZE = { w: 100, h: 80 }
 
 function createResize(graph: WorkflowGraph, overrides: Partial<UseGroupResizeOptions> = {}) {
   const graphRef = ref(graph)
-  const onGraphUpdate = vi.fn((g: WorkflowGraph) => { graphRef.value = g })
+  const onGraphUpdate = vi.fn((g: WorkflowGraph) => {
+    graphRef.value = g
+  })
   const onGroupResizeStart = vi.fn()
   const onGroupResizeEnd = vi.fn()
   const onUpdateSelectedId = vi.fn()
 
   const canvasEl = document.createElement('div')
   Object.defineProperty(canvasEl, 'getBoundingClientRect', {
-    value: () => ({ left: 0, top: 0, right: 1000, bottom: 1000, width: 1000, height: 1000, x: 0, y: 0, toJSON: () => ({}) })
+    value: () => ({
+      left: 0,
+      top: 0,
+      right: 1000,
+      bottom: 1000,
+      width: 1000,
+      height: 1000,
+      x: 0,
+      y: 0,
+      toJSON: () => ({})
+    })
   })
   canvasEl.scrollLeft = 0
   canvasEl.scrollTop = 0
@@ -49,7 +64,14 @@ function createResize(graph: WorkflowGraph, overrides: Partial<UseGroupResizeOpt
   }
 
   const resize = useGroupResize(options)
-  return { resize, graphRef, onGraphUpdate, onGroupResizeStart, onGroupResizeEnd, onUpdateSelectedId }
+  return {
+    resize,
+    graphRef,
+    onGraphUpdate,
+    onGroupResizeStart,
+    onGroupResizeEnd,
+    onUpdateSelectedId
+  }
 }
 
 function startResize(
@@ -65,7 +87,8 @@ function startResize(
 
 describe('useGroupResize', () => {
   const baseGroup: WorkflowGroup = {
-    id: 'g1', kind: 'group',
+    id: 'g1',
+    kind: 'group',
     position: { x: 100, y: 100 },
     size: { w: 300, h: 200 },
     containedIds: []
@@ -122,7 +145,7 @@ describe('useGroupResize', () => {
 
     it('resizes right edge', () => {
       const graph = makeGraph({ groups: [{ ...baseGroup }] })
-      const { resize, graphRef, onGraphUpdate } = createResize(graph)
+      const { resize, graphRef } = createResize(graph)
 
       startResize(resize, 'g1', 'right', 400, 200)
       resize.handleResizeMove({ x: 450, y: 200 })
@@ -271,7 +294,8 @@ describe('useGroupResize', () => {
 
     it('updates parent group bounds after resize', () => {
       const parent: WorkflowGroup = {
-        id: 'parent', kind: 'group',
+        id: 'parent',
+        kind: 'group',
         position: { x: 50, y: 50 },
         size: { w: 500, h: 500 },
         containedIds: ['g1']
