@@ -170,6 +170,7 @@ import {
   watch
 } from 'vue'
 import { useLocale } from '../lib/locale'
+import { DateTimeFormatterOptions } from '../formats/DateTime'
 
 export default defineComponent({
   name: 'OfDateTimePopup',
@@ -184,7 +185,11 @@ export default defineComponent({
     accept: Function,
     withoutTitle: Boolean,
     weekStart: Number,
-    showTodayButton: Boolean
+    showTodayButton: Boolean,
+    dateTimeFormat: {
+      type: Object as () => DateTimeFormatterOptions,
+      default: undefined
+    }
   },
   emits: ['blur'],
   setup(props, ctx) {
@@ -202,7 +207,10 @@ export default defineComponent({
     const formatMgr = useFormats()
     const localeOffset = ref(0)
     const timeZone = computed(() =>
-      props.withTime ? locale.localeParams?.dateTimeFormat?.timeZone : undefined
+      props.withTime
+        ? (props.dateTimeFormat?.timeZone ??
+          locale.localeParams?.dateTimeFormat?.timeZone)
+        : undefined
     )
     const weekStartDayLocale = computed(() => {
       const day =
@@ -214,6 +222,7 @@ export default defineComponent({
     const datetimeFormatter = computed(() =>
       formatMgr.getTextFormatter('datetime', {
         locale: 'en-US',
+        timeZone: timeZone.value,
         timeFormat: '',
         dateFormat: '',
         nativeOptions: {
@@ -265,6 +274,7 @@ export default defineComponent({
     const titleFormater = formatMgr.getTextFormatter(
       props.withTime ? 'datetime' : 'date',
       {
+        timeZone: timeZone.value,
         timeFormat: '',
         dateFormat: '',
         nativeOptions: {
@@ -279,6 +289,7 @@ export default defineComponent({
     )
     const monthYearFormater = formatMgr.getTextFormatter('date', {
       locale: 'en-US',
+      timeZone: timeZone.value,
       timeFormat: '',
       dateFormat: '',
       nativeOptions: {
