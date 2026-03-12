@@ -1686,6 +1686,13 @@ export default defineComponent({
     }
 
     function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape' && isFullWidth.value) {
+        event.preventDefault()
+        isFullWidth.value = false
+        emit('fullscreen-toggle', isFullWidth.value)
+        return
+      }
+
       if (isViewMode.value || props.readonly || !props.selectedId) return
 
       const target = event.target as HTMLElement
