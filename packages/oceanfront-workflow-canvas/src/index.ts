@@ -16,7 +16,19 @@ export type {
   NodeData,
   AddStepEvent,
   ConnectEvent,
-  WorkflowCanvasLabels
+  ConnectedEntities,
+  WorkflowCanvasLabels,
+  WorkflowCanvasMode,
+  NodeTypeConfig,
+  NodeTypeDefinition,
+  NodeFieldDefinition,
+  NodeDefinitionOverride,
+  GroupTypeConfig,
+  GroupTypeDefinition,
+  GroupTypeFieldDefinition,
+  GroupDefinitionOverride,
+  NestedGroupConfig,
+  EdgeAddPayload
 } from './types/workflow'
 
 // Constants
@@ -37,6 +49,7 @@ export {
   findGroupAtPosition,
   getEntityEdges,
   getParentGroup,
+  getGroupDescendants,
   calculateGroupBounds,
   updateGroupBounds,
   updateGroupPosition,
@@ -45,8 +58,30 @@ export {
   handleAddStepToGraph,
   handleConnectNodes,
   addNode,
-  addGroup
+  addGroup,
+  isEntityTypeCompatibleWithGroup,
+  isGroupDescendantOf,
+  moveNodesBelow,
+  getConnectedEntities
 } from './utils/graph-helpers'
+
+export {
+  getNodeCssClass,
+  getNodeDisplayLabel,
+  getNodeDisplayLabelRight,
+  getGroupDisplayLabel,
+  getGroupDisplayLabelRight,
+  shouldHideGroupAddNode,
+  shouldHideGroupAddGroup,
+  shouldHideGroupNestedAddNode,
+  shouldHideGroupNestedAddGroup,
+  shouldHideNodeAddNode,
+  shouldHideNodeAddGroup,
+  getNodeAddNodeButtonText,
+  getNodeAddGroupButtonText,
+  getGroupAddNodeButtonText,
+  getGroupAddGroupButtonText
+} from './utils/display-helpers'
 
 // Components
 export { WorkflowCanvas, WorkflowTile, WorkflowPlusPlaceholder }

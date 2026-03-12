@@ -9,23 +9,34 @@ export const DEFAULT_LABELS: WorkflowCanvasLabels = {
   groupDetailsHeader: 'Group Details',
 
   // Field labels
-  idLabel: 'ID:',
   typeLabel: 'Type',
   titleLabel: 'Title',
-  descriptionLabel: 'Description',
-  containedItemsLabel: 'Contained Items:',
-  nestingDepthLabel: 'Nesting Depth:',
-  sizeLabel: 'Size:',
 
   // Buttons
   deleteNodeButton: 'Delete Node',
   deleteGroupButton: 'Delete Group',
   configureButton: 'Configure',
+  addNodeToGroupButton: 'Add node',
+  addNestedGroupButton: 'Add group',
+  addNodeAfterNodeButton: 'Add node after this node',
+  addGroupAfterNodeButton: 'Add group after this node',
 
   // Placeholders
-  groupTitlePlaceholder: 'Enter group title',
+  groupLabelPlaceholder: 'Enter group label',
+  selectNodeTypePlaceholder: 'Select node type...',
+
+  // Boolean values
+  yes: 'Yes',
+  no: 'No',
+
+  // Button text fallbacks
+  addNodeButtonTextFallback: '+ node',
+  addGroupButtonTextFallback: '+ group',
+
+  // Default values
+  defaultGroupKind: 'group',
+  defaultGroupLabel: 'New Group',
 
   // Dynamic text formatters
-  itemCount: (count: number) => `${count} ${count === 1 ? 'item' : 'items'}`,
-  nestingDepth: (depth: number) => (depth === 0 ? 'Top-level' : `Level ${depth}`)
+  nestedGroupLabel: (kind: string) => `Nested ${kind}`
 }

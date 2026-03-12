@@ -115,6 +115,38 @@ export function useCanvas(options: UseCanvasOptions) {
     }
   }
 
+  const getEntityConnectionPoint = (
+    entity: WorkflowNode | WorkflowGroup,
+    position: 'top' | 'bottom' | 'left' | 'right'
+  ): Position => {
+    const dimensions = getEntityDimensions(entity)
+    const baseX = entity.position.x
+    const baseY = entity.position.y
+
+    switch (position) {
+      case 'top':
+        return {
+          x: baseX + dimensions.width / 2,
+          y: baseY
+        }
+      case 'bottom':
+        return {
+          x: baseX + dimensions.width / 2,
+          y: baseY + dimensions.height
+        }
+      case 'left':
+        return {
+          x: baseX,
+          y: baseY + dimensions.height / 2
+        }
+      case 'right':
+        return {
+          x: baseX + dimensions.width,
+          y: baseY + dimensions.height / 2
+        }
+    }
+  }
+
   return {
     containerStyle,
     svgViewBox,
@@ -125,6 +157,7 @@ export function useCanvas(options: UseCanvasOptions) {
     getNodeCenter,
     getEntityCenter,
     getEntityDimensions,
+    getEntityConnectionPoint,
     getNodeStyle,
     getGroupStyle
   }
