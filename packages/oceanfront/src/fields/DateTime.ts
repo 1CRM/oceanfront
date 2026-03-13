@@ -2,6 +2,7 @@ import {
   computed,
   defineComponent,
   h,
+  PropType,
   Ref,
   ref,
   SetupContext,
@@ -13,6 +14,7 @@ import { OfIcon } from '../components/Icon'
 import {
   DateFormatter,
   DateTimeFormatter,
+  DateTimeFormatterOptions,
   TimeFormatter
 } from '../formats/DateTime'
 import {
@@ -35,6 +37,7 @@ type RenderOpts = {
   withDate: boolean
   showTodayButton: boolean
   weekStart?: number
+  dateTimeFormat?: DateTimeFormatterOptions
 }
 
 export const renderDateTimePopup = (opts: RenderOpts): any => {
@@ -45,6 +48,7 @@ export const renderDateTimePopup = (opts: RenderOpts): any => {
     withTime: opts.withTime,
     withDate: opts.withDate,
     showTodayButton: opts.showTodayButton,
+    dateTimeFormat: opts.dateTimeFormat,
     accept: opts.close,
     onBlur: () => opts.close()
   })
@@ -61,6 +65,10 @@ const defineField = (type: InputType, name: string, cls: string) =>
       inDataTable: {
         type: Boolean,
         default: false
+      },
+      dateTimeFormat: {
+        type: Object as PropType<DateTimeFormatterOptions>,
+        default: undefined
       }
     },
     emits: ['focus', 'blur', 'update:modelValue'],
@@ -75,11 +83,20 @@ const defineField = (type: InputType, name: string, cls: string) =>
       const formatter = computed(() => {
         switch (type) {
           case 'date':
-            return formatMgr.getTextFormatter('date') as DateFormatter
+            return formatMgr.getTextFormatter(
+              'date',
+              props.dateTimeFormat
+            ) as DateFormatter
           case 'time':
-            return formatMgr.getTextFormatter('time') as TimeFormatter
+            return formatMgr.getTextFormatter(
+              'time',
+              props.dateTimeFormat
+            ) as TimeFormatter
           default:
-            return formatMgr.getTextFormatter('datetime') as DateTimeFormatter
+            return formatMgr.getTextFormatter(
+              'datetime',
+              props.dateTimeFormat
+            ) as DateTimeFormatter
         }
       })
 
@@ -195,7 +212,8 @@ const defineField = (type: InputType, name: string, cls: string) =>
           withTime,
           withDate,
           weekStart: props.weekStart,
-          showTodayButton: props.showTodayButton
+          showTodayButton: props.showTodayButton,
+          dateTimeFormat: props.dateTimeFormat
         })
       }
 
