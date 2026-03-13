@@ -5,7 +5,6 @@ import typescriptParser from '@typescript-eslint/parser'
 import vueParser from 'vue-eslint-parser'
 import prettier from 'eslint-plugin-prettier'
 import prettierConfig from 'eslint-config-prettier'
-import vitest from 'eslint-plugin-vitest'
 import globals from 'globals'
 
 export default [
@@ -39,8 +38,7 @@ export default [
     },
     plugins: {
       '@typescript-eslint': typescript,
-      prettier,
-      vitest
+      prettier
     },
     rules: {
       'no-console': process.env.NODE_ENV === 'production' ? 'error' : 'off',

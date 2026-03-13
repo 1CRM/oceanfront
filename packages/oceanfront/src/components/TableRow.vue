@@ -401,8 +401,8 @@ export default defineComponent({
     ) => {
       let coords: any = []
       let fixArrowNext = !isOnTop
-      let target: any = {}
-      let nestedAttempt = false
+      let target: any
+      let nestedAttempt: boolean
       let depth = 0
       const prevItemCoords = index ?? prevItem.value?.coords?.slice()
       const prevItemDepth = currentDepth ?? prevItem.value?.depth
