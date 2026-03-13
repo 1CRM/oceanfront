@@ -194,9 +194,8 @@ const formatItems = (
   const rows = []
 
   for (const item of list) {
-    let text = ''
     let subMenu = undefined
-    text = item[params.textKey] ? item[params.textKey] : ''
+    const text = item[params.textKey] ? item[params.textKey] : ''
 
     if (text === '' && !item[params.iconKey]) continue
 
@@ -512,15 +511,16 @@ export default defineComponent({
           ?.getBoundingClientRect()
         const currentItemBounds = currentTabHeaderItem?.getBoundingClientRect()
         if (!prevNavBounds || !nextNavBounds || !currentItemBounds) return
-        let scroll = 0
 
         //check right bound
         if (currentItemBounds.right > nextNavBounds.left) {
-          scroll = Math.round(currentItemBounds.right - nextNavBounds.left) + 5
+          const scroll =
+            Math.round(currentItemBounds.right - nextNavBounds.left) + 5
           navigateHeader('next', scroll)
           //check left bound
         } else if (currentItemBounds.left < prevNavBounds.right) {
-          scroll = Math.round(prevNavBounds.right - currentItemBounds.left) + 5
+          const scroll =
+            Math.round(prevNavBounds.right - currentItemBounds.left) + 5
           navigateHeader('prev', scroll)
         }
       }
@@ -583,7 +583,6 @@ export default defineComponent({
 
     const adjustTabsVisibility = function (tabsIndexes: Array<number>) {
       const outerWidth = elementWidth(ofTabsHeader.value)
-      let tabsWidth = 0
       let hasInvisibleTabs = false
 
       // In alwaysOverflow-only mode, skip width calculations and only check for alwaysOverflow items
@@ -591,8 +590,8 @@ export default defineComponent({
         //Make tabs visible until widths sum < main container's width
         for (const index of tabsIndexes) {
           updateTabVisibility(index, true)
-          tabsWidth = calcVisibleTabsWidth()
-          if (tabsWidth > outerWidth) {
+          const visibleTabsWidth = calcVisibleTabsWidth()
+          if (visibleTabsWidth > outerWidth) {
             hasInvisibleTabs = true
             updateTabVisibility(index, false)
             break

@@ -412,7 +412,7 @@ export default defineComponent({
       ) as HTMLElement[]
 
       // Calculate new order based on drop position
-      let newOrder = 0
+      let newOrder: number
 
       if (cards.length === 0) {
         // If no cards, place at the beginning

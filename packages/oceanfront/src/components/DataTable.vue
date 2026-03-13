@@ -806,7 +806,7 @@ export default defineComponent({
       item.order = item.hasOwnProperty('order') ? item.order : idx
       if (item.subitems?.length) {
         item.subitems.forEach((v: any, i: number) => {
-          v = orderItems(v, i)
+          orderItems(v, i)
         })
       }
       return item

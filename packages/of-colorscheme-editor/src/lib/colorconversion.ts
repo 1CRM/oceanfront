@@ -921,9 +921,6 @@ export function srgb_to_okhsv_a(
   )
 
   L = L / scale_L
-  C = C / scale_L
-
-  C = (C * toe(L)) / L
   L = toe(L)
 
   const v = L / L_v
