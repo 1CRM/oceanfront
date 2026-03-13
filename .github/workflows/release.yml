@@ -72,6 +72,15 @@ jobs:
           tag: ${{ env.RELEASE_TAG }}
           overwrite: true
 
+      - name: Upload oceanfront-workflow-canvas package
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: "./packages/oceanfront-workflow-canvas/oceanfront-workflow-canvas-v0.1.0.tgz"
+          asset_name: oceanfront-workflow-canvas.tgz
+          tag: ${{ env.RELEASE_TAG }}
+          overwrite: true
+
       - name: Checkout app-js repository
         uses: actions/checkout@v3
         with:
@@ -100,13 +109,19 @@ jobs:
           cp -r packages/oceanfront-html-editor/dist/* app-js/packages/app-js/src/oceanfront-html-editor/dist/
           cp packages/oceanfront-html-editor/package.json app-js/packages/app-js/src/oceanfront-html-editor/package.json
 
+      - name: Copy oceanfront-workflow-canvas build
+        run: |
+          mkdir -p app-js/packages/app-js/src/oceanfront-workflow-canvas/dist
+          cp -r packages/oceanfront-workflow-canvas/dist/* app-js/packages/app-js/src/oceanfront-workflow-canvas/dist/
+          cp packages/oceanfront-workflow-canvas/package.json app-js/packages/app-js/src/oceanfront-workflow-canvas/package.json
+
       - name: Check for changes and commit
         working-directory: app-js
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           if ! git diff --quiet; then
-            git add packages/app-js/src/oceanfront packages/app-js/src/of-colorscheme-editor packages/app-js/src/oceanfront-html-editor packages/1crm-app-js-lib/src/oceanfront
+            git add packages/app-js/src/oceanfront packages/app-js/src/of-colorscheme-editor packages/app-js/src/oceanfront-html-editor packages/app-js/src/oceanfront-workflow-canvas packages/1crm-app-js-lib/src/oceanfront
             git commit -m "chore: update oceanfront build from ${{ github.sha }}"
             git push
             echo "Changes committed and pushed to main branch"
