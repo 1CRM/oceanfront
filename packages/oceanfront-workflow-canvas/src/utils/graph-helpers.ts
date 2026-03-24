@@ -133,8 +133,7 @@ export function removeEntityEdgesAndBridge(
       const toExists = findNode(updatedGraph, toId) || findGroup(updatedGraph, toId)
 
       if (fromExists && toExists) {
-        const edgeIdGen =
-          options?.edgeIdGenerator || (() => `edge-${Date.now()}-${idCounter++}`)
+        const edgeIdGen = options?.edgeIdGenerator || (() => `edge-${Date.now()}-${idCounter++}`)
 
         updatedGraph = addEdge(updatedGraph, {
           id: edgeIdGen(),
@@ -987,8 +986,7 @@ export function alignNodeInGroup(
 
   let maxBottom = -Infinity
   for (const sib of siblings) {
-    const sibH =
-      'containedIds' in sib ? sib.size.h : (sib as WorkflowNode).size?.h || 100
+    const sibH = 'containedIds' in sib ? sib.size.h : (sib as WorkflowNode).size?.h || 100
     const sibBottom = sib.position.y + sibH
     if (sibBottom > maxBottom) maxBottom = sibBottom
   }
@@ -996,9 +994,7 @@ export function alignNodeInGroup(
 
   let updatedGraph: WorkflowGraph = {
     ...graph,
-    nodes: graph.nodes.map(n =>
-      n.id === nodeId ? { ...n, position: { x: newX, y: newY } } : n
-    )
+    nodes: graph.nodes.map(n => (n.id === nodeId ? { ...n, position: { x: newX, y: newY } } : n))
   }
 
   updatedGraph = updateGroupBounds(updatedGraph, groupId)
@@ -1041,11 +1037,7 @@ export function getAutoAssignedNodeKind(
  * Swap two nodes completely: positions, edge connections, and group membership.
  * Both nodes must exist in the graph; returns the graph unchanged if either is missing.
  */
-export function swapNodes(
-  graph: WorkflowGraph,
-  nodeIdA: string,
-  nodeIdB: string
-): WorkflowGraph {
+export function swapNodes(graph: WorkflowGraph, nodeIdA: string, nodeIdB: string): WorkflowGraph {
   const nodeA = findNode(graph, nodeIdA)
   const nodeB = findNode(graph, nodeIdB)
   if (!nodeA || !nodeB) return graph

@@ -769,9 +769,7 @@ describe('removeEntityEdgesAndBridge', () => {
         { id: 'a', kind: 'action', position: { x: 0, y: 0 } },
         { id: 'x', kind: 'action', position: { x: 0, y: 150 } }
       ],
-      edges: [
-        { id: 'e1', from: { entityId: 'a' }, to: { entityId: 'x' } }
-      ]
+      edges: [{ id: 'e1', from: { entityId: 'a' }, to: { entityId: 'x' } }]
     })
 
     const result = removeEntityEdgesAndBridge(graph, 'x')
@@ -785,9 +783,7 @@ describe('removeEntityEdgesAndBridge', () => {
         { id: 'x', kind: 'action', position: { x: 0, y: 0 } },
         { id: 'b', kind: 'action', position: { x: 0, y: 150 } }
       ],
-      edges: [
-        { id: 'e1', from: { entityId: 'x' }, to: { entityId: 'b' } }
-      ]
+      edges: [{ id: 'e1', from: { entityId: 'x' }, to: { entityId: 'b' } }]
     })
 
     const result = removeEntityEdgesAndBridge(graph, 'x')
@@ -836,9 +832,7 @@ describe('removeEntityEdgesAndBridge', () => {
 
     const result = removeEntityEdgesAndBridge(graph, 'g1')
 
-    const bridgeEdge = result.edges.find(
-      e => e.from.entityId === 'n1' && e.to.entityId === 'n3'
-    )
+    const bridgeEdge = result.edges.find(e => e.from.entityId === 'n1' && e.to.entityId === 'n3')
     expect(bridgeEdge).toBeDefined()
     expect(result.edges.some(e => e.from.entityId === 'g1' || e.to.entityId === 'g1')).toBe(false)
   })
