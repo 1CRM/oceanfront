@@ -2,6 +2,7 @@ import { ref, type Ref } from 'vue'
 import type {
   Position,
   WorkflowGraph,
+  WorkflowEdge,
   WorkflowNode,
   WorkflowGroup,
   NodeTypeConfig,
@@ -20,13 +21,18 @@ import {
   getAutoAssignedNodeKind,
   isEntityTypeCompatibleWithGroup,
   isGroupDescendantOf,
-  getConnectedEntities
+  getConnectedEntities,
+  swapNodes,
+  connectNodeToLastInGroup,
+  removeEntityEdgesAndBridge,
+  alignNodeInGroup
 } from '../utils/graph-helpers'
 
 export interface UseDraggingOptions {
   graph: Ref<WorkflowGraph>
   maxGroupDepth: Ref<number | null>
   readonly: Ref<boolean>
+  edgesLocked: Ref<boolean>
   canvasRef: Ref<HTMLElement | undefined>
   nodeTypes: Ref<NodeTypeConfig>
   findDropTargetGroup: (x: number, y: number, excludeId: string | null) => WorkflowGroup | undefined
@@ -47,12 +53,20 @@ export interface UseDraggingOptions {
     connected: ConnectedEntities
   ) => void
   onEntityMovedToGroup: (entityId: string, groupId: string | null) => void
+  onNodeParentGroupChange?: (
+    node: WorkflowNode,
+    parentGroup: WorkflowGroup | null,
+    connected: ConnectedEntities
+  ) => void
+  onNodeSwap: (nodeIdA: string, nodeIdB: string) => void
+  onEdgeAdd?: (graph: WorkflowGraph, edge: WorkflowEdge) => void
 }
 
 export function useDragging(options: UseDraggingOptions) {
   const {
     graph,
     readonly,
+    edgesLocked,
     canvasRef,
     nodeTypes,
     findDropTargetGroup,
@@ -62,7 +76,10 @@ export function useDragging(options: UseDraggingOptions) {
     onNodeDragEnd,
     onGroupDragStart,
     onGroupDragEnd,
-    onEntityMovedToGroup
+    onEntityMovedToGroup,
+    onNodeParentGroupChange,
+    onNodeSwap,
+    onEdgeAdd
   } = options
 
   const draggingNodeId = ref<string | null>(null)
@@ -74,6 +91,8 @@ export function useDragging(options: UseDraggingOptions) {
   const nodeOverGroupIds = ref<string[]>([])
   const hoveredNodeGroupId = ref<string | null>(null)
   const invalidDropTarget = ref<boolean>(false)
+  const swapTargetNodeId = ref<string | null>(null)
+  const invalidSwapTargetNodeId = ref<string | null>(null)
   const isHandlingMouseUp = ref<boolean>(false)
 
   const getCanvasMousePosition = (event: MouseEvent): Position | null => {
@@ -216,11 +235,45 @@ export function useDragging(options: UseDraggingOptions) {
       }
     }
 
+    // Check if node with requireGroup is being dragged outside all groups
+    if (node.requireGroup && !validTargetGroup) {
+      isInvalid = true
+    }
+
     invalidDropTarget.value = isInvalid
     // Keep allGroupsAtPosition in nodeOverGroupIds even when invalid (for visual feedback)
     nodeOverGroupIds.value = allGroupsAtPosition.map(g => g.id)
     // Only set nodeOverGroupId if valid (for actual drop logic)
     nodeOverGroupId.value = validTargetGroup?.id || null
+
+    // Detect if the dragged node is over another node (for swap)
+    let foundSwapTarget: string | null = null
+    let foundInvalidSwapTarget: string | null = null
+    for (const otherNode of updatedGraph.nodes) {
+      if (otherNode.id === draggingNodeId.value) continue
+      const otherDims = getNodeDimensions(otherNode, nodeElements)
+      const otherRect = {
+        x: otherNode.position.x,
+        y: otherNode.position.y,
+        w: otherDims.width,
+        h: otherDims.height
+      }
+      const isOverNode =
+        nodeCenter.x >= otherRect.x &&
+        nodeCenter.x <= otherRect.x + otherRect.w &&
+        nodeCenter.y >= otherRect.y &&
+        nodeCenter.y <= otherRect.y + otherRect.h
+      if (isOverNode) {
+        if (otherNode.kind === node.kind && node.kind !== '') {
+          foundSwapTarget = otherNode.id
+        } else {
+          foundInvalidSwapTarget = otherNode.id
+        }
+        break
+      }
+    }
+    swapTargetNodeId.value = foundSwapTarget
+    invalidSwapTargetNodeId.value = foundInvalidSwapTarget
 
     return true
   }
@@ -290,6 +343,14 @@ export function useDragging(options: UseDraggingOptions) {
       primaryTargetGroup = originalParent
     }
 
+    // Check if group with requireGroup is being dragged outside all groups
+    if (group.requireGroup && !primaryTargetGroup) {
+      isInvalid = true
+      if (originalParent) {
+        primaryTargetGroup = originalParent
+      }
+    }
+
     invalidDropTarget.value = isInvalid
     nodeOverGroupId.value = primaryTargetGroup
     // Keep allGroupsAtPosition in nodeOverGroupIds when hovering over groups (for visual feedback)
@@ -297,6 +358,15 @@ export function useDragging(options: UseDraggingOptions) {
       isInvalid || primaryTargetGroup ? allGroupsAtPosition.map(g => g.id) : []
 
     return true
+  }
+
+  const emitNewEdges = (before: Set<string>, updatedGraph: WorkflowGraph) => {
+    if (!onEdgeAdd) return
+    for (const edge of updatedGraph.edges) {
+      if (!before.has(edge.id)) {
+        onEdgeAdd(updatedGraph, edge)
+      }
+    }
   }
 
   const handleMouseUp = (
@@ -316,6 +386,7 @@ export function useDragging(options: UseDraggingOptions) {
       if (draggingGroupId.value) {
         const groupId = draggingGroupId.value
         const group = findGroup(graph.value, groupId)
+        const edgeIdsBefore = new Set(graph.value.edges.map(e => e.id))
 
         if (group) {
           const groupCenter = {
@@ -359,12 +430,9 @@ export function useDragging(options: UseDraggingOptions) {
               updatedGraph = addEntityToGroup(updatedGraph, groupId, targetGroup.id)
 
               if (parentChanged) {
-                updatedGraph = {
-                  ...updatedGraph,
-                  edges: updatedGraph.edges.filter(
-                    edge => edge.from.entityId !== groupId && edge.to.entityId !== groupId
-                  )
-                }
+                updatedGraph = removeEntityEdgesAndBridge(updatedGraph, groupId, {
+                  edgeLocked: edgesLocked.value
+                })
               }
 
               onGraphUpdate(updatedGraph)
@@ -376,24 +444,30 @@ export function useDragging(options: UseDraggingOptions) {
           } else if (centerInOriginalParent && originalParent) {
             updatedGraph = updateGroupBounds(updatedGraph, originalParent)
             onGraphUpdate(updatedGraph)
-          } else if (originalParent && !centerInOriginalParent && !group.lockParent) {
+          } else if (
+            originalParent &&
+            !centerInOriginalParent &&
+            !group.lockParent &&
+            !group.requireGroup
+          ) {
             parentChanged = true
             updatedGraph = removeEntityFromAllGroups(updatedGraph, groupId)
             updatedGraph = updateGroupBounds(updatedGraph, originalParent)
 
             if (parentChanged) {
-              updatedGraph = {
-                ...updatedGraph,
-                edges: updatedGraph.edges.filter(
-                  edge => edge.from.entityId !== groupId && edge.to.entityId !== groupId
-                )
-              }
+              updatedGraph = removeEntityEdgesAndBridge(updatedGraph, groupId, {
+                edgeLocked: edgesLocked.value
+              })
             }
 
             onGraphUpdate(updatedGraph)
             onEntityMovedToGroup(groupId, null)
-          } else if (originalParent && !centerInOriginalParent && group.lockParent) {
-            // Group has lockParent and is being dragged outside parent - restore original position
+          } else if (
+            originalParent &&
+            !centerInOriginalParent &&
+            (group.lockParent || group.requireGroup)
+          ) {
+            // Group has lockParent/requireGroup and is being dragged outside parent - restore original position
             if (draggedEntityOriginalPosition.value) {
               updatedGraph = updateGroupPosition(
                 updatedGraph,
@@ -404,6 +478,8 @@ export function useDragging(options: UseDraggingOptions) {
             updatedGraph = updateGroupBounds(updatedGraph, originalParent)
             onGraphUpdate(updatedGraph)
           }
+
+          emitNewEdges(edgeIdsBefore, updatedGraph)
 
           const connectedEntities = getConnectedEntities(updatedGraph, groupId)
           onGroupDragEnd(
@@ -422,6 +498,32 @@ export function useDragging(options: UseDraggingOptions) {
         invalidDropTarget.value = false
       } else if (draggingNodeId.value) {
         const nodeId = draggingNodeId.value
+        const edgeIdsBefore = new Set(graph.value.edges.map(e => e.id))
+
+        // Handle node swap if dragged onto a same-kind node
+        if (swapTargetNodeId.value) {
+          const targetId = swapTargetNodeId.value
+          // Restore the dragged node to its original position before swapping,
+          // so swapNodes exchanges the two original positions cleanly.
+          let baseGraph = graph.value
+          if (draggedEntityOriginalPosition.value) {
+            baseGraph = updateNodePosition(baseGraph, nodeId, draggedEntityOriginalPosition.value)
+          }
+          const updatedGraph = swapNodes(baseGraph, nodeId, targetId)
+          onGraphUpdate(updatedGraph)
+          onNodeSwap(nodeId, targetId)
+
+          draggingNodeId.value = null
+          draggedNodeOriginalGroup.value = null
+          draggedEntityOriginalPosition.value = null
+          nodeOverGroupId.value = null
+          nodeOverGroupIds.value = []
+          invalidDropTarget.value = false
+          swapTargetNodeId.value = null
+          invalidSwapTargetNodeId.value = null
+          return
+        }
+
         const node = findNode(graph.value, nodeId)
 
         if (node) {
@@ -468,8 +570,42 @@ export function useDragging(options: UseDraggingOptions) {
               nodeOverGroupId.value = null
               nodeOverGroupIds.value = []
               invalidDropTarget.value = false
+              swapTargetNodeId.value = null
+              invalidSwapTargetNodeId.value = null
               return
             }
+          }
+
+          // Check if node with requireGroup is being moved outside all groups
+          if (node.requireGroup && !targetGroup) {
+            if (draggedEntityOriginalPosition.value) {
+              updatedGraph = updateNodePosition(
+                updatedGraph,
+                nodeId,
+                draggedEntityOriginalPosition.value
+              )
+            }
+            if (originalGroup) {
+              updatedGraph = updateGroupBounds(updatedGraph, originalGroup)
+            }
+            onGraphUpdate(updatedGraph)
+            const connectedEntities = getConnectedEntities(updatedGraph, nodeId)
+            onNodeDragEnd(
+              nodeId,
+              node.position,
+              getParentGroup(updatedGraph, nodeId) || null,
+              connectedEntities
+            )
+
+            draggingNodeId.value = null
+            draggedNodeOriginalGroup.value = null
+            draggedEntityOriginalPosition.value = null
+            nodeOverGroupId.value = null
+            nodeOverGroupIds.value = []
+            invalidDropTarget.value = false
+            swapTargetNodeId.value = null
+            invalidSwapTargetNodeId.value = null
+            return
           }
 
           if (originalGroup) {
@@ -485,6 +621,9 @@ export function useDragging(options: UseDraggingOptions) {
             isEntityTypeCompatibleWithGroup(updatedGraph, nodeId, targetGroup.id)
           ) {
             updatedGraph = addEntityToGroup(updatedGraph, nodeId, targetGroup.id)
+            if (parentChanged) {
+              updatedGraph = alignNodeInGroup(updatedGraph, nodeId, targetGroup.id)
+            }
 
             // Auto-assign node type from group if node has no type
             const autoKind = getAutoAssignedNodeKind(
@@ -502,20 +641,35 @@ export function useDragging(options: UseDraggingOptions) {
           }
 
           if (parentChanged) {
-            updatedGraph = {
-              ...updatedGraph,
-              edges: updatedGraph.edges.filter(
-                edge => edge.from.entityId !== nodeId && edge.to.entityId !== nodeId
-              )
+            updatedGraph = removeEntityEdgesAndBridge(updatedGraph, nodeId, {
+              edgeLocked: edgesLocked.value
+            })
+
+            if (targetGroup) {
+              updatedGraph = connectNodeToLastInGroup(updatedGraph, nodeId, targetGroup.id, {
+                edgeLocked: edgesLocked.value
+              })
             }
           }
 
           onGraphUpdate(updatedGraph)
+          emitNewEdges(edgeIdsBefore, updatedGraph)
 
           if (targetGroup) {
             onEntityMovedToGroup(nodeId, targetGroup.id)
           } else if (originalGroup) {
             onEntityMovedToGroup(nodeId, null)
+          }
+
+          if (parentChanged && onNodeParentGroupChange) {
+            const updatedNode = findNode(updatedGraph, nodeId)
+            if (updatedNode) {
+              onNodeParentGroupChange(
+                updatedNode,
+                getParentGroup(updatedGraph, nodeId) || null,
+                getConnectedEntities(updatedGraph, nodeId)
+              )
+            }
           }
 
           const connectedEntities = getConnectedEntities(updatedGraph, nodeId)
@@ -533,6 +687,8 @@ export function useDragging(options: UseDraggingOptions) {
         nodeOverGroupId.value = null
         nodeOverGroupIds.value = []
         invalidDropTarget.value = false
+        swapTargetNodeId.value = null
+        invalidSwapTargetNodeId.value = null
       }
     } finally {
       // Use setTimeout to reset the flag after the current event loop
@@ -552,6 +708,8 @@ export function useDragging(options: UseDraggingOptions) {
     nodeOverGroupIds,
     hoveredNodeGroupId,
     invalidDropTarget,
+    swapTargetNodeId,
+    invalidSwapTargetNodeId,
     handleNodeMouseDown,
     handleGroupMouseDown,
     handleNodeMouseEnter,

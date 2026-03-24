@@ -101,6 +101,55 @@ export function removeEdge(graph: WorkflowGraph, edgeId: string): WorkflowGraph 
 }
 
 /**
+ * Remove all edges incident on an entity and, when the entity had exactly
+ * one incoming AND one outgoing edge whose endpoints are distinct, bridge
+ * the predecessor directly to the successor.
+ *
+ * Designed for delete-node / delete-group / reparent-move flows.
+ */
+export function removeEntityEdgesAndBridge(
+  graph: WorkflowGraph,
+  entityId: string,
+  options?: {
+    edgeIdGenerator?: () => string
+    edgeLocked?: boolean
+  }
+): WorkflowGraph {
+  const incomingEdge = graph.edges.find(e => e.to.entityId === entityId)
+  const outgoingEdge = graph.edges.find(e => e.from.entityId === entityId)
+
+  const filteredEdges = graph.edges.filter(
+    e => e.from.entityId !== entityId && e.to.entityId !== entityId
+  )
+
+  let updatedGraph: WorkflowGraph = { ...graph, edges: filteredEdges }
+
+  if (incomingEdge && outgoingEdge) {
+    const fromId = incomingEdge.from.entityId
+    const toId = outgoingEdge.to.entityId
+
+    if (fromId !== toId) {
+      const fromExists = findNode(updatedGraph, fromId) || findGroup(updatedGraph, fromId)
+      const toExists = findNode(updatedGraph, toId) || findGroup(updatedGraph, toId)
+
+      if (fromExists && toExists) {
+        const edgeIdGen =
+          options?.edgeIdGenerator || (() => `edge-${Date.now()}-${idCounter++}`)
+
+        updatedGraph = addEdge(updatedGraph, {
+          id: edgeIdGen(),
+          from: { entityId: fromId },
+          to: { entityId: toId },
+          ...(options?.edgeLocked !== undefined && { locked: options.edgeLocked })
+        })
+      }
+    }
+  }
+
+  return updatedGraph
+}
+
+/**
  * Check if an entity's type is compatible with a target group's type
  * - Nodes can be added to any group (node kinds and group kinds are separate namespaces)
  * - Groups can only be added to groups with matching kinds (or no kind)
@@ -755,6 +804,44 @@ export function handleConnectNodes(
 }
 
 /**
+ * Connect a node to the last existing node in a group.
+ * The "last" node is determined by the group's containedIds order.
+ */
+export function connectNodeToLastInGroup(
+  graph: WorkflowGraph,
+  nodeId: string,
+  groupId: string,
+  options?: {
+    edgeIdGenerator?: () => string
+    edgeLocked?: boolean
+  }
+): WorkflowGraph {
+  const group = findGroup(graph, groupId)
+  const node = findNode(graph, nodeId)
+
+  if (!group || !node || !group.containedIds.includes(nodeId)) {
+    return graph
+  }
+
+  const previousEntityId = [...group.containedIds]
+    .reverse()
+    .find(id => id !== nodeId && (!!findNode(graph, id) || !!findGroup(graph, id)))
+
+  if (!previousEntityId) {
+    return graph
+  }
+
+  const edgeIdGenerator = options?.edgeIdGenerator || defaultIdGenerator('edge')
+
+  return addEdge(graph, {
+    id: edgeIdGenerator(),
+    from: { entityId: previousEntityId },
+    to: { entityId: nodeId },
+    ...(options?.edgeLocked !== undefined && { locked: options.edgeLocked })
+  })
+}
+
+/**
  * Add a new node to the workflow graph
  * @param graph - The workflow graph
  * @param options - Optional configuration for node creation
@@ -871,6 +958,55 @@ export function addGroup(
 }
 
 /**
+ * Align a node within its group: horizontally aligned with siblings,
+ * vertically stacked below the bottommost sibling.
+ * Only repositions when the group has other entities (siblings) to align with.
+ * After repositioning the node, recalculates group bounds (and parent bounds recursively).
+ */
+export function alignNodeInGroup(
+  graph: WorkflowGraph,
+  nodeId: string,
+  groupId: string,
+  entitySpacing: number = 20
+): WorkflowGraph {
+  const group = findGroup(graph, groupId)
+  const node = findNode(graph, nodeId)
+  if (!group || !node) return graph
+
+  const siblings = group.containedIds
+    .filter(id => id !== nodeId)
+    .map(id => findEntity(graph, id))
+    .filter(Boolean) as (WorkflowNode | WorkflowGroup)[]
+
+  if (siblings.length === 0) {
+    return graph
+  }
+
+  const firstSibling = siblings[0]
+  const newX = firstSibling.position.x
+
+  let maxBottom = -Infinity
+  for (const sib of siblings) {
+    const sibH =
+      'containedIds' in sib ? sib.size.h : (sib as WorkflowNode).size?.h || 100
+    const sibBottom = sib.position.y + sibH
+    if (sibBottom > maxBottom) maxBottom = sibBottom
+  }
+  const newY = maxBottom + entitySpacing
+
+  let updatedGraph: WorkflowGraph = {
+    ...graph,
+    nodes: graph.nodes.map(n =>
+      n.id === nodeId ? { ...n, position: { x: newX, y: newY } } : n
+    )
+  }
+
+  updatedGraph = updateGroupBounds(updatedGraph, groupId)
+
+  return updatedGraph
+}
+
+/**
  * Get the auto-assigned node kind based on the parent group's kind
  * Only assigns if:
  * 1. Node has no kind (empty string)
@@ -899,4 +1035,54 @@ export function getAutoAssignedNodeKind(
   }
 
   return null
+}
+
+/**
+ * Swap two nodes completely: positions, edge connections, and group membership.
+ * Both nodes must exist in the graph; returns the graph unchanged if either is missing.
+ */
+export function swapNodes(
+  graph: WorkflowGraph,
+  nodeIdA: string,
+  nodeIdB: string
+): WorkflowGraph {
+  const nodeA = findNode(graph, nodeIdA)
+  const nodeB = findNode(graph, nodeIdB)
+  if (!nodeA || !nodeB) return graph
+
+  // Swap positions
+  const updatedNodes = graph.nodes.map(n => {
+    if (n.id === nodeIdA) return { ...n, position: { ...nodeB.position } }
+    if (n.id === nodeIdB) return { ...n, position: { ...nodeA.position } }
+    return n
+  })
+
+  // Swap edge references: A↔B in both from.entityId and to.entityId
+  const updatedEdges = graph.edges.map(e => {
+    let from = e.from
+    let to = e.to
+    if (from.entityId === nodeIdA) from = { ...from, entityId: nodeIdB }
+    else if (from.entityId === nodeIdB) from = { ...from, entityId: nodeIdA }
+    if (to.entityId === nodeIdA) to = { ...to, entityId: nodeIdB }
+    else if (to.entityId === nodeIdB) to = { ...to, entityId: nodeIdA }
+    if (from !== e.from || to !== e.to) return { ...e, from, to }
+    return e
+  })
+
+  // Swap group membership: replace A↔B in every group's containedIds
+  const updatedGroups = graph.groups.map(g => {
+    const hasA = g.containedIds.includes(nodeIdA)
+    const hasB = g.containedIds.includes(nodeIdB)
+    if (!hasA && !hasB) return g
+    return {
+      ...g,
+      containedIds: g.containedIds.map(id => {
+        if (id === nodeIdA) return nodeIdB
+        if (id === nodeIdB) return nodeIdA
+        return id
+      })
+    }
+  })
+
+  return { nodes: updatedNodes, edges: updatedEdges, groups: updatedGroups }
 }

@@ -89,6 +89,7 @@ export interface NodeTypeDefinition {
   fields: NodeFieldDefinition[] // Fields for this type
   cssClass?: string // Custom CSS class (defaults to `workflow-canvas-node--type-${type}`)
   lockParent?: boolean // If true, nodes of this type are locked to parent by default
+  requireGroup?: boolean // If true, nodes of this type must always be inside a group
   hideAddNode?: boolean // If true, hides "+ node" button in hover menu
   hideAddGroup?: boolean // If true, hides "+ group" button in hover menu
   addNodeButtonText?: string // Custom text for "+ node" button in hover menu (defaults to "+ node")
@@ -156,6 +157,7 @@ export interface GroupTypeDefinition {
   showTypeField?: boolean // Control visibility of type field in config panel (default: true)
   showTitleField?: boolean // Control visibility of title field in config panel (default: true)
   lockParent?: boolean // If true, groups of this type are locked to parent by default
+  requireGroup?: boolean // If true, groups of this type must always be inside a group
   hideAddNode?: boolean // If true, hides "+ node" button in connection hover menu
   hideAddGroup?: boolean // If true, hides "+ group" button in connection hover menu
   hideNestedAddNode?: boolean // If true, hides "+ node" button in empty group "+" menu
@@ -193,6 +195,7 @@ export interface WorkflowNode {
   locked?: boolean // if true, prevents deletion
   readonly?: boolean // if true, prevents editing (hides menu and config panel)
   lockParent?: boolean // if true, prevents moving outside parent group
+  requireGroup?: boolean // if true, must always be inside a group
   hideAddNode?: boolean // if true, hides "+ node" button in hover menu
   hideAddGroup?: boolean // if true, hides "+ group" button in hover menu
 }
@@ -231,6 +234,7 @@ export interface WorkflowGroup {
   locked?: boolean // if true, prevents deletion
   readonly?: boolean // if true, prevents editing (hides config panel)
   lockParent?: boolean // if true, prevents moving outside parent group
+  requireGroup?: boolean // if true, must always be inside a group
   maxDepth?: number | null // if set, overrides global maxGroupDepth for this group
   hideAddNode?: boolean // if true, hides "+ node" button in connection hover menu
   hideAddGroup?: boolean // if true, hides "+ group" button in connection hover menu

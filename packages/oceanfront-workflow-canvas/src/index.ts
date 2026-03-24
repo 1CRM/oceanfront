@@ -62,7 +62,11 @@ export {
   isEntityTypeCompatibleWithGroup,
   isGroupDescendantOf,
   moveNodesBelow,
-  getConnectedEntities
+  getConnectedEntities,
+  swapNodes,
+  connectNodeToLastInGroup,
+  removeEntityEdgesAndBridge,
+  alignNodeInGroup
 } from './utils/graph-helpers'
 
 export {

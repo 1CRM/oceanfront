@@ -238,6 +238,10 @@ describe('useConnections', () => {
 
       expect(onGraphUpdate).toHaveBeenCalled()
       expect(onEdgeAdd).toHaveBeenCalled()
+      const [addedGraph, addedEdge] = onEdgeAdd.mock.calls[0]
+      expect(addedEdge.from.entityId).toBe('node-1')
+      expect(addedEdge.to.entityId).toBe('node-2')
+      expect(addedGraph.edges).toContainEqual(addedEdge)
     })
 
     it('does not create edge when connecting same node', () => {

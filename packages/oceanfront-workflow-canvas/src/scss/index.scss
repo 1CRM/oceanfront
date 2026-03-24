@@ -746,6 +746,20 @@
     z-index: 30;
   }
 
+  &--swap-target {
+    .workflow-canvas-tile {
+      border-color: var(--wf-primary);
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--wf-primary) 25%, transparent);
+    }
+  }
+
+  &--invalid-swap-target {
+    .workflow-canvas-tile {
+      border-color: var(--wf-error);
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--wf-error) 15%, transparent);
+    }
+  }
+
   &__label {
     position: absolute;
     top: -11px;

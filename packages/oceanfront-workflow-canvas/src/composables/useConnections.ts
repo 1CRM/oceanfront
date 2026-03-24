@@ -25,7 +25,7 @@ export interface UseConnectionsOptions {
     position: 'top' | 'bottom' | 'left' | 'right'
   ) => Position
   onGraphUpdate: (graph: WorkflowGraph) => void
-  onEdgeAdd: (edge: WorkflowEdge) => void
+  onEdgeAdd: (graph: WorkflowGraph, edge: WorkflowEdge) => void
   onEdgeDelete: (edgeId: string) => void
   nodeTypes?: Ref<Record<string, any>>
 }
@@ -260,7 +260,7 @@ export function useConnections(options: UseConnectionsOptions) {
         )
         onGraphUpdate(updatedGraph)
         const newEdge = updatedGraph.edges[updatedGraph.edges.length - 1]
-        onEdgeAdd(newEdge)
+        onEdgeAdd(updatedGraph, newEdge)
       }
     }
 
