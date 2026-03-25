@@ -379,6 +379,11 @@ export function useDragging(options: UseDraggingOptions) {
       }
     }
 
+    // Check if node with allowedParents is being dragged outside all allowed groups
+    if (node.allowedParents && !validTargetGroup) {
+      isInvalid = true
+    }
+
     // Check if node with requireGroup is being dragged outside all groups
     if (node.requireGroup && !validTargetGroup) {
       isInvalid = true
@@ -504,6 +509,14 @@ export function useDragging(options: UseDraggingOptions) {
     if (group.lockParent && originalParent && !centerInOriginalParent) {
       isInvalid = true
       primaryTargetGroup = originalParent
+    }
+
+    // Check if group with allowedParents is being dragged outside all allowed groups
+    if (group.allowedParents && !primaryTargetGroup) {
+      isInvalid = true
+      if (originalParent) {
+        primaryTargetGroup = originalParent
+      }
     }
 
     // Check if group with requireGroup is being dragged outside all groups
@@ -690,7 +703,8 @@ export function useDragging(options: UseDraggingOptions) {
             originalParent &&
             !centerInOriginalParent &&
             !group.lockParent &&
-            !group.requireGroup
+            !group.requireGroup &&
+            !group.allowedParents
           ) {
             parentChanged = true
             updatedGraph = removeEntityFromAllGroups(updatedGraph, groupId)
@@ -712,7 +726,7 @@ export function useDragging(options: UseDraggingOptions) {
           } else if (
             originalParent &&
             !centerInOriginalParent &&
-            (group.lockParent || group.requireGroup)
+            (group.lockParent || group.requireGroup || group.allowedParents)
           ) {
             if (draggedEntityOriginalPosition.value) {
               updatedGraph = updateGroupPosition(
@@ -827,6 +841,43 @@ export function useDragging(options: UseDraggingOptions) {
 
           // Check if node with requireGroup is being moved outside all groups
           if (node.requireGroup && !targetGroup) {
+            if (draggedEntityOriginalPosition.value) {
+              updatedGraph = updateNodePosition(
+                updatedGraph,
+                nodeId,
+                draggedEntityOriginalPosition.value
+              )
+            }
+            if (originalGroup) {
+              updatedGraph = updateGroupBounds(updatedGraph, originalGroup, getGroupPadding())
+            }
+            onGraphUpdate(updatedGraph)
+            const connectedEntities = getConnectedEntities(updatedGraph, nodeId)
+            onNodeDragEnd(
+              nodeId,
+              node.position,
+              getParentGroup(updatedGraph, nodeId) || null,
+              connectedEntities
+            )
+
+            draggingNodeId.value = null
+            draggedNodeOriginalGroup.value = null
+            draggedEntityOriginalPosition.value = null
+            draggedEntityOriginalAfterEntityId.value = undefined
+            nodeOverGroupId.value = null
+            nodeOverGroupIds.value = []
+            invalidDropTarget.value = false
+            swapTargetNodeId.value = null
+            invalidSwapTargetNodeId.value = null
+            insertIndicator.value = null
+            return
+          }
+
+          // Check if node with allowedParents is being moved outside allowed groups
+          if (
+            node.allowedParents &&
+            (!targetGroup || !node.allowedParents.includes(targetGroup.kind))
+          ) {
             if (draggedEntityOriginalPosition.value) {
               updatedGraph = updateNodePosition(
                 updatedGraph,

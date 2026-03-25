@@ -169,7 +169,16 @@ export function isEntityTypeCompatibleWithGroup(
   const entityGroup = findGroup(graph, entityId)
   const targetGroup = findGroup(graph, targetGroupId)
 
-  if (!targetGroup) return true
+  const entity = node || entityGroup
+
+  if (!targetGroup) {
+    // If entity has allowedParents, it must be inside one of the allowed group kinds
+    return !entity?.allowedParents
+  }
+
+  if (entity?.allowedParents) {
+    return entity.allowedParents.includes(targetGroup.kind)
+  }
 
   // If entity is a node, always allow (node kinds and group kinds are separate)
   if (node) return true

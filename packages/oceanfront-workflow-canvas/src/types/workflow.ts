@@ -196,6 +196,7 @@ export interface WorkflowNode {
   readonly?: boolean // if true, prevents editing (hides menu and config panel)
   lockParent?: boolean // if true, prevents moving outside parent group
   requireGroup?: boolean // if true, must always be inside a group
+  allowedParents?: string[] // if set, restricts which group kinds this node can be placed into
   hideAddNode?: boolean // if true, hides "+ node" button in hover menu
   hideAddGroup?: boolean // if true, hides "+ group" button in hover menu
 }
@@ -235,6 +236,7 @@ export interface WorkflowGroup {
   readonly?: boolean // if true, prevents editing (hides config panel)
   lockParent?: boolean // if true, prevents moving outside parent group
   requireGroup?: boolean // if true, must always be inside a group
+  allowedParents?: string[] // if set, restricts which group kinds this group can be placed into
   maxDepth?: number | null // if set, overrides global maxGroupDepth for this group
   hideAddNode?: boolean // if true, hides "+ node" button in connection hover menu
   hideAddGroup?: boolean // if true, hides "+ group" button in connection hover menu
