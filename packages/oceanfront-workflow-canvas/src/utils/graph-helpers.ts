@@ -642,11 +642,14 @@ export function handleAddStepToGraph(
     edgeIdGenerator?: () => string
     defaultNodeData?: unknown
     defaultKind?: string
+    /** Vertical gap between nodes; should match `--wf-entity-spacing` when used from the canvas */
+    entitySpacing?: number
   }
 ): { graph: WorkflowGraph; newNodeId: string } {
   const nodeIdGenerator = options?.nodeIdGenerator || defaultIdGenerator('node')
   const edgeIdGenerator = options?.edgeIdGenerator || defaultIdGenerator('edge')
   const defaultKind = options?.defaultKind || ''
+  const nodeSpacing = options?.entitySpacing ?? 20
 
   const newNodeId = nodeIdGenerator()
   const afterNode = event.afterNodeId ? findNode(graph, event.afterNodeId) : null
@@ -660,7 +663,6 @@ export function handleAddStepToGraph(
   let position: Position
   let shouldMoveNodesBelow = false
   const nodeHeight = 100 // Default node height
-  const nodeSpacing = 20 // Default spacing between nodes
   const totalOffset = nodeHeight + nodeSpacing
 
   if (afterNode && existingEdge) {
@@ -1077,4 +1079,238 @@ export function swapNodes(graph: WorkflowGraph, nodeIdA: string, nodeIdB: string
   })
 
   return { nodes: updatedNodes, edges: updatedEdges, groups: updatedGroups }
+}
+
+/**
+ * Insert an entity into a group at a specific position within containedIds.
+ * Positions the inserted entity at the correct slot and normalizes spacing
+ * for all siblings so that no gaps are left at the entity's old position.
+ *
+ * @param afterEntityId - The entity after which to insert. null = insert at the beginning.
+ * @param options.entitySpacing - Vertical gap between entities (default 20)
+ */
+export function insertEntityInGroup(
+  graph: WorkflowGraph,
+  entityId: string,
+  groupId: string,
+  afterEntityId: string | null,
+  options?: {
+    entitySpacing?: number
+    edgeIdGenerator?: () => string
+    edgeLocked?: boolean
+  }
+): WorkflowGraph {
+  const group = findGroup(graph, groupId)
+  if (!group) return graph
+
+  const spacing = options?.entitySpacing ?? 20
+
+  let updatedGraph = removeEntityFromAllGroups(graph, entityId)
+
+  const currentIds = updatedGraph.groups.find(g => g.id === groupId)!.containedIds
+  let newContainedIds: string[]
+
+  if (afterEntityId === null) {
+    newContainedIds = [entityId, ...currentIds]
+  } else {
+    const idx = currentIds.indexOf(afterEntityId)
+    if (idx === -1) {
+      newContainedIds = [...currentIds, entityId]
+    } else {
+      newContainedIds = [...currentIds.slice(0, idx + 1), entityId, ...currentIds.slice(idx + 1)]
+    }
+  }
+
+  updatedGraph = {
+    ...updatedGraph,
+    groups: updatedGraph.groups.map(g =>
+      g.id === groupId ? { ...g, containedIds: newContainedIds } : g
+    )
+  }
+
+  const updatedGroup = findGroup(updatedGraph, groupId)!
+
+  // Determine X from existing siblings
+  const firstExisting = newContainedIds
+    .filter(id => id !== entityId)
+    .map(id => findEntity(updatedGraph, id))
+    .find(Boolean)
+  const baseX = firstExisting ? firstExisting.position.x : updatedGroup.position.x + 20
+
+  // Use the first sibling's Y as the anchor for the top of the stack.
+  // This keeps the topmost element pinned and stacks everything below it.
+  const firstEntity = findEntity(updatedGraph, newContainedIds[0])
+  let anchorY: number
+  if (newContainedIds[0] === entityId) {
+    // Inserted entity is first — anchor to the next sibling's current position
+    const nextSib = newContainedIds.length > 1 ? findEntity(updatedGraph, newContainedIds[1]) : null
+    anchorY = nextSib ? nextSib.position.y : updatedGroup.position.y + 40
+  } else {
+    anchorY = firstEntity ? firstEntity.position.y : updatedGroup.position.y + 40
+  }
+
+  // Walk through all siblings in order and stack them with consistent spacing.
+  // This both positions the inserted entity and collapses any gap left behind.
+  let currentY = anchorY
+  for (let i = 0; i < newContainedIds.length; i++) {
+    const sibId = newContainedIds[i]
+    const sib = findEntity(updatedGraph, sibId)
+    if (!sib) continue
+
+    const sibX = sibId === entityId ? baseX : sib.position.x
+
+    if (findNode(updatedGraph, sibId)) {
+      updatedGraph = updateNodePosition(updatedGraph, sibId, { x: sibX, y: currentY })
+    } else {
+      updatedGraph = updateGroupPosition(updatedGraph, sibId, { x: sibX, y: currentY })
+    }
+
+    // Re-read the entity to get the correct height (groups may have changed via updateGroupPosition)
+    const updatedSib = findEntity(updatedGraph, sibId)
+    const sibH = updatedSib
+      ? 'containedIds' in updatedSib
+        ? (updatedSib as WorkflowGroup).size.h
+        : (updatedSib as WorkflowNode).size?.h || 100
+      : 100
+
+    currentY = currentY + sibH + spacing
+  }
+
+  updatedGraph = updateGroupBounds(updatedGraph, groupId)
+
+  return updatedGraph
+}
+
+/**
+ * Normalize the vertical spacing of all entities inside a group so that
+ * consecutive siblings are separated by exactly `entitySpacing` pixels.
+ * The first entity keeps its current Y position; subsequent entities are
+ * stacked below it. Group bounds are updated afterwards.
+ *
+ * Use this after removing an entity from a group to collapse the gap it left.
+ */
+export function normalizeGroupSpacing(
+  graph: WorkflowGraph,
+  groupId: string,
+  entitySpacing: number = 20,
+  boundsPadding: number = 20
+): WorkflowGraph {
+  const group = findGroup(graph, groupId)
+  if (!group || group.containedIds.length === 0) return graph
+
+  const ids = group.containedIds
+  const firstEntity = findEntity(graph, ids[0])
+  if (!firstEntity) return graph
+
+  let updatedGraph = graph
+  let currentY = firstEntity.position.y
+
+  for (let i = 0; i < ids.length; i++) {
+    const sibId = ids[i]
+    const sib = findEntity(updatedGraph, sibId)
+    if (!sib) continue
+
+    if (findNode(updatedGraph, sibId)) {
+      updatedGraph = updateNodePosition(updatedGraph, sibId, { x: sib.position.x, y: currentY })
+    } else {
+      updatedGraph = updateGroupPosition(updatedGraph, sibId, { x: sib.position.x, y: currentY })
+    }
+
+    const updatedSib = findEntity(updatedGraph, sibId)
+    const sibH = updatedSib
+      ? 'containedIds' in updatedSib
+        ? (updatedSib as WorkflowGroup).size.h
+        : (updatedSib as WorkflowNode).size?.h || 100
+      : 100
+
+    currentY = currentY + sibH + entitySpacing
+  }
+
+  updatedGraph = updateGroupBounds(updatedGraph, groupId, boundsPadding)
+
+  return updatedGraph
+}
+
+/**
+ * Normalize vertical spacing for every group (deepest groups first so nested
+ * layout and sizes are correct before parent bounds update).
+ */
+export function normalizeAllGroupsEntitySpacing(
+  graph: WorkflowGraph,
+  entitySpacing: number = 20,
+  boundsPadding: number = 20
+): WorkflowGraph {
+  if (graph.groups.length === 0) return graph
+
+  const sorted = [...graph.groups].sort(
+    (a, b) => getGroupDepth(graph, b.id) - getGroupDepth(graph, a.id)
+  )
+
+  let updated = graph
+  for (const g of sorted) {
+    updated = normalizeGroupSpacing(updated, g.id, entitySpacing, boundsPadding)
+  }
+  return updated
+}
+
+/**
+ * Wire an entity into the edge chain of a group at a specific insertion point.
+ * Removes the old edge between afterEntity and nextEntity, then creates:
+ *   afterEntity -> entityId -> nextEntity
+ */
+export function wireEntityIntoChain(
+  graph: WorkflowGraph,
+  entityId: string,
+  groupId: string,
+  afterEntityId: string | null,
+  options?: {
+    edgeIdGenerator?: () => string
+    edgeLocked?: boolean
+  }
+): WorkflowGraph {
+  const group = findGroup(graph, groupId)
+  if (!group) return graph
+
+  const edgeIdGen = options?.edgeIdGenerator || (() => `edge-${Date.now()}-${idCounter++}`)
+  const containedIds = group.containedIds
+  const idx = containedIds.indexOf(entityId)
+  if (idx === -1) return graph
+
+  let updatedGraph = graph
+
+  // Find the entity before and after in containedIds
+  const prevId = idx > 0 ? containedIds[idx - 1] : null
+  const nextId = idx < containedIds.length - 1 ? containedIds[idx + 1] : null
+
+  // Remove the old edge between prev and next (if it exists)
+  if (prevId && nextId) {
+    const oldEdge = updatedGraph.edges.find(
+      e => e.from.entityId === prevId && e.to.entityId === nextId
+    )
+    if (oldEdge) {
+      updatedGraph = removeEdge(updatedGraph, oldEdge.id)
+    }
+  }
+
+  // Create edge: prev -> entityId
+  if (prevId) {
+    updatedGraph = addEdge(updatedGraph, {
+      id: edgeIdGen(),
+      from: { entityId: prevId },
+      to: { entityId: entityId },
+      ...(options?.edgeLocked !== undefined && { locked: options.edgeLocked })
+    })
+  }
+
+  // Create edge: entityId -> next
+  if (nextId) {
+    updatedGraph = addEdge(updatedGraph, {
+      id: edgeIdGen(),
+      from: { entityId: entityId },
+      to: { entityId: nextId },
+      ...(options?.edgeLocked !== undefined && { locked: options.edgeLocked })
+    })
+  }
+
+  return updatedGraph
 }

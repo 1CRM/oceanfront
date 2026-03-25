@@ -206,6 +206,26 @@ describe('WorkflowCanvas Component', () => {
       const placeholders = wrapper.findAll('.workflow-canvas-plus-placeholder')
       expect(placeholders.length).toBe(0)
     })
+
+    it('does not show plus placeholders when hidePathAdd is true', () => {
+      const graphWithEdge = addEdge(mockGraph, {
+        id: 'edge-1',
+        from: { entityId: 'node-1' },
+        to: { entityId: 'node-2' }
+      })
+
+      const wrapper = mount(WorkflowCanvas, {
+        props: {
+          modelValue: graphWithEdge,
+          mode: 'edit',
+          hidePathAdd: true,
+          record: mockRecord
+        }
+      })
+
+      const placeholders = wrapper.findAll('.workflow-canvas-plus-placeholder')
+      expect(placeholders.length).toBe(0)
+    })
   })
 
   describe('Custom Slots', () => {

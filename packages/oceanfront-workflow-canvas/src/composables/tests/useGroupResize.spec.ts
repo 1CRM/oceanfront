@@ -60,6 +60,7 @@ function createResize(graph: WorkflowGraph, overrides: Partial<UseGroupResizeOpt
     onGroupResizeStart,
     onGroupResizeEnd,
     onUpdateSelectedId,
+    getGroupPadding: () => 20,
     ...overrides
   }
 

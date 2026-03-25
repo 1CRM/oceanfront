@@ -11,6 +11,8 @@ export interface UseGroupResizeOptions {
   onGroupResizeStart: (groupId: string) => void
   onGroupResizeEnd: (groupId: string, size: { w: number; h: number }) => void
   onUpdateSelectedId: (id: string) => void
+  /** From `--wf-group-padding` on the canvas element */
+  getGroupPadding: () => number
 }
 
 export function useGroupResize(options: UseGroupResizeOptions) {
@@ -22,7 +24,8 @@ export function useGroupResize(options: UseGroupResizeOptions) {
     onGraphUpdate,
     onGroupResizeStart,
     onGroupResizeEnd,
-    onUpdateSelectedId
+    onUpdateSelectedId,
+    getGroupPadding
   } = options
 
   const resizingGroupId = ref<string | null>(null)
@@ -141,7 +144,7 @@ export function useGroupResize(options: UseGroupResizeOptions) {
 
       const parentGroup = getParentGroup(graph.value, groupId)
       if (parentGroup) {
-        const updatedGraph = updateGroupBounds(graph.value, parentGroup.id)
+        const updatedGraph = updateGroupBounds(graph.value, parentGroup.id, getGroupPadding())
         onGraphUpdate(updatedGraph)
       }
 

@@ -50,6 +50,17 @@
           </span>
         </div>
         <div class="control-item">
+          <strong>Hide Path Add:</strong>
+          <input
+            type="checkbox"
+            v-model="hidePathAdd"
+            style="margin-left: 8px"
+          />
+          <span style="margin-left: 8px; color: #666; font-size: 13px">
+            (hides "+" buttons on edges between nodes)
+          </span>
+        </div>
+        <div class="control-item">
           <strong>Lock All Edges:</strong>
           <input
             type="checkbox"
@@ -86,6 +97,7 @@
         :height="600"
         :max-group-depth="maxGroupDepth"
         :hide-empty-handles="hideEmptyHandles"
+        :hide-path-add="hidePathAdd"
         :edges-locked="edgesLocked"
         :node-types="nodeTypes"
         :group-types="groupTypes"
@@ -706,7 +718,8 @@ const workflowCanvasRef = ref<
   | null
 >(null)
 const maxGroupDepth = ref<number | null>(null)
-const hideEmptyHandles = ref(true)
+const hideEmptyHandles = ref(false)
+const hidePathAdd = ref(false)
 const edgesLocked = ref(false)
 const canvasMode = ref<WorkflowCanvasMode>('edit')
 

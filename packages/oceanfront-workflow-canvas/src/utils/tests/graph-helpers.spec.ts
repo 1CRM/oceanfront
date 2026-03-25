@@ -11,7 +11,11 @@ import {
   swapNodes,
   connectNodeToLastInGroup,
   removeEntityEdgesAndBridge,
-  alignNodeInGroup
+  alignNodeInGroup,
+  insertEntityInGroup,
+  normalizeGroupSpacing,
+  normalizeAllGroupsEntitySpacing,
+  wireEntityIntoChain
 } from '../graph-helpers'
 
 function makeGraph(overrides: Partial<WorkflowGraph> = {}): WorkflowGraph {
@@ -1014,11 +1018,11 @@ describe('alignNodeInGroup', () => {
       ]
     })
 
-    const result = alignNodeInGroup(graph, 'n2', 'g1', 40)
+    const result = alignNodeInGroup(graph, 'n2', 'g1', 60)
     const node = result.nodes.find(n => n.id === 'n2')!
 
-    // y below n1: 120 + 100 + 40 = 260
-    expect(node.position.y).toBe(260)
+    // y below n1: 120 + 100 + 60 = 280
+    expect(node.position.y).toBe(280)
   })
 
   it('aligns next to nested group sibling', () => {
@@ -1049,5 +1053,627 @@ describe('alignNodeInGroup', () => {
     expect(node.position.x).toBe(70)
     // y below g-child: 70 + 200 + 20 = 290
     expect(node.position.y).toBe(290)
+  })
+})
+
+describe('insertEntityInGroup', () => {
+  it('inserts a node at the beginning of a group', () => {
+    const graph = makeGraph({
+      nodes: [
+        { id: 'n1', kind: 'action', position: { x: 120, y: 160 } },
+        { id: 'n2', kind: 'action', position: { x: 120, y: 280 } },
+        { id: 'nNew', kind: 'action', position: { x: 500, y: 500 } }
+      ],
+      groups: [
+        {
+          id: 'g1',
+          kind: 'group',
+          position: { x: 100, y: 100 },
+          size: { w: 400, h: 600 },
+          containedIds: ['n1', 'n2']
+        }
+      ]
+    })
+
+    const result = insertEntityInGroup(graph, 'nNew', 'g1', null)
+    const group = result.groups.find(g => g.id === 'g1')!
+    expect(group.containedIds[0]).toBe('nNew')
+    expect(group.containedIds[1]).toBe('n1')
+    expect(group.containedIds[2]).toBe('n2')
+  })
+
+  it('inserts a node between two existing nodes', () => {
+    const graph = makeGraph({
+      nodes: [
+        { id: 'n1', kind: 'action', position: { x: 120, y: 160 } },
+        { id: 'n2', kind: 'action', position: { x: 120, y: 280 } },
+        { id: 'nNew', kind: 'action', position: { x: 500, y: 500 } }
+      ],
+      groups: [
+        {
+          id: 'g1',
+          kind: 'group',
+          position: { x: 100, y: 100 },
+          size: { w: 400, h: 600 },
+          containedIds: ['n1', 'n2']
+        }
+      ]
+    })
+
+    const result = insertEntityInGroup(graph, 'nNew', 'g1', 'n1')
+    const group = result.groups.find(g => g.id === 'g1')!
+    expect(group.containedIds).toEqual(['n1', 'nNew', 'n2'])
+  })
+
+  it('inserts a node at the end of a group', () => {
+    const graph = makeGraph({
+      nodes: [
+        { id: 'n1', kind: 'action', position: { x: 120, y: 160 } },
+        { id: 'n2', kind: 'action', position: { x: 120, y: 280 } },
+        { id: 'nNew', kind: 'action', position: { x: 500, y: 500 } }
+      ],
+      groups: [
+        {
+          id: 'g1',
+          kind: 'group',
+          position: { x: 100, y: 100 },
+          size: { w: 400, h: 600 },
+          containedIds: ['n1', 'n2']
+        }
+      ]
+    })
+
+    const result = insertEntityInGroup(graph, 'nNew', 'g1', 'n2')
+    const group = result.groups.find(g => g.id === 'g1')!
+    expect(group.containedIds).toEqual(['n1', 'n2', 'nNew'])
+  })
+
+  it('removes the entity from its previous group before inserting', () => {
+    const graph = makeGraph({
+      nodes: [
+        { id: 'n1', kind: 'action', position: { x: 120, y: 160 } },
+        { id: 'n2', kind: 'action', position: { x: 120, y: 280 } },
+        { id: 'nNew', kind: 'action', position: { x: 500, y: 500 } }
+      ],
+      groups: [
+        {
+          id: 'g1',
+          kind: 'group',
+          position: { x: 100, y: 100 },
+          size: { w: 400, h: 600 },
+          containedIds: ['n1', 'n2']
+        },
+        {
+          id: 'g2',
+          kind: 'group',
+          position: { x: 600, y: 100 },
+          size: { w: 400, h: 300 },
+          containedIds: ['nNew']
+        }
+      ]
+    })
+
+    const result = insertEntityInGroup(graph, 'nNew', 'g1', 'n1')
+    const g1 = result.groups.find(g => g.id === 'g1')!
+    const g2 = result.groups.find(g => g.id === 'g2')!
+    expect(g1.containedIds).toEqual(['n1', 'nNew', 'n2'])
+    expect(g2.containedIds).not.toContain('nNew')
+  })
+
+  it('preserves existing positions and places inserted entity between neighbors', () => {
+    const graph = makeGraph({
+      nodes: [
+        { id: 'n1', kind: 'action', position: { x: 120, y: 160 } },
+        { id: 'n2', kind: 'action', position: { x: 120, y: 400 } },
+        { id: 'nNew', kind: 'action', position: { x: 500, y: 500 } }
+      ],
+      groups: [
+        {
+          id: 'g1',
+          kind: 'group',
+          position: { x: 100, y: 100 },
+          size: { w: 400, h: 600 },
+          containedIds: ['n1', 'n2']
+        }
+      ]
+    })
+
+    const result = insertEntityInGroup(graph, 'nNew', 'g1', 'n1')
+    const n1 = result.nodes.find(n => n.id === 'n1')!
+    const nNew = result.nodes.find(n => n.id === 'nNew')!
+    const n2 = result.nodes.find(n => n.id === 'n2')!
+
+    // n1 stays at original position
+    expect(n1.position.y).toBe(160)
+    expect(n1.position.x).toBe(120)
+    // nNew placed below n1: 160 + 100 + 20 = 280
+    expect(nNew.position.y).toBe(280)
+    expect(nNew.position.x).toBe(120)
+    // n2 was at 400, required bottom is 280+100+20=400, so n2 stays at 400 (no overlap)
+    expect(n2.position.y).toBe(400)
+    expect(n2.position.x).toBe(120)
+  })
+
+  it('returns graph unchanged when group does not exist', () => {
+    const graph = makeGraph({
+      nodes: [{ id: 'n1', kind: 'action', position: { x: 0, y: 0 } }]
+    })
+
+    const result = insertEntityInGroup(graph, 'n1', 'nonexistent', null)
+    expect(result).toBe(graph)
+  })
+
+  it('handles reordering within the same group and adjusts positions', () => {
+    const graph = makeGraph({
+      nodes: [
+        { id: 'n1', kind: 'action', position: { x: 120, y: 160 } },
+        { id: 'n2', kind: 'action', position: { x: 120, y: 280 } },
+        { id: 'n3', kind: 'action', position: { x: 120, y: 400 } }
+      ],
+      groups: [
+        {
+          id: 'g1',
+          kind: 'group',
+          position: { x: 100, y: 100 },
+          size: { w: 400, h: 600 },
+          containedIds: ['n1', 'n2', 'n3']
+        }
+      ]
+    })
+
+    // Move n3 to between n1 and n2
+    const result = insertEntityInGroup(graph, 'n3', 'g1', 'n1')
+    const group = result.groups.find(g => g.id === 'g1')!
+    expect(group.containedIds).toEqual(['n1', 'n3', 'n2'])
+
+    const n1 = result.nodes.find(n => n.id === 'n1')!
+    const n3 = result.nodes.find(n => n.id === 'n3')!
+    const n2 = result.nodes.find(n => n.id === 'n2')!
+    // n1 stays at 160, n3 placed at 160+100+20=280, n2 was at 280 so pushed to 280+100+20=400
+    expect(n1.position.y).toBe(160)
+    expect(n3.position.y).toBe(280)
+    expect(n2.position.y).toBe(400)
+  })
+
+  it('collapses gap when moving an element down within the same group', () => {
+    const graph = makeGraph({
+      nodes: [
+        { id: 'n1', kind: 'action', position: { x: 120, y: 160 } },
+        { id: 'n2', kind: 'action', position: { x: 120, y: 280 } },
+        { id: 'n3', kind: 'action', position: { x: 120, y: 400 } }
+      ],
+      groups: [
+        {
+          id: 'g1',
+          kind: 'group',
+          position: { x: 100, y: 100 },
+          size: { w: 400, h: 600 },
+          containedIds: ['n1', 'n2', 'n3']
+        }
+      ]
+    })
+
+    // Move n1 to after n2 → [n2, n1, n3]
+    const result = insertEntityInGroup(graph, 'n1', 'g1', 'n2')
+    const group = result.groups.find(g => g.id === 'g1')!
+    expect(group.containedIds).toEqual(['n2', 'n1', 'n3'])
+
+    const n2 = result.nodes.find(n => n.id === 'n2')!
+    const n1 = result.nodes.find(n => n.id === 'n1')!
+    const n3 = result.nodes.find(n => n.id === 'n3')!
+
+    // n2 anchors at its original y=280 (first in new order, but was second before)
+    // With normalization: n2 keeps y=280, n1=280+100+20=400, n3=400+100+20=520
+    // No gap left at n1's old position (y=160)
+    expect(n2.position.y).toBe(280)
+    expect(n1.position.y).toBe(400)
+    expect(n3.position.y).toBe(520)
+  })
+
+  it('collapses gap when moving the first element to the end', () => {
+    const graph = makeGraph({
+      nodes: [
+        { id: 'n1', kind: 'action', position: { x: 120, y: 160 } },
+        { id: 'n2', kind: 'action', position: { x: 120, y: 280 } },
+        { id: 'n3', kind: 'action', position: { x: 120, y: 400 } }
+      ],
+      groups: [
+        {
+          id: 'g1',
+          kind: 'group',
+          position: { x: 100, y: 100 },
+          size: { w: 400, h: 600 },
+          containedIds: ['n1', 'n2', 'n3']
+        }
+      ]
+    })
+
+    // Move n1 to after n3 → [n2, n3, n1]
+    const result = insertEntityInGroup(graph, 'n1', 'g1', 'n3')
+    const group = result.groups.find(g => g.id === 'g1')!
+    expect(group.containedIds).toEqual(['n2', 'n3', 'n1'])
+
+    const n2 = result.nodes.find(n => n.id === 'n2')!
+    const n3 = result.nodes.find(n => n.id === 'n3')!
+    const n1 = result.nodes.find(n => n.id === 'n1')!
+
+    // n2 anchors at 280, n3=280+100+20=400, n1=400+100+20=520
+    expect(n2.position.y).toBe(280)
+    expect(n3.position.y).toBe(400)
+    expect(n1.position.y).toBe(520)
+  })
+
+  it('collapses gap when moving the last element to the beginning', () => {
+    const graph = makeGraph({
+      nodes: [
+        { id: 'n1', kind: 'action', position: { x: 120, y: 160 } },
+        { id: 'n2', kind: 'action', position: { x: 120, y: 280 } },
+        { id: 'n3', kind: 'action', position: { x: 120, y: 400 } }
+      ],
+      groups: [
+        {
+          id: 'g1',
+          kind: 'group',
+          position: { x: 100, y: 100 },
+          size: { w: 400, h: 600 },
+          containedIds: ['n1', 'n2', 'n3']
+        }
+      ]
+    })
+
+    // Move n3 to beginning → [n3, n1, n2]
+    const result = insertEntityInGroup(graph, 'n3', 'g1', null)
+    const group = result.groups.find(g => g.id === 'g1')!
+    expect(group.containedIds).toEqual(['n3', 'n1', 'n2'])
+
+    const n3 = result.nodes.find(n => n.id === 'n3')!
+    const n1 = result.nodes.find(n => n.id === 'n1')!
+    const n2 = result.nodes.find(n => n.id === 'n2')!
+
+    // n3 anchors at n1's original position (160), n1=160+100+20=280, n2=280+100+20=400
+    expect(n3.position.y).toBe(160)
+    expect(n1.position.y).toBe(280)
+    expect(n2.position.y).toBe(400)
+  })
+
+  it('maintains uniform spacing with 4 elements after reorder', () => {
+    const graph = makeGraph({
+      nodes: [
+        { id: 'n1', kind: 'action', position: { x: 120, y: 160 } },
+        { id: 'n2', kind: 'action', position: { x: 120, y: 280 } },
+        { id: 'n3', kind: 'action', position: { x: 120, y: 400 } },
+        { id: 'n4', kind: 'action', position: { x: 120, y: 520 } }
+      ],
+      groups: [
+        {
+          id: 'g1',
+          kind: 'group',
+          position: { x: 100, y: 100 },
+          size: { w: 400, h: 800 },
+          containedIds: ['n1', 'n2', 'n3', 'n4']
+        }
+      ]
+    })
+
+    // Move n2 to after n3 → [n1, n3, n2, n4]
+    const result = insertEntityInGroup(graph, 'n2', 'g1', 'n3')
+    const group = result.groups.find(g => g.id === 'g1')!
+    expect(group.containedIds).toEqual(['n1', 'n3', 'n2', 'n4'])
+
+    const n1 = result.nodes.find(n => n.id === 'n1')!
+    const n3 = result.nodes.find(n => n.id === 'n3')!
+    const n2 = result.nodes.find(n => n.id === 'n2')!
+    const n4 = result.nodes.find(n => n.id === 'n4')!
+
+    // All elements should be evenly spaced with no gaps
+    expect(n1.position.y).toBe(160)
+    expect(n3.position.y).toBe(280)
+    expect(n2.position.y).toBe(400)
+    expect(n4.position.y).toBe(520)
+  })
+})
+
+describe('normalizeGroupSpacing', () => {
+  it('collapses gap after an entity is removed from the middle', () => {
+    // Simulate state after n2 was removed from [n1, n2, n3] — gap at y=280
+    const graph = makeGraph({
+      nodes: [
+        { id: 'n1', kind: 'action', position: { x: 120, y: 160 } },
+        { id: 'n3', kind: 'action', position: { x: 120, y: 400 } }
+      ],
+      groups: [
+        {
+          id: 'g1',
+          kind: 'group',
+          position: { x: 100, y: 100 },
+          size: { w: 400, h: 600 },
+          containedIds: ['n1', 'n3']
+        }
+      ]
+    })
+
+    const result = normalizeGroupSpacing(graph, 'g1')
+    const n1 = result.nodes.find(n => n.id === 'n1')!
+    const n3 = result.nodes.find(n => n.id === 'n3')!
+
+    // n1 stays at 160, n3 should move up to 160+100+20=280
+    expect(n1.position.y).toBe(160)
+    expect(n3.position.y).toBe(280)
+  })
+
+  it('collapses gap after the first entity is removed', () => {
+    // Simulate state after n1 was removed from [n1, n2, n3] — gap at top
+    const graph = makeGraph({
+      nodes: [
+        { id: 'n2', kind: 'action', position: { x: 120, y: 280 } },
+        { id: 'n3', kind: 'action', position: { x: 120, y: 400 } }
+      ],
+      groups: [
+        {
+          id: 'g1',
+          kind: 'group',
+          position: { x: 100, y: 100 },
+          size: { w: 400, h: 600 },
+          containedIds: ['n2', 'n3']
+        }
+      ]
+    })
+
+    const result = normalizeGroupSpacing(graph, 'g1')
+    const n2 = result.nodes.find(n => n.id === 'n2')!
+    const n3 = result.nodes.find(n => n.id === 'n3')!
+
+    // n2 stays at 280 (first entity keeps its position), n3 moves to 280+100+20=400
+    expect(n2.position.y).toBe(280)
+    expect(n3.position.y).toBe(400)
+  })
+
+  it('collapses gap after the last entity is removed', () => {
+    // Simulate state after n3 was removed from [n1, n2, n3]
+    const graph = makeGraph({
+      nodes: [
+        { id: 'n1', kind: 'action', position: { x: 120, y: 160 } },
+        { id: 'n2', kind: 'action', position: { x: 120, y: 280 } }
+      ],
+      groups: [
+        {
+          id: 'g1',
+          kind: 'group',
+          position: { x: 100, y: 100 },
+          size: { w: 400, h: 600 },
+          containedIds: ['n1', 'n2']
+        }
+      ]
+    })
+
+    const result = normalizeGroupSpacing(graph, 'g1')
+    const n1 = result.nodes.find(n => n.id === 'n1')!
+    const n2 = result.nodes.find(n => n.id === 'n2')!
+
+    // Already evenly spaced, nothing should change
+    expect(n1.position.y).toBe(160)
+    expect(n2.position.y).toBe(280)
+  })
+
+  it('normalizes uneven spacing between multiple entities', () => {
+    const graph = makeGraph({
+      nodes: [
+        { id: 'n1', kind: 'action', position: { x: 120, y: 160 } },
+        { id: 'n2', kind: 'action', position: { x: 120, y: 400 } },
+        { id: 'n3', kind: 'action', position: { x: 120, y: 700 } }
+      ],
+      groups: [
+        {
+          id: 'g1',
+          kind: 'group',
+          position: { x: 100, y: 100 },
+          size: { w: 400, h: 800 },
+          containedIds: ['n1', 'n2', 'n3']
+        }
+      ]
+    })
+
+    const result = normalizeGroupSpacing(graph, 'g1')
+    const n1 = result.nodes.find(n => n.id === 'n1')!
+    const n2 = result.nodes.find(n => n.id === 'n2')!
+    const n3 = result.nodes.find(n => n.id === 'n3')!
+
+    // n1 stays at 160, n2=160+100+20=280, n3=280+100+20=400
+    expect(n1.position.y).toBe(160)
+    expect(n2.position.y).toBe(280)
+    expect(n3.position.y).toBe(400)
+  })
+
+  it('returns graph unchanged for empty group', () => {
+    const graph = makeGraph({
+      groups: [
+        {
+          id: 'g1',
+          kind: 'group',
+          position: { x: 100, y: 100 },
+          size: { w: 400, h: 140 },
+          containedIds: []
+        }
+      ]
+    })
+
+    const result = normalizeGroupSpacing(graph, 'g1')
+    expect(result).toBe(graph)
+  })
+
+  it('returns graph unchanged for nonexistent group', () => {
+    const graph = makeGraph({})
+    const result = normalizeGroupSpacing(graph, 'nonexistent')
+    expect(result).toBe(graph)
+  })
+
+  it('respects custom entitySpacing parameter', () => {
+    const graph = makeGraph({
+      nodes: [
+        { id: 'n1', kind: 'action', position: { x: 120, y: 160 } },
+        { id: 'n2', kind: 'action', position: { x: 120, y: 500 } }
+      ],
+      groups: [
+        {
+          id: 'g1',
+          kind: 'group',
+          position: { x: 100, y: 100 },
+          size: { w: 400, h: 600 },
+          containedIds: ['n1', 'n2']
+        }
+      ]
+    })
+
+    const result = normalizeGroupSpacing(graph, 'g1', 40)
+    const n1 = result.nodes.find(n => n.id === 'n1')!
+    const n2 = result.nodes.find(n => n.id === 'n2')!
+
+    // n1 stays at 160, n2=160+100+40=300
+    expect(n1.position.y).toBe(160)
+    expect(n2.position.y).toBe(300)
+  })
+})
+
+describe('normalizeAllGroupsEntitySpacing', () => {
+  it('applies spacing to all groups', () => {
+    const graph = makeGraph({
+      nodes: [
+        { id: 'n1', kind: 'action', position: { x: 120, y: 160 } },
+        { id: 'n2', kind: 'action', position: { x: 120, y: 400 } }
+      ],
+      groups: [
+        {
+          id: 'g1',
+          kind: 'group',
+          position: { x: 100, y: 100 },
+          size: { w: 400, h: 600 },
+          containedIds: ['n1', 'n2']
+        }
+      ]
+    })
+
+    const result = normalizeAllGroupsEntitySpacing(graph, 30, 20)
+    const n2 = result.nodes.find(n => n.id === 'n2')!
+    expect(n2.position.y).toBe(290)
+  })
+
+  it('returns the same reference when there are no groups', () => {
+    const graph = makeGraph({
+      nodes: [{ id: 'n1', kind: 'action', position: { x: 0, y: 0 } }]
+    })
+    expect(normalizeAllGroupsEntitySpacing(graph)).toBe(graph)
+  })
+})
+
+describe('wireEntityIntoChain', () => {
+  it('wires an entity between two neighbors by replacing the old edge', () => {
+    const graph = makeGraph({
+      nodes: [
+        { id: 'n1', kind: 'action', position: { x: 120, y: 160 } },
+        { id: 'n2', kind: 'action', position: { x: 120, y: 280 } },
+        { id: 'nNew', kind: 'action', position: { x: 120, y: 220 } }
+      ],
+      edges: [{ id: 'e1', from: { entityId: 'n1' }, to: { entityId: 'n2' } }],
+      groups: [
+        {
+          id: 'g1',
+          kind: 'group',
+          position: { x: 100, y: 100 },
+          size: { w: 400, h: 600 },
+          containedIds: ['n1', 'nNew', 'n2']
+        }
+      ]
+    })
+
+    const result = wireEntityIntoChain(graph, 'nNew', 'g1', 'n1')
+
+    // Old edge n1->n2 should be removed
+    const oldEdge = result.edges.find(e => e.from.entityId === 'n1' && e.to.entityId === 'n2')
+    expect(oldEdge).toBeUndefined()
+
+    // New edge n1->nNew should exist
+    const newEdge1 = result.edges.find(e => e.from.entityId === 'n1' && e.to.entityId === 'nNew')
+    expect(newEdge1).toBeDefined()
+
+    // New edge nNew->n2 should exist
+    const newEdge2 = result.edges.find(e => e.from.entityId === 'nNew' && e.to.entityId === 'n2')
+    expect(newEdge2).toBeDefined()
+  })
+
+  it('wires correctly when inserted at the beginning (no prev)', () => {
+    const graph = makeGraph({
+      nodes: [
+        { id: 'n1', kind: 'action', position: { x: 120, y: 160 } },
+        { id: 'nNew', kind: 'action', position: { x: 120, y: 120 } }
+      ],
+      edges: [],
+      groups: [
+        {
+          id: 'g1',
+          kind: 'group',
+          position: { x: 100, y: 100 },
+          size: { w: 400, h: 600 },
+          containedIds: ['nNew', 'n1']
+        }
+      ]
+    })
+
+    const result = wireEntityIntoChain(graph, 'nNew', 'g1', null)
+
+    // Edge nNew->n1 should exist
+    const edge = result.edges.find(e => e.from.entityId === 'nNew' && e.to.entityId === 'n1')
+    expect(edge).toBeDefined()
+  })
+
+  it('wires correctly when inserted at the end (no next)', () => {
+    const graph = makeGraph({
+      nodes: [
+        { id: 'n1', kind: 'action', position: { x: 120, y: 160 } },
+        { id: 'nNew', kind: 'action', position: { x: 120, y: 280 } }
+      ],
+      edges: [],
+      groups: [
+        {
+          id: 'g1',
+          kind: 'group',
+          position: { x: 100, y: 100 },
+          size: { w: 400, h: 600 },
+          containedIds: ['n1', 'nNew']
+        }
+      ]
+    })
+
+    const result = wireEntityIntoChain(graph, 'nNew', 'g1', 'n1')
+
+    // Edge n1->nNew should exist
+    const edge = result.edges.find(e => e.from.entityId === 'n1' && e.to.entityId === 'nNew')
+    expect(edge).toBeDefined()
+  })
+
+  it('returns graph unchanged when entity is not in group', () => {
+    const graph = makeGraph({
+      nodes: [{ id: 'n1', kind: 'action', position: { x: 120, y: 160 } }],
+      groups: [
+        {
+          id: 'g1',
+          kind: 'group',
+          position: { x: 100, y: 100 },
+          size: { w: 400, h: 600 },
+          containedIds: ['n1']
+        }
+      ]
+    })
+
+    const result = wireEntityIntoChain(graph, 'nonexistent', 'g1', null)
+    expect(result).toBe(graph)
+  })
+
+  it('returns graph unchanged when group does not exist', () => {
+    const graph = makeGraph({
+      nodes: [{ id: 'n1', kind: 'action', position: { x: 120, y: 160 } }]
+    })
+
+    const result = wireEntityIntoChain(graph, 'n1', 'nonexistent', null)
+    expect(result).toBe(graph)
   })
 })

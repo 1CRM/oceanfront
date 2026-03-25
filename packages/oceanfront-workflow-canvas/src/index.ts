@@ -66,7 +66,11 @@ export {
   swapNodes,
   connectNodeToLastInGroup,
   removeEntityEdgesAndBridge,
-  alignNodeInGroup
+  alignNodeInGroup,
+  insertEntityInGroup,
+  normalizeGroupSpacing,
+  normalizeAllGroupsEntitySpacing,
+  wireEntityIntoChain
 } from './utils/graph-helpers'
 
 export {

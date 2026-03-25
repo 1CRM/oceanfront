@@ -21,6 +21,8 @@
   --wf-shadow-selected: 0 4px 12px rgba(0, 0, 0, 0.3);
   --wf-shadow-dragging: 0 8px 16px rgba(0, 0, 0, 0.2);
   --wf-sidebar-width: 400px;
+  --wf-entity-spacing: 20px;
+  --wf-group-padding: 20px;
 }
 
 .-of-theme-dark {
@@ -1077,6 +1079,51 @@
       color: var(--wf-primary);
       border-color: var(--wf-primary);
     }
+  }
+}
+
+// Drop indicator for drag-to-reorder
+.workflow-canvas-drop-indicator {
+  position: absolute;
+  height: 2px;
+  background: var(--wf-primary);
+  opacity: 0.5;
+  border-radius: 1px;
+  z-index: 25;
+  pointer-events: none;
+  transform: translateY(-1px);
+  animation: wf-drop-indicator-fade-in 0.15s ease-out forwards;
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 6px;
+    height: 6px;
+    background: var(--wf-primary);
+    opacity: 0.6;
+    border-radius: 50%;
+    transform: translateY(-50%);
+  }
+
+  &::before {
+    left: -3px;
+  }
+
+  &::after {
+    right: -3px;
+  }
+}
+
+@keyframes wf-drop-indicator-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-1px) scaleX(0.85);
+  }
+  to {
+    opacity: 0.5;
+    transform: translateY(-1px) scaleX(1);
   }
 }
 

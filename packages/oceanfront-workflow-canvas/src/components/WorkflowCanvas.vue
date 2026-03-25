@@ -361,6 +361,17 @@
               @add-step="handleAddStep"
             />
           </template>
+
+          <!-- Drop indicator line for drag-to-reorder -->
+          <div
+            v-if="dragging.insertIndicator.value"
+            class="workflow-canvas-drop-indicator"
+            :style="{
+              left: dragging.insertIndicator.value.x + 'px',
+              top: dragging.insertIndicator.value.y + 'px',
+              width: dragging.insertIndicator.value.width + 'px'
+            }"
+          />
         </div>
       </div>
 
@@ -410,7 +421,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted, onUnmounted, toRef } from 'vue'
+import { defineComponent, ref, computed, onMounted, onUnmounted, toRef, nextTick } from 'vue'
 import type {
   WorkflowGraph,
   WorkflowNode,
@@ -442,7 +453,8 @@ import {
   handleConnectNodes,
   getConnectedEntities,
   connectNodeToLastInGroup,
-  removeEntityEdgesAndBridge
+  removeEntityEdgesAndBridge,
+  normalizeAllGroupsEntitySpacing
 } from '../utils/graph-helpers'
 import { DEFAULT_LABELS } from '../constants/labels'
 import {
@@ -531,6 +543,8 @@ import { useCanvas } from '../composables/useCanvas'
  *
  * @prop {boolean} hideEmptyHandles - If true, hides input/output handles when they have no connections (default: false)
  *
+ * @prop {boolean} hidePathAdd - If true, hides the "+" placeholders shown on edges between nodes (default: false)
+ *
  * @prop {WorkflowCanvasMode} mode - Canvas mode: 'view' for read-only display or 'edit' for full interactivity (default: 'view')
  *
  * @prop {boolean} edgesLocked - If true, all edges are locked and cannot be disconnected or deleted.
@@ -608,6 +622,10 @@ export default defineComponent({
       type: Boolean,
       default: false
     },
+    hidePathAdd: {
+      type: Boolean,
+      default: false
+    },
     mode: {
       type: String as () => WorkflowCanvasMode,
       default: 'view'
@@ -644,11 +662,12 @@ export default defineComponent({
     'canvas-click',
     'entity-moved-to-group',
     'fullscreen-toggle',
-    'node-swap'
+    'node-swap',
+    'entity-reorder'
   ],
   setup(props, { emit, expose }) {
-    // Spacing between nodes/groups when adding new entities
-    const ENTITY_SPACING = 50
+    const DEFAULT_ENTITY_SPACING = 20
+    const DEFAULT_GROUP_PADDING = 20
 
     const isViewMode = computed(() => props.mode === 'view')
 
@@ -668,6 +687,19 @@ export default defineComponent({
     const canvasRef = ref<HTMLElement>()
     const nodeElements = ref<Map<string, HTMLElement>>(new Map())
     const isFullWidth = ref(false)
+
+    function readCssPx(el: HTMLElement | undefined, name: string, fallback: number): number {
+      if (!el) return fallback
+      const raw = getComputedStyle(el).getPropertyValue(name).trim()
+      if (!raw) return fallback
+      const n = parseFloat(raw)
+      return Number.isFinite(n) ? n : fallback
+    }
+
+    const getEntitySpacing = () =>
+      readCssPx(canvasRef.value, '--wf-entity-spacing', DEFAULT_ENTITY_SPACING)
+    const getGroupPadding = () =>
+      readCssPx(canvasRef.value, '--wf-group-padding', DEFAULT_GROUP_PADDING)
 
     // Helper functions for composables
     const findEntity = (entityId: string): WorkflowNode | WorkflowGroup | undefined => {
@@ -773,7 +805,7 @@ export default defineComponent({
         maxY = Math.max(maxY, entityY + entityH)
       })
 
-      const padding = 20
+      const padding = getGroupPadding()
       return {
         w: Math.max(100, maxX - group.position.x + padding),
         h: Math.max(100, maxY - group.position.y + padding)
@@ -804,7 +836,7 @@ export default defineComponent({
       const group = findGroup(graph, groupId)
       if (!group) return graph
 
-      const padding = 20
+      const padding = getGroupPadding()
       const requiredBottom = newItemPosition.y + newItemSize.h + padding
       const currentBottom = group.position.y + group.size.h
 
@@ -865,7 +897,11 @@ export default defineComponent({
       onEdgeAdd: (graph, edge) => {
         const payload = createEdgeAddPayload(graph, edge)
         emit('edge-add', payload)
-      }
+      },
+      onEntityReorder: (entityId, groupId, afterEntityId) =>
+        emit('entity-reorder', entityId, groupId, afterEntityId),
+      getEntitySpacing,
+      getGroupPadding
     })
 
     const connections = useConnections({
@@ -893,7 +929,8 @@ export default defineComponent({
       onGraphUpdate: graph => emit('update:modelValue', graph),
       onGroupResizeStart: groupId => emit('group-resize-start', groupId),
       onGroupResizeEnd: (groupId, size) => emit('group-resize-end', groupId, size),
-      onUpdateSelectedId: id => emit('update:selectedId', id)
+      onUpdateSelectedId: id => emit('update:selectedId', id),
+      getGroupPadding
     })
 
     // Calculate plus placeholder positions on edges
@@ -905,7 +942,7 @@ export default defineComponent({
         inGroupId?: string
       }> = []
 
-      if (props.readonly) return result
+      if (props.readonly || props.hidePathAdd) return result
 
       props.modelValue.edges.forEach(edge => {
         const fromNode = findNode(props.modelValue, edge.from.entityId)
@@ -1060,7 +1097,7 @@ export default defineComponent({
       const sourceHeight = canvas.getEntityDimensions(sourceNode).height
       const nodeHeight = sourceNode.size?.h || 100
       const newX = sourceNode.position.x
-      const newY = sourceNode.position.y + sourceHeight + ENTITY_SPACING
+      const newY = sourceNode.position.y + sourceHeight + getEntitySpacing()
 
       // Expand parent group if needed
       let graphWithExpandedGroup = props.modelValue
@@ -1138,7 +1175,7 @@ export default defineComponent({
       const sourceHeight = canvas.getEntityDimensions(sourceNode).height
       const defaultGroupSize = { w: 290, h: 140 }
       const newX = sourceNode.position.x
-      const newY = sourceNode.position.y + sourceHeight + ENTITY_SPACING
+      const newY = sourceNode.position.y + sourceHeight + getEntitySpacing()
 
       // Expand parent group if needed
       let graphWithExpandedGroup = props.modelValue
@@ -1241,7 +1278,8 @@ export default defineComponent({
 
       // Also handle it internally by default
       const result = handleAddStepToGraph(props.modelValue, event, {
-        defaultKind
+        defaultKind,
+        entitySpacing: getEntitySpacing()
       })
 
       // Apply lockParent/requireGroup defaults from node type definition if available
@@ -1334,7 +1372,7 @@ export default defineComponent({
         // Position below the bottommost node
         const bottomNodeHeight = canvas.getEntityDimensions(bottomNode).height
         newX = bottomNode.position.x
-        newY = bottomNode.position.y + bottomNodeHeight + ENTITY_SPACING
+        newY = bottomNode.position.y + bottomNodeHeight + getEntitySpacing()
       }
 
       // Expand group if needed to accommodate new node
@@ -1447,7 +1485,7 @@ export default defineComponent({
 
         position = {
           x: bottomEntity.position.x,
-          y: bottomEntity.position.y + bottomEntityHeight + ENTITY_SPACING
+          y: bottomEntity.position.y + bottomEntityHeight + getEntitySpacing()
         }
       }
 
@@ -1530,7 +1568,7 @@ export default defineComponent({
       const nodeHeight = 100
       const sourceHeight = canvas.getEntityDimensions(sourceGroup).height
       const newX = sourceGroup.position.x
-      const newY = sourceGroup.position.y + sourceHeight + ENTITY_SPACING
+      const newY = sourceGroup.position.y + sourceHeight + getEntitySpacing()
 
       // Expand parent group if needed
       let graphWithExpandedGroup = props.modelValue
@@ -1608,7 +1646,7 @@ export default defineComponent({
       const sourceHeight = canvas.getEntityDimensions(sourceGroup).height
       const defaultGroupSize = { w: 290, h: 140 }
       const newX = sourceGroup.position.x
-      const newY = sourceGroup.position.y + sourceHeight + ENTITY_SPACING
+      const newY = sourceGroup.position.y + sourceHeight + getEntitySpacing()
 
       // Expand parent group if needed
       let graphWithExpandedGroup = props.modelValue
@@ -1700,7 +1738,7 @@ export default defineComponent({
       updatedGraph = removeEntityFromAllGroups(updatedGraph, nodeId)
 
       if (parentGroup) {
-        updatedGraph = updateGroupBounds(updatedGraph, parentGroup.id)
+        updatedGraph = updateGroupBounds(updatedGraph, parentGroup.id, getGroupPadding())
       }
 
       emit('update:selectedId', null)
@@ -1749,7 +1787,7 @@ export default defineComponent({
       updatedGraph = removeEntityFromAllGroups(updatedGraph, groupId)
 
       if (parentGroup) {
-        updatedGraph = updateGroupBounds(updatedGraph, parentGroup.id)
+        updatedGraph = updateGroupBounds(updatedGraph, parentGroup.id, getGroupPadding())
       }
 
       emit('update:selectedId', null)
@@ -1862,6 +1900,18 @@ export default defineComponent({
       document.addEventListener('mousemove', handleMouseMove)
       document.addEventListener('mouseup', handleMouseUp)
       document.addEventListener('keydown', handleKeyDown)
+
+      // Apply --wf-entity-spacing / --wf-group-padding to v-model graph (static
+      // initial data does not read CSS until the canvas element exists).
+      nextTick(() => {
+        if (!canvasRef.value) return
+        const synced = normalizeAllGroupsEntitySpacing(
+          props.modelValue,
+          getEntitySpacing(),
+          getGroupPadding()
+        )
+        emit('update:modelValue', synced)
+      })
     })
 
     onUnmounted(() => {
