@@ -62,7 +62,15 @@ export {
   isEntityTypeCompatibleWithGroup,
   isGroupDescendantOf,
   moveNodesBelow,
-  getConnectedEntities
+  getConnectedEntities,
+  swapNodes,
+  connectNodeToLastInGroup,
+  removeEntityEdgesAndBridge,
+  alignNodeInGroup,
+  insertEntityInGroup,
+  normalizeGroupSpacing,
+  normalizeAllGroupsEntitySpacing,
+  wireEntityIntoChain
 } from './utils/graph-helpers'
 
 export {

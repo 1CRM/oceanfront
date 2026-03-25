@@ -237,6 +237,9 @@
             :class="{
               'workflow-canvas-node--selected': props.selectedId === node.id,
               'workflow-canvas-node--dragging': dragging.draggingNodeId.value === node.id,
+              'workflow-canvas-node--swap-target': dragging.swapTargetNodeId.value === node.id,
+              'workflow-canvas-node--invalid-swap-target':
+                dragging.invalidSwapTargetNodeId.value === node.id,
               [getNodeCssClass(node)]: true
             }"
             :style="canvas.getNodeStyle(node)"
@@ -358,6 +361,17 @@
               @add-step="handleAddStep"
             />
           </template>
+
+          <!-- Drop indicator line for drag-to-reorder -->
+          <div
+            v-if="dragging.insertIndicator.value"
+            class="workflow-canvas-drop-indicator"
+            :style="{
+              left: dragging.insertIndicator.value.x + 'px',
+              top: dragging.insertIndicator.value.y + 'px',
+              width: dragging.insertIndicator.value.width + 'px'
+            }"
+          />
         </div>
       </div>
 
@@ -407,7 +421,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted, onUnmounted, toRef } from 'vue'
+import { defineComponent, ref, computed, onMounted, onUnmounted, toRef, nextTick } from 'vue'
 import type {
   WorkflowGraph,
   WorkflowNode,
@@ -437,7 +451,10 @@ import {
   addGroup,
   addEntityToGroup,
   handleConnectNodes,
-  getConnectedEntities
+  getConnectedEntities,
+  connectNodeToLastInGroup,
+  removeEntityEdgesAndBridge,
+  normalizeAllGroupsEntitySpacing
 } from '../utils/graph-helpers'
 import { DEFAULT_LABELS } from '../constants/labels'
 import {
@@ -526,6 +543,8 @@ import { useCanvas } from '../composables/useCanvas'
  *
  * @prop {boolean} hideEmptyHandles - If true, hides input/output handles when they have no connections (default: false)
  *
+ * @prop {boolean} hidePathAdd - If true, hides the "+" placeholders shown on edges between nodes (default: false)
+ *
  * @prop {WorkflowCanvasMode} mode - Canvas mode: 'view' for read-only display or 'edit' for full interactivity (default: 'view')
  *
  * @prop {boolean} edgesLocked - If true, all edges are locked and cannot be disconnected or deleted.
@@ -603,6 +622,10 @@ export default defineComponent({
       type: Boolean,
       default: false
     },
+    hidePathAdd: {
+      type: Boolean,
+      default: false
+    },
     mode: {
       type: String as () => WorkflowCanvasMode,
       default: 'view'
@@ -638,11 +661,13 @@ export default defineComponent({
     'edge-delete',
     'canvas-click',
     'entity-moved-to-group',
-    'fullscreen-toggle'
+    'fullscreen-toggle',
+    'node-swap',
+    'entity-reorder'
   ],
   setup(props, { emit, expose }) {
-    // Spacing between nodes/groups when adding new entities
-    const ENTITY_SPACING = 50
+    const DEFAULT_ENTITY_SPACING = 20
+    const DEFAULT_GROUP_PADDING = 20
 
     const isViewMode = computed(() => props.mode === 'view')
 
@@ -662,6 +687,19 @@ export default defineComponent({
     const canvasRef = ref<HTMLElement>()
     const nodeElements = ref<Map<string, HTMLElement>>(new Map())
     const isFullWidth = ref(false)
+
+    function readCssPx(el: HTMLElement | undefined, name: string, fallback: number): number {
+      if (!el) return fallback
+      const raw = getComputedStyle(el).getPropertyValue(name).trim()
+      if (!raw) return fallback
+      const n = parseFloat(raw)
+      return Number.isFinite(n) ? n : fallback
+    }
+
+    const getEntitySpacing = () =>
+      readCssPx(canvasRef.value, '--wf-entity-spacing', DEFAULT_ENTITY_SPACING)
+    const getGroupPadding = () =>
+      readCssPx(canvasRef.value, '--wf-group-padding', DEFAULT_GROUP_PADDING)
 
     // Helper functions for composables
     const findEntity = (entityId: string): WorkflowNode | WorkflowGroup | undefined => {
@@ -767,7 +805,7 @@ export default defineComponent({
         maxY = Math.max(maxY, entityY + entityH)
       })
 
-      const padding = 20
+      const padding = getGroupPadding()
       return {
         w: Math.max(100, maxX - group.position.x + padding),
         h: Math.max(100, maxY - group.position.y + padding)
@@ -798,7 +836,7 @@ export default defineComponent({
       const group = findGroup(graph, groupId)
       if (!group) return graph
 
-      const padding = 20
+      const padding = getGroupPadding()
       const requiredBottom = newItemPosition.y + newItemSize.h + padding
       const currentBottom = group.position.y + group.size.h
 
@@ -840,6 +878,7 @@ export default defineComponent({
       graph: toRef(props, 'modelValue'),
       maxGroupDepth: toRef(props, 'maxGroupDepth'),
       readonly: toRef(props, 'readonly'),
+      edgesLocked: toRef(props, 'edgesLocked'),
       canvasRef,
       nodeTypes: toRef(props, 'nodeTypes'),
       findDropTargetGroup,
@@ -851,7 +890,18 @@ export default defineComponent({
       onGroupDragStart: groupId => emit('group-drag-start', groupId),
       onGroupDragEnd: (groupId, position, parentGroup, connected) =>
         emit('group-drag-end', groupId, position, parentGroup, connected),
-      onEntityMovedToGroup: (entityId, groupId) => emit('entity-moved-to-group', entityId, groupId)
+      onEntityMovedToGroup: (entityId, groupId) => emit('entity-moved-to-group', entityId, groupId),
+      onNodeParentGroupChange: (node, parentGroup, connected) =>
+        emit('node-update', node, parentGroup, connected),
+      onNodeSwap: (nodeIdA, nodeIdB) => emit('node-swap', nodeIdA, nodeIdB),
+      onEdgeAdd: (graph, edge) => {
+        const payload = createEdgeAddPayload(graph, edge)
+        emit('edge-add', payload)
+      },
+      onEntityReorder: (entityId, groupId, afterEntityId) =>
+        emit('entity-reorder', entityId, groupId, afterEntityId),
+      getEntitySpacing,
+      getGroupPadding
     })
 
     const connections = useConnections({
@@ -863,8 +913,8 @@ export default defineComponent({
       getEntityDimensions: canvas.getEntityDimensions,
       getEntityConnectionPoint: canvas.getEntityConnectionPoint,
       onGraphUpdate: graph => emit('update:modelValue', graph),
-      onEdgeAdd: edge => {
-        const payload = createEdgeAddPayload(props.modelValue, edge)
+      onEdgeAdd: (graph, edge) => {
+        const payload = createEdgeAddPayload(graph, edge)
         emit('edge-add', payload)
       },
       onEdgeDelete: edgeId => emit('edge-delete', edgeId),
@@ -879,7 +929,8 @@ export default defineComponent({
       onGraphUpdate: graph => emit('update:modelValue', graph),
       onGroupResizeStart: groupId => emit('group-resize-start', groupId),
       onGroupResizeEnd: (groupId, size) => emit('group-resize-end', groupId, size),
-      onUpdateSelectedId: id => emit('update:selectedId', id)
+      onUpdateSelectedId: id => emit('update:selectedId', id),
+      getGroupPadding
     })
 
     // Calculate plus placeholder positions on edges
@@ -891,7 +942,7 @@ export default defineComponent({
         inGroupId?: string
       }> = []
 
-      if (props.readonly) return result
+      if (props.readonly || props.hidePathAdd) return result
 
       props.modelValue.edges.forEach(edge => {
         const fromNode = findNode(props.modelValue, edge.from.entityId)
@@ -1046,7 +1097,7 @@ export default defineComponent({
       const sourceHeight = canvas.getEntityDimensions(sourceNode).height
       const nodeHeight = sourceNode.size?.h || 100
       const newX = sourceNode.position.x
-      const newY = sourceNode.position.y + sourceHeight + ENTITY_SPACING
+      const newY = sourceNode.position.y + sourceHeight + getEntitySpacing()
 
       // Expand parent group if needed
       let graphWithExpandedGroup = props.modelValue
@@ -1071,13 +1122,23 @@ export default defineComponent({
         updatedGraph = addEntityToGroup(updatedGraph, result.newNodeId, parentGroup.id)
       }
 
-      // Apply lockParent default from node type definition
+      // Apply lockParent/requireGroup defaults from node type definition
       const nodeTypeDef = nodeKind ? props.nodeTypes?.[nodeKind] : undefined
-      if (nodeTypeDef?.lockParent !== undefined) {
+      if (nodeTypeDef?.lockParent !== undefined || nodeTypeDef?.requireGroup !== undefined) {
         updatedGraph = {
           ...updatedGraph,
           nodes: updatedGraph.nodes.map(n =>
-            n.id === result.newNodeId ? { ...n, lockParent: nodeTypeDef.lockParent } : n
+            n.id === result.newNodeId
+              ? {
+                  ...n,
+                  ...(nodeTypeDef.lockParent !== undefined && {
+                    lockParent: nodeTypeDef.lockParent
+                  }),
+                  ...(nodeTypeDef.requireGroup !== undefined && {
+                    requireGroup: nodeTypeDef.requireGroup
+                  })
+                }
+              : n
           )
         }
       }
@@ -1114,7 +1175,7 @@ export default defineComponent({
       const sourceHeight = canvas.getEntityDimensions(sourceNode).height
       const defaultGroupSize = { w: 290, h: 140 }
       const newX = sourceNode.position.x
-      const newY = sourceNode.position.y + sourceHeight + ENTITY_SPACING
+      const newY = sourceNode.position.y + sourceHeight + getEntitySpacing()
 
       // Expand parent group if needed
       let graphWithExpandedGroup = props.modelValue
@@ -1140,13 +1201,23 @@ export default defineComponent({
         updatedGraph = addEntityToGroup(updatedGraph, result.newGroupId, parentGroup.id)
       }
 
-      // Apply lockParent default from group type definition if available
+      // Apply lockParent/requireGroup defaults from group type definition if available
       const groupTypeDef = props.groupTypes?.[groupKind]
-      if (groupTypeDef?.lockParent !== undefined) {
+      if (groupTypeDef?.lockParent !== undefined || groupTypeDef?.requireGroup !== undefined) {
         updatedGraph = {
           ...updatedGraph,
           groups: updatedGraph.groups.map(g =>
-            g.id === result.newGroupId ? { ...g, lockParent: groupTypeDef.lockParent } : g
+            g.id === result.newGroupId
+              ? {
+                  ...g,
+                  ...(groupTypeDef.lockParent !== undefined && {
+                    lockParent: groupTypeDef.lockParent
+                  }),
+                  ...(groupTypeDef.requireGroup !== undefined && {
+                    requireGroup: groupTypeDef.requireGroup
+                  })
+                }
+              : g
           )
         }
       }
@@ -1207,18 +1278,29 @@ export default defineComponent({
 
       // Also handle it internally by default
       const result = handleAddStepToGraph(props.modelValue, event, {
-        defaultKind
+        defaultKind,
+        entitySpacing: getEntitySpacing()
       })
 
-      // Apply lockParent default from node type definition if available
+      // Apply lockParent/requireGroup defaults from node type definition if available
       let updatedGraph = result.graph
       const nodeKind = result.graph.nodes.find(n => n.id === result.newNodeId)?.kind
       const nodeTypeDef = nodeKind ? props.nodeTypes?.[nodeKind] : undefined
-      if (nodeTypeDef?.lockParent !== undefined) {
+      if (nodeTypeDef?.lockParent !== undefined || nodeTypeDef?.requireGroup !== undefined) {
         updatedGraph = {
           ...updatedGraph,
           nodes: updatedGraph.nodes.map(n =>
-            n.id === result.newNodeId ? { ...n, lockParent: nodeTypeDef.lockParent } : n
+            n.id === result.newNodeId
+              ? {
+                  ...n,
+                  ...(nodeTypeDef.lockParent !== undefined && {
+                    lockParent: nodeTypeDef.lockParent
+                  }),
+                  ...(nodeTypeDef.requireGroup !== undefined && {
+                    requireGroup: nodeTypeDef.requireGroup
+                  })
+                }
+              : n
           )
         }
       }
@@ -1290,7 +1372,7 @@ export default defineComponent({
         // Position below the bottommost node
         const bottomNodeHeight = canvas.getEntityDimensions(bottomNode).height
         newX = bottomNode.position.x
-        newY = bottomNode.position.y + bottomNodeHeight + ENTITY_SPACING
+        newY = bottomNode.position.y + bottomNodeHeight + getEntitySpacing()
       }
 
       // Expand group if needed to accommodate new node
@@ -1310,16 +1392,31 @@ export default defineComponent({
       // Add node to group
       let updatedGraph = addEntityToGroup(result.graph, result.newNodeId, groupId)
 
-      // Apply lockParent default from node type definition
+      // Apply lockParent/requireGroup defaults from node type definition
       const nodeTypeDef = nodeKind ? props.nodeTypes?.[nodeKind] : undefined
-      if (nodeTypeDef?.lockParent !== undefined) {
+      if (nodeTypeDef?.lockParent !== undefined || nodeTypeDef?.requireGroup !== undefined) {
         updatedGraph = {
           ...updatedGraph,
           nodes: updatedGraph.nodes.map(n =>
-            n.id === result.newNodeId ? { ...n, lockParent: nodeTypeDef.lockParent } : n
+            n.id === result.newNodeId
+              ? {
+                  ...n,
+                  ...(nodeTypeDef.lockParent !== undefined && {
+                    lockParent: nodeTypeDef.lockParent
+                  }),
+                  ...(nodeTypeDef.requireGroup !== undefined && {
+                    requireGroup: nodeTypeDef.requireGroup
+                  })
+                }
+              : n
           )
         }
       }
+
+      const edgeCountBeforeAutoConnect = updatedGraph.edges.length
+      updatedGraph = connectNodeToLastInGroup(updatedGraph, result.newNodeId, groupId, {
+        edgeLocked: props.edgesLocked
+      })
 
       emit('update:modelValue', updatedGraph)
       emit('update:selectedId', result.newNodeId)
@@ -1327,6 +1424,11 @@ export default defineComponent({
       const parentGroup = findGroup(updatedGraph, groupId)
       const connectedEntities = getConnectedEntities(updatedGraph, result.newNodeId)
       emit('node-add', newNode, parentGroup || null, connectedEntities)
+      if (updatedGraph.edges.length > edgeCountBeforeAutoConnect) {
+        const newEdge = updatedGraph.edges[updatedGraph.edges.length - 1]
+        const payload = createEdgeAddPayload(updatedGraph, newEdge)
+        emit('edge-add', payload)
+      }
     }
 
     function handleAddNestedGroup(parentGroupId: string) {
@@ -1383,7 +1485,7 @@ export default defineComponent({
 
         position = {
           x: bottomEntity.position.x,
-          y: bottomEntity.position.y + bottomEntityHeight + ENTITY_SPACING
+          y: bottomEntity.position.y + bottomEntityHeight + getEntitySpacing()
         }
       }
 
@@ -1402,10 +1504,11 @@ export default defineComponent({
         label
       })
 
-      // If placeholder, fields, or lockParent are configured, set them in the group
+      // If placeholder, fields, lockParent, or requireGroup are configured, set them in the group
       let updatedGraph = result.graph
       const shouldApplyLockParent = groupTypeDef?.lockParent !== undefined
-      if (placeholder || fields || shouldApplyLockParent) {
+      const shouldApplyRequireGroup = groupTypeDef?.requireGroup !== undefined
+      if (placeholder || fields || shouldApplyLockParent || shouldApplyRequireGroup) {
         updatedGraph = {
           ...updatedGraph,
           groups: updatedGraph.groups.map(g =>
@@ -1413,6 +1516,7 @@ export default defineComponent({
               ? {
                   ...g,
                   ...(shouldApplyLockParent && { lockParent: groupTypeDef.lockParent }),
+                  ...(shouldApplyRequireGroup && { requireGroup: groupTypeDef.requireGroup }),
                   definition: {
                     ...g.definition,
                     ...(placeholder && { placeholder }),
@@ -1464,7 +1568,7 @@ export default defineComponent({
       const nodeHeight = 100
       const sourceHeight = canvas.getEntityDimensions(sourceGroup).height
       const newX = sourceGroup.position.x
-      const newY = sourceGroup.position.y + sourceHeight + ENTITY_SPACING
+      const newY = sourceGroup.position.y + sourceHeight + getEntitySpacing()
 
       // Expand parent group if needed
       let graphWithExpandedGroup = props.modelValue
@@ -1489,13 +1593,23 @@ export default defineComponent({
         updatedGraph = addEntityToGroup(updatedGraph, result.newNodeId, parentGroup.id)
       }
 
-      // Apply lockParent default from node type definition
+      // Apply lockParent/requireGroup defaults from node type definition
       const nodeTypeDef = nodeKind ? props.nodeTypes?.[nodeKind] : undefined
-      if (nodeTypeDef?.lockParent !== undefined) {
+      if (nodeTypeDef?.lockParent !== undefined || nodeTypeDef?.requireGroup !== undefined) {
         updatedGraph = {
           ...updatedGraph,
           nodes: updatedGraph.nodes.map(n =>
-            n.id === result.newNodeId ? { ...n, lockParent: nodeTypeDef.lockParent } : n
+            n.id === result.newNodeId
+              ? {
+                  ...n,
+                  ...(nodeTypeDef.lockParent !== undefined && {
+                    lockParent: nodeTypeDef.lockParent
+                  }),
+                  ...(nodeTypeDef.requireGroup !== undefined && {
+                    requireGroup: nodeTypeDef.requireGroup
+                  })
+                }
+              : n
           )
         }
       }
@@ -1532,7 +1646,7 @@ export default defineComponent({
       const sourceHeight = canvas.getEntityDimensions(sourceGroup).height
       const defaultGroupSize = { w: 290, h: 140 }
       const newX = sourceGroup.position.x
-      const newY = sourceGroup.position.y + sourceHeight + ENTITY_SPACING
+      const newY = sourceGroup.position.y + sourceHeight + getEntitySpacing()
 
       // Expand parent group if needed
       let graphWithExpandedGroup = props.modelValue
@@ -1558,13 +1672,23 @@ export default defineComponent({
         updatedGraph = addEntityToGroup(updatedGraph, result.newGroupId, parentGroup.id)
       }
 
-      // Apply lockParent default from group type definition if available
+      // Apply lockParent/requireGroup defaults from group type definition if available
       const groupTypeDef = props.groupTypes?.[groupKind]
-      if (groupTypeDef?.lockParent !== undefined) {
+      if (groupTypeDef?.lockParent !== undefined || groupTypeDef?.requireGroup !== undefined) {
         updatedGraph = {
           ...updatedGraph,
           groups: updatedGraph.groups.map(g =>
-            g.id === result.newGroupId ? { ...g, lockParent: groupTypeDef.lockParent } : g
+            g.id === result.newGroupId
+              ? {
+                  ...g,
+                  ...(groupTypeDef.lockParent !== undefined && {
+                    lockParent: groupTypeDef.lockParent
+                  }),
+                  ...(groupTypeDef.requireGroup !== undefined && {
+                    requireGroup: groupTypeDef.requireGroup
+                  })
+                }
+              : g
           )
         }
       }
@@ -1600,23 +1724,33 @@ export default defineComponent({
       const parentGroup = getParentGroup(props.modelValue, nodeId)
       const connectedEntities = getConnectedEntities(props.modelValue, nodeId)
 
-      const updatedGraph = {
-        ...props.modelValue,
-        nodes: props.modelValue.nodes.filter(node => node.id !== nodeId),
-        edges: props.modelValue.edges.filter(
-          edge => edge.from.entityId !== nodeId && edge.to.entityId !== nodeId
-        )
+      const edgeIdsBefore = new Set(props.modelValue.edges.map(e => e.id))
+      let updatedGraph = removeEntityEdgesAndBridge(props.modelValue, nodeId, {
+        edgeLocked: props.edgesLocked
+      })
+
+      const bridgedGraph = updatedGraph
+      updatedGraph = {
+        ...updatedGraph,
+        nodes: updatedGraph.nodes.filter(node => node.id !== nodeId)
       }
 
-      let graphWithoutNode = removeEntityFromAllGroups(updatedGraph, nodeId)
+      updatedGraph = removeEntityFromAllGroups(updatedGraph, nodeId)
 
       if (parentGroup) {
-        graphWithoutNode = updateGroupBounds(graphWithoutNode, parentGroup.id)
+        updatedGraph = updateGroupBounds(updatedGraph, parentGroup.id, getGroupPadding())
       }
 
       emit('update:selectedId', null)
-      emit('update:modelValue', graphWithoutNode)
+      emit('update:modelValue', updatedGraph)
       emit('node-delete', nodeToDelete, parentGroup || null, connectedEntities)
+
+      for (const edge of bridgedGraph.edges) {
+        if (!edgeIdsBefore.has(edge.id)) {
+          const payload = createEdgeAddPayload(updatedGraph, edge)
+          emit('edge-add', payload)
+        }
+      }
     }
 
     function handleDeleteGroup() {
@@ -1628,30 +1762,44 @@ export default defineComponent({
       const parentGroup = getParentGroup(props.modelValue, groupId)
       const connectedEntities = getConnectedEntities(props.modelValue, groupId)
 
+      const edgeIdsBefore = new Set(props.modelValue.edges.map(e => e.id))
+
+      // Bridge the group's own incoming→outgoing before removing anything
+      let updatedGraph = removeEntityEdgesAndBridge(props.modelValue, groupId, {
+        edgeLocked: props.edgesLocked
+      })
+
+      const bridgedGraph = updatedGraph
+
       // Get all descendants (nodes and nested groups) recursively
-      const descendants = getGroupDescendants(props.modelValue, groupId)
+      const descendants = getGroupDescendants(updatedGraph, groupId)
       const allIdsToDelete = new Set([groupId, ...descendants])
 
-      let updatedGraph = {
-        ...props.modelValue,
-        nodes: props.modelValue.nodes.filter(node => !allIdsToDelete.has(node.id)),
-        groups: props.modelValue.groups.filter(group => !allIdsToDelete.has(group.id)),
-        edges: props.modelValue.edges.filter(
+      updatedGraph = {
+        ...updatedGraph,
+        nodes: updatedGraph.nodes.filter(node => !allIdsToDelete.has(node.id)),
+        groups: updatedGraph.groups.filter(group => !allIdsToDelete.has(group.id)),
+        edges: updatedGraph.edges.filter(
           edge => !allIdsToDelete.has(edge.from.entityId) && !allIdsToDelete.has(edge.to.entityId)
         )
       }
 
-      // Remove the group from any parent groups
       updatedGraph = removeEntityFromAllGroups(updatedGraph, groupId)
 
-      // Update parent group bounds if nested
       if (parentGroup) {
-        updatedGraph = updateGroupBounds(updatedGraph, parentGroup.id)
+        updatedGraph = updateGroupBounds(updatedGraph, parentGroup.id, getGroupPadding())
       }
 
       emit('update:selectedId', null)
       emit('update:modelValue', updatedGraph)
       emit('group-delete', groupToDelete, parentGroup || null, connectedEntities)
+
+      for (const edge of bridgedGraph.edges) {
+        if (!edgeIdsBefore.has(edge.id)) {
+          const payload = createEdgeAddPayload(updatedGraph, edge)
+          emit('edge-add', payload)
+        }
+      }
     }
 
     function handleUpdateNode(updatedNode: WorkflowNode) {
@@ -1752,6 +1900,18 @@ export default defineComponent({
       document.addEventListener('mousemove', handleMouseMove)
       document.addEventListener('mouseup', handleMouseUp)
       document.addEventListener('keydown', handleKeyDown)
+
+      // Apply --wf-entity-spacing / --wf-group-padding to v-model graph (static
+      // initial data does not read CSS until the canvas element exists).
+      nextTick(() => {
+        if (!canvasRef.value) return
+        const synced = normalizeAllGroupsEntitySpacing(
+          props.modelValue,
+          getEntitySpacing(),
+          getGroupPadding()
+        )
+        emit('update:modelValue', synced)
+      })
     })
 
     onUnmounted(() => {
@@ -1764,15 +1924,25 @@ export default defineComponent({
     function addNewNode() {
       const result = addNode(props.modelValue)
 
-      // Apply lockParent default from node type definition
+      // Apply lockParent/requireGroup defaults from node type definition
       let updatedGraph = result.graph
       const node = result.graph.nodes.find(n => n.id === result.newNodeId)
       const nodeTypeDef = node?.kind ? props.nodeTypes?.[node.kind] : undefined
-      if (nodeTypeDef?.lockParent !== undefined) {
+      if (nodeTypeDef?.lockParent !== undefined || nodeTypeDef?.requireGroup !== undefined) {
         updatedGraph = {
           ...updatedGraph,
           nodes: updatedGraph.nodes.map(n =>
-            n.id === result.newNodeId ? { ...n, lockParent: nodeTypeDef.lockParent } : n
+            n.id === result.newNodeId
+              ? {
+                  ...n,
+                  ...(nodeTypeDef.lockParent !== undefined && {
+                    lockParent: nodeTypeDef.lockParent
+                  }),
+                  ...(nodeTypeDef.requireGroup !== undefined && {
+                    requireGroup: nodeTypeDef.requireGroup
+                  })
+                }
+              : n
           )
         }
       }
@@ -1790,15 +1960,25 @@ export default defineComponent({
         label: options?.label
       })
 
-      // Apply lockParent default from group type definition if available
+      // Apply lockParent/requireGroup defaults from group type definition if available
       let updatedGraph = result.graph
       const groupKind = options?.type || 'group'
       const groupTypeDef = props.groupTypes?.[groupKind]
-      if (groupTypeDef?.lockParent !== undefined) {
+      if (groupTypeDef?.lockParent !== undefined || groupTypeDef?.requireGroup !== undefined) {
         updatedGraph = {
           ...updatedGraph,
           groups: updatedGraph.groups.map(g =>
-            g.id === result.newGroupId ? { ...g, lockParent: groupTypeDef.lockParent } : g
+            g.id === result.newGroupId
+              ? {
+                  ...g,
+                  ...(groupTypeDef.lockParent !== undefined && {
+                    lockParent: groupTypeDef.lockParent
+                  }),
+                  ...(groupTypeDef.requireGroup !== undefined && {
+                    requireGroup: groupTypeDef.requireGroup
+                  })
+                }
+              : g
           )
         }
       }
