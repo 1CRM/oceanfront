@@ -245,17 +245,27 @@ export const OfSelectField = defineComponent({
           })
       },
       interactiveContent: () => {
-        const labels = props.multi ? renderBadges() : selectedItemText()
+        let labels = props.multi ? renderBadges() : selectedItemText()
+        const contentClass = [
+          'of-field-content-text',
+          'of--align-' + (props.align || 'start')
+        ]
+
+        const isBlank = props.multi
+          ? !Array.isArray(inputValue.value) || !inputValue.value.length
+          : !labels || (typeof labels === 'string' && labels === '')
+
+        if (isBlank && props.placeholder) {
+          labels = props.placeholder
+          contentClass.push('of--text-placeholder')
+        }
 
         return [
           h(
             'div',
             {
               role: 'textbox',
-              class: [
-                'of-field-content-text',
-                'of--align-' + (props.align || 'start')
-              ],
+              class: contentClass,
               id: inputId.value,
               ref: elt,
               tabindex: fieldCtx.mode === 'fixed' ? -1 : 0,
