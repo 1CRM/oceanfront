@@ -37,6 +37,49 @@ const findEntity = (
 }
 
 /**
+ * Resolve the height of an entity, preferring measured DOM dimensions when available.
+ * Falls back to model `size` then to a hardcoded default.
+ */
+function resolveEntityHeight(
+  entity: WorkflowNode | WorkflowGroup,
+  entityDimensions?: Map<string, Size>
+): number {
+  const measured = entityDimensions?.get(entity.id)
+  if (measured) return measured.h
+
+  if ('containedIds' in entity) {
+    return (entity as WorkflowGroup).size.h
+  }
+  return (entity as WorkflowNode).size?.h || 100
+}
+
+/**
+ * Resolve the width of an entity, preferring measured DOM dimensions.
+ */
+function resolveEntityWidth(
+  entity: WorkflowNode | WorkflowGroup,
+  entityDimensions?: Map<string, Size>
+): number {
+  const measured = entityDimensions?.get(entity.id)
+  if (measured) return measured.w
+
+  if ('containedIds' in entity) {
+    return (entity as WorkflowGroup).size.w
+  }
+  return (entity as WorkflowNode).size?.w || 250
+}
+
+/**
+ * Check whether two entities are in the same visual column.
+ * Two entities are considered column-mates when their X ranges overlap.
+ */
+function isSameColumn(aX: number, aW: number, bX: number, bW: number): boolean {
+  const aRight = aX + aW
+  const bRight = bX + bW
+  return aX < bRight && bX < aRight
+}
+
+/**
  * Update a node's position (immutable)
  */
 export const updateNodePosition = (
@@ -414,7 +457,8 @@ export function getGroupDepth(graph: WorkflowGraph, groupId: string): number {
 export function calculateGroupBounds(
   graph: WorkflowGraph,
   groupId: string,
-  padding: number = 20
+  padding: number = 20,
+  entityDimensions?: Map<string, Size>
 ): Rect {
   const group = findGroup(graph, groupId)
   if (!group || group.containedIds.length === 0) {
@@ -442,23 +486,19 @@ export function calculateGroupBounds(
   let maxY = -Infinity
 
   entities.forEach(entity => {
-    let entityX: number
-    let entityY: number
+    const entityX = entity.position.x
+    const entityY = entity.position.y
+    const measured = entityDimensions?.get(entity.id)
+
     let entityW: number
     let entityH: number
 
-    if ('kind' in entity && 'containedIds' in entity) {
-      // It's a group
-      entityX = entity.position.x
-      entityY = entity.position.y
+    if ('containedIds' in entity) {
       entityW = entity.size.w
       entityH = entity.size.h
     } else {
-      // It's a node
-      entityX = entity.position.x
-      entityY = entity.position.y
-      entityW = entity.size?.w || 250
-      entityH = entity.size?.h || 100
+      entityW = measured?.w ?? entity.size?.w ?? 250
+      entityH = measured?.h ?? entity.size?.h ?? 100
     }
 
     minX = Math.min(minX, entityX)
@@ -483,7 +523,8 @@ export function updateGroupBounds(
   graph: WorkflowGraph,
   groupId: string,
   padding: number = 20,
-  visitedGroups: Set<string> = new Set()
+  visitedGroups: Set<string> = new Set(),
+  entityDimensions?: Map<string, Size>
 ): WorkflowGraph {
   const group = findGroup(graph, groupId)
   if (!group) return graph
@@ -497,7 +538,7 @@ export function updateGroupBounds(
   // Add this group to the visited set
   visitedGroups.add(groupId)
 
-  const newBounds = calculateGroupBounds(graph, groupId, padding)
+  const newBounds = calculateGroupBounds(graph, groupId, padding, entityDimensions)
 
   let updatedGraph = {
     ...graph,
@@ -515,7 +556,13 @@ export function updateGroupBounds(
   // Recursively update parent group if this group is nested
   const parentGroup = getParentGroup(updatedGraph, groupId)
   if (parentGroup) {
-    updatedGraph = updateGroupBounds(updatedGraph, parentGroup.id, padding, visitedGroups)
+    updatedGraph = updateGroupBounds(
+      updatedGraph,
+      parentGroup.id,
+      padding,
+      visitedGroups,
+      entityDimensions
+    )
   }
 
   return updatedGraph
@@ -594,29 +641,54 @@ const defaultIdGenerator = (prefix: string) => () => {
   return `${prefix}-${timestamp}-${counter}`
 }
 
+export type MoveNodesBelowOptions = {
+  /** Do not shift this node (e.g. a node about to be replaced in the same pass) */
+  excludeNodeId?: string
+  /**
+   * When set, only nodes whose X is within `columnTolerance` of this value are moved.
+   * Use when inserting into one vertical column so other columns on the canvas stay put.
+   */
+  columnX?: number
+  columnTolerance?: number
+}
+
 /**
  * Move all nodes below a Y threshold down by a specified offset
  * This is useful when inserting a new node and needing to make space
  * @param graph - The workflow graph
  * @param yThreshold - The Y position threshold (nodes at or below this will be moved)
  * @param offset - How much to move the nodes down (in pixels)
- * @param excludeNodeId - Optional node ID to exclude from movement (e.g., the newly inserted node)
+ * @param excludeNodeIdOrOptions - Optional node ID to exclude, or options (column scope + exclude)
  * @returns Updated graph with moved nodes
  */
 export function moveNodesBelow(
   graph: WorkflowGraph,
   yThreshold: number,
   offset: number,
-  excludeNodeId?: string
+  excludeNodeIdOrOptions?: string | MoveNodesBelowOptions
 ): WorkflowGraph {
+  let excludeNodeId: string | undefined
+  let columnX: number | undefined
+  let columnTolerance = 2
+
+  if (typeof excludeNodeIdOrOptions === 'string') {
+    excludeNodeId = excludeNodeIdOrOptions
+  } else if (excludeNodeIdOrOptions) {
+    excludeNodeId = excludeNodeIdOrOptions.excludeNodeId
+    columnX = excludeNodeIdOrOptions.columnX
+    columnTolerance = excludeNodeIdOrOptions.columnTolerance ?? 2
+  }
+
+  const inColumn = (x: number) => columnX === undefined || Math.abs(x - columnX) <= columnTolerance
+
   const updatedNodes = graph.nodes.map(node => {
     // Skip the excluded node (if specified)
     if (excludeNodeId && node.id === excludeNodeId) {
       return node
     }
 
-    // Move nodes at or below the threshold
-    if (node.position.y >= yThreshold) {
+    // Move nodes at or below the threshold (optionally only in the same column as the insertion)
+    if (node.position.y >= yThreshold && inColumn(node.position.x)) {
       return {
         ...node,
         position: {
@@ -687,11 +759,19 @@ export function handleAddStepToGraph(
       shouldMoveNodesBelow = true
     } else {
       // Fallback: place below the afterNode
-      position = { x: afterNode.position.x, y: afterNode.position.y + 150 }
+      const afterNodeHeight = afterNode.size?.h || nodeHeight
+      position = {
+        x: afterNode.position.x,
+        y: afterNode.position.y + afterNodeHeight + nodeSpacing
+      }
     }
   } else if (afterNode) {
     // No existing edge, place below the afterNode
-    position = { x: afterNode.position.x, y: afterNode.position.y + 150 }
+    const afterNodeHeight = afterNode.size?.h || nodeHeight
+    position = {
+      x: afterNode.position.x,
+      y: afterNode.position.y + afterNodeHeight + nodeSpacing
+    }
   } else {
     // No afterNode specified, place at default position
     position = { x: 100, y: 100 }
@@ -702,8 +782,11 @@ export function handleAddStepToGraph(
   if (shouldMoveNodesBelow && existingEdge) {
     const toNode = findNode(graph, existingEdge.to.entityId)
     if (toNode) {
-      // Move all nodes at or below the target node's position
-      workingGraph = moveNodesBelow(graph, toNode.position.y, totalOffset)
+      // Move nodes at or below the target in the same column only (same X as the edge target),
+      // so inserting in one branch does not shift unrelated columns on the canvas.
+      workingGraph = moveNodesBelow(graph, toNode.position.y, totalOffset, {
+        columnX: toNode.position.x
+      })
     }
   }
 
@@ -968,16 +1051,17 @@ export function addGroup(
 }
 
 /**
- * Align a node within its group: horizontally aligned with siblings,
- * vertically stacked below the bottommost sibling.
- * Only repositions when the group has other entities (siblings) to align with.
- * After repositioning the node, recalculates group bounds (and parent bounds recursively).
+ * Align a node within its group: horizontally aligned with siblings
+ * in the same visual column, vertically stacked below the bottommost
+ * column-mate. Only repositions when the group has other entities
+ * (siblings) to align with. Recalculates group bounds afterwards.
  */
 export function alignNodeInGroup(
   graph: WorkflowGraph,
   nodeId: string,
   groupId: string,
-  entitySpacing: number = 20
+  entitySpacing: number = 20,
+  entityDimensions?: Map<string, Size>
 ): WorkflowGraph {
   const group = findGroup(graph, groupId)
   const node = findNode(graph, nodeId)
@@ -994,13 +1078,27 @@ export function alignNodeInGroup(
 
   const firstSibling = siblings[0]
   const newX = firstSibling.position.x
+  const refW = resolveEntityWidth(firstSibling, entityDimensions)
 
+  // Only consider siblings in the same column when computing the bottom
   let maxBottom = -Infinity
   for (const sib of siblings) {
-    const sibH = 'containedIds' in sib ? sib.size.h : (sib as WorkflowNode).size?.h || 100
+    const sibW = resolveEntityWidth(sib, entityDimensions)
+    if (!isSameColumn(newX, refW, sib.position.x, sibW)) continue
+    const sibH = resolveEntityHeight(sib, entityDimensions)
     const sibBottom = sib.position.y + sibH
     if (sibBottom > maxBottom) maxBottom = sibBottom
   }
+
+  // If no column-mates, fall back to all siblings
+  if (maxBottom === -Infinity) {
+    for (const sib of siblings) {
+      const sibH = resolveEntityHeight(sib, entityDimensions)
+      const sibBottom = sib.position.y + sibH
+      if (sibBottom > maxBottom) maxBottom = sibBottom
+    }
+  }
+
   const newY = maxBottom + entitySpacing
 
   let updatedGraph: WorkflowGraph = {
@@ -1008,7 +1106,7 @@ export function alignNodeInGroup(
     nodes: graph.nodes.map(n => (n.id === nodeId ? { ...n, position: { x: newX, y: newY } } : n))
   }
 
-  updatedGraph = updateGroupBounds(updatedGraph, groupId)
+  updatedGraph = updateGroupBounds(updatedGraph, groupId, 20, new Set(), entityDimensions)
 
   return updatedGraph
 }
@@ -1092,11 +1190,13 @@ export function swapNodes(graph: WorkflowGraph, nodeIdA: string, nodeIdB: string
 
 /**
  * Insert an entity into a group at a specific position within containedIds.
- * Positions the inserted entity at the correct slot and normalizes spacing
- * for all siblings so that no gaps are left at the entity's old position.
+ * Updates containedIds, positions the inserted entity in the target column,
+ * then normalizes spacing for ALL columns so that no gap exceeds
+ * `entitySpacing` anywhere in the group.
  *
  * @param afterEntityId - The entity after which to insert. null = insert at the beginning.
  * @param options.entitySpacing - Vertical gap between entities (default 20)
+ * @param options.entityDimensions - Measured DOM dimensions for accurate stacking
  */
 export function insertEntityInGroup(
   graph: WorkflowGraph,
@@ -1107,12 +1207,15 @@ export function insertEntityInGroup(
     entitySpacing?: number
     edgeIdGenerator?: () => string
     edgeLocked?: boolean
+    entityDimensions?: Map<string, Size>
+    targetX?: number
   }
 ): WorkflowGraph {
   const group = findGroup(graph, groupId)
   if (!group) return graph
 
   const spacing = options?.entitySpacing ?? 20
+  const dims = options?.entityDimensions
 
   let updatedGraph = removeEntityFromAllGroups(graph, entityId)
 
@@ -1139,53 +1242,40 @@ export function insertEntityInGroup(
 
   const updatedGroup = findGroup(updatedGraph, groupId)!
 
-  // Determine X from existing siblings
-  const firstExisting = newContainedIds
-    .filter(id => id !== entityId)
-    .map(id => findEntity(updatedGraph, id))
-    .find(Boolean)
-  const baseX = firstExisting ? firstExisting.position.x : updatedGroup.position.x + 20
-
-  // Use the first sibling's Y as the anchor for the top of the stack.
-  // This keeps the topmost element pinned and stacks everything below it.
-  const firstEntity = findEntity(updatedGraph, newContainedIds[0])
-  let anchorY: number
-  if (newContainedIds[0] === entityId) {
-    // Inserted entity is first — anchor to the next sibling's current position
-    const nextSib = newContainedIds.length > 1 ? findEntity(updatedGraph, newContainedIds[1]) : null
-    anchorY = nextSib ? nextSib.position.y : updatedGroup.position.y + 40
-  } else {
-    anchorY = firstEntity ? firstEntity.position.y : updatedGroup.position.y + 40
+  // Determine the target column X from the insertion neighbors so the entity
+  // lands in the same column as the nodes it is being placed between.
+  let baseX: number | undefined = options?.targetX
+  if (baseX === undefined && afterEntityId) {
+    const afterEnt = findEntity(updatedGraph, afterEntityId)
+    if (afterEnt) baseX = afterEnt.position.x
+  }
+  if (baseX === undefined) {
+    // Inserted at the beginning — find the next sibling in the target column.
+    // When a targetX hint is not provided, walk containedIds to find the first
+    // sibling that is NOT the inserted entity. If the group has entities in
+    // multiple columns, the first sibling may be in a different column than
+    // intended (e.g. a nested sub-group vs. loose nodes). To mitigate this,
+    // prefer the sibling that immediately follows the insertion point in
+    // containedIds order — which is the first non-entityId entry.
+    const nextId = newContainedIds.find(id => id !== entityId)
+    const nextEnt = nextId ? findEntity(updatedGraph, nextId) : undefined
+    if (nextEnt) baseX = nextEnt.position.x
+  }
+  if (baseX === undefined) {
+    baseX = updatedGroup.position.x + 20
   }
 
-  // Walk through all siblings in order and stack them with consistent spacing.
-  // This both positions the inserted entity and collapses any gap left behind.
-  let currentY = anchorY
-  for (let i = 0; i < newContainedIds.length; i++) {
-    const sibId = newContainedIds[i]
-    const sib = findEntity(updatedGraph, sibId)
-    if (!sib) continue
-
-    const sibX = sibId === entityId ? baseX : sib.position.x
-
-    if (findNode(updatedGraph, sibId)) {
-      updatedGraph = updateNodePosition(updatedGraph, sibId, { x: sibX, y: currentY })
-    } else {
-      updatedGraph = updateGroupPosition(updatedGraph, sibId, { x: sibX, y: currentY })
-    }
-
-    // Re-read the entity to get the correct height (groups may have changed via updateGroupPosition)
-    const updatedSib = findEntity(updatedGraph, sibId)
-    const sibH = updatedSib
-      ? 'containedIds' in updatedSib
-        ? (updatedSib as WorkflowGroup).size.h
-        : (updatedSib as WorkflowNode).size?.h || 100
-      : 100
-
-    currentY = currentY + sibH + spacing
+  // Align the inserted entity's X to the target column
+  if (findNode(updatedGraph, entityId)) {
+    const ent = findNode(updatedGraph, entityId)!
+    updatedGraph = updateNodePosition(updatedGraph, entityId, { x: baseX, y: ent.position.y })
+  } else if (findGroup(updatedGraph, entityId)) {
+    const ent = findGroup(updatedGraph, entityId)!
+    updatedGraph = updateGroupPosition(updatedGraph, entityId, { x: baseX, y: ent.position.y })
   }
 
-  updatedGraph = updateGroupBounds(updatedGraph, groupId)
+  // Normalize all columns — uses containedIds order, not Y-sort
+  updatedGraph = normalizeGroupSpacingByOrder(updatedGraph, groupId, spacing, 20, dims)
 
   return updatedGraph
 }
@@ -1193,8 +1283,11 @@ export function insertEntityInGroup(
 /**
  * Normalize the vertical spacing of all entities inside a group so that
  * consecutive siblings are separated by exactly `entitySpacing` pixels.
- * The first entity keeps its current Y position; subsequent entities are
- * stacked below it. Group bounds are updated afterwards.
+ *
+ * Entities are grouped into visual columns (by overlapping X range).
+ * Within each column the first entity keeps its current Y position;
+ * subsequent entities are stacked below it. Entities in other columns
+ * are not moved. Group bounds are updated afterwards.
  *
  * Use this after removing an entity from a group to collapse the gap it left.
  */
@@ -1202,42 +1295,212 @@ export function normalizeGroupSpacing(
   graph: WorkflowGraph,
   groupId: string,
   entitySpacing: number = 20,
-  boundsPadding: number = 20
+  boundsPadding: number = 20,
+  entityDimensions?: Map<string, Size>
 ): WorkflowGraph {
   const group = findGroup(graph, groupId)
   if (!group || group.containedIds.length === 0) return graph
 
   const ids = group.containedIds
-  const firstEntity = findEntity(graph, ids[0])
-  if (!firstEntity) return graph
 
-  let updatedGraph = graph
-  let currentY = firstEntity.position.y
+  // Resolve every entity once so we can detect columns
+  const resolved: Array<{
+    id: string
+    entity: WorkflowNode | WorkflowGroup
+    x: number
+    w: number
+  }> = []
+  for (const id of ids) {
+    const ent = findEntity(graph, id)
+    if (!ent) continue
+    resolved.push({
+      id,
+      entity: ent,
+      x: ent.position.x,
+      w: resolveEntityWidth(ent, entityDimensions)
+    })
+  }
+  if (resolved.length === 0) return graph
 
-  for (let i = 0; i < ids.length; i++) {
-    const sibId = ids[i]
-    const sib = findEntity(updatedGraph, sibId)
-    if (!sib) continue
-
-    if (findNode(updatedGraph, sibId)) {
-      updatedGraph = updateNodePosition(updatedGraph, sibId, { x: sib.position.x, y: currentY })
-    } else {
-      updatedGraph = updateGroupPosition(updatedGraph, sibId, { x: sib.position.x, y: currentY })
+  // Group entities into columns. Two entities are column-mates when their
+  // X ranges overlap. We process entities in containedIds order and assign
+  // each to the first existing column it overlaps with, or start a new one.
+  const columns: Array<typeof resolved> = []
+  for (const item of resolved) {
+    let assigned = false
+    for (const col of columns) {
+      const ref = col[0]
+      if (isSameColumn(ref.x, ref.w, item.x, item.w)) {
+        col.push(item)
+        assigned = true
+        break
+      }
     }
-
-    const updatedSib = findEntity(updatedGraph, sibId)
-    const sibH = updatedSib
-      ? 'containedIds' in updatedSib
-        ? (updatedSib as WorkflowGroup).size.h
-        : (updatedSib as WorkflowNode).size?.h || 100
-      : 100
-
-    currentY = currentY + sibH + entitySpacing
+    if (!assigned) {
+      columns.push([item])
+    }
   }
 
-  updatedGraph = updateGroupBounds(updatedGraph, groupId, boundsPadding)
+  let updatedGraph = graph
+
+  for (const column of columns) {
+    // Sort column-mates by their current Y so we compact from the top
+    column.sort((a, b) => a.entity.position.y - b.entity.position.y)
+
+    // The topmost entity keeps its Y; the rest are stacked tightly below
+    let currentY = column[0].entity.position.y
+
+    for (const item of column) {
+      const sib = findEntity(updatedGraph, item.id)
+      if (!sib) continue
+
+      if (findNode(updatedGraph, item.id)) {
+        updatedGraph = updateNodePosition(updatedGraph, item.id, {
+          x: sib.position.x,
+          y: currentY
+        })
+      } else {
+        updatedGraph = updateGroupPosition(updatedGraph, item.id, {
+          x: sib.position.x,
+          y: currentY
+        })
+      }
+
+      const updatedSib = findEntity(updatedGraph, item.id)
+      const sibH = updatedSib ? resolveEntityHeight(updatedSib, entityDimensions) : 100
+
+      currentY = currentY + sibH + entitySpacing
+    }
+  }
+
+  updatedGraph = updateGroupBounds(
+    updatedGraph,
+    groupId,
+    boundsPadding,
+    new Set(),
+    entityDimensions
+  )
 
   return updatedGraph
+}
+
+/**
+ * Like normalizeGroupSpacing but preserves containedIds order within each
+ * column instead of Y-sorting. The anchor Y for each column is the minimum
+ * Y among its members. Intended for use after insert/reorder where the
+ * containedIds order is already the desired visual order.
+ */
+function normalizeGroupSpacingByOrder(
+  graph: WorkflowGraph,
+  groupId: string,
+  entitySpacing: number = 20,
+  boundsPadding: number = 20,
+  entityDimensions?: Map<string, Size>
+): WorkflowGraph {
+  const group = findGroup(graph, groupId)
+  if (!group || group.containedIds.length === 0) return graph
+
+  const ids = group.containedIds
+
+  const resolved: Array<{
+    id: string
+    entity: WorkflowNode | WorkflowGroup
+    x: number
+    w: number
+  }> = []
+  for (const id of ids) {
+    const ent = findEntity(graph, id)
+    if (!ent) continue
+    resolved.push({
+      id,
+      entity: ent,
+      x: ent.position.x,
+      w: resolveEntityWidth(ent, entityDimensions)
+    })
+  }
+  if (resolved.length === 0) return graph
+
+  const columns: Array<typeof resolved> = []
+  for (const item of resolved) {
+    let assigned = false
+    for (const col of columns) {
+      const ref = col[0]
+      if (isSameColumn(ref.x, ref.w, item.x, item.w)) {
+        col.push(item)
+        assigned = true
+        break
+      }
+    }
+    if (!assigned) {
+      columns.push([item])
+    }
+  }
+
+  let updatedGraph = graph
+
+  for (const column of columns) {
+    // Anchor at the minimum Y among column-mates (keeps topmost position stable)
+    const anchorY = Math.min(...column.map(c => c.entity.position.y))
+    let currentY = anchorY
+
+    // Process in containedIds order (already correct after insert/reorder)
+    for (const item of column) {
+      const sib = findEntity(updatedGraph, item.id)
+      if (!sib) continue
+
+      if (findNode(updatedGraph, item.id)) {
+        updatedGraph = updateNodePosition(updatedGraph, item.id, {
+          x: sib.position.x,
+          y: currentY
+        })
+      } else {
+        updatedGraph = updateGroupPosition(updatedGraph, item.id, {
+          x: sib.position.x,
+          y: currentY
+        })
+      }
+
+      const updatedSib = findEntity(updatedGraph, item.id)
+      const sibH = updatedSib ? resolveEntityHeight(updatedSib, entityDimensions) : 100
+
+      currentY = currentY + sibH + entitySpacing
+    }
+  }
+
+  updatedGraph = updateGroupBounds(
+    updatedGraph,
+    groupId,
+    boundsPadding,
+    new Set(),
+    entityDimensions
+  )
+
+  return updatedGraph
+}
+
+/**
+ * After {@link normalizeGroupSpacing} on a nested group, that group's
+ * position/size can be recalculated from its children via {@link updateGroupBounds},
+ * which no longer matches the slot assigned when the parent was last stacked.
+ * Re-run order-preserving stacking on the parent so siblings (e.g. a node and a
+ * nested group) stay flush.
+ */
+export function reflowParentGroupStackPreservingOrder(
+  graph: WorkflowGraph,
+  compactedGroupId: string,
+  entitySpacing: number = 20,
+  boundsPadding: number = 20,
+  entityDimensions?: Map<string, Size>
+): WorkflowGraph {
+  const parent = getParentGroup(graph, compactedGroupId)
+  if (!parent) return graph
+  return normalizeGroupSpacingByOrder(
+    graph,
+    parent.id,
+    entitySpacing,
+    boundsPadding,
+    entityDimensions
+  )
 }
 
 /**
@@ -1247,7 +1510,8 @@ export function normalizeGroupSpacing(
 export function normalizeAllGroupsEntitySpacing(
   graph: WorkflowGraph,
   entitySpacing: number = 20,
-  boundsPadding: number = 20
+  boundsPadding: number = 20,
+  entityDimensions?: Map<string, Size>
 ): WorkflowGraph {
   if (graph.groups.length === 0) return graph
 
@@ -1257,8 +1521,101 @@ export function normalizeAllGroupsEntitySpacing(
 
   let updated = graph
   for (const g of sorted) {
-    updated = normalizeGroupSpacing(updated, g.id, entitySpacing, boundsPadding)
+    updated = normalizeGroupSpacing(updated, g.id, entitySpacing, boundsPadding, entityDimensions)
   }
+  return updated
+}
+
+/**
+ * Stack root-level nodes (not inside any group) into visual columns and apply
+ * uniform vertical gaps of `entitySpacing` within each column — same column
+ * rules as {@link normalizeGroupSpacing}, but for ungrouped canvas nodes only.
+ */
+export function normalizeRootLevelNodesSpacing(
+  graph: WorkflowGraph,
+  entitySpacing: number = 20,
+  entityDimensions?: Map<string, Size>
+): WorkflowGraph {
+  const rootIds = graph.nodes.filter(n => !getParentGroup(graph, n.id)).map(n => n.id)
+  if (rootIds.length === 0) return graph
+
+  const resolved: Array<{
+    id: string
+    entity: WorkflowNode
+    x: number
+    w: number
+  }> = []
+  for (const id of rootIds) {
+    const ent = findNode(graph, id)
+    if (!ent) continue
+    resolved.push({
+      id,
+      entity: ent,
+      x: ent.position.x,
+      w: resolveEntityWidth(ent, entityDimensions)
+    })
+  }
+  if (resolved.length === 0) return graph
+
+  const columns: Array<typeof resolved> = []
+  for (const item of resolved) {
+    let assigned = false
+    for (const col of columns) {
+      const ref = col[0]
+      if (isSameColumn(ref.x, ref.w, item.x, item.w)) {
+        col.push(item)
+        assigned = true
+        break
+      }
+    }
+    if (!assigned) {
+      columns.push([item])
+    }
+  }
+
+  let updatedGraph = graph
+
+  for (const column of columns) {
+    column.sort((a, b) => a.entity.position.y - b.entity.position.y)
+
+    let currentY = column[0].entity.position.y
+
+    for (const item of column) {
+      const sib = findNode(updatedGraph, item.id)
+      if (!sib) continue
+
+      updatedGraph = updateNodePosition(updatedGraph, item.id, {
+        x: sib.position.x,
+        y: currentY
+      })
+
+      const updatedSib = findNode(updatedGraph, item.id)
+      const sibH = updatedSib ? resolveEntityHeight(updatedSib, entityDimensions) : 100
+
+      currentY = currentY + sibH + entitySpacing
+    }
+  }
+
+  return updatedGraph
+}
+
+/**
+ * Apply `entitySpacing` / `boundsPadding` to grouped entities and to root-level
+ * nodes (see {@link normalizeRootLevelNodesSpacing}).
+ */
+export function normalizeCanvasEntitySpacing(
+  graph: WorkflowGraph,
+  entitySpacing: number = 20,
+  boundsPadding: number = 20,
+  entityDimensions?: Map<string, Size>
+): WorkflowGraph {
+  let updated = normalizeAllGroupsEntitySpacing(
+    graph,
+    entitySpacing,
+    boundsPadding,
+    entityDimensions
+  )
+  updated = normalizeRootLevelNodesSpacing(updated, entitySpacing, entityDimensions)
   return updated
 }
 
@@ -1266,6 +1623,10 @@ export function normalizeAllGroupsEntitySpacing(
  * Wire an entity into the edge chain of a group at a specific insertion point.
  * Removes the old edge between afterEntity and nextEntity, then creates:
  *   afterEntity -> entityId -> nextEntity
+ *
+ * Only same-column neighbors participate in wiring so that entities in
+ * other visual columns (e.g. a nested sub-group beside loose nodes) are
+ * not accidentally connected.
  */
 export function wireEntityIntoChain(
   graph: WorkflowGraph,
@@ -1275,6 +1636,7 @@ export function wireEntityIntoChain(
   options?: {
     edgeIdGenerator?: () => string
     edgeLocked?: boolean
+    entityDimensions?: Map<string, Size>
   }
 ): WorkflowGraph {
   const group = findGroup(graph, groupId)
@@ -1285,11 +1647,39 @@ export function wireEntityIntoChain(
   const idx = containedIds.indexOf(entityId)
   if (idx === -1) return graph
 
-  let updatedGraph = graph
+  const dims = options?.entityDimensions
 
-  // Find the entity before and after in containedIds
-  const prevId = idx > 0 ? containedIds[idx - 1] : null
-  const nextId = idx < containedIds.length - 1 ? containedIds[idx + 1] : null
+  // Resolve the inserted entity so we can determine its column
+  const insertedEnt = findEntity(graph, entityId)
+  if (!insertedEnt) return graph
+  const entX = insertedEnt.position.x
+  const entW = resolveEntityWidth(insertedEnt, dims)
+
+  // Walk containedIds backwards from idx to find the nearest same-column predecessor
+  let prevId: string | null = null
+  for (let i = idx - 1; i >= 0; i--) {
+    const sib = findEntity(graph, containedIds[i])
+    if (!sib) continue
+    const sibW = resolveEntityWidth(sib, dims)
+    if (isSameColumn(entX, entW, sib.position.x, sibW)) {
+      prevId = containedIds[i]
+      break
+    }
+  }
+
+  // Walk containedIds forwards from idx to find the nearest same-column successor
+  let nextId: string | null = null
+  for (let i = idx + 1; i < containedIds.length; i++) {
+    const sib = findEntity(graph, containedIds[i])
+    if (!sib) continue
+    const sibW = resolveEntityWidth(sib, dims)
+    if (isSameColumn(entX, entW, sib.position.x, sibW)) {
+      nextId = containedIds[i]
+      break
+    }
+  }
+
+  let updatedGraph = graph
 
   // Remove the old edge between prev and next (if it exists)
   if (prevId && nextId) {

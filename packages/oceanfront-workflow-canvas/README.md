@@ -730,6 +730,7 @@ interface WorkflowNode {
   locked?: boolean // if true, prevents deletion
   readonly?: boolean // if true, prevents editing (hides menu and config panel)
   lockParent?: boolean // if true, prevents moving outside parent group
+  allowedParents?: string[] // if set, restricts which group kinds this node can be placed into
   hideAddNode?: boolean // if true, hides "+ node" button in hover menu
   hideAddGroup?: boolean // if true, hides "+ group" button in hover menu
 }
@@ -763,6 +764,7 @@ interface WorkflowGroup {
   locked?: boolean // if true, prevents deletion
   readonly?: boolean // if true, prevents editing (hides config panel)
   lockParent?: boolean // if true, prevents moving outside parent group
+  allowedParents?: string[] // if set, restricts which group kinds this group can be placed into
   maxDepth?: number | null // if set, overrides global maxGroupDepth for this group
   hideAddNode?: boolean // if true, hides "+ node" button in connection hover menu
   hideAddGroup?: boolean // if true, hides "+ group" button in connection hover menu
@@ -858,6 +860,7 @@ Each node type definition supports the following properties:
 - `placeholder?: string` - Placeholder text to display in tile when node is not configured
 - `cssClass?: string` - Custom CSS class (defaults to `workflow-canvas-node--type-${type}`)
 - `lockParent?: boolean` - If true, nodes of this type are locked to parent by default
+- `allowedParents?: string[]` - If set, restricts which group kinds nodes of this type can be placed into
 - `hideAddNode?: boolean` - If true, hides the "+ node" button in the hover menu
 - `hideAddGroup?: boolean` - If true, hides the "+ group" button in the hover menu
 - `addNodeButtonText?: string` - Custom text for the "+ node" button in the hover menu (defaults to "+ node")
@@ -1007,6 +1010,52 @@ The `lockParent` value is resolved in this order:
 1. **Instance value**: `node.lockParent` (if explicitly set)
 2. **Type default**: `nodeTypes[kind].lockParent` (applied when node is created)
 3. **Global default**: `undefined` (no locking)
+
+### Node Type Allowed Parents
+
+You can restrict which group kinds nodes of a specific type can be placed into using the `allowedParents` property in `NodeTypeDefinition`. When set, nodes can only be dropped into groups whose `kind` matches one of the allowed values.
+
+#### Type-Level Configuration
+
+Set a default `allowedParents` value for all nodes of a specific type:
+
+```typescript
+const nodeTypes: NodeTypeConfig = {
+  trigger: {
+    type: 'trigger',
+    label: 'Trigger',
+    fields: [],
+    allowedParents: ['phase'] // Trigger nodes can only be placed inside 'phase' groups
+  },
+  action: {
+    type: 'action',
+    label: 'Action',
+    fields: [],
+    allowedParents: ['phase', 'swimlane'] // Action nodes can be placed in 'phase' or 'swimlane' groups
+  }
+}
+```
+
+#### Instance-Level Override
+
+Individual nodes can override the type-level default by setting `allowedParents` directly on the node instance:
+
+```typescript
+const node: WorkflowNode = {
+  id: 'node-1',
+  kind: 'trigger',
+  position: { x: 100, y: 100 },
+  allowedParents: ['phase', 'group'] // Override type-level setting for this instance
+}
+```
+
+#### Priority Resolution
+
+The `allowedParents` value is resolved in this order:
+
+1. **Instance value**: `node.allowedParents` (if explicitly set)
+2. **Type default**: `nodeTypes[kind].allowedParents` (applied when node is created)
+3. **Global default**: `undefined` (no restriction)
 
 ## Utilities
 
@@ -2213,6 +2262,7 @@ export interface GroupTypeDefinition {
   showTypeField?: boolean // Control visibility of type field in config panel (default: true)
   showTitleField?: boolean // Control visibility of title field in config panel (default: true)
   lockParent?: boolean // If true, groups of this type are locked to parent by default
+  allowedParents?: string[] // If set, restricts which group kinds groups of this type can be placed into
   hideAddNode?: boolean // If true, hides "+ node" button in connection hover menu
   hideAddGroup?: boolean // If true, hides "+ group" button in connection hover menu
   hideNestedAddNode?: boolean // If true, hides "+ node" button in empty group "+" menu
@@ -2352,6 +2402,7 @@ export interface GroupTypeDefinition {
   showTypeField?: boolean // Control visibility of type field in config panel (default: true)
   showTitleField?: boolean // Control visibility of title field in config panel (default: true)
   lockParent?: boolean // If true, groups of this type are locked to parent by default
+  allowedParents?: string[] // If set, restricts which group kinds groups of this type can be placed into
 }
 ```
 
@@ -2448,6 +2499,55 @@ The `lockParent` value is resolved in this order:
 1. **Instance value**: `group.lockParent` (if explicitly set)
 2. **Type default**: `groupTypes[kind].lockParent` (applied when group is created)
 3. **Global default**: `undefined` (no locking)
+
+### Group Type Allowed Parents
+
+You can restrict which group kinds groups of a specific type can be placed into using the `allowedParents` property in `GroupTypeDefinition`. When set, groups can only be dropped into groups whose `kind` matches one of the allowed values.
+
+#### Type-Level Configuration
+
+Set a default `allowedParents` value for all groups of a specific type:
+
+```typescript
+const groupTypes: GroupTypeConfig = {
+  phase: {
+    type: 'phase',
+    label: 'Phase',
+    fields: [],
+    allowedParents: ['swimlane'] // Phase groups can only be placed inside 'swimlane' groups
+  },
+  swimlane: {
+    type: 'swimlane',
+    label: 'Swimlane',
+    fields: [],
+    allowedParents: ['swimlane', 'group'] // Swimlane groups can be placed in 'swimlane' or 'group' groups
+  }
+}
+```
+
+#### Instance-Level Override
+
+Individual groups can override the type-level default by setting `allowedParents` directly on the group instance:
+
+```typescript
+const group: WorkflowGroup = {
+  id: 'group-1',
+  kind: 'phase',
+  label: 'Planning Phase',
+  position: { x: 100, y: 100 },
+  size: { w: 400, h: 300 },
+  containedIds: [],
+  allowedParents: ['swimlane', 'group'] // Override type-level setting for this instance
+}
+```
+
+#### Priority Resolution
+
+The `allowedParents` value is resolved in this order:
+
+1. **Instance value**: `group.allowedParents` (if explicitly set)
+2. **Type default**: `groupTypes[kind].allowedParents` (applied when group is created)
+3. **Global default**: `undefined` (no restriction)
 
 ### Group Add Button Visibility
 

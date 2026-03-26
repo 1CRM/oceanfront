@@ -2206,9 +2206,52 @@ describe('Graph Helper Functions', () => {
       const node2 = findNode(result.graph, 'node-2')
       expect(node2?.position.y).toBeGreaterThan(300)
 
-      // Node-3 should also have moved down (all nodes below threshold)
+      // Node-3 should also have moved down (same column, at or below threshold)
       const node3 = findNode(result.graph, 'node-3')
       expect(node3?.position.y).toBeGreaterThan(500)
+    })
+
+    it('does not move nodes in other columns when inserting between connected nodes', () => {
+      const graph: WorkflowGraph = {
+        nodes: [
+          {
+            id: 'node-left',
+            kind: 'action',
+            position: { x: 50, y: 380 },
+            size: { w: 250, h: 100 }
+          },
+          {
+            id: 'node-right-1',
+            kind: 'action',
+            position: { x: 770, y: 60 },
+            size: { w: 250, h: 100 }
+          },
+          {
+            id: 'node-right-2',
+            kind: 'action',
+            position: { x: 770, y: 220 },
+            size: { w: 250, h: 100 }
+          }
+        ],
+        edges: [
+          {
+            id: 'edge-rr',
+            from: { entityId: 'node-right-1' },
+            to: { entityId: 'node-right-2' }
+          }
+        ],
+        groups: []
+      }
+
+      const result = handleAddStepToGraph(graph, {
+        afterNodeId: 'node-right-1'
+      })
+
+      const left = findNode(result.graph, 'node-left')
+      expect(left?.position.y).toBe(380)
+
+      const right2 = findNode(result.graph, 'node-right-2')
+      expect(right2?.position.y).toBeGreaterThan(220)
     })
 
     it('moveNodesBelow helper moves all nodes at or below threshold', () => {
