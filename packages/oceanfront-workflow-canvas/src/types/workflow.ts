@@ -90,6 +90,7 @@ export interface NodeTypeDefinition {
   cssClass?: string // Custom CSS class (defaults to `workflow-canvas-node--type-${type}`)
   lockParent?: boolean // If true, nodes of this type are locked to parent by default
   requireGroup?: boolean // If true, nodes of this type must always be inside a group
+  allowedParents?: string[] // If set, restricts which group kinds nodes of this type can be placed into
   hideAddNode?: boolean // If true, hides "+ node" button in hover menu
   hideAddGroup?: boolean // If true, hides "+ group" button in hover menu
   addNodeButtonText?: string // Custom text for "+ node" button in hover menu (defaults to "+ node")
@@ -158,6 +159,7 @@ export interface GroupTypeDefinition {
   showTitleField?: boolean // Control visibility of title field in config panel (default: true)
   lockParent?: boolean // If true, groups of this type are locked to parent by default
   requireGroup?: boolean // If true, groups of this type must always be inside a group
+  allowedParents?: string[] // If set, restricts which group kinds groups of this type can be placed into
   hideAddNode?: boolean // If true, hides "+ node" button in connection hover menu
   hideAddGroup?: boolean // If true, hides "+ group" button in connection hover menu
   hideNestedAddNode?: boolean // If true, hides "+ node" button in empty group "+" menu

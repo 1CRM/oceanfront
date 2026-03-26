@@ -31,6 +31,8 @@ export type {
   EdgeAddPayload
 } from './types/workflow'
 
+export type { MoveNodesBelowOptions } from './utils/graph-helpers'
+
 // Constants
 export { DEFAULT_LABELS } from './constants/labels'
 
@@ -69,7 +71,10 @@ export {
   alignNodeInGroup,
   insertEntityInGroup,
   normalizeGroupSpacing,
+  reflowParentGroupStackPreservingOrder,
   normalizeAllGroupsEntitySpacing,
+  normalizeRootLevelNodesSpacing,
+  normalizeCanvasEntitySpacing,
   wireEntityIntoChain
 } from './utils/graph-helpers'
 

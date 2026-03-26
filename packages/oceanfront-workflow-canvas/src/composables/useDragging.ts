@@ -1,6 +1,7 @@
 import { ref, type Ref } from 'vue'
 import type {
   Position,
+  Size,
   WorkflowGraph,
   WorkflowEdge,
   WorkflowNode,
@@ -28,7 +29,8 @@ import {
   alignNodeInGroup,
   insertEntityInGroup,
   wireEntityIntoChain,
-  normalizeGroupSpacing
+  normalizeGroupSpacing,
+  reflowParentGroupStackPreservingOrder
 } from '../utils/graph-helpers'
 
 export interface InsertIndicator {
@@ -76,6 +78,8 @@ export interface UseDraggingOptions {
   getEntitySpacing: () => number
   /** From `--wf-group-padding` on the canvas element */
   getGroupPadding: () => number
+  /** Returns measured DOM dimensions for all mounted node elements */
+  buildEntityDimensionsMap: () => Map<string, Size>
 }
 
 export function useDragging(options: UseDraggingOptions) {
@@ -98,7 +102,8 @@ export function useDragging(options: UseDraggingOptions) {
     onEdgeAdd,
     onEntityReorder,
     getEntitySpacing,
-    getGroupPadding
+    getGroupPadding,
+    buildEntityDimensionsMap
   } = options
 
   const draggingNodeId = ref<string | null>(null)
@@ -223,14 +228,19 @@ export function useDragging(options: UseDraggingOptions) {
   }
 
   /**
-   * Given a target group and the Y-center of the dragged entity, compute the
+   * Given a target group and the center of the dragged entity, compute the
    * insertion slot (the gap between two consecutive siblings, or before the
    * first / after the last) and return the indicator geometry.
+   *
+   * Only siblings in the same visual column (overlapping X range with the
+   * dragged entity) participate in slot computation; siblings in other
+   * columns are ignored so the indicator doesn't "tangle" across columns.
    */
   const computeInsertionPoint = (
     currentGraph: WorkflowGraph,
     targetGroupId: string,
     draggedEntityId: string,
+    draggedCenterX: number,
     draggedCenterY: number,
     nodeElements: Map<string, HTMLElement>,
     originalGroupId?: string | null,
@@ -239,8 +249,8 @@ export function useDragging(options: UseDraggingOptions) {
     const targetGroup = findGroup(currentGraph, targetGroupId)
     if (!targetGroup) return null
 
-    // Resolve siblings (excluding the dragged entity itself)
-    const siblings = targetGroup.containedIds
+    // Resolve all siblings (excluding the dragged entity itself)
+    const allSiblings = targetGroup.containedIds
       .filter(id => id !== draggedEntityId)
       .map(id => {
         const node = findNode(currentGraph, id)
@@ -256,7 +266,41 @@ export function useDragging(options: UseDraggingOptions) {
       })
       .filter(Boolean) as Array<{ id: string; y: number; h: number; x: number; w: number }>
 
-    if (siblings.length === 0) return null
+    if (allSiblings.length === 0) return null
+
+    // Group siblings into visual columns (mutual X-range overlap)
+    type Sibling = (typeof allSiblings)[number]
+    const columns: Sibling[][] = []
+    for (const sib of allSiblings) {
+      let placed = false
+      for (const col of columns) {
+        const ref = col[0]
+        if (ref.x < sib.x + sib.w && sib.x < ref.x + ref.w) {
+          col.push(sib)
+          placed = true
+          break
+        }
+      }
+      if (!placed) {
+        columns.push([sib])
+      }
+    }
+
+    // Pick the column whose horizontal center is closest to draggedCenterX
+    let bestCol = columns[0]
+    let bestColDist = Infinity
+    for (const col of columns) {
+      const colLeft = Math.min(...col.map(s => s.x))
+      const colRight = Math.max(...col.map(s => s.x + s.w))
+      const colCenterX = (colLeft + colRight) / 2
+      const dist = Math.abs(draggedCenterX - colCenterX)
+      if (dist < bestColDist) {
+        bestColDist = dist
+        bestCol = col
+      }
+    }
+
+    const siblings = bestCol
 
     // Sort by Y position
     siblings.sort((a, b) => a.y - b.y)
@@ -264,7 +308,7 @@ export function useDragging(options: UseDraggingOptions) {
     // Compute gap midpoints and find the closest one to draggedCenterY
     interface Slot {
       afterEntityId: string | null
-      y: number // Y coordinate for the indicator line
+      y: number
     }
 
     const slots: Slot[] = []
@@ -314,9 +358,9 @@ export function useDragging(options: UseDraggingOptions) {
       return null
     }
 
-    // Compute X and width from the group bounds (or sibling bounds)
-    const indicatorX = targetGroup.position.x + 10
-    const indicatorWidth = targetGroup.size.w - 20
+    // Indicator X and width from column siblings only
+    const indicatorX = Math.min(...siblings.map(s => s.x))
+    const indicatorWidth = Math.max(...siblings.map(s => s.w))
 
     return {
       groupId: targetGroupId,
@@ -434,6 +478,7 @@ export function useDragging(options: UseDraggingOptions) {
         updatedGraph,
         validTargetGroup.id,
         draggingNodeId.value,
+        nodeCenter.x,
         nodeCenter.y,
         nodeElements,
         draggedNodeOriginalGroup.value,
@@ -539,6 +584,7 @@ export function useDragging(options: UseDraggingOptions) {
         updatedGraph,
         primaryTargetGroup,
         draggingGroupId.value,
+        groupCenter.x,
         groupCenter.y,
         new Map(),
         draggedNodeOriginalGroup.value,
@@ -575,6 +621,7 @@ export function useDragging(options: UseDraggingOptions) {
 
     try {
       const currentInsertIndicator = insertIndicator.value
+      const dims = buildEntityDimensionsMap()
 
       if (draggingGroupId.value) {
         const groupId = draggingGroupId.value
@@ -627,7 +674,9 @@ export function useDragging(options: UseDraggingOptions) {
                   currentInsertIndicator.afterEntityId,
                   {
                     edgeLocked: edgesLocked.value,
-                    entitySpacing: getEntitySpacing()
+                    entitySpacing: getEntitySpacing(),
+                    entityDimensions: dims,
+                    targetX: currentInsertIndicator.x
                   }
                 )
                 updatedGraph = wireEntityIntoChain(
@@ -635,14 +684,22 @@ export function useDragging(options: UseDraggingOptions) {
                   groupId,
                   targetGroup.id,
                   currentInsertIndicator.afterEntityId,
-                  { edgeLocked: edgesLocked.value }
+                  { edgeLocked: edgesLocked.value, entityDimensions: dims }
                 )
                 if (parentChanged && originalParent) {
                   updatedGraph = normalizeGroupSpacing(
                     updatedGraph,
                     originalParent,
                     getEntitySpacing(),
-                    getGroupPadding()
+                    getGroupPadding(),
+                    dims
+                  )
+                  updatedGraph = reflowParentGroupStackPreservingOrder(
+                    updatedGraph,
+                    originalParent,
+                    getEntitySpacing(),
+                    getGroupPadding(),
+                    dims
                   )
                 }
               } else {
@@ -652,7 +709,15 @@ export function useDragging(options: UseDraggingOptions) {
                     updatedGraph,
                     originalParent,
                     getEntitySpacing(),
-                    getGroupPadding()
+                    getGroupPadding(),
+                    dims
+                  )
+                  updatedGraph = reflowParentGroupStackPreservingOrder(
+                    updatedGraph,
+                    originalParent,
+                    getEntitySpacing(),
+                    getGroupPadding(),
+                    dims
                   )
                 }
                 updatedGraph = addEntityToGroup(updatedGraph, groupId, targetGroup.id)
@@ -665,7 +730,13 @@ export function useDragging(options: UseDraggingOptions) {
                 onEntityReorder(groupId, targetGroup.id, currentInsertIndicator.afterEntityId)
               }
             } else if (originalParent) {
-              updatedGraph = updateGroupBounds(updatedGraph, originalParent, getGroupPadding())
+              updatedGraph = updateGroupBounds(
+                updatedGraph,
+                originalParent,
+                getGroupPadding(),
+                new Set(),
+                dims
+              )
               onGraphUpdate(updatedGraph)
             }
           } else if (centerInOriginalParent && originalParent) {
@@ -681,7 +752,9 @@ export function useDragging(options: UseDraggingOptions) {
                 currentInsertIndicator.afterEntityId,
                 {
                   edgeLocked: edgesLocked.value,
-                  entitySpacing: getEntitySpacing()
+                  entitySpacing: getEntitySpacing(),
+                  entityDimensions: dims,
+                  targetX: currentInsertIndicator.x
                 }
               )
               updatedGraph = wireEntityIntoChain(
@@ -689,14 +762,20 @@ export function useDragging(options: UseDraggingOptions) {
                 groupId,
                 originalParent,
                 currentInsertIndicator.afterEntityId,
-                { edgeLocked: edgesLocked.value }
+                { edgeLocked: edgesLocked.value, entityDimensions: dims }
               )
               onGraphUpdate(updatedGraph)
               if (onEntityReorder) {
                 onEntityReorder(groupId, originalParent, currentInsertIndicator.afterEntityId)
               }
             } else {
-              updatedGraph = updateGroupBounds(updatedGraph, originalParent, getGroupPadding())
+              updatedGraph = updateGroupBounds(
+                updatedGraph,
+                originalParent,
+                getGroupPadding(),
+                new Set(),
+                dims
+              )
               onGraphUpdate(updatedGraph)
             }
           } else if (
@@ -712,7 +791,15 @@ export function useDragging(options: UseDraggingOptions) {
               updatedGraph,
               originalParent,
               getEntitySpacing(),
-              getGroupPadding()
+              getGroupPadding(),
+              dims
+            )
+            updatedGraph = reflowParentGroupStackPreservingOrder(
+              updatedGraph,
+              originalParent,
+              getEntitySpacing(),
+              getGroupPadding(),
+              dims
             )
 
             if (parentChanged) {
@@ -735,7 +822,13 @@ export function useDragging(options: UseDraggingOptions) {
                 draggedEntityOriginalPosition.value
               )
             }
-            updatedGraph = updateGroupBounds(updatedGraph, originalParent, getGroupPadding())
+            updatedGraph = updateGroupBounds(
+              updatedGraph,
+              originalParent,
+              getGroupPadding(),
+              new Set(),
+              dims
+            )
             onGraphUpdate(updatedGraph)
           }
 
@@ -789,7 +882,11 @@ export function useDragging(options: UseDraggingOptions) {
         const node = findNode(graph.value, nodeId)
 
         if (node) {
-          const nodeDimensions = { width: node.size?.w || 250, height: node.size?.h || 100 }
+          const measuredDims = dims.get(nodeId)
+          const nodeDimensions = {
+            width: measuredDims?.w ?? node.size?.w ?? 250,
+            height: measuredDims?.h ?? node.size?.h ?? 100
+          }
           const nodeCenter = {
             x: node.position.x + nodeDimensions.width / 2,
             y: node.position.y + nodeDimensions.height / 2
@@ -815,7 +912,13 @@ export function useDragging(options: UseDraggingOptions) {
                   draggedEntityOriginalPosition.value
                 )
               }
-              updatedGraph = updateGroupBounds(updatedGraph, originalGroup, getGroupPadding())
+              updatedGraph = updateGroupBounds(
+                updatedGraph,
+                originalGroup,
+                getGroupPadding(),
+                new Set(),
+                dims
+              )
               onGraphUpdate(updatedGraph)
               const connectedEntities = getConnectedEntities(updatedGraph, nodeId)
               onNodeDragEnd(
@@ -849,7 +952,13 @@ export function useDragging(options: UseDraggingOptions) {
               )
             }
             if (originalGroup) {
-              updatedGraph = updateGroupBounds(updatedGraph, originalGroup, getGroupPadding())
+              updatedGraph = updateGroupBounds(
+                updatedGraph,
+                originalGroup,
+                getGroupPadding(),
+                new Set(),
+                dims
+              )
             }
             onGraphUpdate(updatedGraph)
             const connectedEntities = getConnectedEntities(updatedGraph, nodeId)
@@ -927,7 +1036,9 @@ export function useDragging(options: UseDraggingOptions) {
               currentInsertIndicator.afterEntityId,
               {
                 edgeLocked: edgesLocked.value,
-                entitySpacing: getEntitySpacing()
+                entitySpacing: getEntitySpacing(),
+                entityDimensions: dims,
+                targetX: currentInsertIndicator.x
               }
             )
 
@@ -937,7 +1048,7 @@ export function useDragging(options: UseDraggingOptions) {
               nodeId,
               targetGrpId,
               currentInsertIndicator.afterEntityId,
-              { edgeLocked: edgesLocked.value }
+              { edgeLocked: edgesLocked.value, entityDimensions: dims }
             )
 
             if (parentChanged && originalGroup) {
@@ -945,7 +1056,15 @@ export function useDragging(options: UseDraggingOptions) {
                 updatedGraph,
                 originalGroup,
                 getEntitySpacing(),
-                getGroupPadding()
+                getGroupPadding(),
+                dims
+              )
+              updatedGraph = reflowParentGroupStackPreservingOrder(
+                updatedGraph,
+                originalGroup,
+                getEntitySpacing(),
+                getGroupPadding(),
+                dims
               )
             }
 
@@ -983,7 +1102,13 @@ export function useDragging(options: UseDraggingOptions) {
             }
           } else if (!parentChanged && originalGroup) {
             // Node stayed in the same group with no reorder — just update bounds
-            updatedGraph = updateGroupBounds(updatedGraph, originalGroup, getGroupPadding())
+            updatedGraph = updateGroupBounds(
+              updatedGraph,
+              originalGroup,
+              getGroupPadding(),
+              new Set(),
+              dims
+            )
             onGraphUpdate(updatedGraph)
           } else {
             // Default behavior: move to a different group or to canvas root
@@ -993,7 +1118,15 @@ export function useDragging(options: UseDraggingOptions) {
                 updatedGraph,
                 originalGroup,
                 getEntitySpacing(),
-                getGroupPadding()
+                getGroupPadding(),
+                dims
+              )
+              updatedGraph = reflowParentGroupStackPreservingOrder(
+                updatedGraph,
+                originalGroup,
+                getEntitySpacing(),
+                getGroupPadding(),
+                dims
               )
             } else {
               updatedGraph = removeEntityFromAllGroups(updatedGraph, nodeId)
@@ -1010,7 +1143,8 @@ export function useDragging(options: UseDraggingOptions) {
                   updatedGraph,
                   nodeId,
                   targetGroup.id,
-                  getEntitySpacing()
+                  getEntitySpacing(),
+                  dims
                 )
               }
 

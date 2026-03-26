@@ -161,7 +161,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, nextTick } from 'vue'
 import { makeRecord } from 'oceanfront'
 import {
   WorkflowCanvas,
@@ -242,7 +242,7 @@ const nodeTypes: NodeTypeConfig = {
         name: 'actionType',
         type: 'select',
         label: 'Action Type',
-        showInTile: true,
+        showInTile: false,
         items: [
           { value: 'email', text: 'Send Email' },
           { value: 'update', text: 'Update Record' },
@@ -413,290 +413,175 @@ const groupTypes: GroupTypeConfig = {
 }
 
 // Initial workflow data (separate from graph structure) - flat format
-const initialRecordData = {
-  'node-trigger-1-title': 'Quote Created',
-  'node-trigger-1-description':
-    'Triggered when a new quote is created in the system',
-  'node-trigger-1-event': 'new_quote',
-  'node-action-1-title': 'Validate Quote',
-  'node-action-1-description': 'Check if quote meets minimum requirements',
-  'node-action-1-actionType': 'update',
-  'node-action-1-enabled': true,
-  'node-condition-1-title': 'Amount > $10,000?',
-  'node-condition-1-description': 'Check if quote amount exceeds threshold',
-  'node-condition-1-operator': 'greater_than',
-  'node-condition-1-threshold': 10000,
-  'node-action-2-title': 'Notify Sales Manager',
-  'node-action-2-description': 'Send notification for high-value quotes',
-  'node-action-2-actionType': 'email',
-  'node-action-2-enabled': true,
-  'node-action-3-title': 'Create Approval Task',
-  'node-action-3-description': 'Require manager approval for large quotes',
-  'node-action-3-actionType': 'create',
-  'node-action-3-enabled': true,
-  'node-action-4-title': 'Auto-Approve Quote',
-  'node-action-4-description': 'Automatically approve standard quotes',
-  'node-action-4-actionType': 'update',
-  'node-action-4-enabled': true,
-  'node-action-5-title': 'Update CRM',
-  'node-action-5-description': 'Sync quote data to CRM system',
-  'node-action-5-actionType': 'update',
-  'node-action-5-enabled': true,
-  'node-action-6-title': 'Generate PDF',
-  'node-action-6-description': 'Create PDF document for quote',
-  'node-action-6-actionType': 'create',
-  'node-action-6-enabled': true,
-  'node-action-7-title': 'Email Customer',
-  'node-action-7-description': 'Send quote to customer email',
-  'node-action-7-actionType': 'email',
-  'node-action-7-enabled': true,
-  'node-action-8-title': 'Log Activity',
-  'node-action-8-description': 'Record quote activity in audit log',
-  'node-action-8-actionType': 'create',
-  'node-action-8-enabled': true,
-  'node-action-9-title': 'Archive Old Quotes',
-  'node-action-9-description': 'Move expired quotes to archive',
-  'node-action-9-actionType': 'update',
-  'node-action-9-enabled': false,
-  'group-processing-main-description':
-    'Main processing phase for quote handling',
-  'group-processing-main-duration': 2,
-  'group-processing-main-status': 'in_progress',
-  'group-processing-main-lockParent': true,
-  'group-processing-sub-description': 'Handle all customer notifications',
-  'group-processing-sub-priority': 'high',
-  'group-processing-sub-owner': 'Sales Team',
-  'group-admin-description': 'Background administrative operations',
-  'group-admin-priority': 'low',
-  'group-admin-owner': 'System Admin'
+const initialRecordData: Record<string, unknown> = {
+  'trigger-1-title': 'New Order',
+  'trigger-1-description': 'Triggered when a customer places an order',
+  'trigger-1-event': 'new_quote',
+  'action-1-title': 'Validate Order',
+  'action-1-description': 'Check stock and pricing',
+  'action-1-actionType': 'update',
+  'action-1-enabled': true,
+  'condition-1-title': 'Amount > $500?',
+  'condition-1-description': 'Route based on order value',
+  'condition-1-operator': 'greater_than',
+  'condition-1-threshold': 500,
+  'action-2-title': 'Manager Approval',
+  'action-2-description': 'Require manager sign-off',
+  'action-2-actionType': 'create',
+  'action-2-enabled': true,
+  'action-3-title': 'Send Invoice',
+  'action-3-description': 'Generate and send invoice to customer',
+  'action-3-actionType': 'email',
+  'action-3-enabled': true,
+  'action-4-title': 'Auto-Approve',
+  'action-4-description': 'Approve small orders automatically',
+  'action-4-actionType': 'update',
+  'action-4-enabled': true,
+  'action-5-title': 'Send Confirmation',
+  'action-5-description': 'Email order confirmation to customer',
+  'action-5-actionType': 'email',
+  'action-5-enabled': true,
+  'action-6-title': 'Update Inventory',
+  'action-6-description': 'Deduct ordered items from stock',
+  'action-6-actionType': 'update',
+  'action-6-enabled': true,
+  'action-7-title': 'Notify Warehouse',
+  'action-7-description': 'Send pick-and-pack request',
+  'action-7-actionType': 'email',
+  'action-7-enabled': true,
+  'action-8-title': 'Log Activity',
+  'action-8-description': 'Record order in audit log',
+  'action-8-actionType': 'create',
+  'action-8-enabled': true,
+  'group-fulfillment-description': 'Post-approval fulfillment steps',
+  'group-fulfillment-priority': 'high',
+  'group-fulfillment-owner': 'Warehouse Team',
+  'group-notifications-description': 'Customer and internal notifications',
+  'group-notifications-priority': 'medium',
+  'group-notifications-owner': 'Sales Team'
 }
 
-// Initial workflow graph state - Comprehensive demo showcasing various features
+// Initial workflow graph state
 const initialWorkflowGraph: WorkflowGraph = {
   nodes: [
     {
-      id: 'node-trigger-1',
+      id: 'trigger-1',
       kind: 'trigger',
-      position: {
-        x: 49,
-        y: 39
-      },
-      definition: {
-        label: 'Label',
-        labelRight: 'Label Right'
-      }
+      label: 'Order Entry',
+      labelRight: 'v2.1',
+      position: { x: 50, y: 40 }
     },
     {
-      id: 'node-action-1',
+      id: 'action-1',
       kind: 'action',
-      position: {
-        x: 48,
-        y: 232
-      }
+      label: 'Validation',
+      position: { x: 50, y: 200 }
     },
     {
-      id: 'node-condition-1',
+      id: 'condition-1',
       kind: 'condition',
-      position: {
-        x: 48,
-        y: 451
-      }
+      label: 'Route',
+      position: { x: 50, y: 380 }
     },
     {
-      id: 'node-action-2',
+      id: 'action-2',
       kind: 'action',
-      position: {
-        x: 50,
-        y: 651
-      }
+      labelRight: 'High value',
+      position: { x: 50, y: 560 }
     },
     {
-      id: 'node-action-3',
+      id: 'action-3',
       kind: 'action',
-      position: {
-        x: 50,
-        y: 878
-      }
+      position: { x: 50, y: 720 }
     },
     {
-      id: 'node-action-4',
+      id: 'action-4',
       kind: 'action',
-      position: {
-        x: 340,
-        y: 651
-      }
+      labelRight: 'Low value',
+      position: { x: 340, y: 560 }
     },
     {
-      id: 'node-action-5',
+      id: 'action-5',
       kind: 'action',
-      position: {
-        x: 421,
-        y: 85
-      }
+      label: 'Step 1',
+      position: { x: 450, y: 60 }
     },
     {
-      id: 'node-action-6',
+      id: 'action-6',
       kind: 'action',
-      position: {
-        x: 422,
-        y: 284
-      }
+      label: 'Step 2',
+      position: { x: 450, y: 220 }
     },
     {
-      id: 'node-action-7',
+      id: 'action-7',
       kind: 'action',
-      position: {
-        x: 771,
-        y: 80
-      }
+      position: { x: 770, y: 60 }
     },
     {
-      id: 'node-action-8',
+      id: 'action-8',
       kind: 'action',
-      position: {
-        x: 773,
-        y: 273
-      }
-    },
-    {
-      id: 'node-action-9',
-      kind: 'action',
-      position: {
-        x: 792,
-        y: 651
-      }
+      position: { x: 770, y: 220 }
     }
   ],
   edges: [
     {
       id: 'edge-1',
-      from: {
-        entityId: 'node-trigger-1'
-      },
-      to: {
-        entityId: 'node-action-1'
-      }
+      from: { entityId: 'trigger-1' },
+      to: { entityId: 'action-1' }
     },
     {
       id: 'edge-2',
-      from: {
-        entityId: 'node-action-1'
-      },
-      to: {
-        entityId: 'node-condition-1'
-      }
+      from: { entityId: 'action-1' },
+      to: { entityId: 'condition-1' }
     },
     {
       id: 'edge-3',
-      from: {
-        entityId: 'node-condition-1'
-      },
-      to: {
-        entityId: 'node-action-2'
-      }
+      from: { entityId: 'condition-1' },
+      to: { entityId: 'action-2' }
     },
     {
       id: 'edge-4',
-      from: {
-        entityId: 'node-condition-1'
-      },
-      to: {
-        entityId: 'node-action-4'
-      }
+      from: { entityId: 'condition-1' },
+      to: { entityId: 'action-4' }
     },
     {
       id: 'edge-5',
-      from: {
-        entityId: 'node-action-2'
-      },
-      to: {
-        entityId: 'node-action-3'
-      }
+      from: { entityId: 'action-2' },
+      to: { entityId: 'action-3' }
     },
     {
       id: 'edge-6',
-      from: {
-        entityId: 'node-action-5'
-      },
-      to: {
-        entityId: 'node-action-6'
-      }
+      from: { entityId: 'action-5' },
+      to: { entityId: 'action-6' }
     },
     {
       id: 'edge-7',
-      from: {
-        entityId: 'node-action-7'
-      },
-      to: {
-        entityId: 'node-action-8'
-      }
+      from: { entityId: 'action-7' },
+      to: { entityId: 'action-8' }
     },
     {
       id: 'edge-8',
-      from: {
-        entityId: 'node-action-6'
-      },
-      to: {
-        entityId: 'node-action-7'
-      }
-    },
-    {
-      id: 'edge-1772605630434-0',
-      from: {
-        entityId: 'node-action-4',
-        position: 'right'
-      },
-      to: {
-        entityId: 'group-admin',
-        position: 'left'
-      },
-      locked: false
+      from: { entityId: 'action-6' },
+      to: { entityId: 'action-7' }
     }
   ],
   groups: [
     {
-      id: 'group-processing-main',
+      id: 'group-fulfillment',
       kind: 'phase',
-      label: 'Quote Processing Phase',
+      label: 'Fulfillment Phase',
       labelRight: 'Phase 1',
-      position: {
-        x: 401,
-        y: 40
-      },
-      size: {
-        w: 662,
-        h: 445
-      },
-      containedIds: ['group-processing-sub', 'node-action-5', 'node-action-6']
+      position: { x: 430, y: 20 },
+      size: { w: 630, h: 370 },
+      containedIds: ['group-notifications', 'action-5', 'action-6']
     },
     {
-      id: 'group-processing-sub',
+      id: 'group-notifications',
       kind: 'action',
-      label: 'Notification Actions',
-      position: {
-        x: 745,
-        y: 60
-      },
-      size: {
-        w: 298,
-        h: 405
-      },
-      containedIds: ['node-action-7', 'node-action-8']
-    },
-    {
-      id: 'group-admin',
-      kind: 'action',
-      label: 'Administrative Tasks',
-      position: {
-        x: 766,
-        y: 617
-      },
-      size: {
-        w: 298,
-        h: 207
-      },
-      maxDepth: 0,
-      containedIds: []
+      label: 'Notifications',
+      position: { x: 750, y: 40 },
+      size: { w: 290, h: 330 },
+      containedIds: ['action-7', 'action-8']
     }
   ]
 }
@@ -714,6 +599,7 @@ const workflowCanvasRef = ref<
   | (InstanceType<typeof WorkflowCanvas> & {
       addNewNode?: () => void
       addNewGroup?: (options?: { type?: string; label?: string }) => void
+      syncEntitySpacingFromCss?: () => void
     })
   | null
 >(null)
@@ -737,6 +623,7 @@ function resetCanvas() {
   // Reset record data as well
   record.value = JSON.parse(JSON.stringify(initialRecordData))
   selectedId.value = null
+  nextTick(() => workflowCanvasRef.value?.syncEntitySpacingFromCss?.())
 }
 
 // Event log for demonstrating all emits
@@ -1009,6 +896,9 @@ function handleEntityMovedToGroup(entityId: string, groupId: string | null) {
 </script>
 
 <style scoped>
+:root {
+  --wf-spacing: 16px;
+}
 .demo-actions {
   display: flex;
   gap: 12px;

@@ -75,6 +75,7 @@ function createDragging(graph: WorkflowGraph, overrides: Partial<UseDraggingOpti
     onEdgeAdd,
     getEntitySpacing: () => 20,
     getGroupPadding: () => 20,
+    buildEntityDimensionsMap: () => new Map(),
     ...overrides
   }
 
