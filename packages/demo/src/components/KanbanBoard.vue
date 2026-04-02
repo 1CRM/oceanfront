@@ -7,6 +7,12 @@
       v-model:columns="columns"
       :column-menu-items="columnMenuItems"
       :card-menu-items="cardMenuItems"
+      :dependencies="{
+        enabled: true,
+        hoverHighlightMode: 'group',
+        getEdges: (card: any) =>
+          card.dependsOnId ? [{ toId: card.dependsOnId }] : []
+      }"
       search-input-placeholder="Search by keyword..."
       @column-menu-item-click="handleColumnMenuItemClick"
       @card-moved="handleCardMoved"
@@ -60,6 +66,10 @@ export default defineComponent({
   :card-menu-items="cardMenuItems"
   :has-more-cards="columnHasMore"
   search-input-placeholder="Search by keyword..."
+  :dependencies="{
+    enabled: true,
+    getEdges: (card) => (card.dependsOnId ? [{ toId: card.dependsOnId }] : [])
+  }"
   @column-menu-item-click="handleColumnMenuItemClick"
   @card-moved="handleCardMoved"
   @add-card="handleAddCard"
@@ -96,64 +106,64 @@ export default defineComponent({
             tags: ['Bug', 'Feature']
           } as IKanbanCard,
           {
-            id: 'card-2',
-            title: 'Kanban Board: Create KanbanColumn component',
+            id: 'card-11',
+            title: 'Build: Create release checklist',
             project: {
-              id: 'project-2',
-              name: 'Project 2',
-              icon: 'email'
+              id: 'project-6',
+              name: 'Project 6',
+              icon: 'mobile'
             },
             order: 1,
             assignee: {
-              id: 'assignee-2',
-              name: 'admin'
+              id: 'assignee-6',
+              name: 'Dana Rivera'
             },
-            tags: ['Feature', '1CRM', 'Oceanfront']
+            tags: ['Build']
           } as IKanbanCard,
           {
-            id: 'card-33',
-            title: 'Test card 1',
+            id: 'card-35',
+            title: 'Test card 3',
+            dependsOnId: 'card-34',
             project: {
-              id: 'project-3',
+              id: 'project-4',
               name: 'Project 3',
               icon: 'email'
             },
             order: 2,
             assignee: {
-              id: 'assignee-3',
-              name: 'Charlie Brown'
-            }
-          },
-          {
-            id: 'card-34',
-            title: 'Test card 2',
-            project: {
-              id: 'project-4',
-              name: 'Project 3',
-              icon: 'email'
-            },
-            order: 3,
-            assignee: {
-              id: 'assignee-1',
-              name: 'Michael Whitehead',
-              avatar:
-                'https://1crm9-demo.1crmcloud.com/files/images/directory/1/MichaelWhitehead.png'
-            }
-          },
-          {
-            id: 'card-35',
-            title: 'Test card 3',
-            project: {
-              id: 'project-4',
-              name: 'Project 3',
-              icon: 'email'
-            },
-            order: 4,
-            assignee: {
               id: 'assignee-4',
               name: 'Alex Johnson'
             }
-          }
+          } as IKanbanCard,
+          {
+            id: 'card-4',
+            title: 'Basic Component Setup',
+            dependsOnId: 'card-31',
+            project: {
+              id: 'project-4',
+              name: 'Project 4',
+              icon: 'mobile'
+            },
+            order: 3,
+            assignee: {
+              id: 'assignee-4',
+              name: 'David Lee'
+            }
+          } as IKanbanCard,
+          {
+            id: 'card-100',
+            title: 'Independent card (no deps)',
+            project: {
+              id: 'project-9',
+              name: 'Project 9',
+              icon: 'mobile'
+            },
+            order: 4,
+            assignee: {
+              id: 'assignee-9',
+              name: 'Sam Patel'
+            }
+          } as IKanbanCard
         ]
       },
       {
@@ -162,19 +172,49 @@ export default defineComponent({
         limit: 3,
         cards: [
           {
-            id: 'card-3',
-            title: 'Style Improvements',
+            id: 'card-2',
+            title: 'Kanban Board: Create KanbanColumn component',
+            dependsOnId: 'card-1',
             project: {
-              id: 'project-3',
-              name: 'Project 3',
-              icon: 'mobile'
+              id: 'project-2',
+              name: 'Project 2',
+              icon: 'email'
             },
             order: 0,
             assignee: {
-              id: 'assignee-3',
-              name: 'Charlie Brown'
+              id: 'assignee-2',
+              name: 'admin'
             }
-          }
+          } as IKanbanCard,
+          {
+            id: 'card-21',
+            title: 'QA: Prepare test cases',
+            project: {
+              id: 'project-7',
+              name: 'Project 7',
+              icon: 'email'
+            },
+            order: 1,
+            assignee: {
+              id: 'assignee-7',
+              name: 'Morgan Lee'
+            }
+          } as IKanbanCard,
+          {
+            id: 'card-12',
+            title: 'Build: Smoke test staging',
+            dependsOnId: 'card-11',
+            project: {
+              id: 'project-6',
+              name: 'Project 6',
+              icon: 'mobile'
+            },
+            order: 2,
+            assignee: {
+              id: 'assignee-6',
+              name: 'Dana Rivera'
+            }
+          } as IKanbanCard
         ]
       },
       {
@@ -182,19 +222,34 @@ export default defineComponent({
         title: 'Reviewe & Test',
         cards: [
           {
-            id: 'card-5',
-            title: 'Kanban Board: Implement Basic Drag-and-Drop',
+            id: 'card-33',
+            title: 'Test card 1',
+            dependsOnId: 'card-2',
             project: {
-              id: 'project-5',
-              name: 'Project 5',
+              id: 'project-3',
+              name: 'Project 3',
               icon: 'email'
             },
             order: 0,
             assignee: {
-              id: 'assignee-5',
-              name: 'Alex Johnson'
+              id: 'assignee-3',
+              name: 'Charlie Brown'
             }
-          }
+          } as IKanbanCard,
+          {
+            id: 'card-31',
+            title: 'Docs: Write README',
+            project: {
+              id: 'project-8',
+              name: 'Project 8',
+              icon: 'mobile'
+            },
+            order: 1,
+            assignee: {
+              id: 'assignee-8',
+              name: 'Taylor Kim'
+            }
+          } as IKanbanCard
         ]
       },
       {
@@ -202,19 +257,52 @@ export default defineComponent({
         title: 'Done',
         cards: [
           {
-            id: 'card-4',
-            title: 'Basic Component Setup',
+            id: 'card-34',
+            title: 'Test card 2',
+            dependsOnId: 'card-33',
             project: {
               id: 'project-4',
-              name: 'Project 4',
-              icon: 'mobile'
+              name: 'Project 3',
+              icon: 'email'
             },
             order: 0,
             assignee: {
-              id: 'assignee-4',
-              name: 'David Lee'
+              id: 'assignee-1',
+              name: 'Michael Whitehead',
+              avatar:
+                'https://1crm9-demo.1crmcloud.com/files/images/directory/1/MichaelWhitehead.png'
             }
-          }
+          } as IKanbanCard,
+          {
+            id: 'card-3',
+            title: 'Style Improvements',
+            dependsOnId: 'card-11',
+            project: {
+              id: 'project-3',
+              name: 'Project 3',
+              icon: 'mobile'
+            },
+            order: 1,
+            assignee: {
+              id: 'assignee-3',
+              name: 'Charlie Brown'
+            }
+          } as IKanbanCard,
+          {
+            id: 'card-5',
+            title: 'Kanban Board: Implement Basic Drag-and-Drop',
+            dependsOnId: 'card-21',
+            project: {
+              id: 'project-5',
+              name: 'Project 5',
+              icon: 'email'
+            },
+            order: 2,
+            assignee: {
+              id: 'assignee-5',
+              name: 'Alex Johnson'
+            }
+          } as IKanbanCard
         ]
       },
       {

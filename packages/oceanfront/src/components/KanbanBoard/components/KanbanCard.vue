@@ -3,8 +3,13 @@
     class="of-kanban-card of--elevated-1"
     :class="{
       'of--is-dragging': isCardDragging,
-      'of--is-selected': isSelected
+      'of--is-selected': isSelected,
+      'of--has-dependency-stripe':
+        !!dependencyStripeColor && dependenciesEnabled,
+      'of--dependency-related': isDependencyRelated && dependenciesEnabled,
+      'of--dependency-dimmed': isDependencyDimmed && dependenciesEnabled
     }"
+    :style="dependencyStyle"
     :data-order="card.order"
     draggable="true"
     @dragstart="handleDragStart"
@@ -120,6 +125,22 @@ export default defineComponent({
     hovering: {
       type: Boolean,
       default: false
+    },
+    dependenciesEnabled: {
+      type: Boolean,
+      default: false
+    },
+    dependencyStripeColor: {
+      type: String as PropType<string | undefined>,
+      default: undefined
+    },
+    isDependencyRelated: {
+      type: Boolean,
+      default: false
+    },
+    isDependencyDimmed: {
+      type: Boolean,
+      default: false
     }
   },
   emits: {
@@ -132,7 +153,8 @@ export default defineComponent({
     'card-menu-item-click': (_item: string | number, _card: IKanbanCard) =>
       true,
     'card-tag-click': null,
-    'filter-change': null
+    'filter-change': null,
+    'hover-change': (_isHovering: boolean) => true
   },
   setup(props, { emit }) {
     const isCardDragging = computed<boolean>(
@@ -156,6 +178,7 @@ export default defineComponent({
     const handleMouseEnter = (event: MouseEvent) => {
       if ((event.target as HTMLElement).closest('.of-kanban-card')) {
         isHovering.value = true
+        emit('hover-change', true)
       }
     }
 
@@ -165,6 +188,7 @@ export default defineComponent({
         !(event.relatedTarget as HTMLElement)?.closest('.of-list-item')
       ) {
         isHovering.value = false
+        emit('hover-change', false)
       }
     }
 
@@ -186,6 +210,14 @@ export default defineComponent({
       if (!name) return 'AN'
 
       return getInitials(name)
+    })
+
+    const dependencyStyle = computed<Record<string, string>>(() => {
+      if (!props.dependenciesEnabled || !props.dependencyStripeColor)
+        return {} as Record<string, string>
+      return {
+        '--of-kanban-dep-color': props.dependencyStripeColor
+      } as Record<string, string>
     })
 
     const handleDragStart = (event: DragEvent) => {
@@ -350,7 +382,8 @@ export default defineComponent({
       handleMouseEnter,
       handleMouseLeave,
       isHovering,
-      compactedMenuItems
+      compactedMenuItems,
+      dependencyStyle
     }
   }
 })

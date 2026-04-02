@@ -46,12 +46,20 @@
         :active-column-id="activeColumnId"
         :has-more="hasMoreCards[column.id]"
         :is-collapsed="collapsedColumns.includes(column.id)"
+        :dependency-stripe-color-by-card-key="
+          dependencyIndex.stripeColorByCardKey
+        "
+        :dependency-related-keys="dependencyIndex.relatedKeys"
+        :dependency-dimmed-keys="dependencyIndex.dimmedKeys"
+        :dependencies-enabled="dependenciesEnabled"
+        :get-dependency-card-key="getDependencyCardKey"
         @menu-item-click="handleColumnMenuItemClick"
         @column-click="handleColumnClick"
         @card-blur="handleCardBlur"
         @card-moved="handleCardMove"
         @card-drag-start="handleCardDragStart"
         @card-click="handleCardClick"
+        @card-hover-change="handleCardHoverChange"
         @add-card="$emit('add-card', column.id)"
         @project-click="$emit('project-click', $event)"
         @assignee-click="$emit('assignee-click', $event)"
@@ -99,10 +107,18 @@ import type {
   IKanbanColumn,
   CardMovedEvent,
   IKanbanCard,
-  IKanbanCardAssignee
+  IKanbanCardAssignee,
+  KanbanCardId,
+  KanbanDependenciesConfig
 } from './types'
 import { Item } from '../../lib/items_list'
 import { getCollapsedColumns, saveCollapsedState } from './utils'
+import {
+  defaultDependenciesPalette,
+  generateHslColor,
+  hashString,
+  toDependencyKey
+} from './utils/dependencies'
 
 export default defineComponent({
   name: 'OfKanbanBoard',
@@ -131,6 +147,10 @@ export default defineComponent({
       type: Object as PropType<Record<string, boolean>>,
       default: () => ({})
     },
+    dependencies: {
+      type: Object as PropType<KanbanDependenciesConfig | undefined>,
+      default: undefined
+    },
     id: {
       type: String,
       default: 'default'
@@ -154,6 +174,7 @@ export default defineComponent({
     const boardRef = ref<HTMLElement>()
     const draggedCardId = ref<string | number | undefined>(undefined)
     const selectedCardId = ref<string | number | undefined>(undefined)
+    const hoveredCardKey = ref<string | null>(null)
     const collapsedColumns = ref<string[]>([])
     const currentFilters = reactive({
       keyword: '',
@@ -238,9 +259,190 @@ export default defineComponent({
 
     const selectedTags = computed(() => Array.from(currentFilters.tags))
 
+    const dependenciesEnabled = computed<boolean>(
+      () => !!props.dependencies?.enabled
+    )
+
+    const hoverHighlightMode = computed<'neighbors' | 'group'>(() => {
+      return props.dependencies?.hoverHighlightMode ?? 'neighbors'
+    })
+
+    const dependenciesPalette = computed<string[]>(() => {
+      const palette = props.dependencies?.palette
+      return palette && palette.length > 0
+        ? palette
+        : defaultDependenciesPalette
+    })
+
+    const getCardId = computed<(card: IKanbanCard) => KanbanCardId>(() => {
+      return props.dependencies?.getCardId ?? ((card: IKanbanCard) => card.id)
+    })
+
+    const getEdges = computed<(card: IKanbanCard) => { toId: KanbanCardId }[]>(
+      () => props.dependencies?.getEdges ?? (() => [])
+    )
+
+    const dependencyIndex = computed(() => {
+      if (!dependenciesEnabled.value) {
+        return {
+          stripeColorByCardKey: {} as Record<string, string | undefined>,
+          relatedKeys: new Set<string>(),
+          dimmedKeys: new Set<string>()
+        }
+      }
+
+      const cards: IKanbanCard[] = []
+      props.columns.forEach((col) => col.cards?.forEach((c) => cards.push(c)))
+
+      const keyByCard = new Map<IKanbanCard, string>()
+      const cardByKey = new Map<string, IKanbanCard>()
+      for (const card of cards) {
+        const key = toDependencyKey(getCardId.value(card))
+        keyByCard.set(card, key)
+        cardByKey.set(key, card)
+      }
+
+      const dependsOnByKey = new Map<string, Set<string>>()
+      const dependentsByKey = new Map<string, Set<string>>()
+      const adjacency = new Map<string, Set<string>>()
+
+      const addAdj = (a: string, b: string) => {
+        if (!adjacency.has(a)) adjacency.set(a, new Set())
+        adjacency.get(a)!.add(b)
+      }
+
+      for (const card of cards) {
+        const fromKey = keyByCard.get(card)!
+        const edges = getEdges.value(card) ?? []
+
+        for (const edge of edges) {
+          const toKeyRaw = toDependencyKey(edge.toId)
+          if (!cardByKey.has(toKeyRaw)) continue
+
+          if (!dependsOnByKey.has(fromKey))
+            dependsOnByKey.set(fromKey, new Set())
+          dependsOnByKey.get(fromKey)!.add(toKeyRaw)
+
+          if (!dependentsByKey.has(toKeyRaw))
+            dependentsByKey.set(toKeyRaw, new Set())
+          dependentsByKey.get(toKeyRaw)!.add(fromKey)
+
+          addAdj(fromKey, toKeyRaw)
+          addAdj(toKeyRaw, fromKey)
+        }
+      }
+
+      const groupKeyByKey = new Map<string, string>()
+      const groupMembersByGroupKey = new Map<string, Set<string>>()
+      const visited = new Set<string>()
+
+      for (const key of cardByKey.keys()) {
+        if (visited.has(key)) continue
+
+        const stack = [key]
+        const component: string[] = []
+        visited.add(key)
+        while (stack.length) {
+          const curr = stack.pop()!
+          component.push(curr)
+          const neigh = adjacency.get(curr)
+          if (!neigh) continue
+          for (const n of neigh) {
+            if (visited.has(n)) continue
+            visited.add(n)
+            stack.push(n)
+          }
+        }
+
+        const componentHasEdges = component.some(
+          (k) => (adjacency.get(k)?.size ?? 0) > 0
+        )
+        if (!componentHasEdges) {
+          for (const k of component) groupKeyByKey.set(k, k)
+          for (const k of component) groupMembersByGroupKey.set(k, new Set([k]))
+          continue
+        }
+
+        const groupKey = component.reduce((min, curr) =>
+          curr < min ? curr : min
+        )
+        for (const k of component) groupKeyByKey.set(k, groupKey)
+        groupMembersByGroupKey.set(groupKey, new Set(component))
+      }
+
+      const stripeColorByGroupKey = new Map<string, string>()
+      const palette = dependenciesPalette.value
+      const usedPaletteIndexes = new Set<number>()
+      const usedColors = new Set<string>()
+      const uniqueGroupKeys = Array.from(new Set(groupKeyByKey.values())).sort()
+
+      for (const groupKey of uniqueGroupKeys) {
+        const startIndex = hashString(groupKey) % palette.length
+        let index = startIndex
+        let tries = 0
+        while (usedPaletteIndexes.has(index) && tries < palette.length) {
+          index = (index + 1) % palette.length
+          tries++
+        }
+
+        const color =
+          tries < palette.length
+            ? palette[index]
+            : generateHslColor(hashString(groupKey))
+
+        stripeColorByGroupKey.set(groupKey, color)
+        if (tries < palette.length) usedPaletteIndexes.add(index)
+        usedColors.add(color)
+      }
+
+      const stripeColorByCardKey: Record<string, string | undefined> = {}
+      for (const [cardKey, groupKey] of groupKeyByKey.entries()) {
+        if ((adjacency.get(cardKey)?.size ?? 0) === 0) continue
+        stripeColorByCardKey[cardKey] = stripeColorByGroupKey.get(groupKey)
+      }
+
+      const hovered = hoveredCardKey.value
+      const relatedKeys = new Set<string>()
+      const dimmedKeys = new Set<string>()
+
+      if (hovered) {
+        const hoveredGroupKey = groupKeyByKey.get(hovered)
+        if (hoverHighlightMode.value === 'group' && hoveredGroupKey) {
+          groupMembersByGroupKey
+            .get(hoveredGroupKey)
+            ?.forEach((k) => relatedKeys.add(k))
+        } else {
+          dependsOnByKey.get(hovered)?.forEach((k) => relatedKeys.add(k))
+          dependentsByKey.get(hovered)?.forEach((k) => relatedKeys.add(k))
+          relatedKeys.add(hovered)
+        }
+
+        for (const cardKey of cardByKey.keys()) {
+          const hasStripe = !!stripeColorByCardKey[cardKey]
+          if (!hasStripe) continue
+          if (!relatedKeys.has(cardKey)) dimmedKeys.add(cardKey)
+        }
+      }
+
+      return { stripeColorByCardKey, relatedKeys, dimmedKeys }
+    })
+
+    const getDependencyCardKey = (card: IKanbanCard) =>
+      toDependencyKey(getCardId.value(card))
+
+    const handleCardHoverChange = (card: IKanbanCard, isHovering: boolean) => {
+      if (!dependenciesEnabled.value) return
+      if (!isHovering) {
+        hoveredCardKey.value = null
+        return
+      }
+      hoveredCardKey.value = toDependencyKey(getCardId.value(card))
+    }
+
     const handleCardDragStart = (card: IKanbanCard) => {
       draggedCardId.value = card.id
       selectedCardId.value = card.id
+      hoveredCardKey.value = null
     }
 
     const handleCardBlur = (card: IKanbanCard) => {
@@ -321,6 +523,7 @@ export default defineComponent({
       }
 
       draggedCardId.value = undefined
+      hoveredCardKey.value = null
       emit('update:columns', updatedColumns)
       emit('card-moved', { cardId, fromColumn, toColumn, newOrder })
     }
@@ -350,6 +553,7 @@ export default defineComponent({
 
     const handleWindowDragEnd = () => {
       draggedCardId.value = undefined
+      hoveredCardKey.value = null
     }
 
     const handleColumnMenuItemClick = (
@@ -422,6 +626,10 @@ export default defineComponent({
       currentFilters,
       selectedTags,
       getSelectedTags,
+      dependencyIndex,
+      dependenciesEnabled,
+      getDependencyCardKey,
+      handleCardHoverChange,
       handleCardMove,
       handleCardDragStart,
       handleCardBlur,

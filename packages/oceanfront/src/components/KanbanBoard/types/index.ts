@@ -2,9 +2,24 @@ export interface IKanbanCard {
   id: string | number
   title: string
   order: number
+  dependsOnId?: KanbanCardId
   project?: IKanbanProject
   assignee?: IKanbanCardAssignee
   tags?: string[]
+}
+
+export type KanbanCardId = string | number
+
+export type KanbanDependencyEdge = {
+  toId: KanbanCardId
+}
+
+export type KanbanDependenciesConfig = {
+  enabled?: boolean
+  getCardId?: (card: IKanbanCard) => KanbanCardId
+  getEdges?: (card: IKanbanCard) => KanbanDependencyEdge[]
+  palette?: string[]
+  hoverHighlightMode?: 'neighbors' | 'group'
 }
 
 export interface IKanbanProject {

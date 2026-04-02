@@ -50,8 +50,19 @@
         :is-selected="selectedCardId === card.id"
         :dragged-card-id="draggedCardId"
         :card-menu-items="cardMenuItems"
+        :dependency-stripe-color="
+          dependencyStripeColorByCardKey[getDependencyCardKey(card)]
+        "
+        :is-dependency-related="
+          dependencyRelatedKeys.has(getDependencyCardKey(card))
+        "
+        :is-dependency-dimmed="
+          dependencyDimmedKeys.has(getDependencyCardKey(card))
+        "
+        :dependencies-enabled="dependenciesEnabled"
         @card-click="handleCardClick"
         @drag-start="handleCardDragStart"
+        @hover-change="handleCardHoverChange(card, $event)"
         @project-click="$emit('project-click', $event)"
         @assignee-click="$emit('assignee-click', $event)"
         @card-title-click="$emit('card-title-click', $event)"
@@ -156,6 +167,26 @@ export default defineComponent({
     isCollapsed: {
       type: Boolean,
       default: false
+    },
+    dependenciesEnabled: {
+      type: Boolean,
+      default: false
+    },
+    dependencyStripeColorByCardKey: {
+      type: Object as PropType<Record<string, string | undefined>>,
+      default: () => ({})
+    },
+    dependencyRelatedKeys: {
+      type: Object as PropType<Set<string>>,
+      default: () => new Set<string>()
+    },
+    dependencyDimmedKeys: {
+      type: Object as PropType<Set<string>>,
+      default: () => new Set<string>()
+    },
+    getDependencyCardKey: {
+      type: Function as PropType<(card: IKanbanCard) => string>,
+      default: (card: IKanbanCard) => `${typeof card.id}:${String(card.id)}`
     }
   },
   emits: {
@@ -179,7 +210,8 @@ export default defineComponent({
     'column-click': (_column: IKanbanColumn) => true,
     'set-active-column': (_columnId: string | null) => true,
     'load-more': null,
-    'collapse-toggle': (_columnId: string) => true
+    'collapse-toggle': (_columnId: string) => true,
+    'card-hover-change': (_card: IKanbanCard, _isHovering: boolean) => true
   },
 
   setup(props, { emit }) {
@@ -451,6 +483,10 @@ export default defineComponent({
       emit('card-click', card)
     }
 
+    const handleCardHoverChange = (card: IKanbanCard, isHovering: boolean) => {
+      emit('card-hover-change', card, isHovering)
+    }
+
     const handleColumnClick = (event: MouseEvent) => {
       const target = event.target as HTMLElement
 
@@ -533,6 +569,7 @@ export default defineComponent({
       handleDrop,
       handleCardDragStart,
       handleCardClick,
+      handleCardHoverChange,
       handleDragEnd,
       handleColumnClick,
       handleCardTouchHover,
