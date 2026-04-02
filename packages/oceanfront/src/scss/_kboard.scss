@@ -176,8 +176,18 @@
         will-change: transform;
         max-height: 160px;
 
+        &.of--has-dependency-stripe {
+          box-shadow: inset 6px 0 0 var(--of-kanban-dep-color, transparent);
+        }
+
         &:hover {
           box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.12);
+        }
+
+        &.of--has-dependency-stripe:hover {
+          box-shadow:
+            inset 6px 0 0 var(--of-kanban-dep-color, transparent),
+            0px 2px 8px rgba(0, 0, 0, 0.12);
         }
 
         &.of--is-dragging {
@@ -187,6 +197,25 @@
         &.of--is-selected {
           outline: 2px solid var(--of-kanban-board-drop-indicator-bg);
           outline-offset: -2px;
+        }
+
+        &.of--dependency-related {
+          outline: 2px solid
+            var(
+              --of-kanban-dep-color,
+              var(--of-kanban-board-drop-indicator-bg)
+            );
+          outline-offset: -2px;
+        }
+
+        // Selected state should win over dependency hover highlight.
+        &.of--is-selected.of--dependency-related {
+          outline: 2px solid var(--of-kanban-board-drop-indicator-bg);
+          outline-offset: -2px;
+        }
+
+        &.of--dependency-dimmed {
+          opacity: 0.6;
         }
 
         .card-content {
@@ -273,6 +302,7 @@
               cursor: pointer;
               display: -webkit-box;
               -webkit-line-clamp: 4;
+              line-clamp: 4;
               -webkit-box-orient: vertical;
               overflow: hidden;
               text-overflow: ellipsis;
