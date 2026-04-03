@@ -38,6 +38,7 @@
           @keydown:enter="onKeyDown"
           v-model="item.value"
           :label="item.label"
+          :aria-label="item.ariaLabel"
           label-position="frame"
           :invalid="isInvalid"
           :format="item.format"
@@ -100,6 +101,7 @@
           in-data-table
           @focus="onInputFocus"
           :label="item.label"
+          :aria-label="item.ariaLabel"
           :type="type"
           :mode="inputMode"
           @input="resizeInput"
