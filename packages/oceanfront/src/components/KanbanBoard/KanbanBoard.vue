@@ -7,6 +7,7 @@
     @click="handleBoardClick"
   >
     <kanban-filters
+      v-if="!disableInternalFilters"
       :assignees="assignees"
       :search-input-placeholder="searchInputPlaceholder"
       :tags="currentFilters.tags"
@@ -151,6 +152,10 @@ export default defineComponent({
       type: Object as PropType<KanbanDependenciesConfig | undefined>,
       default: undefined
     },
+    disableInternalFilters: {
+      type: Boolean,
+      default: false
+    },
     id: {
       type: String,
       default: 'default'
@@ -225,6 +230,7 @@ export default defineComponent({
     })
 
     const filteredColumns = computed(() => {
+      if (props.disableInternalFilters) return props.columns
       return props.columns.map((column) => {
         if (!column.cards) return column
 
@@ -457,10 +463,9 @@ export default defineComponent({
     }
 
     const handleCardTagClick = (tag: string) => {
-      if (currentFilters.tags.has(tag)) {
-        currentFilters.tags.delete(tag)
-      } else {
-        currentFilters.tags.add(tag)
+      if (!props.disableInternalFilters) {
+        if (currentFilters.tags.has(tag)) currentFilters.tags.delete(tag)
+        else currentFilters.tags.add(tag)
       }
       emit('card-tag-click', tag)
     }
@@ -571,6 +576,7 @@ export default defineComponent({
       },
       clearFilters = false
     ) => {
+      if (props.disableInternalFilters) return
       currentFilters.keyword = filters.keyword
       currentFilters.assignees = filters.assignees
       currentFilters.tags = new Set(filters.tags)
@@ -599,6 +605,7 @@ export default defineComponent({
     }
 
     const removeTag = (tag: string) => {
+      if (props.disableInternalFilters) return
       currentFilters.tags.delete(tag)
       emit('filter-change', currentFilters)
     }
