@@ -42,6 +42,30 @@
       @card-touch-drop="handleCardTouchDrop"
       ref="columnContentRef"
     >
+      <div class="of-kanban-top-spacer" :style="topSpacerStyle" />
+
+      <!-- Tiny spinner shown above loaded cards when loading the previous page -->
+      <div
+        v-if="isLoading && windowTopCount > 0"
+        class="of-kanban-load-indicator of-kanban-load-indicator--top"
+      >
+        <span class="of-kanban-load-indicator__dot" />
+        <span class="of-kanban-load-indicator__dot" />
+        <span class="of-kanban-load-indicator__dot" />
+      </div>
+
+      <!-- Skeleton cards shown only while column data is explicitly not loaded -->
+      <template v-if="!isLoaded && sortedCards.length === 0">
+        <div v-for="i in 4" :key="i" class="of-kanban-skeleton-card">
+          <div
+            class="of-kanban-skeleton-card__line of-kanban-skeleton-card__line--short"
+          />
+          <div
+            class="of-kanban-skeleton-card__line of-kanban-skeleton-card__line--long"
+          />
+        </div>
+      </template>
+
       <kanban-card
         v-for="card in sortedCards"
         :key="card.id"
@@ -85,6 +109,17 @@
         :style="dropIndicatorStyle"
         class="of-kanban-column-drop-indicator"
       />
+      <!-- Tiny spinner shown below loaded cards when loading the next page -->
+      <div
+        v-if="isLoading && sortedCards.length > 0"
+        class="of-kanban-load-indicator of-kanban-load-indicator--bottom"
+      >
+        <span class="of-kanban-load-indicator__dot" />
+        <span class="of-kanban-load-indicator__dot" />
+        <span class="of-kanban-load-indicator__dot" />
+      </div>
+
+      <div class="of-kanban-bottom-spacer" :style="bottomSpacerStyle" />
     </div>
 
     <div class="of-kanban-column-footer">
@@ -108,6 +143,8 @@ import {
   defineComponent,
   type PropType,
   ref,
+  watch,
+  nextTick,
   CSSProperties,
   onMounted,
   onUnmounted
@@ -164,6 +201,30 @@ export default defineComponent({
       type: Boolean,
       default: false
     },
+    isLoading: {
+      type: Boolean,
+      default: false
+    },
+    isLoaded: {
+      type: Boolean,
+      default: false
+    },
+    windowTopCount: {
+      type: Number,
+      default: 0
+    },
+    windowBottomCount: {
+      type: Number,
+      default: 0
+    },
+    estimatedCardHeight: {
+      type: Number,
+      default: 80
+    },
+    scrollThreshold: {
+      type: Number,
+      default: 100
+    },
     isCollapsed: {
       type: Boolean,
       default: false
@@ -210,6 +271,7 @@ export default defineComponent({
     'column-click': (_column: IKanbanColumn) => true,
     'set-active-column': (_columnId: string | null) => true,
     'load-more': null,
+    'load-previous': null,
     'collapse-toggle': (_columnId: string) => true,
     'card-hover-change': (_card: IKanbanCard, _isHovering: boolean) => true
   },
@@ -519,16 +581,143 @@ export default defineComponent({
     }))
 
     const columnContentRef = ref<HTMLElement | null>(null)
-    const SCROLL_THRESHOLD = 100 // pixels before bottom to trigger load more
+
+    // Top spacer uses real measured DOM heights of evicted cards (accurate for scroll anchoring)
+    const topSpacerHeight = ref(0)
+
+    const topSpacerStyle = computed<CSSProperties>(() => ({
+      height: `${topSpacerHeight.value}px`,
+      flexShrink: '0'
+    }))
+
+    const bottomSpacerStyle = computed<CSSProperties>(() => ({
+      height: `${props.windowBottomCount * props.estimatedCardHeight}px`,
+      flexShrink: '0'
+    }))
+
+    // When windowTopCount drops to 0, reset top spacer (full reload / initial hydration)
+    watch(
+      () => props.windowTopCount,
+      (n) => {
+        if (n === 0) topSpacerHeight.value = 0
+      }
+    )
+
+    // After the top spacer grows due to eviction, overflow-anchor adjusts scrollTop silently
+    // (no scroll event fires). Re-evaluate the load-previous condition post-DOM-update so the
+    // user doesn't see a frozen empty zone when they're already inside the trigger range.
+    watch(
+      topSpacerHeight,
+      () => {
+        nextTick(() => handleScroll())
+      },
+      { flush: 'post' }
+    )
+
+    // Measure top-space changes before Vue updates DOM (flush:'pre').
+    // We track cards + windowTopCount together so we can distinguish:
+    // - load-more eviction from top  => windowTopCount increases
+    // - load-previous prepend        => windowTopCount decreases
+    // This avoids relying on array-length growth, because prepend often keeps
+    // length constant (it prepends and evicts from bottom in the same update).
+    watch(
+      [() => props.column.cards, () => props.windowTopCount],
+      ([newCards, newWindowTop], [oldCards, oldWindowTop]) => {
+        if (!oldCards?.length || !newCards) return
+        const allCardEls = Array.from(
+          columnContentRef.value?.querySelectorAll('.of-kanban-card') ?? []
+        ) as HTMLElement[]
+
+        // Eviction from top (window sliding): first card changed and server window moved forward.
+        const firstNewId = newCards[0]?.id
+        const firstNewIndexInOld =
+          firstNewId != null
+            ? oldCards.findIndex((c) => c.id === firstNewId)
+            : -1
+        if (firstNewIndexInOld > 0 && newWindowTop > oldWindowTop) {
+          let evictedPx = 0
+          for (
+            let i = 0;
+            i < firstNewIndexInOld && i < allCardEls.length;
+            i++
+          ) {
+            evictedPx += allCardEls[i].getBoundingClientRect().height
+          }
+          topSpacerHeight.value += evictedPx
+        }
+
+        // Prepend (load-previous): server window moved backward.
+        const firstOldId = oldCards[0]?.id
+        const firstOldIndexInNew =
+          firstOldId != null
+            ? newCards.findIndex((c) => c.id === firstOldId)
+            : -1
+        if (firstOldIndexInNew > 0 && newWindowTop < oldWindowTop) {
+          // New cards are not in the DOM yet (flush: 'pre') — measure after nextTick then shrink spacer
+          nextTick(() => {
+            const updatedCardEls = Array.from(
+              columnContentRef.value?.querySelectorAll('.of-kanban-card') ?? []
+            ) as HTMLElement[]
+            let prependedPx = 0
+            for (
+              let i = 0;
+              i < firstOldIndexInNew && i < updatedCardEls.length;
+              i++
+            ) {
+              prependedPx += updatedCardEls[i].getBoundingClientRect().height
+            }
+            topSpacerHeight.value = Math.max(
+              0,
+              topSpacerHeight.value - prependedPx
+            )
+          })
+          return
+        }
+
+        // Fallback: if IDs shifted unexpectedly during backward paging, still
+        // shrink spacer approximately by count delta to avoid prolonged empty area.
+        if (newWindowTop < oldWindowTop) {
+          const delta = oldWindowTop - newWindowTop
+          if (delta > 0) {
+            const approxPx = delta * props.estimatedCardHeight
+            topSpacerHeight.value = Math.max(
+              0,
+              topSpacerHeight.value - approxPx
+            )
+          }
+        }
+      },
+      { flush: 'pre', deep: false }
+    )
 
     const handleScroll = () => {
-      if (!columnContentRef.value || !props.hasMore) return
-
+      if (!columnContentRef.value) return
       const { scrollTop, scrollHeight, clientHeight } = columnContentRef.value
+      const isNearTop =
+        props.windowTopCount > 0 &&
+        scrollTop <= topSpacerHeight.value + props.scrollThreshold
 
-      if (scrollHeight - scrollTop - clientHeight < SCROLL_THRESHOLD) {
+      // Prioritize backfill from top. When we're near top, firing load-more in the same
+      // tick can bounce the window forward again after prepend completes.
+      if (isNearTop) {
+        emit('load-previous', props.column.id)
+        return
+      }
+
+      // Scroll near the end of loaded cards → load next page.
+      // The bottom spacer represents off-screen cards; its height is subtracted so the trigger
+      // fires when the user reaches the last loaded card, not the absolute scroll bottom.
+      const bottomSpacerHeight =
+        props.windowBottomCount * props.estimatedCardHeight
+      const remaining = scrollHeight - scrollTop - clientHeight
+      if (
+        props.hasMore &&
+        remaining <= bottomSpacerHeight + props.scrollThreshold
+      ) {
         emit('load-more', props.column.id)
       }
+
+      // Top trigger handled first above to avoid load-more/load-previous ping-pong.
     }
 
     // Debounce the scroll handler with 10ms delay
@@ -561,6 +750,8 @@ export default defineComponent({
       isAtLimit,
       sortedCards,
       dropIndicatorStyle,
+      topSpacerStyle,
+      bottomSpacerStyle,
       compactedMenuItems,
       columnContentRef,
       handleDragOver,
