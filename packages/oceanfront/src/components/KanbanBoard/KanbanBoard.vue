@@ -39,6 +39,7 @@
       <kanban-column
         v-for="column in filteredColumns"
         :key="column.id"
+        :data-column-id="column.id"
         :column="column"
         :menu-items="columnMenuItems"
         :card-menu-items="cardMenuItems"
@@ -70,8 +71,14 @@
           (item: string | number, card: IKanbanCard) =>
             $emit('card-menu-item-click', item, card)
         "
+        :window-top-count="windowTopCounts[column.id] ?? 0"
+        :window-bottom-count="windowBottomCounts[column.id] ?? 0"
+        :scroll-threshold="scrollThreshold"
+        :is-loading="loadingColumns[column.id] ?? false"
+        :is-loaded="loadedColumns[column.id] ?? column.loaded ?? true"
         @set-active-column="setActiveColumn"
         @load-more="handleLoadMore"
+        @load-previous="handleLoadPrevious"
         @collapse-toggle="handleColumnCollapse"
       >
         <template #card-title="slotProps">
@@ -97,6 +104,7 @@ import {
   type PropType,
   ref,
   onMounted,
+  nextTick,
   computed,
   watch,
   onUnmounted,
@@ -159,6 +167,33 @@ export default defineComponent({
     id: {
       type: String,
       default: 'default'
+    },
+    windowTopCounts: {
+      type: Object as PropType<Record<string, number>>,
+      default: () => ({})
+    },
+    windowBottomCounts: {
+      type: Object as PropType<Record<string, number>>,
+      default: () => ({})
+    },
+    scrollThreshold: {
+      type: Number,
+      default: 100
+    },
+    loadingColumns: {
+      type: Object as PropType<Record<string, boolean>>,
+      default: () => ({})
+    },
+    loadedColumns: {
+      type: Object as PropType<Record<string, boolean>>,
+      default: () => ({})
+    },
+    // Incremented by the parent on every full board reload (loadInitialData).
+    // Causes the IntersectionObserver to re-setup so that already-visible columns
+    // re-fire column-enter-viewport even though their column IDs haven't changed.
+    boardKey: {
+      type: Number,
+      default: 0
     }
   },
   emits: [
@@ -173,7 +208,11 @@ export default defineComponent({
     'card-tag-click',
     'card-menu-item-click',
     'filter-change',
-    'load-more'
+    'load-more',
+    'load-previous',
+    'column-enter-viewport',
+    'column-leave-viewport',
+    'column-expanded'
   ] as const,
   setup(props, { emit }) {
     const boardRef = ref<HTMLElement>()
@@ -593,15 +632,67 @@ export default defineComponent({
       return emit('load-more', columnId)
     }
 
+    const handleLoadPrevious = (columnId: string) => {
+      return emit('load-previous', columnId)
+    }
+
     const handleColumnCollapse = (columnId: string) => {
-      const index = collapsedColumns.value.indexOf(columnId)
-      if (index === -1) {
-        collapsedColumns.value = [...collapsedColumns.value, columnId]
-      } else {
+      const wasCollapsed = collapsedColumns.value.includes(columnId)
+      if (wasCollapsed) {
         collapsedColumns.value = collapsedColumns.value.filter(
           (id) => id !== columnId
         )
+        emit('column-expanded', columnId)
+      } else {
+        collapsedColumns.value = [...collapsedColumns.value, columnId]
       }
+    }
+
+    const columnObserver = ref<IntersectionObserver | null>(null)
+    const observedColumns = new Map<Element, string>() // element → columnId
+
+    const setupColumnObserver = () => {
+      // Root must be the element that scrolls horizontally (.of-kanban-board has overflow:auto),
+      // not .of-kanban-columns — otherwise intersection may not update on scroll and columns
+      // stay stuck on skeletons while data has already loaded.
+      if (!boardRef.value) return
+      // Vitest/JSDOM and some non-browser runtimes do not provide IntersectionObserver.
+      if (typeof IntersectionObserver === 'undefined') return
+      columnObserver.value?.disconnect()
+      observedColumns.clear()
+
+      columnObserver.value = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            const columnId = observedColumns.get(entry.target)
+            if (!columnId) return
+            if (entry.isIntersecting) {
+              // Skip collapsed columns (width ≤ 60px means collapsed ~48px + margin)
+              if (entry.boundingClientRect.width <= 60) {
+                return
+              }
+              emit('column-enter-viewport', columnId)
+            } else {
+              emit('column-leave-viewport', columnId)
+            }
+          })
+        },
+        {
+          root: boardRef.value,
+          rootMargin: '0px 350px 0px 350px', // prefetch one column ahead in each direction
+          threshold: 0
+        }
+      )
+
+      // Observe all current column elements
+      const columnEls = boardRef.value.querySelectorAll('.of-kanban-column')
+      columnEls.forEach((el) => {
+        const columnId = (el as HTMLElement).dataset.columnId
+        if (columnId) {
+          observedColumns.set(el, String(columnId))
+          columnObserver.value!.observe(el)
+        }
+      })
     }
 
     const removeTag = (tag: string) => {
@@ -614,11 +705,25 @@ export default defineComponent({
       collapsedColumns.value = getCollapsedColumns(storageKey.value)
       window.addEventListener('click', handleWindowClick)
       window.addEventListener('dragend', handleWindowDragEnd)
+      setupColumnObserver()
     })
 
     onUnmounted(() => {
       window.removeEventListener('click', handleWindowClick)
       window.removeEventListener('dragend', handleWindowDragEnd)
+      columnObserver.value?.disconnect()
+    })
+
+    // Re-observe when:
+    //   a) column structure changes (IDs added/removed) — filteredColumnIds
+    //   b) a full board reload happens (loadInitialData resets hydration) — boardKey
+    // Watching filteredColumns directly would re-fire on every card update and cause the IO to
+    // disconnect/reconnect — emitting spurious column-enter-viewport events after every load.
+    const filteredColumnIds = computed(() =>
+      filteredColumns.value.map((c) => String(c.id)).join(',')
+    )
+    watch([filteredColumnIds, () => props.boardKey, collapsedColumns], () => {
+      nextTick(() => setupColumnObserver())
     })
 
     return {
@@ -649,6 +754,7 @@ export default defineComponent({
       handleFilterChange,
       setActiveColumn,
       handleLoadMore,
+      handleLoadPrevious,
       handleColumnCollapse,
       removeTag
     }

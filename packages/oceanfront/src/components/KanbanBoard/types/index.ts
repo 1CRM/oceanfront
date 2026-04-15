@@ -35,6 +35,7 @@ export interface IKanbanColumn {
   total?: number
   cards?: IKanbanCard[]
   limit?: number
+  loaded?: boolean
 }
 
 export interface CardMovedEvent {
