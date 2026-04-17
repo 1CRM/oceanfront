@@ -11,6 +11,7 @@
   >
     <div :class="cls">
       <div
+        tabindex="-1"
         :class="{
           'of-tabs-navigation-header': true,
           'of-tabs-navigation-header-show-next-navigation':
@@ -784,6 +785,7 @@ export default defineComponent({
     }
 
     const closeSubMenu = () => {
+      subMenuClearTimeout()
       openedMenuTabKey.value = null
       subMenuActive.value = false
       optionListFocused.value = false
@@ -824,6 +826,7 @@ export default defineComponent({
 
     const selectSubMenuTab = function (_index: number, tab: Tab) {
       if (typeof tab.parentKey !== 'undefined') {
+        subMenuHidden.value = true
         selectTab(tab.parentKey, false)
         closeSubMenu()
         context.emit('select-tab', tab)
@@ -881,13 +884,18 @@ export default defineComponent({
 
       switch (evt.key) {
         case 'Tab':
-          focusedTabKey.value = getNextTabKey(idx, evt.shiftKey)
-          if (evt.shiftKey && idx == 0) consumed = false
+        case 'ArrowLeft':
+        case 'ArrowRight': {
+          const prev =
+            evt.key === 'ArrowLeft' || (evt.key === 'Tab' && evt.shiftKey)
+          focusedTabKey.value = getNextTabKey(idx, prev)
+          if (evt.key === 'Tab' && evt.shiftKey && idx == 0) consumed = false
           focusTab()
           nextTick(() => {
             if (!subMenuHidden.value) openFocusedSubMenu()
           })
           break
+        }
         case 'ArrowUp':
         case 'ArrowDown':
           if (

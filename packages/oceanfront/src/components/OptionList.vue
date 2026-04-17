@@ -186,10 +186,20 @@ const OfOptionList = defineComponent({
       searchText.value = ''
     }
 
+    const applyInitialFocus = () => {
+      if (!isEmpty.value) {
+        focusFirstItem()
+      } else if (showSearch.value) {
+        focusSearch()
+      } else {
+        focusFirstItem()
+      }
+    }
+
     watch(
       () => props.focus,
       (val) => {
-        if (val) focusFirstItem()
+        if (val) applyInitialFocus()
       }
     )
 
@@ -303,8 +313,7 @@ const OfOptionList = defineComponent({
 
     if (props.focus) {
       nextTick(() => {
-        if (showSearch.value) focusSearch()
-        else focusFirstItem()
+        applyInitialFocus()
       })
     }
 

@@ -53,7 +53,7 @@
     }
 
     &.focused-date {
-      outline: 1px solid var(--of-primary-tint);
+      @include of-focus-visible-ring(1px, 1px, 1px);
     }
   }
 
@@ -73,9 +73,11 @@
 div.of-date-picker-cur-year {
   cursor: pointer;
 
-  &:focus,
+  &:focus {
+    @include of-focus-visible-ring(1px, 1px, 1px);
+  }
   &:focus-visible {
-    outline: 1px solid var(--of-primary-tint);
+    @include of-focus-visible-ring;
   }
 }
 
@@ -115,10 +117,11 @@ div.of-date-picker-cur-year {
       grid-template-columns: auto auto;
     }
     .of-time-selector {
-      &:focus,
+      &:focus {
+        @include of-focus-visible-ring(1px, 1px, 1px);
+      }
       &:focus-visible {
-        outline: 1px solid var(--of-primary-tint);
-        outline-offset: -2px;
+        @include of-focus-visible-ring;
       }
     }
   }
@@ -286,10 +289,12 @@ div.of-date-picker-cur-year {
     display: flex;
     justify-content: center;
     padding-bottom: 2px;
-    &:focus,
-    &:focus-visible {
+    &:focus {
       outline: solid 1px var(--calendar-grid-color);
       outline-offset: -2px;
+    }
+    &:focus-visible {
+      @include of-focus-visible-ring;
     }
   }
   &:hover {
@@ -322,10 +327,12 @@ div.of-date-picker-cur-year {
   height: var(--of-event-height, auto);
   position: absolute;
   margin: 0 5px;
-  &:focus,
-  &:focus-visible {
+  &:focus {
     outline: solid 1px var(--calendar-grid-color);
     outline-offset: -2px;
+  }
+  &:focus-visible {
+    @include of-focus-visible-ring;
   }
 }
 
@@ -347,10 +354,12 @@ div.of-date-picker-cur-year {
   &.conflict {
     border-left: solid 2px var(--of-calendar-conflict-color, red);
   }
-  &:focus,
-  &:focus-visible {
+  &:focus {
     outline: solid 1px var(--calendar-grid-color);
     outline-offset: 0;
+  }
+  &:focus-visible {
+    @include of-focus-visible-ring;
   }
   &:hover {
     z-index: 9999 !important;
@@ -404,10 +413,12 @@ div.of-date-picker-cur-year {
   border-right: solid 1px var(--calendar-grid-color);
   > div,
   &.of-week-number {
-    &:focus,
-    &:focus-visible {
+    &:focus {
       outline: 1px solid var(--calendar-grid-color);
       outline-offset: -2px;
+    }
+    &:focus-visible {
+      @include of-focus-visible-ring;
     }
   }
   &.of-week-number {
@@ -420,10 +431,12 @@ div.of-date-picker-cur-year {
 
 .of-calendar-category-title {
   cursor: pointer;
-  &:focus,
-  &:focus-visible {
+  &:focus {
     outline: 1px solid var(--calendar-grid-color);
     outline-offset: -2px;
+  }
+  &:focus-visible {
+    @include of-focus-visible-ring;
   }
 }
 
@@ -465,12 +478,18 @@ div.of-date-picker-cur-year {
       color: var(--calendar-today-color);
     }
   }
-  &:focus,
-  &:focus-visible {
+  &:focus {
     outline: none;
     .day-number {
       outline: 2px solid var(--calendar-grid-color);
       outline-offset: -2px;
+    }
+  }
+  &:focus-visible {
+    outline: none;
+    .day-number {
+      @include of-focus-visible-ring;
+      border-radius: 50%;
     }
   }
 }
@@ -486,7 +505,9 @@ div.of-date-picker-cur-year {
   }
 }
 
-.of-icon-clear-calendar:focus,
+.of-icon-clear-calendar:focus {
+  @include of-focus-visible-ring(1px, 1px, 1px);
+}
 .of-icon-clear-calendar:focus-visible {
-  outline: 1px solid var(--of-primary-tint);
+  @include of-focus-visible-ring;
 }

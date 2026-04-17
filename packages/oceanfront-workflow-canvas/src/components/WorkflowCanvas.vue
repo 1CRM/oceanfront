@@ -6,7 +6,14 @@
       'workflow-canvas-wrapper--full-width': isFullWidth
     }"
   >
-    <div class="workflow-canvas" ref="canvasRef" @click="handleCanvasClick">
+    <div
+      class="workflow-canvas"
+      ref="canvasRef"
+      role="application"
+      :tabindex="canvasTabIndex"
+      :aria-label="mergedLabels.canvasAriaLabel"
+      @click="handleCanvasClick"
+    >
       <div class="workflow-canvas__container" :style="canvas.containerStyle.value">
         <!-- SVG layer for connectors -->
         <svg
@@ -68,6 +75,7 @@
           <div
             v-for="group in canvas.sortedGroups.value"
             :key="`group-label-${group.id}`"
+            :data-workflow-entity-id="group.id"
             class="workflow-canvas-group"
             :class="{
               'workflow-canvas-group--selected': props.selectedId === group.id,
@@ -233,6 +241,7 @@
             v-for="node in props.modelValue.nodes"
             :key="node.id"
             :ref="el => setNodeRef(node.id, el as HTMLElement)"
+            :data-workflow-entity-id="node.id"
             class="workflow-canvas-node"
             :class="{
               'workflow-canvas-node--selected': props.selectedId === node.id,
@@ -685,6 +694,12 @@ export default defineComponent({
     const selectedGroup = computed(() =>
       props.selectedId ? props.modelValue.groups.find(g => g.id === props.selectedId) : null
     )
+
+    /** Tab stop for keyboard panes when the workflow can be operated or browsed with keys */
+    const canvasTabIndex = computed(() => {
+      if (isViewMode.value) return 0
+      return props.readonly ? -1 : 0
+    })
 
     const canvasRef = ref<HTMLElement>()
     const nodeElements = ref<Map<string, HTMLElement>>(new Map())
@@ -1924,6 +1939,114 @@ export default defineComponent({
       emit('fullscreen-toggle', isFullWidth.value)
     }
 
+    function isInteractiveFocusTarget(target: EventTarget | null): boolean {
+      if (!target || !(target instanceof HTMLElement)) return false
+      const tag = target.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable) {
+        return true
+      }
+      if (tag === 'BUTTON' || tag === 'A') return true
+      return !!target.closest('button, a[href], input, select, textarea, [contenteditable="true"]')
+    }
+
+    function buildKeyboardNavEntities(): Array<{ id: string; center: Position }> {
+      const g = props.modelValue
+      const items: Array<{ id: string; center: Position }> = []
+      for (const node of g.nodes) {
+        items.push({ id: node.id, center: canvas.getEntityCenter(node) })
+      }
+      for (const group of g.groups) {
+        items.push({ id: group.id, center: canvas.getEntityCenter(group) })
+      }
+      return items
+    }
+
+    function pickFirstNavEntityId(items: Array<{ id: string; center: Position }>): string | null {
+      if (items.length === 0) return null
+      const sorted = [...items].sort((a, b) => {
+        if (a.center.y !== b.center.y) return a.center.y - b.center.y
+        return a.center.x - b.center.x
+      })
+      return sorted[0].id
+    }
+
+    function pickLastNavEntityId(items: Array<{ id: string; center: Position }>): string | null {
+      if (items.length === 0) return null
+      const sorted = [...items].sort((a, b) => {
+        if (a.center.y !== b.center.y) return b.center.y - a.center.y
+        return b.center.x - a.center.x
+      })
+      return sorted[0].id
+    }
+
+    function findNextEntityInDirection(
+      direction: 'up' | 'down' | 'left' | 'right',
+      currentId: string | null,
+      items: Array<{ id: string; center: Position }>
+    ): string | null {
+      if (items.length === 0) return null
+      if (!currentId) return pickFirstNavEntityId(items)
+
+      const current = items.find(i => i.id === currentId)
+      if (!current) return pickFirstNavEntityId(items)
+
+      const cx = current.center.x
+      const cy = current.center.y
+      const EPS = 2
+
+      const vec =
+        direction === 'up'
+          ? { x: 0, y: -1 }
+          : direction === 'down'
+            ? { x: 0, y: 1 }
+            : direction === 'left'
+              ? { x: -1, y: 0 }
+              : { x: 1, y: 0 }
+
+      let best: { id: string; dist: number } | null = null
+
+      for (const item of items) {
+        if (item.id === currentId) continue
+        const dx = item.center.x - cx
+        const dy = item.center.y - cy
+        const dot = dx * vec.x + dy * vec.y
+        if (dot <= EPS) continue
+        const dist = dx * dx + dy * dy
+        if (!best || dist < best.dist) {
+          best = { id: item.id, dist }
+        }
+      }
+
+      return best?.id ?? currentId
+    }
+
+    function scrollSelectedEntityIntoView(entityId: string) {
+      const root = canvasRef.value
+      if (!root) return
+      const el = root.querySelector<HTMLElement>(`[data-workflow-entity-id="${entityId}"]`)
+      if (el && typeof el.scrollIntoView === 'function') {
+        el.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+      }
+    }
+
+    function activateKeyboardSelection() {
+      const id = props.selectedId
+      if (!id) return
+      const node = findNode(props.modelValue, id)
+      if (node) {
+        if (!node.readonly) {
+          emit('update:selectedId', node.id)
+          emit('node-click', node.id)
+        }
+        return
+      }
+      const group = findGroup(props.modelValue, id)
+      if (group && !props.readonly && !group.readonly) {
+        emit('update:selectedId', group.id)
+        emit('group-click', group.id)
+      }
+    }
+
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape' && isFullWidth.value) {
         event.preventDefault()
@@ -1932,12 +2055,76 @@ export default defineComponent({
         return
       }
 
-      if (isViewMode.value || props.readonly || !props.selectedId) return
+      const interactive = isInteractiveFocusTarget(event.target)
 
-      const target = event.target as HTMLElement
-      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+      const allowKeyboardNav =
+        (isViewMode.value || !props.readonly) &&
+        !interactive &&
+        !event.ctrlKey &&
+        !event.metaKey &&
+        !event.altKey
+
+      if (allowKeyboardNav && event.key === 'Escape' && !isFullWidth.value && props.selectedId) {
+        event.preventDefault()
+        emit('update:selectedId', null)
         return
       }
+
+      if (allowKeyboardNav) {
+        const navItems = buildKeyboardNavEntities()
+
+        const arrowDir =
+          event.key === 'ArrowUp'
+            ? 'up'
+            : event.key === 'ArrowDown'
+              ? 'down'
+              : event.key === 'ArrowLeft'
+                ? 'left'
+                : event.key === 'ArrowRight'
+                  ? 'right'
+                  : null
+
+        if (arrowDir) {
+          event.preventDefault()
+          const nextId = findNextEntityInDirection(arrowDir, props.selectedId, navItems)
+          if (nextId && nextId !== props.selectedId) {
+            emit('update:selectedId', nextId)
+            void nextTick(() => scrollSelectedEntityIntoView(nextId))
+          }
+          return
+        }
+
+        if (event.key === 'Home') {
+          event.preventDefault()
+          const firstId = pickFirstNavEntityId(navItems)
+          if (firstId && firstId !== props.selectedId) {
+            emit('update:selectedId', firstId)
+            void nextTick(() => scrollSelectedEntityIntoView(firstId))
+          }
+          return
+        }
+
+        if (event.key === 'End') {
+          event.preventDefault()
+          const lastId = pickLastNavEntityId(navItems)
+          if (lastId && lastId !== props.selectedId) {
+            emit('update:selectedId', lastId)
+            void nextTick(() => scrollSelectedEntityIntoView(lastId))
+          }
+          return
+        }
+
+        if (event.key === 'Enter' || event.key === ' ') {
+          if (!props.selectedId) return
+          event.preventDefault()
+          activateKeyboardSelection()
+          return
+        }
+      }
+
+      if (isViewMode.value || props.readonly || !props.selectedId) return
+
+      if (interactive) return
 
       if (event.key === 'Delete' || event.key === 'Backspace') {
         event.preventDefault()
@@ -2116,6 +2303,7 @@ export default defineComponent({
       emit,
       isViewMode,
       isFullWidth,
+      canvasTabIndex,
       mergedLabels,
       selectedNode,
       selectedGroup,

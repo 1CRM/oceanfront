@@ -14,6 +14,7 @@ import {
 } from '../lib/fields'
 import { transformItemsList, useItems } from '../lib/items'
 import { useLanguage } from '../lib/language'
+import { focusManage } from '../lib/util'
 
 type ActiveItem = { text?: string; [key: string]: any }
 
@@ -117,11 +118,24 @@ export const OfSelectField = defineComponent({
     let closing: number | null = null
     const clickOpen = (_evt?: MouseEvent) => {
       if (opened.value) {
-        closePopup()
+        closePopup(true)
       } else if (fieldCtx.editable && !closing) {
         opened.value = true
       }
       return false
+    }
+    const onSelectKeydown = (evt: KeyboardEvent) => {
+      const isSpace = evt.key === ' ' || evt.code === 'Space'
+      const opensPopup =
+        isSpace ||
+        evt.key === 'Enter' ||
+        evt.key === 'ArrowUp' ||
+        evt.key === 'ArrowDown'
+      if (opensPopup) {
+        clickOpen()
+        evt.preventDefault()
+        evt.stopPropagation()
+      }
     }
     const closePopup = (refocus?: boolean) => {
       ctx.emit('blur')
@@ -135,8 +149,7 @@ export const OfSelectField = defineComponent({
       }
     }
     const focus = () => {
-      const curelt = elt.value
-      if (curelt) curelt.focus()
+      focusManage(elt.value)
     }
 
     const toggleValue = (val: any): any => {
@@ -204,7 +217,10 @@ export const OfSelectField = defineComponent({
                     setValue(val)
                   },
                   onKeydown(e: KeyboardEvent) {
-                    if (e.code === 'Enter') {
+                    const activatesRemove =
+                      e.code === 'Enter' || e.key === ' ' || e.code === 'Space'
+                    if (activatesRemove) {
+                      e.preventDefault()
                       e.stopPropagation()
                       setValue(val)
                       focus()
@@ -226,13 +242,7 @@ export const OfSelectField = defineComponent({
         focused.value = true
         searchText.value = ''
       },
-      onKeydown(evt: KeyboardEvent) {
-        if (evt.key == ' ' || evt.key == 'ArrowUp' || evt.key == 'ArrowDown') {
-          clickOpen()
-          evt.preventDefault()
-          evt.stopPropagation()
-        }
-      }
+      onKeydown: onSelectKeydown
     }
 
     const slots = {
@@ -285,11 +295,12 @@ export const OfSelectField = defineComponent({
       onMouseleave: () => {
         if (!opened.value) return false
         selectTimerId = window.setTimeout(() => {
-          closePopup()
+          closePopup(true)
         }, 500)
       }
     }
     const fRender = fieldRender({
+      keydown: onSelectKeydown,
       blank: computed(() => {
         if (props.multi)
           return !Array.isArray(inputValue.value) || !inputValue.value.length
@@ -320,13 +331,14 @@ export const OfSelectField = defineComponent({
                 onUpdateValue: (val: any) => {
                   fieldCtx.onUpdate?.(val)
                 },
-                'onKeydown:escape': () => closePopup(),
+                'onKeydown:escape': () => closePopup(true),
                 class: 'of--elevated-1',
                 ...selectMouseEvents
               })
             : undefined,
         visible: opened,
-        capture: false
+        capture: false,
+        onBlur: (isEscape?: boolean) => closePopup(isEscape !== false)
       },
       updated: computed(() => initialValue.value !== stateValue.value),
       value: stateValue

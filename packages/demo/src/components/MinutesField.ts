@@ -4,7 +4,7 @@ import {
   OfFieldBase,
   provideFieldContext,
   provideFieldRender,
-  useRecords,
+  useRecords
 } from 'oceanfront'
 import { computed, defineComponent, h, ref } from 'vue'
 
@@ -18,10 +18,23 @@ export default defineComponent({
       return props.record || recordMgr.getCurrentRecord()
     })
     const focused = ref(false)
+    const pendingPointerFocus = ref(false)
+    const suppressKeyboardFocusRing = ref(false)
+
     const elt = ref<HTMLInputElement | undefined>()
+
+    const markPendingPointerFocus = () => {
+      pendingPointerFocus.value = true
+      requestAnimationFrame(() => {
+        if (!focused.value) pendingPointerFocus.value = false
+      })
+    }
+
     const focus = (select?: boolean) => {
       if (elt.value) {
-        elt.value.focus()
+        elt.value.focus({
+          focusVisible: false
+        } as FocusOptions & { focusVisible?: boolean })
         if (select) elt.value.select()
         return true
       }
@@ -55,11 +68,14 @@ export default defineComponent({
         }
       },
       onFocus: () => {
+        suppressKeyboardFocusRing.value = pendingPointerFocus.value
+        pendingPointerFocus.value = false
         focused.value = true
       },
       onBlur: () => {
         focused.value = false
-      },
+        suppressKeyboardFocusRing.value = false
+      }
     }
 
     const slots = {
@@ -70,32 +86,27 @@ export default defineComponent({
           class: ['of-field-input'],
           value: value.value,
           ...hooks,
-          ref: elt,
+          ref: elt
         })
-      },
+      }
     }
 
     const fRender = fieldRender({
       cursor: computed(() => (fieldCtx.editable ? 'text' : 'normal')),
       focused,
       focus,
+      click: () => focus(fieldCtx.editable),
+      onMousedown: markPendingPointerFocus,
+      class: computed(() => ({
+        'of-text-field': true,
+        'of--suppress-keyboard-focus-ring': suppressKeyboardFocusRing.value
+      }))
     })
 
     provideFieldRender(fRender)
 
-    const theProps = computed(() => {
-      return {
-        ...props,
-        class: {
-          'of-text-field': true,
-        },
-        onClick: () => focus(fieldCtx.editable),
-      }
-    })
-
-    const render = () => {
-      return h(OfFieldBase, theProps, { ...slots, ...ctx.slots })
+    return () => {
+      return h(OfFieldBase, props, { ...slots, ...ctx.slots })
     }
-    return render
-  },
+  }
 })

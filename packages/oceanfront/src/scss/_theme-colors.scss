@@ -70,6 +70,8 @@
   --of-color-section-header-dark: #314762;
   --of-color-section-header2-dark: #354c69;
   --of-color-section-header3-dark: #39516f;
+  --of-focus-ring-color: #005fcc;
+  --of-focus-ring-contrast: #ffffff;
 }
 
 :root,
@@ -93,6 +95,7 @@
   --of-color-error-container: var(--of-color-error-container-light);
   --of-color-on-error-container: var(--of-color-on-error-container-light);
   --of-color-background: var(--of-color-background-light);
+  --of-focus-ring-gap-fill: var(--of-color-background);
   --of-color-on-background: var(--of-color-on-background-light);
   --of-color-outline: var(--of-color-outline-light);
   --of-color-shadow: var(--of-color-shadow-light);

@@ -38,6 +38,15 @@ export const isPrimitive = (val: unknown): val is Primitive => {
 
 export type Primitive = boolean | null | number | string | bigint | symbol
 
+/** Programmatic focus (e.g. after closing a popup) without :focus-visible styling where supported. */
+export function focusManage(elt: HTMLElement | undefined | null): void {
+  if (!elt) return
+  // focusVisible: DOM FocusOptions extension (Chromium/WebKit/Firefox); lib.dom may omit it
+  elt.focus({ focusVisible: false } as FocusOptions & {
+    focusVisible?: boolean
+  })
+}
+
 type Head<T extends any[]> = T extends [infer X, ...any[]] ? X : never
 
 type Tail<T extends any[]> = ((...x: T) => void) extends (

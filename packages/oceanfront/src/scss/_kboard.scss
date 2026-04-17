@@ -1,3 +1,5 @@
+@use 'variables' as *;
+
 .of-kanban-board {
   --of-kanban-board-drop-indicator-bg: #0052cc;
   --of-kanban-board-avatar-text-color: white;
@@ -288,10 +290,7 @@
 
         &.of--dependency-related {
           outline: 2px solid
-            var(
-              --of-kanban-dep-color,
-              var(--of-kanban-board-drop-indicator-bg)
-            );
+            var(--of-kanban-dep-color, var(--of-kanban-board-drop-indicator-bg));
           outline-offset: -2px;
         }
 
@@ -303,6 +302,12 @@
 
         &.of--dependency-dimmed {
           opacity: 0.6;
+        }
+
+        outline: none;
+        &:focus-visible {
+          @include of-focus-visible-ring;
+          border-radius: 3px;
         }
 
         .card-content {
@@ -404,6 +409,7 @@
             display: flex;
             flex-wrap: wrap;
             overflow: scroll;
+            padding: 4px 2px;
 
             .card-tags {
               color: var(--of-color-on-background);
@@ -411,13 +417,17 @@
               cursor: pointer;
               display: -webkit-box;
               -webkit-box-orient: vertical;
-              overflow: hidden;
+              overflow: visible;
               display: flex;
               text-overflow: ellipsis;
               .of-button > button {
                 font-size: 12px;
                 font-weight: 400;
                 line-height: 1em;
+
+                &:focus-visible {
+                  @include of-focus-visible-ring;
+                }
               }
             }
           }
@@ -450,6 +460,11 @@
     align-items: center;
     gap: 10px;
     cursor: pointer;
+
+    &:focus-visible {
+      @include of-focus-visible-ring;
+      border-radius: 1000px;
+    }
 
     .avatar-image {
       width: 100%;
@@ -537,6 +552,12 @@
         display: flex;
         align-items: center;
         gap: 4px;
+        outline: none;
+
+        &:focus-visible {
+          @include of-focus-visible-ring;
+          border-radius: 12px;
+        }
 
         .remove-icon {
           font-size: 14px;

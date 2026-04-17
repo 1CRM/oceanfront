@@ -263,7 +263,29 @@
         font-size: 0.85em;
       }
     }
+
+    &.of-button-main {
+      border-top-left-radius: var(--button-border-left-radius);
+      border-bottom-left-radius: var(--button-border-left-radius);
+      border-top-right-radius: var(--button-border-right-radius);
+      border-bottom-right-radius: var(--button-border-right-radius);
+    }
+    &.of-button-split {
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+      border-top-right-radius: var(--button-border-right-radius);
+      border-bottom-right-radius: var(--button-border-right-radius);
+    }
+    &:focus-visible {
+      @include of-focus-visible-ring;
+    }
   }
+
+  &:has(> .of-button-split) > .of-button-main {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
   &.of-button--icon > button {
     padding: 0 var(--button-v-pad);
   }
@@ -284,14 +306,17 @@
           --of-elevation-box-shadow: none;
         }
       }
-      &:hover:not(:active) {
+      &:hover:not(:active):not(.of--pressed) {
         @include apply-button-state(btn-elv, hover);
         .of--layer.of--layer-outl {
           --of-elevation-box-shadow: var(--of-elevation-box-shadow-2);
         }
       }
-      &.of--focused {
+      &.of--focused:not(:has(> button:focus-visible)) {
         @include apply-button-state(btn-elv, focus);
+      }
+      &.of--pressed {
+        @include apply-button-state(btn-elv, active);
       }
     }
     &.of--mode-disabled {
@@ -307,14 +332,17 @@
     --button-border-color: transparent;
 
     &:not(.of--mode-disabled) {
-      &:hover:not(:active) {
+      &:hover:not(:active):not(.of--pressed) {
         @include apply-button-state(btn-fill, hover);
         & .of--layer.of--layer-outl {
           --of-elevation-box-shadow: var(--of-elevation-box-shadow-1);
         }
       }
-      &.of--focused {
+      &.of--focused:not(:has(> button:focus-visible)) {
         @include apply-button-state(btn-fill, hover);
+      }
+      &.of--pressed {
+        @include apply-button-bg(btn-fill, active);
       }
     }
     &.of--mode-disabled {
@@ -330,14 +358,17 @@
     --button-border-color: transparent;
 
     &:not(.of--mode-disabled) {
-      &:hover:not(:active) {
+      &:hover:not(:active):not(.of--pressed) {
         @include apply-button-state(btn-tonal, hover);
         & .of--layer.of--layer-outl {
           --of-elevation-box-shadow: var(--of-elevation-box-shadow-1);
         }
       }
-      &.of--focused {
+      &.of--focused:not(:has(> button:focus-visible)) {
         @include apply-button-state(btn-tonal, focus);
+      }
+      &.of--pressed {
+        @include apply-button-state(btn-tonal, active);
       }
     }
     &.of--mode-disabled {
@@ -354,11 +385,14 @@
     --button-border-color: #{use-color(btn-outl-brd)};
 
     &:not(.of--mode-disabled) {
-      &:hover:not(:active) {
+      &:hover:not(:active):not(.of--pressed) {
         @include apply-button-state(btn-outl, hover);
       }
-      &.of--focused {
+      &.of--focused:not(:has(> button:focus-visible)) {
         @include apply-button-state(btn-outl, focus);
+      }
+      &.of--pressed {
+        --button-border-color: #{use-color(btn-outl-brd, active)};
       }
     }
     &.of--mode-disabled {
@@ -378,10 +412,13 @@
     --button-border-color: transparent;
 
     &:not(.of--mode-disabled) {
-      &:hover:not(:active) {
+      &:hover:not(:active):not(.of--pressed) {
         @include apply-button-state(btn-text, hover);
       }
-      &.of--focused {
+      &.of--focused:not(:has(> button:focus-visible)) {
+        @include apply-button-state(btn-text, focus);
+      }
+      &.of--pressed {
         @include apply-button-state(btn-text, focus);
       }
     }
@@ -455,9 +492,9 @@
       @include apply-button-state(btn-tonal, active);
     }
 
-    &.of--variant-elevated.of--focused,
-    &.of--variant-tonal.of--focused:not(.of--active),
-    &.of--variant-filled.of--focused {
+    &.of--variant-elevated.of--focused:not(.of--active):not(.of--pressed),
+    &.of--variant-tonal.of--focused:not(.of--active):not(.of--pressed),
+    &.of--variant-filled.of--focused:not(.of--active):not(.of--pressed) {
       --state-bg-opacity: 0;
     }
 

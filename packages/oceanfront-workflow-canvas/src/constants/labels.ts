@@ -38,5 +38,8 @@ export const DEFAULT_LABELS: WorkflowCanvasLabels = {
   defaultGroupLabel: 'New Group',
 
   // Dynamic text formatters
-  nestedGroupLabel: (kind: string) => `Nested ${kind}`
+  nestedGroupLabel: (kind: string) => `Nested ${kind}`,
+
+  canvasAriaLabel:
+    'Workflow diagram. Use arrow keys to move between steps, Enter to open details, Escape to clear selection.'
 }

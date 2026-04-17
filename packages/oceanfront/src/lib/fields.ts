@@ -29,6 +29,7 @@ export interface FieldRender {
   blank?: boolean
   class?: string | string[] | Record<string, boolean>
   click?: (evt?: MouseEvent) => boolean | void
+  onMousedown?: (evt?: MouseEvent) => void
   onMouseleave?: (evt?: MouseEvent) => boolean | void
   onMouseenter?: (evt?: MouseEvent) => boolean | void
   keydown?: (evt?: KeyboardEvent) => boolean | void

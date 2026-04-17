@@ -1,5 +1,6 @@
 @use 'sass:list';
 @use 'sass:map';
+@use 'sass:math';
 
 @function use-var($cat, $var, $state: false) {
   @if $state {
@@ -114,4 +115,25 @@ $color-field-focus-label: var(--of-color-field-focus-label);
   -webkit-user-select: none;
   -moz-user-select: -moz-none;
   user-select: none;
+}
+
+/// Two-color “Oreo” focus ring: gap (like `outline-offset`) + contrast stripe + `--of-focus-ring-color`.
+@mixin of-focus-visible-ring($gap: 2px, $inner: 2px, $outer: 2px) {
+  overflow: visible;
+  z-index: 2;
+
+  @if $gap < 0px {
+    $pull: math.abs($gap);
+    outline: #{$inner} solid var(--of-focus-ring-color);
+    outline-offset: $gap;
+    box-shadow: 0 0 0 #{$pull} var(--of-focus-ring-contrast);
+  } @else {
+    outline: none;
+    $spread-contrast: $gap + $inner;
+    $spread-focus: $gap + $inner + $outer;
+    box-shadow:
+      0 0 0 #{$gap} var(--of-focus-ring-gap-fill, var(--of-color-background)),
+      0 0 0 #{$spread-contrast} var(--of-focus-ring-color),
+      0 0 0 #{$spread-focus} var(--of-focus-ring-contrast);
+  }
 }

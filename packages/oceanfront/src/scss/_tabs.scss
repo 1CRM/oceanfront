@@ -105,8 +105,20 @@
     --tabs-v-pad-base: 0.2em;
   }
 
-  .of-tab-header-item {
+  > div .of-tabs-header .of-tab-header-item {
     position: relative;
+
+    &:focus-visible {
+      outline: none;
+      transition: none;
+      animation: none;
+
+      .of--layer.of--layer-brd {
+        @include of-focus-visible-ring(-2px, 2px, 2px);
+        opacity: 1;
+        border: none;
+      }
+    }
   }
   &.of--with-border {
     margin-bottom: calc(-1 * var(--tab-active-border));
@@ -306,10 +318,6 @@
           @include apply-tab-color(mat, hover);
           @include apply-tab-state(mat, hover);
         }
-        &:focus,
-        &:focus-visible {
-          outline: none;
-        }
       }
       &.is-disabled {
         @include apply-tab-bg(mat, disabled);
@@ -331,10 +339,6 @@
           @include apply-tab-bg(att, hover);
           @include apply-tab-color(att, hover);
           @include apply-tab-state(att, hover);
-        }
-        &:focus,
-        &:focus-visible {
-          outline: none;
         }
         &.is-active {
           @include apply-tab-bg(att, active);
@@ -420,10 +424,6 @@
             @include apply-tab-bg(osx, hover);
             @include apply-tab-color(osx, hover);
             @include apply-tab-state(osx, hover);
-          }
-          &:focus,
-          &.of--focused {
-            outline: none;
           }
           &.is-active {
             @include apply-tab-bg(osx, active);

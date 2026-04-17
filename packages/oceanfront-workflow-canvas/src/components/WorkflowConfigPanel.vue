@@ -128,7 +128,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed } from 'vue'
+import { defineComponent, computed, onMounted, onUnmounted } from 'vue'
 import type {
   WorkflowNode,
   WorkflowGroup,
@@ -180,6 +180,14 @@ export default defineComponent({
   },
   emits: ['close', 'delete-node', 'delete-group', 'update-node', 'update-group'],
   setup(props, { emit }) {
+    const onKeydown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen.value) {
+        emit('close')
+      }
+    }
+    onMounted(() => document.addEventListener('keydown', onKeydown))
+    onUnmounted(() => document.removeEventListener('keydown', onKeydown))
+
     // Helper to check if field.value is a valid component
     const isComponent = (value: any): boolean => {
       if (!value) return false

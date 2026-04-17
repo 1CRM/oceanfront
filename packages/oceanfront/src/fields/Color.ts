@@ -2,6 +2,7 @@ import {
   computed,
   defineComponent,
   h,
+  nextTick,
   ref,
   resolveComponent,
   VNode,
@@ -19,6 +20,7 @@ import {
   rgbToHex,
   rgbToHsv
 } from '../lib/color'
+import { focusManage } from '../lib/util'
 import {
   BaseFieldProps,
   fieldRender,
@@ -47,11 +49,11 @@ export const OfColorField = defineComponent({
       return id
     })
     const focus = () => {
-      elt.value?.focus()
+      focusManage(elt.value)
     }
-    const closePopup = (refocus?: boolean) => {
+    const closePopup = (refocus = true) => {
       opened.value = false
-      if (refocus) focus()
+      if (refocus) nextTick(() => focus())
     }
     const clickOpen = () => {
       if (fieldCtx.editable) opened.value = true
@@ -377,7 +379,7 @@ export const OfColorField = defineComponent({
       popup: {
         content: () => (opened.value ? renderPopup() : undefined),
         visible: opened,
-        onBlur: closePopup
+        onBlur: (isEscape?: boolean) => closePopup(isEscape !== false)
       },
       updated: computed(() => initialValue.value !== stateValue.value),
       value: stateValue

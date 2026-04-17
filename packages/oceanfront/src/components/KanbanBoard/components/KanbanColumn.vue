@@ -34,6 +34,7 @@
     <div
       class="of-kanban-column-content"
       :data-column-id="column.id"
+      tabindex="-1"
       @dragover.prevent="handleDragOver"
       @drop.prevent="handleDrop"
       @dragenter.prevent="handleDragEnter"

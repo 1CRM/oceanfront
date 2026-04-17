@@ -124,7 +124,14 @@ export const OfToggleField = defineComponent({
       updated: computed(() => initialValue.value !== stateValue.value),
       value: stateValue,
       undecorated: true,
-      fieldContext: fieldCtx
+      fieldContext: fieldCtx,
+      keydown: (event: KeyboardEvent) => {
+        if (!fieldCtx.editable) return
+        if (!['Enter', 'Space'].includes(event.code)) return
+        event.preventDefault()
+        event.stopPropagation()
+        clickToggle()
+      }
     })
     provideFieldRender(fRender)
 

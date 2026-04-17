@@ -59,6 +59,10 @@
   cursor: pointer;
   display: block;
   outline: none;
+  &:focus-visible {
+    @include of-focus-visible-ring(-2px, 2px, 2px);
+    border-radius: 5px;
+  }
   padding: 2px 4px;
   text-decoration: none;
   transition: color 200ms;

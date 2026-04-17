@@ -25,6 +25,7 @@ import {
   provideFieldRender
 } from '../lib/fields'
 import { useFormats } from '../lib/formats'
+import { focusManage } from '../lib/util'
 
 type InputType = 'date' | 'datetime' | 'time'
 
@@ -134,7 +135,7 @@ const defineField = (type: InputType, name: string, cls: string) =>
       const monthStart: Ref<Date> = ref(new Date())
 
       const focus = () => {
-        elt.value?.focus()
+        focusManage(elt.value)
       }
 
       const closePopup = (refocus?: boolean) => {
@@ -299,7 +300,7 @@ const defineField = (type: InputType, name: string, cls: string) =>
         popup: {
           content: () => (opened.value ? renderPopup() : null),
           visible: opened,
-          onBlur: closePopup
+          onBlur: (isEscape?: boolean) => closePopup(isEscape !== false)
         },
         value: stateValue
       })

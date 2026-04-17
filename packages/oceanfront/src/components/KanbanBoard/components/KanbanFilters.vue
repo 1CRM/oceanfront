@@ -17,7 +17,13 @@
                   'of-kanban-avatar': true,
                   'of--selected': selectedAssignees.includes(assignee.id)
                 }"
+                role="button"
+                tabindex="0"
+                :aria-pressed="selectedAssignees.includes(assignee.id)"
+                :aria-label="assignee.name"
                 @click="toggleAssignee(assignee.id)"
+                @keydown.enter.prevent="toggleAssignee(assignee.id)"
+                @keydown.space.prevent="toggleAssignee(assignee.id)"
                 :title="assignee.name"
               >
                 <img

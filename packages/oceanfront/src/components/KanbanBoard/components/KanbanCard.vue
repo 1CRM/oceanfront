@@ -52,7 +52,12 @@
           <div
             class="of-kanban-avatar"
             v-if="card.assignee"
+            role="button"
+            tabindex="0"
+            :aria-label="card.assignee.name"
             @click="$emit('assignee-click', card.assignee)"
+            @keydown.enter.prevent="$emit('assignee-click', card.assignee)"
+            @keydown.space.prevent="$emit('assignee-click', card.assignee)"
             :title="card.assignee.name"
           >
             <img
@@ -80,6 +85,8 @@
             variant="outlined"
             icon=""
             size="sm"
+            tabindex="0"
+            :aria-label="tag"
             @click.stop="$emit('card-tag-click', tag)"
           >
             {{ tag }}

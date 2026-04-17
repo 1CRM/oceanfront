@@ -125,6 +125,15 @@
   height: 100%;
   overflow: auto;
   background-color: var(--wf-surface);
+
+  &:focus {
+    outline: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--wf-primary);
+    outline-offset: 2px;
+  }
   background-image:
     linear-gradient(var(--wf-grid-line) 1px, transparent 1px),
     linear-gradient(90deg, var(--wf-grid-line) 1px, transparent 1px);

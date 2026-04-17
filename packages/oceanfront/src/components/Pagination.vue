@@ -2,12 +2,14 @@
   <div :id="outerId" class="of-pagination">
     <div class="of-pagination-header">
       <span
+        ref="buttonsetRef"
         class="of-buttonset"
         :aria-label="ariaLabels?.pagination ?? 'Pagination'"
         :class="{
           'of-buttonset--rounded': rounded,
           'of--elevated': variant == 'elevated'
         }"
+        @keydown="onButtonsetKeydown"
       >
         <of-button
           v-if="showGoToFirst"
@@ -132,6 +134,31 @@ export default defineComponent({
     let page: Ref<number> = computed(() => props.modelValue || 1)
     const totalVisible: Ref<number> = computed(() => props.totalVisible || 5)
     const activeButton = ref<any>(null)
+    const buttonsetRef = ref<HTMLElement | null>(null)
+
+    const paginationButtons = (): HTMLButtonElement[] => {
+      const root = buttonsetRef.value
+      if (!root) return []
+      return Array.from(
+        root.querySelectorAll<HTMLButtonElement>(
+          'button.of-button-main:not([disabled])'
+        )
+      )
+    }
+
+    const onButtonsetKeydown = (event: KeyboardEvent) => {
+      if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return
+      const buttons = paginationButtons()
+      if (buttons.length < 2) return
+      const active = document.activeElement as HTMLElement | null
+      const idx = buttons.indexOf(active as HTMLButtonElement)
+      if (idx < 0) return
+      const delta = event.key === 'ArrowRight' ? 1 : -1
+      const nextIdx = idx + delta
+      if (nextIdx < 0 || nextIdx >= buttons.length) return
+      event.preventDefault()
+      buttons[nextIdx].focus()
+    }
 
     let autoId: string
     const outerId = computed(() => {
@@ -325,6 +352,8 @@ export default defineComponent({
       pages,
       outerId,
       activeButton,
+      buttonsetRef,
+      onButtonsetKeydown,
 
       showGoToFirst,
       showGoToLast,
