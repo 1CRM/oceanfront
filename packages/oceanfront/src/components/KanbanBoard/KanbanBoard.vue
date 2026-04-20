@@ -47,7 +47,7 @@
         :selected-card-id="selectedCardId"
         :active-column-id="activeColumnId"
         :has-more="hasMoreCards[column.id]"
-        :is-collapsed="collapsedColumns.includes(column.id)"
+        :is-collapsed="collapsedColumns.includes(String(column.id))"
         :dependency-stripe-color-by-card-key="
           dependencyIndex.stripeColorByCardKey
         "
@@ -226,6 +226,7 @@ export default defineComponent({
       tags: new Set<string>()
     })
     const activeColumnId = ref<string | null>(null)
+    const pendingExpandChecks = new Set<number>()
 
     const storageKey = computed<string>(
       () => `kanban-collapsed-columns-${props.id}`
@@ -636,15 +637,122 @@ export default defineComponent({
       return emit('load-previous', columnId)
     }
 
+    const getColumnElementById = (
+      columnId: string
+    ): HTMLElement | undefined => {
+      const boardEl = boardRef.value
+      if (!boardEl) return undefined
+
+      const columnEls = Array.from(
+        boardEl.querySelectorAll('.of-kanban-column')
+      ) as HTMLElement[]
+      const normalizedId = String(columnId)
+      const byDataId = columnEls.find(
+        (el) => (el as HTMLElement).dataset.columnId === normalizedId
+      )
+      if (byDataId) return byDataId
+
+      const columnIndex = filteredColumns.value.findIndex(
+        (column) => String(column.id) === normalizedId
+      )
+      if (columnIndex < 0 || columnIndex >= columnEls.length) return undefined
+
+      return columnEls[columnIndex]
+    }
+
+    const ensureExpandedColumnVisible = (columnId: string) => {
+      const boardEl = boardRef.value
+      if (!boardEl) return
+
+      const columnEl = getColumnElementById(columnId)
+      if (!columnEl) return
+
+      const computedStyle = window.getComputedStyle(columnEl)
+      const maxWidth = Number.parseFloat(computedStyle.maxWidth) || 0
+      const minWidth = Number.parseFloat(computedStyle.minWidth) || 0
+      const projectedWidth = Math.max(columnEl.offsetWidth, maxWidth, minWidth)
+
+      const columnLeft = columnEl.offsetLeft
+      const columnRight = columnLeft + projectedWidth
+      const viewLeft = boardEl.scrollLeft
+      const viewRight = viewLeft + boardEl.clientWidth
+
+      if (columnLeft >= viewLeft && columnRight <= viewRight) return
+
+      const edgePadding = 8
+      let targetScrollLeft = viewLeft
+      if (columnLeft < viewLeft) targetScrollLeft = columnLeft - edgePadding
+      else if (columnRight > viewRight)
+        targetScrollLeft = columnRight - boardEl.clientWidth + edgePadding
+
+      const maxScrollLeft = Math.max(
+        0,
+        boardEl.scrollWidth - boardEl.clientWidth
+      )
+      targetScrollLeft = Math.min(Math.max(targetScrollLeft, 0), maxScrollLeft)
+
+      if (Math.abs(targetScrollLeft - boardEl.scrollLeft) < 1) return
+      boardEl.scrollLeft = targetScrollLeft
+    }
+
+    const scheduleExpandedColumnVisibility = (columnId: string) => {
+      const normalizedId = String(columnId)
+      const runIfStillExpanded = () => {
+        if (!collapsedColumns.value.includes(normalizedId))
+          ensureExpandedColumnVisible(normalizedId)
+      }
+
+      nextTick(() => {
+        const runAfterFrame = () => {
+          if (typeof requestAnimationFrame === 'undefined') {
+            runIfStillExpanded()
+            return
+          }
+          requestAnimationFrame(() => runIfStillExpanded())
+        }
+
+        runAfterFrame()
+
+        const columnEl = getColumnElementById(normalizedId)
+        if (!columnEl) return
+
+        const handleTransitionEnd = (event: TransitionEvent) => {
+          if (event.target !== columnEl) return
+          if (
+            event.propertyName &&
+            !['width', 'min-width', 'max-width', 'flex-basis', 'flex'].includes(
+              event.propertyName
+            )
+          ) {
+            return
+          }
+          runIfStillExpanded()
+        }
+        columnEl.addEventListener('transitionend', handleTransitionEnd, {
+          once: true
+        })
+
+        // Fallback for browsers/layouts where transitionend is not emitted as expected.
+        const timeoutId = window.setTimeout(() => {
+          pendingExpandChecks.delete(timeoutId)
+          columnEl.removeEventListener('transitionend', handleTransitionEnd)
+          runIfStillExpanded()
+        }, 380)
+        pendingExpandChecks.add(timeoutId)
+      })
+    }
+
     const handleColumnCollapse = (columnId: string) => {
-      const wasCollapsed = collapsedColumns.value.includes(columnId)
+      const normalizedId = String(columnId)
+      const wasCollapsed = collapsedColumns.value.includes(normalizedId)
       if (wasCollapsed) {
         collapsedColumns.value = collapsedColumns.value.filter(
-          (id) => id !== columnId
+          (id) => id !== normalizedId
         )
-        emit('column-expanded', columnId)
+        scheduleExpandedColumnVisibility(normalizedId)
+        emit('column-expanded', normalizedId)
       } else {
-        collapsedColumns.value = [...collapsedColumns.value, columnId]
+        collapsedColumns.value = [...collapsedColumns.value, normalizedId]
       }
     }
 
@@ -691,6 +799,14 @@ export default defineComponent({
         if (columnId) {
           observedColumns.set(el, String(columnId))
           columnObserver.value!.observe(el)
+          return
+        }
+
+        const index = Array.from(columnEls).indexOf(el)
+        const fallbackId = filteredColumns.value[index]?.id
+        if (fallbackId != null) {
+          observedColumns.set(el, String(fallbackId))
+          columnObserver.value!.observe(el)
         }
       })
     }
@@ -702,7 +818,7 @@ export default defineComponent({
     }
 
     onMounted(() => {
-      collapsedColumns.value = getCollapsedColumns(storageKey.value)
+      collapsedColumns.value = getCollapsedColumns(storageKey.value).map(String)
       window.addEventListener('click', handleWindowClick)
       window.addEventListener('dragend', handleWindowDragEnd)
       setupColumnObserver()
@@ -712,6 +828,10 @@ export default defineComponent({
       window.removeEventListener('click', handleWindowClick)
       window.removeEventListener('dragend', handleWindowDragEnd)
       columnObserver.value?.disconnect()
+      pendingExpandChecks.forEach((timeoutId) => {
+        window.clearTimeout(timeoutId)
+      })
+      pendingExpandChecks.clear()
     })
 
     // Re-observe when:
