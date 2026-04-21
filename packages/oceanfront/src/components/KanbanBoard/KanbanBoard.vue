@@ -227,6 +227,11 @@ export default defineComponent({
     })
     const activeColumnId = ref<string | null>(null)
     const pendingExpandChecks = new Set<number>()
+    const pendingSmoothScrollFallbacks = new Set<number>()
+    const recentExpandScrollTargets = new WeakMap<
+      HTMLElement,
+      { left: number; at: number }
+    >()
 
     const storageKey = computed<string>(
       () => `kanban-collapsed-columns-${props.id}`
@@ -667,32 +672,99 @@ export default defineComponent({
       const columnEl = getColumnElementById(columnId)
       if (!columnEl) return
 
-      const computedStyle = window.getComputedStyle(columnEl)
-      const maxWidth = Number.parseFloat(computedStyle.maxWidth) || 0
-      const minWidth = Number.parseFloat(computedStyle.minWidth) || 0
-      const projectedWidth = Math.max(columnEl.offsetWidth, maxWidth, minWidth)
+      const hasHorizontalOverflow = (el: HTMLElement): boolean =>
+        el.scrollWidth - el.clientWidth > 1
 
-      const columnLeft = columnEl.offsetLeft
-      const columnRight = columnLeft + projectedWidth
-      const viewLeft = boardEl.scrollLeft
-      const viewRight = viewLeft + boardEl.clientWidth
+      const isHorizontalScrollContainer = (el: HTMLElement): boolean => {
+        const overflowX = window.getComputedStyle(el).overflowX
+        const allowsHorizontalScroll =
+          overflowX === 'auto' ||
+          overflowX === 'scroll' ||
+          overflowX === 'overlay'
+        // Prefer true horizontal scrollers; always allow boardEl as fallback root.
+        return (
+          hasHorizontalOverflow(el) &&
+          (allowsHorizontalScroll || el === boardEl)
+        )
+      }
 
-      if (columnLeft >= viewLeft && columnRight <= viewRight) return
+      // Keep geometry and scroll calculations in the same coordinate system.
+      const getScrollContainer = (): HTMLElement => {
+        if (isHorizontalScrollContainer(boardEl)) return boardEl
+        let current: HTMLElement | null = columnEl.parentElement
+        while (current) {
+          if (isHorizontalScrollContainer(current)) return current
+          if (current === boardEl) break
+          current = current.parentElement
+        }
+        return boardEl
+      }
 
-      const edgePadding = 8
-      let targetScrollLeft = viewLeft
-      if (columnLeft < viewLeft) targetScrollLeft = columnLeft - edgePadding
-      else if (columnRight > viewRight)
-        targetScrollLeft = columnRight - boardEl.clientWidth + edgePadding
+      const scrollContainer = getScrollContainer()
+      const containerRect = scrollContainer.getBoundingClientRect()
+      const columnRect = columnEl.getBoundingClientRect()
 
+      const leftEdgePadding = 8
+      // Keep a little more space on the right so expanded columns are fully visible.
+      const rightEdgePadding = 24
+      const visibleLeft = containerRect.left + leftEdgePadding
+      const visibleRight = containerRect.right - rightEdgePadding
+
+      if (columnRect.left >= visibleLeft && columnRect.right <= visibleRight)
+        return
+
+      let delta = 0
+      if (columnRect.left < visibleLeft) delta = columnRect.left - visibleLeft
+      else if (columnRect.right > visibleRight)
+        delta = columnRect.right - visibleRight
+
+      const targetScrollLeft = scrollContainer.scrollLeft + delta
       const maxScrollLeft = Math.max(
         0,
-        boardEl.scrollWidth - boardEl.clientWidth
+        scrollContainer.scrollWidth - scrollContainer.clientWidth
       )
-      targetScrollLeft = Math.min(Math.max(targetScrollLeft, 0), maxScrollLeft)
+      const clampedTarget = Math.min(
+        Math.max(targetScrollLeft, 0),
+        maxScrollLeft
+      )
 
-      if (Math.abs(targetScrollLeft - boardEl.scrollLeft) < 1) return
-      boardEl.scrollLeft = targetScrollLeft
+      if (Math.abs(clampedTarget - scrollContainer.scrollLeft) < 1) return
+
+      const now =
+        typeof performance !== 'undefined' ? performance.now() : Date.now()
+      const recentTarget = recentExpandScrollTargets.get(scrollContainer)
+      // Expand checks run multiple times (raf, transitionend, timeout). Avoid
+      // restarting essentially the same smooth scroll and creating a jerky feel.
+      if (
+        recentTarget &&
+        Math.abs(recentTarget.left - clampedTarget) < 2 &&
+        now - recentTarget.at < 450
+      ) {
+        return
+      }
+
+      recentExpandScrollTargets.set(scrollContainer, {
+        left: clampedTarget,
+        at: now
+      })
+
+      if (typeof scrollContainer.scrollTo === 'function') {
+        const startLeft = scrollContainer.scrollLeft
+        scrollContainer.scrollTo({ left: clampedTarget, behavior: 'smooth' })
+        const fallbackId = window.setTimeout(() => {
+          pendingSmoothScrollFallbacks.delete(fallbackId)
+          const didNotMove =
+            Math.abs(scrollContainer.scrollLeft - startLeft) < 1
+          const stillFarFromTarget =
+            Math.abs(scrollContainer.scrollLeft - clampedTarget) > 1
+          if (didNotMove && stillFarFromTarget) {
+            scrollContainer.scrollLeft = clampedTarget
+          }
+        }, 220)
+        pendingSmoothScrollFallbacks.add(fallbackId)
+      } else {
+        scrollContainer.scrollLeft = clampedTarget
+      }
     }
 
     const scheduleExpandedColumnVisibility = (columnId: string) => {
@@ -832,6 +904,10 @@ export default defineComponent({
         window.clearTimeout(timeoutId)
       })
       pendingExpandChecks.clear()
+      pendingSmoothScrollFallbacks.forEach((timeoutId) => {
+        window.clearTimeout(timeoutId)
+      })
+      pendingSmoothScrollFallbacks.clear()
     })
 
     // Re-observe when:
