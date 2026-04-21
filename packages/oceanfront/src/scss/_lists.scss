@@ -45,7 +45,15 @@
     item-border,
     (transparent, 0%),
     (
-      focus: var(--of-primary-tint) 50%
+      focus:
+        (
+          color-mix(
+              in srgb,
+              var(--of-primary-tint) 80%,
+              var(--of-color-on-surface) 20%
+            ),
+          100%
+        )
     )
   );
 
@@ -79,7 +87,7 @@
     transition: background-color 200ms;
 
     & .of--layer {
-      border: 1px solid transparent;
+      border: #{$field-focus-border-em} solid transparent;
       background: transparent;
       border-radius: 5px;
 

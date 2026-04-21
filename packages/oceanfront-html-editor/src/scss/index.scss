@@ -135,7 +135,7 @@
       color: var(--of-field-border-color);
       background-color: var(--of-field-border-color);
       opacity: var(--of-field-border-opacity);
-      height: var(--field-border-width);
+      height: var(--field-border-layout, var(--field-border-width));
       border: none;
     }
 
@@ -295,6 +295,7 @@
   border: 0;
   --of-editor-content-margin: 0;
   --field-border-width: 0;
+  --field-border-layout: 0;
   padding-left: var(--field-h-pad);
 
   .of-editor-body {

@@ -162,7 +162,15 @@
     (
       hover: var(--of-primary-tint) 60%,
       disabled: var(--of-primary-tint) 60%,
-      focus: var(--of-primary-tint) 100%,
+      // Blend toward on-surface so .of--layer-brd meets non-text contrast (≥3:1) on pale surfaces (WCAG 1.4.11).
+      focus: (
+          color-mix(
+            in srgb,
+            var(--of-primary-tint) 80%,
+            var(--of-color-on-surface) 20%
+          ),
+          100%
+        ),
       invalid: var(--of-color-error) 100%
     )
   );
@@ -224,7 +232,9 @@
   --field-border-opacity: 1;
   --field-border-radius: #{$border-radius-input};
   --field-border-style: solid;
+  // Paint: --field-border-width (1px at rest, em when focused). Layout: --field-border-layout (max stroke so inner content does not shift).
   --field-border-width: 1px;
+  --field-border-layout: var(--field-border-width);
   --field-color: #{use-color(field-color)};
   --field-opacity: #{use-opacity(field-color)};
   --field-font-size: #{$font-size-input};
@@ -254,6 +264,8 @@
   }
 
   &.of--interactive {
+    --field-border-layout: #{$field-focus-border-em};
+    --field-border-width: 1px;
     --field-border-color: #{use-color(field-border)};
     --field-border-opacity: #{use-opacity(field-border)};
   }
@@ -274,23 +286,13 @@
     --field-label-opacity: #{use-opacity(field-label, hover)};
   }
   &.of--interactive.of--focused {
+    --field-border-width: #{$field-focus-border-em};
     &:not(.of--invalid):not(.of--undecorated) {
       --field-border-color: #{use-color(field-border, focus)};
       --field-border-opacity: #{use-opacity(field-border, focus)};
     }
     --field-label-color: #{use-color(field-label, focus)};
     --field-label-opacity: #{use-opacity(field-label, focus)};
-  }
-  // Toggle: hidden input is focused on click for a11y; show field focus chrome only for keyboard.
-  &.of-toggle-field.of--interactive.of--focused:not(
-      :has(.of-field-input:focus-visible)
-    ) {
-    &:not(.of--invalid):not(.of--undecorated) {
-      --field-border-color: #{use-color(field-border)};
-      --field-border-opacity: #{use-opacity(field-border)};
-    }
-    --field-label-color: #{use-color(field-label)};
-    --field-label-opacity: #{use-opacity(field-label)};
   }
   &.of--invalid {
     --field-label-color: #{use-color(field-label, invalid)};
@@ -407,7 +409,7 @@
 
   > .of-field-main > .of-field-body > .of-field-inner > textarea {
     box-sizing: border-box;
-    margin: 0 var(--field-border-width) 2px 0;
+    margin: 0 var(--field-border-layout) 2px 0;
     padding: var(--field-v-pad) var(--field-h-pad);
     resize: vertical;
   }
@@ -454,7 +456,7 @@
   align-items: flex-start;
   box-sizing: border-box;
   display: flex;
-  margin: calc(0px - var(--field-border-width));
+  margin: calc(0px - var(--field-border-layout));
   min-height: calc(var(--field-v-pad) + var(--field-input-height));
   position: relative;
   max-width: 100%;
@@ -527,6 +529,20 @@
   @include field-keyboard-focus-ring;
 }
 
+// .of--layer-brd already shows focus; skip the duplicate “Oreo” ring on .of-field-main.
+.of-field.of--interactive.of--focused:not(.of--undecorated):has(
+    > .of-field-main > .of--layer-brd
+  ) {
+  &:focus-visible > .of-field-main,
+  .of-field-main:has(.of-field-input:focus-visible),
+  .of-field-main:has(textarea:focus-visible),
+  .of-field-main:has(.of-field-content-text:focus-visible) {
+    outline: none;
+    box-shadow: none;
+    z-index: auto;
+  }
+}
+
 .of-field:focus-visible > .of-field-main .of-field-input:focus-visible,
 .of-field:focus-visible > .of-field-main textarea:focus-visible,
 .of-field:focus-visible > .of-field-main .of-field-content-text:focus-visible,
@@ -554,10 +570,6 @@
     outline: none;
     box-shadow: none;
     z-index: auto;
-  }
-
-  &.of--variant-outlined.of--label-frame.of--interactive.of--focused {
-    --field-border-width: 1px;
   }
 
   &.of--variant-filled.of--interactive.of--focused {
@@ -617,15 +629,34 @@
     border-radius: var(--field-border-radius);
   }
   .of--layer-brd {
-    border: var(--field-border-width) var(--field-border-style) transparent;
+    border: var(--field-border-layout) var(--field-border-style) transparent;
   }
 
   &:not(.of--label-frame) .of--layer-brd {
-    border-color: var(--field-border-color);
     opacity: var(--field-border-opacity);
   }
+
+  &:not(.of--label-frame):not(.of--interactive) .of--layer-brd,
+  &:not(.of--label-frame).of--undecorated .of--layer-brd {
+    border-color: var(--field-border-color);
+    box-shadow: none;
+  }
+
+  &:not(.of--label-frame).of--interactive:not(.of--focused):not(
+      .of--undecorated
+    ):not(.of--mode-disabled) .of--layer-brd {
+    border-color: transparent;
+    box-shadow: inset 0 0 0 var(--field-border-width) var(--field-border-color);
+  }
+
+  &:not(.of--label-frame).of--interactive.of--focused:not(.of--undecorated)
+    .of--layer-brd {
+    border-color: var(--field-border-color);
+    box-shadow: none;
+  }
+
   > .of-field-inner {
-    margin-top: -1px;
+    margin-top: calc(0px - var(--field-border-layout));
   }
 
   &.of--label-frame {
@@ -652,7 +683,7 @@
         width: 100%;
 
         &::before {
-          border: var(--field-border-width) var(--field-border-style)
+          border: var(--field-border-layout) var(--field-border-style)
             var(--field-border-color);
           opacity: var(--field-border-opacity);
           border-radius: var(--field-border-radius) 0 0
@@ -665,7 +696,7 @@
           transition: border-color 120ms;
         }
         &::after {
-          border: var(--field-border-width) var(--field-border-style)
+          border: var(--field-border-layout) var(--field-border-style)
             var(--field-border-color);
           opacity: var(--field-border-opacity);
           border-radius: 0 var(--field-border-radius) var(--field-border-radius)
@@ -682,9 +713,9 @@
           position: relative;
 
           &::after {
-            border-bottom: var(--field-border-width) var(--field-border-style)
+            border-bottom: var(--field-border-layout) var(--field-border-style)
               var(--field-border-color);
-            border-top: var(--field-border-width) var(--field-border-style)
+            border-top: var(--field-border-layout) var(--field-border-style)
               var(--field-border-color);
             opacity: var(--field-border-opacity);
             content: '';
@@ -711,12 +742,6 @@
           }
         }
       }
-    }
-
-    &.of--interactive.of--focused:not(:has(:focus-visible)):not(
-        .of-toggle-field
-      ) {
-      --field-border-width: 2px;
     }
 
     padding-top: 0.675em;
@@ -746,10 +771,24 @@
 
 .of-field.of--variant-filled {
   .of--layer-brd {
-    border: var(--field-border-width) var(--field-border-style)
+    border: var(--field-border-layout) var(--field-border-style)
       var(--field-border-color);
     border-color: transparent transparent var(--field-border-color) transparent;
     opacity: var(--field-border-opacity);
+  }
+
+  &.of--interactive:not(.of--focused):not(.of--undecorated):not(
+      .of--mode-disabled
+    )
+    .of--layer-brd {
+    border-color: transparent;
+    box-shadow: inset 0 calc(0px - var(--field-border-width)) 0 0
+      var(--field-border-color);
+  }
+
+  &.of--interactive.of--focused:not(.of--undecorated) .of--layer-brd {
+    border-color: transparent transparent var(--field-border-color) transparent;
+    box-shadow: none;
   }
 
   &.of--mode-editable,
@@ -788,9 +827,9 @@
     // ripple
     background: #{use-color(field-border, focus)};
     content: '';
-    height: 2px;
+    height: #{$field-focus-border-em};
     position: absolute;
-    bottom: calc(0px - var(--field-border-width));
+    bottom: calc(0px - var(--field-border-layout));
     left: 0;
     width: 100%;
     opacity: 0;
@@ -804,9 +843,7 @@
   &.of--interactive.of--invalid .of--layer-brd::after {
     background: #{use-color(field-border, invalid)};
   }
-  &.of--interactive.of--focused:not(:has(:focus-visible)):not(
-      .of-toggle-field
-    )
+  &.of--interactive.of--focused:not(:has(:focus-visible)):not(.of-toggle-field)
     .of--layer-brd::after {
     opacity: #{use-opacity(field-border, focus)};
     transform: scaleX(1);
@@ -843,7 +880,7 @@
         left: 0;
         right: 0;
         top: -1px;
-        margin: calc(0px - var(--field-border-width));
+        margin: calc(0px - var(--field-border-layout));
 
         .of-field-header-label {
           display: flex;
