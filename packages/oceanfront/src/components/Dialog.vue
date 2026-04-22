@@ -5,7 +5,11 @@
         <div
           ref="dialog"
           role="dialog"
+          aria-modal="true"
           :id="id"
+          :aria-label="ariaLabel || undefined"
+          :aria-labelledby="ariaLabelledby || undefined"
+          :aria-describedby="ariaDescribedby || undefined"
           class="of-dialog"
           :class="classAttr"
           v-if="dialogActive"
@@ -20,10 +24,11 @@
               v-if="showCloseButton"
               class="dialog-close"
               tabindex="0"
+              :aria-label="lang.dialogClose"
               @click="hide()"
               @keydown="onCloseButtonKeydown"
             >
-              <of-icon name="cancel" />
+              <of-icon name="cancel" decorative />
             </div>
             <slot name="header" />
           </div>
@@ -32,7 +37,7 @@
           </div>
           <div class="of-dialog-footer">
             <div v-if="resize" class="dialog-resizer" @mousedown="resizeAction">
-              <of-icon name="popup resize" />
+              <of-icon name="popup resize" decorative />
             </div>
             <slot name="footer" />
           </div>
@@ -54,6 +59,7 @@ import {
 } from 'vue'
 import { OfOverlay } from './Overlay'
 import { focusManage } from '../lib/util'
+import { useLanguage } from '../lib/language'
 
 export default defineComponent({
   name: 'OfDialog',
@@ -69,13 +75,17 @@ export default defineComponent({
     transition: { type: String, default: 'slide-down' },
     hideOnBlur: { type: Boolean, default: true },
     showCloseButton: { type: Boolean, default: false },
-    capture: { type: Boolean, default: true }
+    capture: { type: Boolean, default: true },
+    ariaLabel: { type: String, default: undefined },
+    ariaLabelledby: { type: String, default: undefined },
+    ariaDescribedby: { type: String, default: undefined }
   },
   emits: ['update:modelValue'],
   setup: function (props, ctx) {
+    const lang = useLanguage()
     const dialog = ref<any>()
     const focusableElements =
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"]'
+      'button, [href], input, select, textarea, [contenteditable="true"], [tabindex]:not([tabindex="-1"])'
     const handelKeyDown = (e: KeyboardEvent) => {
       const firstFocusableElement =
         dialog.value.querySelectorAll(focusableElements)[0]
@@ -311,6 +321,7 @@ export default defineComponent({
     }
 
     return {
+      lang,
       active,
       classAttr,
       hide,

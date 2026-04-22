@@ -11,7 +11,14 @@
         <h3>
           {{ panelTitle }}
         </h3>
-        <button @click="emit('close')" class="workflow-canvas__panel-close" type="button">×</button>
+        <button
+          @click="emit('close')"
+          class="workflow-canvas__panel-close"
+          type="button"
+          :aria-label="panelCloseAriaLabel || undefined"
+        >
+          ×
+        </button>
       </div>
       <div class="workflow-canvas__panel-content">
         <div v-if="selectedNode">
@@ -141,6 +148,7 @@ import type {
 import type { FormRecord } from 'oceanfront'
 import { getGroupDepth } from '../utils/graph-helpers'
 import { DEFAULT_LABELS } from '../constants/labels'
+import { readRecordTrimmed } from '../utils/workflow-record-a11y'
 
 export default defineComponent({
   name: 'WorkflowConfigPanel',
@@ -201,6 +209,10 @@ export default defineComponent({
     }
     // Use DEFAULT_LABELS if no labels provided
     const effectiveLabels = computed(() => props.labels || DEFAULT_LABELS)
+
+    const panelCloseAriaLabel = computed(() =>
+      readRecordTrimmed(props.record.value, 'workflow-canvas-panelClose')
+    )
 
     const isOpen = computed(() => {
       if (props.selectedNode?.readonly || props.selectedGroup?.readonly) {
@@ -485,7 +497,8 @@ export default defineComponent({
       getGroupTypeFieldValue,
       isComponent,
       showGroupTypeField,
-      showGroupTitleField
+      showGroupTitleField,
+      panelCloseAriaLabel
     }
   }
 })

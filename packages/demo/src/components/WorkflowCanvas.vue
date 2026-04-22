@@ -414,6 +414,8 @@ const groupTypes: GroupTypeConfig = {
 
 // Initial workflow data (separate from graph structure) - flat format
 const initialRecordData: Record<string, unknown> = {
+  'workflow-canvas-fullWidthToggle': 'Toggle full width layout',
+  'workflow-canvas-panelClose': 'Close configuration panel',
   'trigger-1-title': 'New Order',
   'trigger-1-description': 'Triggered when a customer places an order',
   'trigger-1-event': 'new_quote',

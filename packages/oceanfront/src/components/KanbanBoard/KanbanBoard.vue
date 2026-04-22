@@ -1,6 +1,8 @@
 <template>
   <div
     class="of-kanban-board"
+    role="region"
+    :aria-label="lang.kanbanBoard"
     @blur="handleBlur"
     tabindex="-1"
     ref="boardRef"
@@ -23,10 +25,12 @@
             v-for="tag in getSelectedTags"
             :key="tag"
             class="tag-button"
+            type="button"
+            :aria-label="`${lang.kanbanRemoveTagFilter} ${tag}`"
             @click="removeTag(tag)"
           >
             {{ tag }}
-            <span class="remove-icon">×</span>
+            <span class="remove-icon" aria-hidden="true">×</span>
           </button>
         </div>
       </template>
@@ -35,7 +39,11 @@
       </template>
     </kanban-filters>
 
-    <div class="of-kanban-columns">
+    <div
+      class="of-kanban-columns"
+      role="group"
+      :aria-label="lang.kanbanColumns"
+    >
       <kanban-column
         v-for="column in filteredColumns"
         :key="column.id"
@@ -128,6 +136,7 @@ import {
   hashString,
   toDependencyKey
 } from './utils/dependencies'
+import { useLanguage } from '../../lib/language'
 
 export default defineComponent({
   name: 'OfKanbanBoard',
@@ -215,6 +224,7 @@ export default defineComponent({
     'column-expanded'
   ] as const,
   setup(props, { emit }) {
+    const lang = useLanguage()
     const boardRef = ref<HTMLElement>()
     const draggedCardId = ref<string | number | undefined>(undefined)
     const selectedCardId = ref<string | number | undefined>(undefined)
@@ -923,6 +933,7 @@ export default defineComponent({
     })
 
     return {
+      lang,
       boardRef,
       draggedCardId,
       selectedCardId,

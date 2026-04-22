@@ -24,11 +24,21 @@
         <div
           v-if="showNavigation"
           class="of-tabs-navigation of-tabs-navigation-prev"
+          role="button"
+          tabindex="0"
+          :aria-label="lang.tabsScrollLeft"
           @click="navigateHeader('prev')"
+          @keydown.enter.prevent="navigateHeader('prev')"
+          @keydown.space.prevent="navigateHeader('prev')"
         >
-          <of-icon name="page previous" :title="'Previous tab'" scale="input" />
+          <of-icon name="page previous" decorative scale="input" />
         </div>
-        <div class="of-tabs-header" ref="ofTabsHeader" role="tablist">
+        <div
+          class="of-tabs-header"
+          ref="ofTabsHeader"
+          role="tablist"
+          aria-orientation="horizontal"
+        >
           <template :key="tab.key" v-for="(tab, idx) in tabsList">
             <div class="overflow-separator" v-if="tab.overflowButton" />
             <div
@@ -55,7 +65,7 @@
               @blur="onBlurTab(tab.key)"
               @keydown="navigate($event)"
               :ref="(el: any) => (tabsRefs[idx] = el)"
-              tabindex="0"
+              :tabindex="tab.disabled ? -1 : 0"
               :class="[
                 {
                   'is-active': selectedTabKey === tab.key && showActiveTab,
@@ -73,15 +83,21 @@
               ]"
               role="tab"
               :id="tab.id"
-              :aria-label="tab.ariaLabel"
-              :aria-haspopup="showSubMenu"
-              :aria-selected="selectedTabKey === tab.key"
+              :aria-label="tab.ariaLabel || tab.text || undefined"
+              :aria-haspopup="showSubMenu ? 'menu' : undefined"
+              :aria-selected="selectedTabKey === tab.key ? 'true' : 'false'"
+              :aria-disabled="tab.disabled ? 'true' : 'false'"
             >
               <div class="of--layer of--layer-bg" />
               <div class="of--layer of--layer-brd" />
               <div class="of--layer of--layer-outl" />
               <div :class="['of-tab-text', { 'only-icon': !tab.text }]">
-                <of-icon v-if="tab.icon" :name="tab.icon" scale="1.1em" />
+                <of-icon
+                  v-if="tab.icon"
+                  :name="tab.icon"
+                  scale="1.1em"
+                  :decorative="!!tab.text"
+                />
                 <span v-if="tab.text">{{ tab.text }}</span>
               </div>
               <div class="of--layer of--layer-state" />
@@ -95,9 +111,14 @@
         <div
           v-if="showNavigation"
           class="of-tabs-navigation of-tabs-navigation-next"
+          role="button"
+          tabindex="0"
+          :aria-label="lang.tabsScrollRight"
           @click="navigateHeader('next')"
+          @keydown.enter.prevent="navigateHeader('next')"
+          @keydown.space.prevent="navigateHeader('next')"
         >
-          <of-icon name="page next" :title="'Next tab'" scale="input" />
+          <of-icon name="page next" decorative scale="input" />
         </div>
       </div>
       <of-overlay
@@ -175,6 +196,7 @@ import { Tab } from '../lib/tab'
 import { useThemeOptions } from '../lib/theme'
 import { OfOverlay } from './Overlay'
 import OfOptionList from './OptionList.vue'
+import { useLanguage } from '../lib/language'
 
 const elementWidth = (el?: HTMLElement): number => {
   let w = el?.offsetWidth ?? 0
@@ -274,6 +296,7 @@ export default defineComponent({
     'leave-tab': null
   },
   setup(props, context) {
+    const lang = useLanguage()
     const themeOptions = useThemeOptions()
     let tabs: any = ref([])
 
@@ -984,6 +1007,7 @@ export default defineComponent({
     }
 
     return {
+      lang,
       tabsList,
       selectedTabKey,
       overflowButtonEl,

@@ -1,13 +1,24 @@
 <template>
   <div
+    role="table"
+    :aria-label="tableLabel || undefined"
     :class="[tableClass, { drag: dragInProgress }, { editable: editable }]"
     :style="columnsStyle"
     :id="outerId"
     ref="tableElt"
   >
-    <div class="of-data-table-header">
-      <div v-if="draggable"></div>
-      <div v-if="addRowsSelector" class="of-data-table-rows-selector">
+    <div class="of-data-table-header" role="row">
+      <div
+        v-if="draggable"
+        role="columnheader"
+        :aria-label="lang.dataTableReorderRows"
+      ></div>
+      <div
+        v-if="addRowsSelector"
+        class="of-data-table-rows-selector"
+        role="columnheader"
+        :aria-label="lang.dataTableRowSelection"
+      >
         <slot name="header-rows-selector">
           <of-button
             variant="text"
@@ -33,6 +44,7 @@
                 <div class="of-toggle-wrapper">
                   <div class="of-toggle-input">
                     <of-icon
+                      decorative
                       :name="
                         'checkbox' +
                         (headerRowsSelectorChecked ? ' checked' : '')
@@ -48,6 +60,8 @@
       </div>
       <div
         v-for="(col, idx) of columns"
+        role="columnheader"
+        :aria-sort="colAriaSort(col)"
         :class="[
           col.class,
           {
@@ -69,9 +83,11 @@
           @mouseleave="col.extra_sort_fields ? sortColLeave() : null"
           @click="onSort(col.value)"
           @keydown.enter.prevent="onSort(col.value)"
+          @keydown.space.prevent="onSort(col.value)"
         >
           {{ col.text }}
           <of-icon
+            decorative
             :name="
               sort.order == RowSortOrders.desc && sort.column == col.value
                 ? 'select down'
@@ -167,13 +183,22 @@
     <template v-if="footerRows?.length">
       <div
         class="of-data-table-footer"
+        role="row"
         v-for="(row, rowidx) of footerRows"
         :key="rowidx"
       >
-        <div v-if="draggable"></div>
-        <div :class="{ first: rowidx == 0 }" v-if="addRowsSelector">&nbsp;</div>
+        <div v-if="draggable" role="cell" aria-hidden="true"></div>
+        <div
+          :class="{ first: rowidx == 0 }"
+          v-if="addRowsSelector"
+          role="cell"
+          aria-hidden="true"
+        >
+          &nbsp;
+        </div>
         <div
           v-for="(col, colidx) of columns"
+          role="cell"
           :class="[col.class, rowidx == 0 ? 'first' : undefined]"
           :key="colidx"
         >
@@ -241,6 +266,7 @@ import { OfOverlay } from './Overlay'
 import OfOptionList from './OptionList.vue'
 import { OfButton } from './Button'
 import OfTableRow from './TableRow.vue'
+import { useLanguage } from '../lib/language'
 
 enum RowsSelectorValues {
   Page = 'page',
@@ -314,7 +340,8 @@ export default defineComponent({
       type: String,
       default: 'name'
     },
-    density: [String, Number]
+    density: [String, Number],
+    tableLabel: { type: String, default: undefined }
   },
   emits: {
     'rows-selected': null,
@@ -328,6 +355,7 @@ export default defineComponent({
     'row-edited': null
   },
   setup(props, ctx) {
+    const lang = useLanguage()
     const themeOptions = useThemeOptions()
     const sort = ref({ column: '', order: '' })
     const items = ref(props.items || [])
@@ -737,7 +765,7 @@ export default defineComponent({
       })
       sumTotals.value = {
         ...row,
-        [name]: label || 'Total amounts',
+        [name]: label || lang.value.dataTableTotalAmounts,
         editable: false
       }
     }
@@ -943,23 +971,23 @@ export default defineComponent({
 
       selectRows(select)
     }
-    const selectRowsItems = [
+    const selectRowsItems = computed(() => [
       {
         key: 'page',
-        text: 'Select Page',
+        text: lang.value.dataTableSelectPage,
         value: () => selectRows(RowsSelectorValues.Page)
       },
       {
         key: 'all',
-        text: 'Select All',
+        text: lang.value.dataTableSelectAll,
         value: () => selectRows(RowsSelectorValues.All)
       },
       {
         key: 'clear',
-        text: 'Deselect All',
+        text: lang.value.dataTableDeselectAll,
         value: () => selectRows(RowsSelectorValues.DeselectAll)
       }
-    ]
+    ])
 
     const onSort = function (
       column: string,
@@ -999,7 +1027,16 @@ export default defineComponent({
       'of--density-' + density.value
     ])
 
+    const colAriaSort = (col: DataTableHeader) => {
+      if (col.sortable === false) return undefined
+      if (sort.value.column !== col.value) return 'none'
+      return sort.value.order === RowSortOrders.desc
+        ? 'descending'
+        : 'ascending'
+    }
+
     return {
+      lang,
       columns,
       footerRows,
       rows,
@@ -1017,6 +1054,7 @@ export default defineComponent({
       arrowTop,
       currentNested,
       tableClass,
+      colAriaSort,
       outerId,
       RowSortOrders,
       sortPopupTarget,

@@ -126,38 +126,51 @@ export const OfRadioField = defineComponent({
                 ],
                 id: inputId.value,
                 ref: elt,
-                tabindex: fieldCtx.mode === 'fixed' ? -1 : 0,
-                ariaLabel:
+                tabindex: -1,
+                'aria-label':
                   fieldCtx.ariaLabel ?? props.label ?? stateValue.value ?? ' ',
+                'aria-disabled': 'true',
+                'aria-readonly': 'true',
+                'aria-invalid': props.invalid ? 'true' : undefined,
                 ...hooks
               },
               selectedItemText.value
             )
           ]
-        return h('div', { class: ['radio-group', gridClass(props.grid)] }, [
-          items.value.map((item: any, index: number) =>
-            h(
-              RadioInner,
-              {
-                onSelectItem: (value: string | number) => {
-                  clickToggle(value)
+        return h(
+          'div',
+          {
+            class: ['radio-group', gridClass(props.grid)],
+            role: 'radiogroup',
+            'aria-label': fieldCtx.ariaLabel ?? props.label ?? undefined
+          },
+          [
+            items.value.map((item: any, index: number) =>
+              h(
+                RadioInner,
+                {
+                  onSelectItem: (value: string | number) => {
+                    clickToggle(value)
+                  },
+                  checked: stateValue.value === item.value,
+                  focused: focusIndex.value === index,
+                  index,
+                  label: item.text,
+                  value: item.value,
+                  inputId: inputId.value + item.value,
+                  align: props.align,
+                  name: props.name ?? inputId.value,
+                  mode: fieldCtx.mode,
+                  scale: props.scale,
+                  invalid: props.invalid,
+                  ariaDescription: fieldCtx.ariaModeDescription,
+                  ...hooks
                 },
-                checked: stateValue.value === item.value,
-                focused: focusIndex.value === index,
-                index,
-                label: item.text,
-                value: item.value,
-                inputId: inputId.value + item.value,
-                align: props.align,
-                name: props.name ?? inputId.value,
-                mode: fieldCtx.mode,
-                scale: props.scale,
-                ...hooks
-              },
-              { icon: ctx.slots.icon }
+                { icon: ctx.slots.icon }
+              )
             )
-          )
-        ])
+          ]
+        )
       }
     }
 
@@ -175,6 +188,7 @@ export const OfRadioField = defineComponent({
       value: stateValue,
       fieldContext: fieldCtx,
       keydown: (event: KeyboardEvent) => {
+        if (!fieldCtx.editable) return
         let consumed = false
         if (['ArrowRight', 'ArrowDown'].includes(event.code)) {
           selectAdjacent(1)

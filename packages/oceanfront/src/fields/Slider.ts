@@ -122,6 +122,7 @@ export const OfSliderField = defineComponent({
         focused.value = true
       },
       onKeydown(evt: KeyboardEvent) {
+        if (!fieldCtx.editable) return
         if (evt.key == 'ArrowUp' || evt.key == 'ArrowRight') {
           setValue(fixValue(pendingValue.value + opts.value.step))
         } else if (evt.key == 'ArrowDown' || evt.key == 'ArrowLeft') {
@@ -281,11 +282,17 @@ export const OfSliderField = defineComponent({
               class: 'of-field-input',
               value: lazyInputValue,
               role: 'slider',
-              'aria-describedby': props.label,
+              tabindex:
+                fieldCtx.mode === 'fixed' || fieldCtx.inputDisabled ? -1 : 0,
+              'aria-label': fieldCtx.ariaLabel ?? props.label ?? undefined,
               'aria-valuemin': opts.value.min,
               'aria-valuemax': opts.value.max,
               'aria-valuenow': lazyInputValue,
               'aria-orientation': 'horizontal',
+              'aria-disabled': fieldCtx.inputDisabled ? 'true' : undefined,
+              'aria-readonly': fieldCtx.inputReadonly ? 'true' : undefined,
+              'aria-invalid': props.invalid ? 'true' : undefined,
+              'aria-description': fieldCtx.ariaModeDescription,
               ...inputHooks
             }),
             h(

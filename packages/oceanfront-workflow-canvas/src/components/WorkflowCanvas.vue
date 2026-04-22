@@ -11,13 +11,15 @@
       ref="canvasRef"
       role="application"
       :tabindex="canvasTabIndex"
-      :aria-label="mergedLabels.canvasAriaLabel"
+      :aria-label="canvasApplicationAriaLabel"
+      :aria-activedescendant="selectedId ? 'wf-entity-' + selectedId : undefined"
       @click="handleCanvasClick"
     >
       <div class="workflow-canvas__container" :style="canvas.containerStyle.value">
         <!-- SVG layer for connectors -->
         <svg
           class="workflow-canvas__svg-layer"
+          aria-hidden="true"
           :viewBox="canvas.svgViewBox.value"
           :width="canvas.svgWidth.value"
           :height="canvas.svgHeight.value"
@@ -75,7 +77,10 @@
           <div
             v-for="group in canvas.sortedGroups.value"
             :key="`group-label-${group.id}`"
+            :id="'wf-entity-' + group.id"
             :data-workflow-entity-id="group.id"
+            role="group"
+            :aria-label="getEntityA11yName(group.id)"
             class="workflow-canvas-group"
             :class="{
               'workflow-canvas-group--selected': props.selectedId === group.id,
@@ -98,6 +103,7 @@
             <div
               v-if="!isViewMode && !readonly && shouldShowInputHandle(group.id)"
               class="workflow-canvas-group__handle"
+              aria-hidden="true"
               :class="{
                 'workflow-canvas-group__handle--input': getInputHandlePosition(group.id) === 'top',
                 'workflow-canvas-group__handle--left': getInputHandlePosition(group.id) === 'left'
@@ -148,6 +154,7 @@
                 <button
                   class="workflow-canvas-group__empty-plus-button"
                   type="button"
+                  :aria-label="getEntityA11yName(group.id)"
                   @mousedown.stop
                   @click.stop="handleEmptyPlusClick(group)"
                 >
@@ -185,6 +192,7 @@
             <div
               v-if="!isViewMode && !readonly && shouldShowOutputHandle(group.id)"
               class="workflow-canvas-group__handle"
+              aria-hidden="true"
               :class="{
                 'workflow-canvas-group__handle--output':
                   getOutputHandlePosition(group.id) === 'bottom',
@@ -201,36 +209,44 @@
               <!-- Edge handles -->
               <div
                 class="workflow-canvas-group__resize-handle workflow-canvas-group__resize-handle--top"
+                aria-hidden="true"
                 @mousedown.stop="resize.handleResizeMouseDown($event, group.id, 'top')"
               ></div>
               <div
                 class="workflow-canvas-group__resize-handle workflow-canvas-group__resize-handle--right"
+                aria-hidden="true"
                 @mousedown.stop="resize.handleResizeMouseDown($event, group.id, 'right')"
               ></div>
               <div
                 class="workflow-canvas-group__resize-handle workflow-canvas-group__resize-handle--bottom"
+                aria-hidden="true"
                 @mousedown.stop="resize.handleResizeMouseDown($event, group.id, 'bottom')"
               ></div>
               <div
                 class="workflow-canvas-group__resize-handle workflow-canvas-group__resize-handle--left"
+                aria-hidden="true"
                 @mousedown.stop="resize.handleResizeMouseDown($event, group.id, 'left')"
               ></div>
 
               <!-- Corner handles -->
               <div
                 class="workflow-canvas-group__resize-handle workflow-canvas-group__resize-handle--top-left"
+                aria-hidden="true"
                 @mousedown.stop="resize.handleResizeMouseDown($event, group.id, 'top-left')"
               ></div>
               <div
                 class="workflow-canvas-group__resize-handle workflow-canvas-group__resize-handle--top-right"
+                aria-hidden="true"
                 @mousedown.stop="resize.handleResizeMouseDown($event, group.id, 'top-right')"
               ></div>
               <div
                 class="workflow-canvas-group__resize-handle workflow-canvas-group__resize-handle--bottom-left"
+                aria-hidden="true"
                 @mousedown.stop="resize.handleResizeMouseDown($event, group.id, 'bottom-left')"
               ></div>
               <div
                 class="workflow-canvas-group__resize-handle workflow-canvas-group__resize-handle--bottom-right"
+                aria-hidden="true"
                 @mousedown.stop="resize.handleResizeMouseDown($event, group.id, 'bottom-right')"
               ></div>
             </template>
@@ -240,8 +256,11 @@
           <div
             v-for="node in props.modelValue.nodes"
             :key="node.id"
+            :id="'wf-entity-' + node.id"
             :ref="el => setNodeRef(node.id, el as HTMLElement)"
             :data-workflow-entity-id="node.id"
+            role="group"
+            :aria-label="getEntityA11yName(node.id)"
             class="workflow-canvas-node"
             :class="{
               'workflow-canvas-node--selected': props.selectedId === node.id,
@@ -268,6 +287,7 @@
             <div
               v-if="!isViewMode && !readonly && shouldShowInputHandle(node.id)"
               class="workflow-canvas-node__handle"
+              aria-hidden="true"
               :class="{
                 'workflow-canvas-node__handle--input': getInputHandlePosition(node.id) === 'top',
                 'workflow-canvas-node__handle--left': getInputHandlePosition(node.id) === 'left'
@@ -340,6 +360,7 @@
             <div
               v-if="!isViewMode && !readonly && shouldShowOutputHandle(node.id)"
               class="workflow-canvas-node__handle"
+              aria-hidden="true"
               :class="{
                 'workflow-canvas-node__handle--output':
                   getOutputHandlePosition(node.id) === 'bottom',
@@ -355,6 +376,7 @@
               <span
                 v-if="connections.isOutputFree(node.id)"
                 class="workflow-canvas-node__handle-plus"
+                aria-hidden="true"
               ></span>
             </div>
           </div>
@@ -367,6 +389,7 @@
               :position="placeholder.position"
               :after-node-id="placeholder.afterNodeId"
               :in-group-id="placeholder.inGroupId"
+              :aria-label="getPlaceholderAriaLabel(placeholder)"
               @add-step="handleAddStep"
             />
           </template>
@@ -375,6 +398,7 @@
           <div
             v-if="dragging.insertIndicator.value"
             class="workflow-canvas-drop-indicator"
+            aria-hidden="true"
             :style="{
               left: dragging.insertIndicator.value.x + 'px',
               top: dragging.insertIndicator.value.y + 'px',
@@ -389,7 +413,8 @@
         class="workflow-canvas__fullwidth-toggle"
         :class="{ 'workflow-canvas__fullwidth-toggle--active': isFullWidth }"
         type="button"
-        title="Toggle full width"
+        :title="fullWidthToggleRecordLabel || undefined"
+        :aria-label="fullWidthToggleRecordLabel || undefined"
         @click.stop="handleFullWidthToggle"
       >
         <of-icon :name="isFullWidth ? 'expand close' : 'expand open'" scale="sm" />
@@ -484,6 +509,7 @@ import {
   getGroupAddNodeButtonText as _getGroupAddNodeButtonText,
   getGroupAddGroupButtonText as _getGroupAddGroupButtonText
 } from '../utils/display-helpers'
+import { readRecordTrimmed, entityAccessibilityLabel } from '../utils/workflow-record-a11y'
 import WorkflowTile from './WorkflowTile.vue'
 import WorkflowConfigPanel from './WorkflowConfigPanel.vue'
 import WorkflowPlusPlaceholder from './WorkflowPlusPlaceholder.vue'
@@ -686,6 +712,29 @@ export default defineComponent({
       ...DEFAULT_LABELS,
       ...props.labels
     }))
+
+    const canvasApplicationAriaLabel = computed(
+      () =>
+        readRecordTrimmed(props.record.value, 'workflow-canvas-ariaLabel') ||
+        mergedLabels.value.canvasAriaLabel
+    )
+
+    const fullWidthToggleRecordLabel = computed(() =>
+      readRecordTrimmed(props.record.value, 'workflow-canvas-fullWidthToggle')
+    )
+
+    function getEntityA11yName(entityId: string) {
+      return entityAccessibilityLabel(props.record.value, entityId)
+    }
+
+    function getPlaceholderAriaLabel(placeholder: {
+      afterNodeId?: string
+      inGroupId?: string
+    }): string | undefined {
+      const id = placeholder.afterNodeId ?? placeholder.inGroupId
+      if (!id) return undefined
+      return entityAccessibilityLabel(props.record.value, id)
+    }
 
     const selectedNode = computed(() =>
       props.selectedId ? findNode(props.modelValue, props.selectedId) : null
@@ -2305,6 +2354,10 @@ export default defineComponent({
       isFullWidth,
       canvasTabIndex,
       mergedLabels,
+      canvasApplicationAriaLabel,
+      fullWidthToggleRecordLabel,
+      getEntityA11yName,
+      getPlaceholderAriaLabel,
       selectedNode,
       selectedGroup,
       canvasRef,

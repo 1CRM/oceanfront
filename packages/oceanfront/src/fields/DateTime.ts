@@ -25,6 +25,7 @@ import {
   provideFieldRender
 } from '../lib/fields'
 import { useFormats } from '../lib/formats'
+import { useLanguage } from '../lib/language'
 import { focusManage } from '../lib/util'
 
 type InputType = 'date' | 'datetime' | 'time'
@@ -39,10 +40,14 @@ type RenderOpts = {
   showTodayButton: boolean
   weekStart?: number
   dateTimeFormat?: DateTimeFormatterOptions
+  popupId: string
+  dialogLabel: string
 }
 
 export const renderDateTimePopup = (opts: RenderOpts): any => {
   return h(OfDateTimePopup, {
+    id: opts.popupId,
+    dialogLabel: opts.dialogLabel,
     date: opts.selectedDate.value,
     monthStart: opts.monthStart.value,
     weekStart: opts.weekStart,
@@ -74,6 +79,7 @@ const defineField = (type: InputType, name: string, cls: string) =>
     },
     emits: ['focus', 'blur', 'update:modelValue'],
     setup(props, ctx) {
+      const lang = useLanguage()
       const fieldCtx = makeFieldContext(props, ctx as SetupContext)
       const withTime = type == 'datetime' || type == 'time'
       const withDate = type == 'datetime' || type == 'date'
@@ -128,6 +134,27 @@ const defineField = (type: InputType, name: string, cls: string) =>
           id = defaultFieldId
         }
         return id
+      })
+      const popupId = computed(() => inputId.value + '-popup')
+      const dialogLabel = computed(() => {
+        switch (type) {
+          case 'date':
+            return lang.value.fieldDateTimeDialogDate
+          case 'time':
+            return lang.value.fieldDateTimeDialogTime
+          default:
+            return lang.value.fieldDateTimeDialogDateTime
+        }
+      })
+      const fieldAccessibleName = computed(() => {
+        const textValue = stateValue.value
+          ? formatter.value?.format(stateValue.value)?.textValue
+          : ''
+        return fieldCtx.ariaLabel ?? props.label ?? textValue ?? ''
+      })
+      const dateTimeAriaDescription = computed(() => {
+        const modeDesc = fieldCtx.ariaModeDescription
+        return [modeDesc].filter(Boolean).join(' ') || undefined
       })
 
       const currentDate: Ref<Date> = ref(new Date())
@@ -214,7 +241,9 @@ const defineField = (type: InputType, name: string, cls: string) =>
           withDate,
           weekStart: props.weekStart,
           showTodayButton: props.showTodayButton,
-          dateTimeFormat: props.dateTimeFormat
+          dateTimeFormat: props.dateTimeFormat,
+          popupId: popupId.value,
+          dialogLabel: dialogLabel.value
         })
       }
 
@@ -245,13 +274,26 @@ const defineField = (type: InputType, name: string, cls: string) =>
             h(
               'div',
               {
+                role: 'combobox',
+                'aria-autocomplete': 'none',
+                'aria-haspopup': 'dialog',
+                'aria-expanded': opened.value ? 'true' : 'false',
+                ...(opened.value
+                  ? { 'aria-controls': popupId.value }
+                  : undefined),
                 class: [
                   'of-field-content-text',
                   'of--align-' + (props.align || 'start')
                 ],
                 id: inputId.value,
-                tabindex: fieldCtx.mode === 'fixed' ? -1 : 0,
+                tabindex:
+                  fieldCtx.mode === 'fixed' || fieldCtx.inputDisabled ? -1 : 0,
                 ref: elt,
+                'aria-label': fieldAccessibleName.value,
+                'aria-disabled': fieldCtx.inputDisabled ? 'true' : undefined,
+                'aria-readonly': fieldCtx.inputReadonly ? 'true' : undefined,
+                'aria-invalid': props.invalid ? 'true' : undefined,
+                'aria-description': dateTimeAriaDescription.value,
                 ...hooks
               },
               value

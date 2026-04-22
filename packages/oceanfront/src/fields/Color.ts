@@ -20,6 +20,7 @@ import {
   rgbToHex,
   rgbToHsv
 } from '../lib/color'
+import { useLanguage } from '../lib/language'
 import { focusManage } from '../lib/util'
 import {
   BaseFieldProps,
@@ -35,6 +36,7 @@ export const OfColorField = defineComponent({
   class: 'of-color-field',
   props: BaseFieldProps,
   setup(props, ctx) {
+    const lang = useLanguage()
     const fieldCtx = makeFieldContext(props, ctx)
     const opened = ref(false)
     const focused = ref(false)
@@ -48,6 +50,7 @@ export const OfColorField = defineComponent({
       }
       return id
     })
+    const popupId = computed(() => inputId.value + '-popup')
     const focus = () => {
       focusManage(elt.value)
     }
@@ -257,7 +260,11 @@ export const OfColorField = defineComponent({
       return h(
         'div',
         {
-          class: 'of-menu of-colorpicker-popup of--elevated-1'
+          class: 'of-menu of-colorpicker-popup of--elevated-1',
+          id: popupId.value,
+          role: 'dialog',
+          'aria-modal': 'true',
+          'aria-label': lang.value.fieldColorPickerDialog
         },
         h('div', { class: 'color-picker' }, [
           h(ColorSaturation, {
@@ -346,13 +353,25 @@ export const OfColorField = defineComponent({
         h(
           'div',
           {
+            role: 'combobox',
+            'aria-autocomplete': 'none',
+            'aria-haspopup': 'dialog',
+            'aria-expanded': opened.value ? 'true' : 'false',
+            ...(opened.value ? { 'aria-controls': popupId.value } : {}),
             class: [
               'of-field-content-text',
               'of--align-' + (props.align || 'start')
             ],
             id: inputId.value,
-            tabindex: 0,
+            tabindex:
+              fieldCtx.mode === 'fixed' || fieldCtx.inputDisabled ? -1 : 0,
             ref: elt,
+            'aria-label':
+              fieldCtx.ariaLabel ?? props.label ?? compColor.value.hex ?? '',
+            'aria-disabled': fieldCtx.inputDisabled ? 'true' : undefined,
+            'aria-readonly': fieldCtx.inputReadonly ? 'true' : undefined,
+            'aria-invalid': props.invalid ? 'true' : undefined,
+            'aria-description': fieldCtx.ariaModeDescription,
             ...hooks
           },
           [compColor.value.hex]

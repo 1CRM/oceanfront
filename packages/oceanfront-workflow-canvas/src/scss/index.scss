@@ -471,12 +471,14 @@
     }
   }
 
-  &:hover &__hover-menu-connection {
+  &:hover &__hover-menu-connection,
+  &:focus-within &__hover-menu-connection {
     opacity: 1;
     pointer-events: auto;
   }
 
-  &:has(&__empty-plus:hover) &__hover-menu-connection {
+  &:has(&__empty-plus:hover) &__hover-menu-connection,
+  &:has(&__empty-plus:focus-within) &__hover-menu-connection {
     opacity: 0;
     pointer-events: none;
   }
@@ -544,7 +546,8 @@
     }
   }
 
-  &__empty-plus:hover &__empty-menu {
+  &__empty-plus:hover &__empty-menu,
+  &__empty-plus:focus-within &__empty-menu {
     opacity: 1;
     pointer-events: auto;
   }
@@ -928,7 +931,8 @@
     }
   }
 
-  &:hover &__hover-menu {
+  &:hover &__hover-menu,
+  &:focus-within &__hover-menu {
     opacity: 1;
     pointer-events: auto;
   }

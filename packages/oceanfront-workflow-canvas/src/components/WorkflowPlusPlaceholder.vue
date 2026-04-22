@@ -1,6 +1,11 @@
 <template>
   <div class="workflow-canvas-plus-placeholder" :style="positionStyle">
-    <button class="workflow-canvas-plus-placeholder__button" @click="handleClick" type="button">
+    <button
+      class="workflow-canvas-plus-placeholder__button"
+      @click="handleClick"
+      type="button"
+      :aria-label="ariaLabel"
+    >
       +
     </button>
   </div>
@@ -22,6 +27,10 @@ export default defineComponent({
       default: undefined
     },
     inGroupId: {
+      type: String,
+      default: undefined
+    },
+    ariaLabel: {
       type: String,
       default: undefined
     }

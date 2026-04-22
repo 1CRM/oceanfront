@@ -4,7 +4,7 @@
       <span
         ref="buttonsetRef"
         class="of-buttonset"
-        :aria-label="ariaLabels?.pagination ?? 'Pagination'"
+        :aria-label="ariaLabels?.pagination ?? lang.pagination"
         :class="{
           'of-buttonset--rounded': rounded,
           'of--elevated': variant == 'elevated'
@@ -14,7 +14,7 @@
         <of-button
           v-if="showGoToFirst"
           icon="page first"
-          :aria-label="ariaLabels?.first ?? 'Go To First'"
+          :aria-label="ariaLabels?.first ?? lang.paginationGoToFirst"
           :variant="variantVal"
           :density="densityVal"
           @click="goToFirst()"
@@ -26,7 +26,7 @@
           :ref="page === item ? 'activeButton' : null"
           :variant="variantVal"
           :density="densityVal"
-          :aria-label="(ariaLabels?.page ?? 'Page') + ' ' + item"
+          :aria-label="(ariaLabels?.page ?? lang.paginationPage) + ' ' + item"
           @click="onSelectPage(item)"
         >
           {{ item }}
@@ -34,7 +34,7 @@
         <of-button
           v-if="showGoToLast"
           icon="page last"
-          :aria-label="ariaLabels?.last ?? 'Go To Last'"
+          :aria-label="ariaLabels?.last ?? lang.paginationGoToLast"
           :variant="variantVal"
           :density="densityVal"
           @click="goToLast()"
@@ -46,7 +46,7 @@
           icon="select down"
           :variant="variantVal"
           :density="densityVal"
-          :aria-label="ariaLabels?.expand ?? 'Expand'"
+          :aria-label="ariaLabels?.expand ?? lang.paginationExpand"
           @click="openOffsetPopup"
         >
           <template #default v-if="$slots['custom-offset-button']">
@@ -63,7 +63,11 @@
       @blur="closeOffsetPopup()"
     >
       <slot name="custom-offset-popup" v-if="showCustomOffsetPopup">
-        <div role="menu" class="of-menu of-pagination-offset of--elevated-1">
+        <div
+          role="group"
+          :aria-label="lang.paginationExpand"
+          class="of-menu of-pagination-offset of--elevated-1"
+        >
           <form
             class="of-group"
             method="POST"

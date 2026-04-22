@@ -1,9 +1,7 @@
 <template>
   <section class="container">
     <div class="demo-block">
-      <div class="demo-title">
-        Badges
-      </div>
+      <div class="demo-title">Badges</div>
       <div class="row demo-row">
         <div class="demo-inline">
           <div class="badge">Badge</div>
@@ -43,9 +41,7 @@
         </div>
       </div>
 
-      <div class="demo-title">
-        Icons
-      </div>
+      <div class="demo-title">Icons</div>
       <div class="row demo-row">
         <div class="demo-inline">
           <div
@@ -243,9 +239,7 @@
         </div>
       </div>
 
-      <div class="demo-title">
-        Checkboxes
-      </div>
+      <div class="demo-title">Checkboxes</div>
       <!-- div class="row demo-row">
 <div class="demo-inline"><?php echo renderToggle('togtest', 'togtest_sm', 'input-sm', 'Small'); ?></div>
 <div class="demo-inline"><?php echo renderToggle('togtest', 'togtest', '', 'Normal', 'checkbox', 'checked=1'); ?></div>
@@ -293,48 +287,46 @@
 <div class="demo-inline"><?php echo renderCheck('radiotest', 'radiotest_dis', 'input-field', 'Field', 'radio'); ?></div>
 </div -->
 
-      <div class="demo-title">
-        Text inputs
-      </div>
+      <div class="demo-title">Text inputs</div>
       <div class="row demo-row">
         <div class="demo-inline">
           <of-text-field
             class="of--small"
             value="Small text input"
-            style="width: 10em;"
+            style="width: 10em"
           />
         </div>
         <div class="demo-inline">
-          <of-text-field value="Normal text input" style="width: 10em;" />
+          <of-text-field value="Normal text input" style="width: 10em" />
         </div>
         <div class="demo-inline">
           <of-text-field
             class="of--large"
             value="Large text input"
-            style="width: 10em;"
+            style="width: 10em"
           />
         </div>
         <div class="demo-inline">
           <of-text-field
             readonly="1"
             value="Read-only text"
-            style="width: 10em;"
+            style="width: 10em"
           />
         </div>
         <div class="demo-inline">
           <of-text-field
             disabled="1"
             value="Disabled text"
-            style="width: 10em;"
+            style="width: 10em"
           />
         </div>
         <div class="demo-inline">
-          <of-text-field placeholder="Placeholder" style="width: 10em;" />
+          <of-text-field placeholder="Placeholder" style="width: 10em" />
         </div>
         <div class="demo-inline">
           <of-text-field
             class="input-compact"
-            style="width: 10em;"
+            style="width: 10em"
             value="Compact"
           />
         </div>
@@ -343,39 +335,37 @@
         <div class="demo-inline">
           <of-textarea
             class="of--small"
-            style="width: 10em;"
+            style="width: 10em"
             value="Small text area"
           />
         </div>
         <div class="demo-inline">
-          <of-textarea style="width: 10em;" value="Normal text area" />
+          <of-textarea style="width: 10em" value="Normal text area" />
         </div>
         <div class="demo-inline">
           <of-textarea
             class="of--large"
-            style="width: 10em;"
+            style="width: 10em"
             value="Large text area"
           />
         </div>
         <div class="demo-inline">
           <of-textarea
             readonly="1"
-            style="width: 10em;"
+            style="width: 10em"
             value="Read-only text area"
           />
         </div>
         <div class="demo-inline">
           <of-textarea
             disabled="1"
-            style="width: 10em;"
+            style="width: 10em"
             value="Disabled text area"
           />
         </div>
       </div>
 
-      <div class="demo-title">
-        Button inputs
-      </div>
+      <div class="demo-title">Button inputs</div>
       <div class="row demo-row">
         <div class="demo-inline">
           <button type="button" class="input-button input-sm">
@@ -432,9 +422,7 @@
 </div -->
       </div>
 
-      <div class="demo-title">
-        Field inputs
-      </div>
+      <div class="demo-title">Field inputs</div>
       <div class="row demo-row">
         <div class="demo-inline">
           <div
@@ -502,14 +490,12 @@
         </div>
       </div>
 
-      <div class="demo-title">
-        Long-text fields
-      </div>
+      <div class="demo-title">Long-text fields</div>
       <div class="row demo-row">
         <div class="demo-inline">
           <div
             class="input-field input-bullet bullet-expand"
-            style="max-width: 15em;"
+            style="max-width: 15em"
             tabindex="0"
           >
             <div class="input-label single">
@@ -520,7 +506,7 @@
         <div class="demo-inline">
           <div
             class="input-field input-bullet bullet-expand"
-            style="max-width: 12em;"
+            style="max-width: 12em"
             tabindex="0"
           >
             <div class="input-label limit-height">
@@ -532,7 +518,7 @@
         <div class="demo-inline">
           <div
             class="input-field input-bullet bullet-expand"
-            style="max-width: 12em;"
+            style="max-width: 12em"
             tabindex="0"
           >
             <div class="input-label">
@@ -552,9 +538,7 @@
 </div -->
       </div>
 
-      <div class="demo-title">
-        Tag inputs
-      </div>
+      <div class="demo-title">Tag inputs</div>
       <div class="row demo-row">
         <div class="demo-inline">
           <div class="input-field state-alert input-sm">
@@ -596,7 +580,7 @@
           </div>
         </div>
         <div class="demo-inline">
-          <div class="input-field" style="max-width: 15em;" tabindex="0">
+          <div class="input-field" style="max-width: 15em" tabindex="0">
             <div class="input-flow-content">
               <div class="input-field state-special">
                 <div class="input-label">CSS</div>
@@ -657,9 +641,7 @@
         </div>
       </div>
 
-      <div class="demo-title">
-        Input groups
-      </div>
+      <div class="demo-title">Input groups</div>
       <div class="row demo-row">
         <div class="demo-inline">
           <div class="input-field input-field-group">
@@ -673,7 +655,7 @@
               class="input-field input-bullet bullet-expand border-left"
               id="cell-group"
               tabindex="0"
-              style="max-width: 10em;"
+              style="max-width: 10em"
             >
               <div class="input-label">Expand field over multiple lines</div>
             </div>
@@ -799,22 +781,20 @@
         </div>
       </div>
 
-      <div class="demo-title">
-        Progress inputs
-      </div>
+      <div class="demo-title">Progress inputs</div>
       <div class="row demo-row">
         <div class="demo-inline">
           <div
             class="input-field input-progress-outer input-sm state-success"
-            style="width: 10em;"
+            style="width: 10em"
           >
             <div class="input-progress">
-              <div class="input-progress-bar state-active" style="width: 50%;">
+              <div class="input-progress-bar state-active" style="width: 50%">
                 <label>50<small>%</small></label>
               </div>
               <div
                 class="input-progress-bar state-final"
-                style="width: 30%;"
+                style="width: 30%"
               ></div>
             </div>
           </div>
@@ -828,11 +808,11 @@
               value="50"
             />
             <div class="input-label small border-right">%</div>
-            <div class="input-field input-progress-outer" style="width: 15em;">
+            <div class="input-field input-progress-outer" style="width: 15em">
               <div class="input-progress">
                 <div
                   class="input-progress-bar state-disabled"
-                  style="width: 50%;"
+                  style="width: 50%"
                 ></div>
                 <div class="input-progress-bar empty"></div>
               </div>
@@ -842,10 +822,10 @@
         <div class="demo-inline">
           <div
             class="input-field input-progress-outer input-lg"
-            style="width: 15em;"
+            style="width: 15em"
           >
             <div class="input-progress">
-              <div class="input-progress-bar state-alert" style="width: 30%;">
+              <div class="input-progress-bar state-alert" style="width: 30%">
                 <label>30<small>%</small></label>
               </div>
             </div>
@@ -853,9 +833,7 @@
         </div>
       </div>
 
-      <div class="demo-title">
-        File inputs
-      </div>
+      <div class="demo-title">File inputs</div>
       <div class="row demo-row">
         <div class="demo-inline">
           <input type="file" class="input-field input-file" />
@@ -873,20 +851,18 @@
         </div>
       </div>
 
-      <div class="demo-title">
-        Multi select
-      </div>
+      <div class="demo-title">Multi select</div>
       <div class="row demo-row">
         <div class="demo-inline">
           <div
             class="input-field input-field-group input-bullet bullet-expand"
             id="multisel-blank"
             tabindex="0"
-            style="width: 10em;"
+            style="width: 10em"
           >
             <div class="input-label input-placeholder">(placeholder)</div>
           </div>
-          <div style="text-align: right; padding-right: 5px; margin-top: -1px;">
+          <div style="text-align: right; padding-right: 5px; margin-top: -1px">
             <div
               class="card-outer card-inline panel-outer panel-border panel-default popup-default flat-top hover-tools active"
             >
@@ -904,7 +880,7 @@
           <div class="input-field input-sm" id="multisel-head" tabindex="0">
             <section
               class="input-scroll menu-outer"
-              style="width: 150px; height: 100px;"
+              style="width: 150px; height: 100px"
             >
               <p class="menu-option" tabindex="0">Small menu</p>
               <p class="menu-option" tabindex="0">Small menu</p>
@@ -917,7 +893,7 @@
           <div class="input-field" id="multisel" tabindex="0">
             <section
               class="input-scroll menu-outer"
-              style="width: 200px; height: 100px;"
+              style="width: 200px; height: 100px"
             >
               <div class="menu-header">Teams</div>
               <div class="menu-option input-label single" tabindex="0">
@@ -967,7 +943,7 @@
         </div>
         <div class="demo-inline">
           <div class="input-field input-lg" id="multisel-head" tabindex="0">
-            <section class="input-scroll menu-outer" style="width: 150px;">
+            <section class="input-scroll menu-outer" style="width: 150px">
               <p class="menu-option" tabindex="0">Large menu</p>
               <p class="menu-option" tabindex="0">Large menu</p>
             </section>
@@ -977,10 +953,10 @@
       <div class="row demo-row">
         <div class="demo-inline">
           <div class="input-field input-field-group" id="to_addrs" tabindex="0">
-            <label class="input-label input-addon" style="min-width: 3em;"
+            <label class="input-label input-addon" style="min-width: 3em"
               >To:</label
             >
-            <div class="input-flow-content border-left" style="width: 450px;">
+            <div class="input-flow-content border-left" style="width: 450px">
               <div class="input-field input-bullet bullet-expand state-info">
                 <div class="input-label">
                   Andrew Whitehead{{ ' ' }}

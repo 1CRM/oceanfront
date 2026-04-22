@@ -81,6 +81,7 @@ export const OfSelectField = defineComponent({
       }
       return id
     })
+    const popupMenuId = computed(() => inputId.value + '-popup-menu')
     const opened = ref(false)
     const items = computed(() =>
       transformItemsList(itemMgr, props.items, props.name, props.record)
@@ -125,6 +126,7 @@ export const OfSelectField = defineComponent({
       return false
     }
     const onSelectKeydown = (evt: KeyboardEvent) => {
+      if (!fieldCtx.editable) return
       const isSpace = evt.key === ' ' || evt.code === 'Space'
       const opensPopup =
         isSpace ||
@@ -211,7 +213,7 @@ export const OfSelectField = defineComponent({
                   name: 'cancel',
                   size: '14px',
                   tabindex: 0,
-                  ariaLabel: lang.value.remove + ' ' + itemText(val),
+                  ariaLabel: lang.value.remove,
                   onClick: (e: Event) => {
                     e.stopPropagation()
                     setValue(val)
@@ -274,13 +276,25 @@ export const OfSelectField = defineComponent({
           h(
             'div',
             {
-              role: 'textbox',
+              role: 'combobox',
               class: contentClass,
               id: inputId.value,
               ref: elt,
-              tabindex: fieldCtx.mode === 'fixed' ? -1 : 0,
-              ariaLabel:
-                fieldCtx.ariaLabel ?? props.label ?? stateValue.value ?? ' ',
+              tabindex:
+                fieldCtx.mode === 'fixed' || fieldCtx.inputDisabled ? -1 : 0,
+              'aria-expanded': opened.value ? 'true' : 'false',
+              'aria-haspopup': 'menu',
+              'aria-autocomplete': 'none',
+              ...(opened.value ? { 'aria-controls': popupMenuId.value } : {}),
+              'aria-label':
+                fieldCtx.ariaLabel ??
+                props.label ??
+                stateValue.value ??
+                lang.value.selectComboboxFallback,
+              'aria-disabled': fieldCtx.inputDisabled ? 'true' : undefined,
+              'aria-readonly': fieldCtx.inputReadonly ? 'true' : undefined,
+              'aria-invalid': props.invalid ? 'true' : undefined,
+              'aria-description': fieldCtx.ariaModeDescription,
               ...hooks
             },
             labels
@@ -327,6 +341,7 @@ export const OfSelectField = defineComponent({
                 addRemove: props.addRemove,
                 closeAfterSelect: props.closeAfterSelect,
                 closePopup,
+                menuId: popupMenuId.value,
                 value: inputValue.value,
                 onUpdateValue: (val: any) => {
                   fieldCtx.onUpdate?.(val)

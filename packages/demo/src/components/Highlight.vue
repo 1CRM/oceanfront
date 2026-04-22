@@ -1,5 +1,5 @@
 <template>
-  <div class="of-code of--highlight"> 
+  <div class="of-code of--highlight">
     <div class="hljs" v-html="result"></div>
   </div>
 </template>
@@ -34,7 +34,7 @@ export default defineComponent({
   name: 'OfHighlight',
   props: {
     lang: String,
-    value: String,
+    value: String
   },
   setup(props, _ctx) {
     const result = computed(() =>
@@ -45,9 +45,9 @@ export default defineComponent({
         : undefined
     )
     return {
-      result,
+      result
     }
-  },
+  }
 })
 </script>
 
@@ -63,7 +63,7 @@ html:not(.-of-theme-dark) {
   }
   .hljs {
     color: #24292e;
-    background:none;
+    background: none;
   }
   .hljs-doctag,
   .hljs-keyword,
@@ -150,7 +150,7 @@ html.-of-theme-dark {
   }
   .hljs {
     color: #c9d1d9;
-    background:none;
+    background: none;
   }
   .hljs-doctag,
   .hljs-keyword,

@@ -1,6 +1,8 @@
 <template>
   <div
     class="of-kanban-column"
+    role="region"
+    :aria-labelledby="columnHeadingId"
     :class="{ 'of-is-collapsed': isCollapsed }"
     @dragend="handleDragEnd"
     @touchend="handleDragEnd"
@@ -8,7 +10,7 @@
   >
     <div class="of-kanban-column-header">
       <div class="of-kanban-column-title">
-        <h3>{{ column.title }}</h3>
+        <h3 :id="columnHeadingId">{{ column.title }}</h3>
         <span class="of-kanban-column-count">
           {{ column.total || column.cards?.length || 0 }}
           <template v-if="column.limit"> / {{ column.limit }} </template>
@@ -20,6 +22,11 @@
           class="of-kanban-column-collapse-button"
           :icon="isCollapsed ? 'expand open' : 'expand close'"
           size="sm"
+          :aria-label="
+            isCollapsed
+              ? `${lang.kanbanExpandColumn}: ${column.title}`
+              : `${lang.kanbanCollapseColumn}: ${column.title}`
+          "
           @click.stop="$emit('collapse-toggle', column.id)"
         />
         <of-button
@@ -27,6 +34,7 @@
           variant="text"
           icon="more"
           size="sm"
+          :aria-label="`${lang.kanbanColumnActionsMenu}: ${column.title}`"
           :items="compactedMenuItems"
         />
       </div>
@@ -34,6 +42,7 @@
     <div
       class="of-kanban-column-content"
       :data-column-id="column.id"
+      :aria-label="`${column.title}, ${lang.kanbanColumnCards}`"
       tabindex="-1"
       @dragover.prevent="handleDragOver"
       @drop.prevent="handleDrop"
@@ -72,6 +81,7 @@
         :key="card.id"
         :card="card"
         :column-id="column.id"
+        :column-title="column.title"
         :is-selected="selectedCardId === card.id"
         :dragged-card-id="draggedCardId"
         :card-menu-items="cardMenuItems"
@@ -131,6 +141,7 @@
         variant="elevated"
         tint="primary"
         icon="plus"
+        :aria-label="`${lang.kanbanAddCard}: ${column.title}`"
       >
         <slot name="create-button"> Create Issue </slot>
       </of-button>
@@ -166,6 +177,7 @@ import {
   isOverTheLimit,
   debounce
 } from '../utils'
+import { useLanguage } from '../../../lib/language'
 
 export default defineComponent({
   name: 'OfKanbanColumn',
@@ -278,6 +290,11 @@ export default defineComponent({
   },
 
   setup(props, { emit }) {
+    const lang = useLanguage()
+    const columnHeadingId = computed(() => {
+      const safe = String(props.column.id).replace(/[^a-zA-Z0-9_-]/g, '-')
+      return `of-kanban-col-${safe}-title`
+    })
     const isDropTarget = computed(
       () => props.activeColumnId === props.column.id
     )
@@ -747,6 +764,8 @@ export default defineComponent({
     })
 
     return {
+      lang,
+      columnHeadingId,
       isDropTarget,
       isAtLimit,
       sortedCards,
