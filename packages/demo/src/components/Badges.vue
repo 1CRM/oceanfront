@@ -59,13 +59,13 @@
       >
       <h2>Icon only</h2>
       <of-badge icon scale="sm" status="warning" :density="params.density"
-        ><of-icon name="print"
+        ><of-icon name="print" title="Print"
       /></of-badge>
       <of-badge icon scale="nm" status="warning" :density="params.density"
-        ><of-icon name="print"
+        ><of-icon name="print" title="Print"
       /></of-badge>
       <of-badge icon scale="lg" status="warning" :density="params.density"
-        ><of-icon name="print"
+        ><of-icon name="print" title="Print"
       /></of-badge>
       <of-badge
         icon
@@ -73,7 +73,7 @@
         scale="sm"
         status="warning"
         :density="params.density"
-        ><of-icon name="print"
+        ><of-icon name="print" title="Print"
       /></of-badge>
       <of-badge
         icon
@@ -81,7 +81,7 @@
         scale="nm"
         status="warning"
         :density="params.density"
-        ><of-icon name="print"
+        ><of-icon name="print" title="Print"
       /></of-badge>
       <of-badge
         icon
@@ -89,7 +89,7 @@
         scale="lg"
         status="warning"
         :density="params.density"
-        ><of-icon name="print"
+        ><of-icon name="print" title="Print"
       /></of-badge>
     </div>
   </div>

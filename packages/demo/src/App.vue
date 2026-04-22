@@ -2,14 +2,30 @@
   <of-config :form="{ locked: true }">
     <header class="app-header">
       <div class="app-header-gradient" />
-      <div class="app-menu-source" @click.prevent="toggleSidebar">
+      <div
+        class="app-menu-source"
+        role="button"
+        tabindex="0"
+        aria-label="Toggle navigation"
+        @click.prevent="toggleSidebar"
+        @keydown.enter.prevent="toggleSidebar"
+        @keydown.space.prevent="toggleSidebar"
+      >
         <of-icon name="menu" />
       </div>
       <div class="app-header-main">
         <div class="app-title">Oceanfront</div>
         <div class="app-tag">dev</div>
       </div>
-      <div class="app-config-source" @click.prevent="showConfig">
+      <div
+        class="app-config-source"
+        role="button"
+        tabindex="0"
+        aria-label="Theme settings"
+        @click.prevent="showConfig"
+        @keydown.enter.prevent="showConfig"
+        @keydown.space.prevent="showConfig"
+      >
         <of-icon name="theme settings" />
         <of-dialog v-model="configActive">
           <div class="container">
@@ -42,7 +58,13 @@
           <div
             style="display: flex; color: var(--of-primary-tint)"
             :class="`of--tinted of--tint-${t.name}`"
+            role="radio"
+            tabindex="0"
+            :aria-label="`${t.name} tint`"
+            :aria-checked="tint === t.name"
             @click.prevent="() => (tint = t.name)"
+            @keydown.enter.prevent="() => (tint = t.name)"
+            @keydown.space.prevent="() => (tint = t.name)"
           >
             <of-icon :name="t.icon" />
           </div>
@@ -50,7 +72,20 @@
       </div>
       <div
         class="app-config-source"
+        role="button"
+        tabindex="0"
+        :aria-label="dark ? 'Switch to light theme' : 'Switch to dark theme'"
         @click.prevent="
+          () => {
+            dark = !dark
+          }
+        "
+        @keydown.enter.prevent="
+          () => {
+            dark = !dark
+          }
+        "
+        @keydown.space.prevent="
           () => {
             dark = !dark
           }
