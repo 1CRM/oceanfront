@@ -2,6 +2,11 @@
 
 .of-data-table {
   --table-cell-vpad: 0.25rem;
+  --table-border-color: color-mix(
+    in srgb,
+    var(--of-color-on-surface) 22%,
+    var(--of-color-outline)
+  );
 
   &.of--density-0 {
     --table-cell-vpad: 0.5rem;
@@ -60,7 +65,7 @@
 
   > .of-data-table-header {
     > div {
-      border-bottom: 2px solid #ddd;
+      border-bottom: 2px solid var(--table-border-color);
       padding: var(--table-cell-vpad) 0.75rem;
       font-weight: bold;
       &.of-data-table-rows-selector {
@@ -104,17 +109,17 @@
       }
     }
     + .of-data-table-row > div {
-      border-top: 1px solid #ddd;
+      border-top: 1px solid var(--table-border-color);
     }
     &:last-child > div {
-      border-bottom: 1px solid #ddd;
+      border-bottom: 1px solid var(--table-border-color);
     }
     &.selected > div {
       background-color: $base-color-highlight;
     }
     &.total-amount > div {
       font-weight: 500;
-      border-top: 3px double #ddd;
+      border-top: 3px double var(--table-border-color);
     }
   }
 
@@ -124,7 +129,7 @@
   }
   > .of-data-table-row + .of-data-table-footer > div,
   > .of-data-table-header + .of-data-table-footer > div {
-    border-top: 3px double #ddd;
+    border-top: 3px double var(--table-border-color);
   }
 }
 .of-extra-sort-popup {

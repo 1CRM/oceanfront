@@ -179,13 +179,17 @@ div.of-date-picker-cur-year {
   padding-top: 8px;
   padding-bottom: 8px;
   &.accept {
-    color: var(--of-pal-primary-20);
+    color: var(--of-primary-tint);
   }
   &.cancel {
-    color: var(--of-pal-error-50);
+    color: var(--of-color-error);
   }
   &:hover {
-    background-color: var(--of-pal-primary-92);
+    background-color: color-mix(
+      in srgb,
+      var(--of-primary-tint) 16%,
+      transparent
+    );
   }
 }
 
