@@ -337,6 +337,7 @@ div.of-date-picker-cur-year {
   background: $color-bg-event;
   color: $color-event;
   border: solid 1px $color-border-event;
+  --of-color-secondary: currentColor;
   cursor: pointer;
   position: absolute;
   white-space: nowrap;
@@ -363,6 +364,11 @@ div.of-date-picker-cur-year {
     &.two-lines {
       min-height: calc(2 * calc(var(--of-event-height, 20px) - 2px));
     }
+  }
+
+  .of-link {
+    color: inherit;
+    --of-color-secondary: currentColor;
   }
 }
 
