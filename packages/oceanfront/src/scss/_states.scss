@@ -168,6 +168,85 @@
   @include state-event-mixin(#f6f6f6, #68d, #506cb2);
 }
 
+.-of-theme-dark {
+  .of-badge.of--icon {
+    --bg-badge: color-mix(in srgb, var(--bg-badge) 92%, var(--of-color-surface));
+  }
+
+  .state-success {
+    @include state-mixin(
+      var(--of-color-on-primary-container),
+      color-mix(in srgb, var(--of-color-primary-container) 64%, transparent),
+      color-mix(in srgb, var(--of-color-primary) 64%, var(--of-color-outline))
+    );
+  }
+
+  .state-info {
+    @include state-mixin(
+      var(--of-color-on-tertiary-container),
+      color-mix(in srgb, var(--of-color-tertiary-container) 64%, transparent),
+      color-mix(in srgb, var(--of-color-tertiary) 64%, var(--of-color-outline))
+    );
+  }
+
+  .state-warning {
+    @include state-mixin(
+      var(--of-color-on-secondary-container),
+      color-mix(in srgb, var(--of-color-secondary-container) 60%, transparent),
+      color-mix(in srgb, var(--of-color-secondary) 60%, var(--of-color-outline))
+    );
+  }
+
+  .state-alert {
+    @include state-mixin(
+      var(--of-color-on-secondary-container),
+      color-mix(in srgb, var(--of-color-secondary-container) 58%, transparent),
+      color-mix(in srgb, var(--of-color-secondary) 58%, var(--of-color-outline))
+    );
+  }
+
+  .state-error,
+  .state-danger {
+    @include state-mixin(
+      var(--of-color-on-error-container),
+      color-mix(in srgb, var(--of-color-error-container) 64%, transparent),
+      color-mix(in srgb, var(--of-color-error) 64%, var(--of-color-outline))
+    );
+    @include state-event-mixin(
+      var(--of-color-on-error-container),
+      color-mix(in srgb, var(--of-color-error-container) 60%, transparent),
+      color-mix(in srgb, var(--of-color-error) 60%, var(--of-color-outline))
+    );
+  }
+
+  .state-primary {
+    @include state-mixin(
+      var(--of-on-primary-tint),
+      color-mix(in srgb, var(--of-primary-tint) 62%, transparent),
+      color-mix(in srgb, var(--of-primary-tint) 64%, var(--of-color-outline))
+    );
+    @include state-event-mixin(
+      var(--of-on-primary-tint),
+      color-mix(in srgb, var(--of-primary-tint) 54%, transparent),
+      color-mix(in srgb, var(--of-primary-tint) 62%, var(--of-color-outline))
+    );
+  }
+
+  .state-ignore,
+  .state-active {
+    @include state-mixin(
+      var(--of-color-on-surface-variant),
+      color-mix(in srgb, var(--of-color-surface-variant) 70%, transparent),
+      color-mix(in srgb, var(--of-color-on-surface) 35%, transparent)
+    );
+    @include state-event-mixin(
+      var(--of-color-on-surface),
+      color-mix(in srgb, var(--of-color-surface) 72%, transparent),
+      color-mix(in srgb, var(--of-color-on-surface) 30%, transparent)
+    );
+  }
+}
+
 .of--elevated,
 .of--elevated-1,
 .of--elevated-2,

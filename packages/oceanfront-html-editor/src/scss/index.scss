@@ -5,7 +5,7 @@
     overflow: visible;
   }
   .editor-outer {
-    background-color: rgb(255, 255, 255);
+    background-color: var(--of-editor-content-bg, #e7e9e5);
     display: flex;
     flex-flow: column nowrap;
     margin-left: 0.11em;
@@ -26,6 +26,8 @@
       overflow: hidden;
 
       .source-container {
+        background-color: var(--of-editor-content-bg, #e7e9e5);
+        color: var(--of-editor-content-color, #151713);
         outline: none;
         border: none;
         resize: none;
@@ -39,7 +41,7 @@
 
   .of-editor-body {
     min-height: var(--of-editor-editable-area-height, 14em);
-    color: rgb(0, 0, 0);
+    color: var(--of-editor-content-color, #151713);
   }
 
   .editor-footer {
