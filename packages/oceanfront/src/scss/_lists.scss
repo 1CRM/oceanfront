@@ -87,7 +87,7 @@
     transition: background-color 200ms;
 
     & .of--layer {
-      border: #{$field-focus-border-em} solid transparent;
+      border: 1px solid transparent;
       background: transparent;
       border-radius: 5px;
 

@@ -232,9 +232,7 @@
   --field-border-opacity: 1;
   --field-border-radius: #{$border-radius-input};
   --field-border-style: solid;
-  // Paint: --field-border-width (1px at rest, em when focused). Layout: --field-border-layout (max stroke so inner content does not shift).
   --field-border-width: 1px;
-  --field-border-layout: var(--field-border-width);
   --field-color: #{use-color(field-color)};
   --field-opacity: #{use-opacity(field-color)};
   --field-font-size: #{$font-size-input};
@@ -264,8 +262,6 @@
   }
 
   &.of--interactive {
-    --field-border-layout: #{$field-focus-border-em};
-    --field-border-width: 1px;
     --field-border-color: #{use-color(field-border)};
     --field-border-opacity: #{use-opacity(field-border)};
   }
@@ -286,7 +282,6 @@
     --field-label-opacity: #{use-opacity(field-label, hover)};
   }
   &.of--interactive.of--focused {
-    --field-border-width: #{$field-focus-border-em};
     &:not(.of--invalid):not(.of--undecorated) {
       --field-border-color: #{use-color(field-border, focus)};
       --field-border-opacity: #{use-opacity(field-border, focus)};
@@ -409,7 +404,7 @@
 
   > .of-field-main > .of-field-body > .of-field-inner > textarea {
     box-sizing: border-box;
-    margin: 0 var(--field-border-layout) 2px 0;
+    margin: 0 var(--field-border-width) 2px 0;
     padding: var(--field-v-pad) var(--field-h-pad);
     resize: vertical;
   }
@@ -456,7 +451,7 @@
   align-items: flex-start;
   box-sizing: border-box;
   display: flex;
-  margin: calc(0px - var(--field-border-layout));
+  margin: calc(0px - var(--field-border-width));
   min-height: calc(var(--field-v-pad) + var(--field-input-height));
   position: relative;
   max-width: 100%;
@@ -572,6 +567,10 @@
     z-index: auto;
   }
 
+  &.of--variant-outlined.of--label-frame.of--interactive.of--focused {
+    --field-border-width: 1px;
+  }
+
   &.of--variant-filled.of--interactive.of--focused {
     --field-background: #{use-color(field-filled-bg)};
     --field-background-opacity: #{use-opacity(field-filled-bg)};
@@ -638,35 +637,16 @@
     border-radius: var(--field-border-radius);
   }
   .of--layer-brd {
-    border: var(--field-border-layout) var(--field-border-style) transparent;
+    border: var(--field-border-width) var(--field-border-style) transparent;
   }
 
   &:not(.of--label-frame) .of--layer-brd {
+    border-color: var(--field-border-color);
     opacity: var(--field-border-opacity);
   }
 
-  &:not(.of--label-frame):not(.of--interactive) .of--layer-brd,
-  &:not(.of--label-frame).of--undecorated .of--layer-brd {
-    border-color: var(--field-border-color);
-    box-shadow: none;
-  }
-
-  &:not(.of--label-frame).of--interactive:not(.of--focused):not(
-      .of--undecorated
-    ):not(.of--mode-disabled)
-    .of--layer-brd {
-    border-color: transparent;
-    box-shadow: inset 0 0 0 var(--field-border-width) var(--field-border-color);
-  }
-
-  &:not(.of--label-frame).of--interactive.of--focused:not(.of--undecorated)
-    .of--layer-brd {
-    border-color: var(--field-border-color);
-    box-shadow: none;
-  }
-
   > .of-field-inner {
-    margin-top: calc(0px - var(--field-border-layout));
+    margin-top: -1px;
   }
 
   &.of--label-frame {
@@ -693,7 +673,7 @@
         width: 100%;
 
         &::before {
-          border: var(--field-border-layout) var(--field-border-style)
+          border: var(--field-border-width) var(--field-border-style)
             var(--field-border-color);
           opacity: var(--field-border-opacity);
           border-radius: var(--field-border-radius) 0 0
@@ -706,7 +686,7 @@
           transition: border-color 120ms;
         }
         &::after {
-          border: var(--field-border-layout) var(--field-border-style)
+          border: var(--field-border-width) var(--field-border-style)
             var(--field-border-color);
           opacity: var(--field-border-opacity);
           border-radius: 0 var(--field-border-radius) var(--field-border-radius)
@@ -723,9 +703,9 @@
           position: relative;
 
           &::after {
-            border-bottom: var(--field-border-layout) var(--field-border-style)
+            border-bottom: var(--field-border-width) var(--field-border-style)
               var(--field-border-color);
-            border-top: var(--field-border-layout) var(--field-border-style)
+            border-top: var(--field-border-width) var(--field-border-style)
               var(--field-border-color);
             opacity: var(--field-border-opacity);
             content: '';
@@ -752,6 +732,12 @@
           }
         }
       }
+    }
+
+    &.of--interactive.of--focused:not(:has(:focus-visible)):not(
+        .of-toggle-field
+      ) {
+      --field-border-width: 2px;
     }
 
     padding-top: 0.675em;
@@ -783,30 +769,17 @@
     .of--mode-disabled
   )
   .editor-toolbar
+  .editor-action
   .of--layer.of--layer-brd {
   box-shadow: none;
 }
 
 .of-field.of--variant-filled {
   .of--layer-brd {
-    border: var(--field-border-layout) var(--field-border-style)
+    border: var(--field-border-width) var(--field-border-style)
       var(--field-border-color);
     border-color: transparent transparent var(--field-border-color) transparent;
     opacity: var(--field-border-opacity);
-  }
-
-  &.of--interactive:not(.of--focused):not(.of--undecorated):not(
-      .of--mode-disabled
-    )
-    .of--layer-brd {
-    border-color: transparent;
-    box-shadow: inset 0 calc(0px - var(--field-border-width)) 0 0
-      var(--field-border-color);
-  }
-
-  &.of--interactive.of--focused:not(.of--undecorated) .of--layer-brd {
-    border-color: transparent transparent var(--field-border-color) transparent;
-    box-shadow: none;
   }
 
   &.of--mode-editable,
@@ -845,9 +818,9 @@
     // ripple
     background: #{use-color(field-border, focus)};
     content: '';
-    height: #{$field-focus-border-em};
+    height: 2px;
     position: absolute;
-    bottom: calc(0px - var(--field-border-layout));
+    bottom: calc(0px - var(--field-border-width));
     left: 0;
     width: 100%;
     opacity: 0;
@@ -898,7 +871,7 @@
         left: 0;
         right: 0;
         top: -1px;
-        margin: calc(0px - var(--field-border-layout));
+        margin: calc(0px - var(--field-border-width));
 
         .of-field-header-label {
           display: flex;

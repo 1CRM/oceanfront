@@ -98,9 +98,6 @@ $pad-h-menu-option: var(--pad-h-menu-option, 0.4em);
 $pad-v-menu-option: var(--pad-v-menu-option, 0.3em);
 $pad-inline-button: var(--pad-inline-button, 0.2rem);
 
-/// ~1.5px at 16px reference; scales with component font-size (`em`).
-$field-focus-border-em: 0.09375em !default;
-
 //////////////////////////////////////////////////////////////////////////
 
 /** !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
