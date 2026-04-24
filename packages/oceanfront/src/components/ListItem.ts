@@ -108,7 +108,8 @@ export const OfListItem = defineComponent({
       if (expand.value !== null) {
         result.push(
           h(OfIcon, {
-            name: expand.value ? 'expand up' : 'expand down'
+            name: expand.value ? 'expand up' : 'expand down',
+            decorative: true
           })
         )
       }
@@ -151,7 +152,8 @@ export const OfListItem = defineComponent({
                 },
                 href: link.href,
                 ref: elt,
-                tabIndex: 0,
+                tabIndex: props.disabled ? -1 : 0,
+                'aria-disabled': props.disabled ? true : undefined,
                 onMousedown(evt: MouseEvent) {
                   if (evt.button != null && evt.button !== 0) return
                   ctx.emit('mousedown', evt)

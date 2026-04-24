@@ -1,3 +1,5 @@
+@use 'variables' as *;
+
 .of-field-color-picker {
   width: 20px;
   height: 20px;
@@ -60,6 +62,14 @@
           }
         }
       }
+      &:focus-visible {
+        .saturation__cursor {
+          div {
+            @include of-focus-visible-ring;
+            border-radius: 50%;
+          }
+        }
+      }
       &__white,
       &__black {
         position: absolute;
@@ -104,6 +114,14 @@
         .hue__inner-pointer {
           div {
             outline: 2px solid black;
+          }
+        }
+      }
+      &:focus-visible {
+        .hue__inner-pointer {
+          div {
+            @include of-focus-visible-ring;
+            border-radius: 50%;
           }
         }
       }

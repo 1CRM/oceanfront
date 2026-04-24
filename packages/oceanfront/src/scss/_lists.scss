@@ -45,7 +45,15 @@
     item-border,
     (transparent, 0%),
     (
-      focus: var(--of-primary-tint) 50%
+      focus:
+        (
+          color-mix(
+              in srgb,
+              var(--of-primary-tint) 80%,
+              var(--of-color-on-surface) 20%
+            ),
+          100%
+        )
     )
   );
 
@@ -59,6 +67,10 @@
   cursor: pointer;
   display: block;
   outline: none;
+  &:focus-visible {
+    @include of-focus-visible-ring(-2px, 2px, 2px);
+    border-radius: 5px;
+  }
   padding: 2px 4px;
   text-decoration: none;
   transition: color 200ms;

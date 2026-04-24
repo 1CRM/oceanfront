@@ -45,14 +45,43 @@ const checkFocused = (elt?: HTMLElement) => {
 
 let overlayZIndex = 200
 let overlayStack: HTMLElement[] = []
+const overlayTriggers = new WeakMap<HTMLElement, HTMLElement>()
+const overlayEscCallbacks = new WeakMap<HTMLElement, () => void>()
+
+document.addEventListener('keydown', (evt: KeyboardEvent) => {
+  if (evt.key !== 'Escape' || overlayStack.length === 0) return
+  const topOverlay = overlayStack[overlayStack.length - 1]
+  if (!topOverlay) return
+  if (topOverlay.contains(evt.target as Node)) return
+  const callback = overlayEscCallbacks.get(topOverlay)
+  if (callback) callback()
+})
 
 const removeFromStack = (elt?: HTMLElement) => {
+  const triggerEl = elt ? overlayTriggers.get(elt) : undefined
+  if (elt) {
+    overlayTriggers.delete(elt)
+    overlayEscCallbacks.delete(elt)
+  }
+
   overlayStack = overlayStack.filter((e) => e !== elt)
   if (overlayStack.length == 0) {
     overlayZIndex = 200
   }
+
+  const active = document.activeElement as HTMLElement | null
+  const focusLost =
+    !active || active === document.body || (elt && elt.contains(active))
+
   const top = overlayStack[overlayStack.length - 1]
-  if (!top) return
+  if (!top) {
+    if (focusLost && triggerEl && triggerEl.isConnected) {
+      triggerEl.focus({ focusVisible: false } as FocusOptions & {
+        focusVisible?: boolean
+      })
+    }
+    return
+  }
   if (!checkFocused(top)) top.focus()
 }
 
@@ -78,12 +107,19 @@ export const OfOverlay = defineComponent({
   setup(props, ctx) {
     const id = Math.random()
     let focused = false
+    let focusoutTimer: ReturnType<typeof setTimeout> | null = null
     const layout = useLayout()
     const elt = ref<HTMLElement | undefined>()
     const clickCapture = ref<HTMLElement | undefined>()
     const portal = ref<HTMLElement | undefined>()
     const portalTo = ref<HTMLElement | undefined>()
     const instanceZIndex = ref(overlayZIndex)
+    const clearFocusoutTimer = () => {
+      if (focusoutTimer != null) {
+        clearTimeout(focusoutTimer)
+        focusoutTimer = null
+      }
+    }
     const handlers = {
       onClick(evt: MouseEvent) {
         const outer = elt.value
@@ -96,10 +132,38 @@ export const OfOverlay = defineComponent({
       },
       onKeydown(evt: KeyboardEvent) {
         if (evt.key == 'Escape') {
+          evt.stopPropagation()
           focused = false
           ctx.emit('blur', true)
           removeFromStack(elt.value)
         }
+      },
+      onFocusout(evt: FocusEvent) {
+        const outer = elt.value
+        if (!outer || !props.active) return
+        const related = evt.relatedTarget as Node | null
+        if (related && outer.contains(related)) return
+
+        clearFocusoutTimer()
+        focusoutTimer = setTimeout(() => {
+          focusoutTimer = null
+          if (!props.active || !elt.value) return
+          const currentOuter = elt.value
+
+          const active = document.activeElement
+          if (active && currentOuter.contains(active)) return
+
+          const myIdx = overlayStack.indexOf(currentOuter)
+          if (myIdx >= 0 && active) {
+            for (let i = myIdx + 1; i < overlayStack.length; i++) {
+              if (overlayStack[i].contains(active)) return
+            }
+          }
+
+          focused = false
+          ctx.emit('blur', false)
+          removeFromStack(currentOuter)
+        }, 0)
       }
     }
     const state = computed(() => (props.embed ? 'embed' : 'overlay'))
@@ -116,6 +180,17 @@ export const OfOverlay = defineComponent({
     const pushToStack = () => {
       if (!elt.value) return false
 
+      const activeEl = document.activeElement as HTMLElement | null
+      if (activeEl && activeEl !== document.body) {
+        overlayTriggers.set(elt.value, activeEl)
+      }
+
+      overlayEscCallbacks.set(elt.value, () => {
+        focused = false
+        ctx.emit('blur', true)
+        removeFromStack(elt.value)
+      })
+
       overlayStack.push(elt.value)
       overlayZIndex++
       instanceZIndex.value = overlayZIndex
@@ -123,16 +198,33 @@ export const OfOverlay = defineComponent({
       elt.value.style.zIndex = overlayZIndex.toString()
     }
 
+    const focusableSelector =
+      'button, [href], input, select, textarea, [contenteditable="true"], [tabindex]:not([tabindex="-1"])'
+
     const focus = () => {
       const outer = elt.value
       if (!outer) return false
-      if (checkFocused(outer)) return
-      // FIXME look for [autofocus] or [data-autofocus]?
+      if (checkFocused(outer)) return true
+      const opts = {
+        focusVisible: false
+      } as FocusOptions & { focusVisible?: boolean }
+      const autofocus = outer.querySelector(
+        '[autofocus], [data-autofocus]'
+      ) as HTMLElement | null
+      if (autofocus?.isConnected) {
+        autofocus.focus(opts)
+        if (checkFocused(outer)) {
+          focused = true
+          return true
+        }
+      }
       const findFocus = outer.querySelector(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      )
-      ;((findFocus as HTMLElement) || outer).focus()
+        focusableSelector
+      ) as HTMLElement | null
+      const target = findFocus || outer
+      target.focus(opts)
       focused = true
+      return true
     }
     const reparent = () => {
       if (!portal.value) return
@@ -248,14 +340,23 @@ export const OfOverlay = defineComponent({
         nextTick(() => {
           reposition()
           pushToStack()
-          if (props.focus) focus()
+          // Defer focus one extra tick so slot content (e.g. v-if on slot props) is in the DOM.
+          if (props.focus) {
+            nextTick(() => {
+              focus()
+              if (!checkFocused(elt.value)) requestAnimationFrame(() => focus())
+            })
+          }
         })
       }
     }
     watch(
       () => [props.target, props.active, props.focus, state.value],
       ([src, active, ..._]) => {
-        if (!active) removeFromStack(elt.value)
+        if (!active) {
+          clearFocusoutTimer()
+          removeFromStack(elt.value)
+        }
         if (typeof src === 'string') {
           target.value = document.documentElement.querySelector(src)
         } else if (src instanceof Element) {
@@ -320,6 +421,7 @@ export const OfOverlay = defineComponent({
           ref: portal,
           onVnodeMounted: updateState,
           onVnodeBeforeUnmount: () => {
+            clearFocusoutTimer()
             bind(false)
             if (focused) removeFromStack(elt.value)
           }

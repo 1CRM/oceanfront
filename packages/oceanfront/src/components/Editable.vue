@@ -34,7 +34,7 @@
           @blur="onInputBlur(true)"
           @focus="onInputFocus"
           @update:model-value="updateValue"
-          @keydown.enter.stop="elem?.focus()"
+          @keydown.enter.stop="focusManage(elem)"
           @keydown:enter="onKeyDown"
           v-model="item.value"
           :label="item.label"
@@ -108,7 +108,7 @@
           @blur="
             () => {
               onInputBlur()
-              elemFieldHandler?.focus()
+              focusManage(elemFieldHandler)
             }
           "
           @update:model-value="updateValue"
@@ -144,6 +144,7 @@ import {
 } from 'vue'
 import { OfIcon } from './Icon'
 import { DataTypeValue } from '../lib/datatype'
+import { focusManage } from '../lib/util'
 import { OfButton } from './Button'
 import { OfField } from './Field'
 const supportedTypes = [
@@ -226,6 +227,9 @@ const OfEditableField = defineComponent({
       if (value) {
         setTimeout(() => {
           active.value = false
+          if (props.mode === 'popup' && elem.value) {
+            focusManage(elem.value)
+          }
         }, 150)
       } else {
         active.value = false
@@ -296,7 +300,8 @@ const OfEditableField = defineComponent({
       classes,
       supportedTypes,
       updateValue,
-      isInvalid
+      isInvalid,
+      focusManage
     }
   }
 })
@@ -305,6 +310,8 @@ export default OfEditableField
 </script>
 
 <style lang="scss">
+@use '../scss/variables' as *;
+
 .of-data-table {
   .editable-prepend {
     padding-right: 5px;
@@ -365,11 +372,9 @@ export default OfEditableField
   .editable-field-value:not(.input-mode-editable),
   .editable-field-value-handler:not(.input-mode-editable) {
     &:focus-visible {
-      color: var(--of-primary-tint);
       cursor: pointer;
       &:not(.active) {
-        border-radius: 4px;
-        outline: 1px solid var(--of-primary-tint);
+        @include of-focus-visible-ring;
       }
     }
   }

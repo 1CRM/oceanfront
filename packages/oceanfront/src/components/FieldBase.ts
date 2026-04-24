@@ -167,8 +167,8 @@ export const OfFieldBase = defineComponent({
         focused.value = true
         if (focusGrp) focusGrp.focus()
       },
-      onMousedown(_evt: MouseEvent) {
-        // ctx.emit('mousedown', evt)
+      onMousedown(evt: MouseEvent) {
+        fieldRender.onMousedown?.(evt)
       },
       onKeydown(evt: KeyboardEvent) {
         fieldRender.keydown?.(evt)

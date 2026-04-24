@@ -9,6 +9,7 @@ import {
   newFieldId,
   provideFieldRender
 } from '../lib/fields'
+import { useLanguage } from '../lib/language'
 
 export const OfFileField = defineComponent({
   name: 'OfFileField',
@@ -17,6 +18,15 @@ export const OfFileField = defineComponent({
   },
   setup(props, ctx) {
     const fieldCtx = makeFieldContext(props, ctx)
+    const lang = useLanguage()
+    const fileInputAriaLabel = computed(() => {
+      if (fieldCtx.ariaLabel) return fieldCtx.ariaLabel
+      const l = lang.value
+      const nameParts = [fieldCtx.label, stateValue.value?.name].filter(Boolean)
+      const base =
+        nameParts.join(', ') || props.placeholder || l.fieldFilePlaceholder
+      return base ? `${base}, ${l.fieldFileUpload}` : l.fieldFileUpload
+    })
     const initialValue = computed(() => {
       let initial = fieldCtx.initialValue
       if (initial === undefined) initial = props.defaultValue
@@ -117,9 +127,13 @@ export const OfFileField = defineComponent({
             name: 'cancel circle',
             scale: props.scale || 'input',
             tabindex: '0',
+            ariaLabel: lang.value.fieldFileClear,
             onClick: clickClear,
             onKeydown(evt: KeyboardEvent) {
-              if (evt.key == 'Enter') clickClear()
+              if (evt.key === 'Enter' || evt.key === ' ') {
+                evt.preventDefault()
+                clickClear()
+              }
             }
           })
       },
@@ -150,7 +164,7 @@ export const OfFileField = defineComponent({
               for: inputId.value,
               onClick: (evt: MouseEvent) => evt.stopPropagation()
             },
-            [props.placeholder || 'Attach a file']
+            [props.placeholder || lang.value.fieldFilePlaceholder]
           )
         }
         return h('div', { class: 'of-file-input' }, [
@@ -160,6 +174,9 @@ export const OfFileField = defineComponent({
             disabled: !fieldCtx.editable,
             name: fieldCtx.name,
             type: 'file',
+            'aria-label': fileInputAriaLabel.value,
+            'aria-invalid': props.invalid ? 'true' : undefined,
+            'aria-description': fieldCtx.ariaModeDescription,
             ...hooks
           }),
           label

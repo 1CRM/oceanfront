@@ -13,8 +13,9 @@ export const OfTooltip = defineComponent({
     const textPosition = ref()
     const opened = ref(false)
 
-    const show = (e: MouseEvent) => {
-      const tooltipIconEl = e.target as HTMLElement
+    const show = (e: MouseEvent | FocusEvent) => {
+      const tooltipIconEl =
+        (e.currentTarget as HTMLElement) ?? (e.target as HTMLElement)
 
       const tooltipIconElRect = tooltipIconEl?.getBoundingClientRect()
       let tooltipTextElRect = tooltipTextEl.value.getBoundingClientRect()
@@ -62,20 +63,27 @@ export const OfTooltip = defineComponent({
       h(
         'div',
         {
-          role: 'tooltip',
-          'aria-label': props.text,
           class: 'of-tooltip'
         },
         h(
           'div',
           {
             class: ['of-tooltip-main'],
+            tabindex: ctx.slots.default ? undefined : 0,
             onMouseenter: (e: MouseEvent) => {
               tooltipStyle.value = {}
               opened.value = true
               nextTick(() => show(e))
             },
             onMouseleave: () => {
+              opened.value = false
+            },
+            onFocus: (e: FocusEvent) => {
+              tooltipStyle.value = {}
+              opened.value = true
+              nextTick(() => show(e))
+            },
+            onBlur: () => {
               opened.value = false
             }
           },
@@ -84,7 +92,8 @@ export const OfTooltip = defineComponent({
               ? h('div', {}, ctx.slots.default())
               : h(OfIcon, {
                   name: 'help circle',
-                  scale: 1.71
+                  scale: 1.71,
+                  ariaLabel: props.text || undefined
                 }),
             (props.text ?? '') !== ''
               ? h(

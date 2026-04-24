@@ -94,7 +94,7 @@ const testField = {
   placeholder: 'placeholder',
   readOnly: false,
   required: true,
-  type: 'float',
+  type: 'float'
 }
 
 const testCheckField = {
@@ -106,7 +106,7 @@ const testCheckField = {
   readOnly: false,
   required: true,
   type: 'float',
-  labelPosition: 'input',
+  labelPosition: 'input'
 }
 
 export default defineComponent({
@@ -119,8 +119,8 @@ export default defineComponent({
       change,
       testField,
       testCheckField,
-      textValue,
+      textValue
     }
-  },
+  }
 })
 </script>

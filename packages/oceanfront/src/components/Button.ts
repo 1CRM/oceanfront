@@ -4,7 +4,7 @@ import { OfOverlay } from './Overlay'
 import OfOptionList from './OptionList.vue'
 import { ItemsProp } from '../lib/items'
 import { useThemeOptions } from '../lib/theme'
-import { Scale, scaleClass } from '../lib/util'
+import { focusManage, Scale, scaleClass } from '../lib/util'
 
 let sysMenuTargetIndex = 0
 
@@ -45,12 +45,13 @@ export const OfButton = defineComponent({
     const tint = computed(() => props.tint)
     const menuShown = ref(false)
     const focused = ref(false)
+    const pressed = ref(false)
     let menuTimerId: number | undefined
 
     const menuButton = ref<HTMLElement | null>(null)
-    const focus = () => {
+    const focusButton = () => {
       nextTick(() => {
-        menuButton.value?.focus()
+        focusManage(menuButton.value ?? undefined)
       })
     }
 
@@ -91,13 +92,13 @@ export const OfButton = defineComponent({
     }
     const onBlurList = () => {
       closeMenu()
-      focus()
     }
     const toggleMenu = (_evt?: MouseEvent) => {
       menuShown.value = !menuShown.value
     }
-    const closeMenu = () => {
+    const closeMenu = (refocus = true) => {
       menuShown.value = false
+      if (refocus) focusButton()
     }
     const expand = h(
       'div',
@@ -124,7 +125,19 @@ export const OfButton = defineComponent({
       },
       onBlur: () => {
         focused.value = false
+        pressed.value = false
       }
+    }
+    const onButtonKeyup = (evt: KeyboardEvent) => {
+      if (evt.key !== 'Enter' && evt.key !== ' ') return
+      pressed.value = false
+    }
+    const onButtonKeydown = (evt: KeyboardEvent) => {
+      if (props.disabled || evt.repeat) return
+      if (evt.key !== 'Enter' && evt.key !== ' ') return
+      evt.preventDefault()
+      pressed.value = true
+      ;(evt.currentTarget as HTMLButtonElement).click()
     }
     let autoId: string
 
@@ -188,6 +201,7 @@ export const OfButton = defineComponent({
               ['of--tint-' + tint.value]: !!tint.value,
               'of--keep-text-color': props.keepTextColor,
               'of--focused': focused.value,
+              'of--pressed': pressed.value,
               'of--active': props.active,
               'of-button--rounded': rounded,
               'of-button--icon': !!(
@@ -216,6 +230,8 @@ export const OfButton = defineComponent({
               id: buttonId,
               ref: split && items ? undefined : menuButton,
               onClick,
+              onKeydown: onButtonKeydown,
+              onKeyup: onButtonKeyup,
               name: props.name,
               type: props.type ?? 'button',
               'aria-label': props.ariaLabel ?? props.label,
@@ -233,6 +249,9 @@ export const OfButton = defineComponent({
                   id: splitId,
                   ref: menuButton,
                   onClick: toggleMenu,
+                  onKeydown: onButtonKeydown,
+                  onKeyup: onButtonKeyup,
+                  type: 'button',
                   ...menuMouseEvts,
                   ...focusEvts,
                   'aria-label': props.ariaLabel ?? props.label,
@@ -250,7 +269,7 @@ export const OfButton = defineComponent({
                   shade: false,
                   target: '#' + (split ? splitId : buttonId),
                   onBlur: () => {
-                    menuShown.value = false
+                    closeMenu()
                   }
                 },
                 () => {

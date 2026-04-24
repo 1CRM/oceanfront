@@ -26,7 +26,8 @@ export const OfSelectPopup = defineComponent({
     },
     closePopup: Function,
     value: [String, Array],
-    class: [String, Array, Object]
+    class: [String, Array, Object],
+    menuId: String
   },
   emits: ['updateValue', 'keydown:escape'],
   setup(props, ctx) {
@@ -150,6 +151,7 @@ export const OfSelectPopup = defineComponent({
         {
           items: filteredItems.value,
           class: props.class,
+          menuId: props.menuId,
           onClick: setValue,
           onKeydown(evt: KeyboardEvent) {
             if (evt.key == 'Escape') ctx.emit('keydown:escape')

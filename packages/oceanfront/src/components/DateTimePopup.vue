@@ -1,14 +1,22 @@
 <template>
   <!-- eslint-disable vue/singleline-html-element-content-newline-->
   <div
-    role="menu"
+    :id="id"
+    role="dialog"
+    aria-modal="true"
+    :aria-labelledby="dialogLabelledBy"
+    :aria-label="dialogAriaLabel"
     class="of-menu of-datepicker-popup of--elevated-1"
     :class="{ 'with-time': withTime, 'with-date': withDate }"
     @vueMounted="mounted"
     @vueUnmounted="unmounted"
     @keydown="onPopupKeydown"
   >
-    <div class="of-date-picker-title" v-if="withDate && !withoutTitle">
+    <div
+      class="of-date-picker-title"
+      v-if="withDate && !withoutTitle"
+      :id="titleId"
+    >
       {{ title }}
     </div>
     <div class="of-datepicker-selectors" @selectstart.prevent="">
@@ -19,8 +27,16 @@
         tabindex="0"
         @keydown="onDateKeydown"
       >
-        <div class="of-datepicker-nav-button prev" @click="prevMonth">
-          <of-icon name="arrow left" />
+        <div
+          class="of-datepicker-nav-button prev"
+          role="button"
+          tabindex="0"
+          :aria-label="lang.datePickerPrevMonth"
+          @click="prevMonth"
+          @keydown.enter.prevent="prevMonth"
+          @keydown.space.prevent="prevMonth"
+        >
+          <of-icon name="arrow left" decorative />
         </div>
         <div
           v-if="!editingYear"
@@ -43,8 +59,16 @@
           :onkeydown="yearInputHandler"
           :value="selMonthStart.getFullYear()"
         />
-        <div class="of-datepicker-nav-button next" @click="nextMonth">
-          <of-icon name="arrow right" />
+        <div
+          class="of-datepicker-nav-button next"
+          role="button"
+          tabindex="0"
+          :aria-label="lang.datePickerNextMonth"
+          @click="nextMonth"
+          @keydown.enter.prevent="nextMonth"
+          @keydown.space.prevent="nextMonth"
+        >
+          <of-icon name="arrow right" decorative />
         </div>
 
         <div
@@ -170,6 +194,7 @@ import {
   watch
 } from 'vue'
 import { useLocale } from '../lib/locale'
+import { useLanguage } from '../lib/language'
 import { DateTimeFormatterOptions } from '../formats/DateTime'
 
 export default defineComponent({
@@ -177,6 +202,10 @@ export default defineComponent({
   inheritAttrs: false,
   props: {
     id: String,
+    dialogLabel: {
+      type: String,
+      default: ''
+    },
     withTime: Boolean,
     withDate: Boolean,
     date: Date,
@@ -193,6 +222,19 @@ export default defineComponent({
   },
   emits: ['blur'],
   setup(props, ctx) {
+    const titleId = computed(() => (props.id ? props.id + '-title' : undefined))
+    const dialogLabelledBy = computed(() => {
+      if (props.withDate && !props.withoutTitle && titleId.value) {
+        return titleId.value
+      }
+      return undefined
+    })
+    const dialogAriaLabel = computed(() => {
+      if (dialogLabelledBy.value) {
+        return undefined
+      }
+      return props.dialogLabel || undefined
+    })
     let theNode: VNode | null
     const selDate = ref(props.date ?? new Date())
     const selDateLocale = ref(props.date ?? new Date())
@@ -204,6 +246,7 @@ export default defineComponent({
     const dateSelector = ref<any>(null)
 
     const locale = useLocale()
+    const lang = useLanguage()
     const formatMgr = useFormats()
     const localeOffset = ref(0)
     const timeZone = computed(() =>
@@ -498,6 +541,7 @@ export default defineComponent({
 
     return {
       OfButton,
+      lang,
       timeSelector,
       dateSelector,
 
@@ -543,6 +587,10 @@ export default defineComponent({
           return items
         }, [])
       }),
+
+      titleId,
+      dialogLabelledBy,
+      dialogAriaLabel,
 
       mounted: (vnode: VNode) => {
         theNode = vnode

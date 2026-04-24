@@ -19,7 +19,7 @@ import {
 } from '../lib/fields'
 import OfOptionList from '../components/OptionList.vue'
 import { TextFormatter, useFormats } from '../lib/formats'
-import { removeEmpty, throttle } from '../lib/util'
+import { focusManage, removeEmpty, throttle } from '../lib/util'
 import { useItems } from '../lib/items'
 
 // editing a list field does not necessarily mean swapping input to edit mode
@@ -148,6 +148,9 @@ export const OfTextField = defineComponent({
 
     const elt = ref<HTMLInputElement | undefined>()
     const focused = ref(false)
+    /** mousedown on field before focus — pointer path; Tab focus has no preceding mousedown on this field */
+    const pendingPointerFocus = ref(false)
+    const suppressKeyboardFocusRing = ref(false)
     const focusFirstItem = ref(false)
     const optionListFocused = ref(false)
     let defaultFieldId: string
@@ -262,7 +265,7 @@ export const OfTextField = defineComponent({
     const focus = (select?: boolean) => {
       ctx.emit('focus')
       if (elt.value) {
-        elt.value.focus()
+        focusManage(elt.value)
         if (select) elt.value.select()
         return true
       }
@@ -281,6 +284,7 @@ export const OfTextField = defineComponent({
           ctx.emit('blur', val)
         }
         focused.value = false
+        suppressKeyboardFocusRing.value = false
         const fmt = formatter.value
         if (fmt?.handleBlur) {
           fmt.handleBlur(evt)
@@ -300,6 +304,8 @@ export const OfTextField = defineComponent({
         if (!optionListFocused.value && !props.capture) closeItemsPopup(true)
       },
       onFocus(_evt: FocusEvent) {
+        suppressKeyboardFocusRing.value = pendingPointerFocus.value
+        pendingPointerFocus.value = false
         focused.value = true
       },
       onChange(evt: Event) {
@@ -409,10 +415,12 @@ export const OfTextField = defineComponent({
           closeItemsPopup()
           ctx.emit('keydown:escape')
         } else if (evt.key === 'Tab') {
-          if (itemsOpened.value) {
+          if (itemsOpened.value && formatItems.value.length > 0) {
             focusFirstItem.value = true
             evt.preventDefault()
             evt.stopPropagation()
+          } else if (itemsOpened.value) {
+            closeItemsPopup()
           }
         } else if (
           !(
@@ -460,11 +468,14 @@ export const OfTextField = defineComponent({
             maxlength: props.maxlength,
             name: fieldCtx.name,
             placeholder: props.placeholder,
-            readonly: !fieldCtx.editable || undefined,
+            disabled: fieldCtx.inputDisabled || undefined,
+            readonly: fieldCtx.inputReadonly || undefined,
             rows: props.rows,
             // size: props.size,  - need to implement at field level?
             type: inputType.value,
             'aria-label': fieldCtx.ariaLabel ?? fieldCtx.label,
+            'aria-invalid': props.invalid || invalid.value ? 'true' : undefined,
+            'aria-description': fieldCtx.ariaModeDescription,
             autocomplete: fieldCtx.autocomplete ?? null,
             autocapitalize: fieldCtx.autocapitalize ?? null,
             autocorrect: fieldCtx.autocorrect ?? null,
@@ -485,9 +496,16 @@ export const OfTextField = defineComponent({
       blank,
       class: computed(() => ({
         'of-text-field': true,
-        'of--multiline': multiline
+        'of--multiline': multiline,
+        'of--suppress-keyboard-focus-ring': suppressKeyboardFocusRing.value
       })),
       click: () => focus(fieldCtx.editable),
+      onMousedown: () => {
+        pendingPointerFocus.value = true
+        window.setTimeout(() => {
+          if (!focused.value) pendingPointerFocus.value = false
+        }, 0)
+      },
       cursor: computed(() => (fieldCtx.editable ? 'text' : 'normal')),
       focus,
       focused,
@@ -521,7 +539,7 @@ export const OfTextField = defineComponent({
               })
             : undefined,
         visible: itemsOpened,
-        onBlur: closeItemsPopup,
+        onBlur: (isEscape?: boolean) => closeItemsPopup(isEscape !== false),
         focus: props.focusItems,
         capture: props.capture
       },

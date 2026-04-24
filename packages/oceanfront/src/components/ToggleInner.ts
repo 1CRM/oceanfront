@@ -13,7 +13,9 @@ export const ToggleInner = defineComponent({
     name: String,
     mode: String as PropType<FieldMode>,
     scale: [String, Number],
-    outside: Boolean
+    outside: Boolean,
+    invalid: Boolean,
+    ariaDescription: String
   },
   emits: ['focus', 'blur', 'inputMounted'],
   setup(props, ctx) {
@@ -63,12 +65,22 @@ export const ToggleInner = defineComponent({
               class: ['of-field-input', { 'of--focused': props.focused }],
               checked: props.checked,
               id: props.inputId,
-              // disabled: disabled.value,
-              tabindex: props.mode === 'fixed' ? -1 : 0,
+              disabled: props.mode === 'disabled',
+              tabindex:
+                props.mode === 'fixed' || props.mode === 'disabled' ? -1 : 0,
               name: props.name,
               type: 'checkbox',
               value: '1',
-              'aria-label': (props.ariaLabel ?? '') + ' ' + props.label,
+              'aria-label': props.label
+                ? undefined
+                : props.ariaLabel || undefined,
+              'aria-readonly':
+                props.mode &&
+                ['readonly', 'locked', 'static'].includes(props.mode)
+                  ? 'true'
+                  : undefined,
+              'aria-invalid': props.invalid ? 'true' : undefined,
+              'aria-description': props.ariaDescription || undefined,
               ...hooks
             }),
             props.switch
@@ -89,7 +101,8 @@ export const ToggleInner = defineComponent({
                 : h(OfIcon, {
                     class: 'of-toggle-icon',
                     name: icon.value,
-                    scale: props.scale || 'input'
+                    scale: props.scale || 'input',
+                    decorative: !!inputLabel
                   })
           ]
         )

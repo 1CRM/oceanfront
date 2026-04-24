@@ -10,7 +10,8 @@ export const OfIcon = defineComponent({
     scale: [Number, String],
     type: String,
     ariaLabel: String,
-    title: String
+    title: String,
+    decorative: Boolean
   },
   setup(props, ctx) {
     const mgr = useIcons()
@@ -34,11 +35,24 @@ export const OfIcon = defineComponent({
       const sz = size.value
       const numSz = !isNaN(parseInt(sz as string))
       if (!iconVal) return
+      const hasAccessibleName =
+        !!(props.ariaLabel && String(props.ariaLabel).trim()) ||
+        !!(props.title && String(props.title).trim())
+      const explicitNonDecorative = props.decorative === false
+      const ariaHidden =
+        props.decorative === true ||
+        (!hasAccessibleName && !explicitNonDecorative)
+      const labelText = ariaHidden
+        ? undefined
+        : hasAccessibleName
+          ? (props.ariaLabel ?? props.title)?.trim()
+          : (props.name ?? '').trim() || undefined
       return h(
         'i',
         {
-          role: 'img',
-          'aria-label': props.ariaLabel ?? props.title ?? props.name,
+          role: ariaHidden ? undefined : 'img',
+          'aria-hidden': ariaHidden ? true : undefined,
+          'aria-label': labelText,
           title: props.title,
           class: [
             {

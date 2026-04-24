@@ -1,6 +1,8 @@
 <template>
   <div
+    role="article"
     class="of-kanban-card of--elevated-1"
+    :aria-label="cardAccessibleLabel"
     :class="{
       'of--is-dragging': isCardDragging,
       'of--is-selected': isSelected,
@@ -17,8 +19,11 @@
     @touchmove="handleTouchMove"
     @touchend="handleTouchEnd"
     @click="handleCardClick"
+    @keydown.enter.prevent="handleCardClick"
+    @keydown.space.prevent.stop="handleCardClick"
     @mouseenter="handleMouseEnter"
     @mouseleave="handleMouseLeave"
+    @focus="handleFocus"
     @blur="handleBlur"
     tabindex="0"
   >
@@ -27,7 +32,7 @@
         <div class="project-container">
           <slot name="project" :card="card">
             <div class="project-icon" v-if="card.project?.name">
-              <of-icon :name="card.project?.icon ?? 'mobile'" />
+              <of-icon :name="card.project?.icon ?? 'mobile'" decorative />
             </div>
             <div class="project-name" v-if="card.project?.name">
               <div
@@ -38,12 +43,13 @@
               </div>
             </div>
           </slot>
-          <div class="of-kanban-card-actions" v-if="isHovering">
+          <div class="of-kanban-card-actions" v-if="isHovering || isFocused">
             <of-button
               v-if="compactedMenuItems.length > 0"
               variant="text"
               icon="more"
               size="sm"
+              :aria-label="lang.kanbanCardActionsMenu"
               :items="compactedMenuItems"
             />
           </div>
@@ -52,7 +58,12 @@
           <div
             class="of-kanban-avatar"
             v-if="card.assignee"
+            role="button"
+            tabindex="0"
+            :aria-label="card.assignee.name"
             @click="$emit('assignee-click', card.assignee)"
+            @keydown.enter.prevent="$emit('assignee-click', card.assignee)"
+            @keydown.space.prevent="$emit('assignee-click', card.assignee)"
             :title="card.assignee.name"
           >
             <img
@@ -80,6 +91,8 @@
             variant="outlined"
             icon=""
             size="sm"
+            tabindex="0"
+            :aria-label="`${lang.kanbanFilterByTag} ${tag}`"
             @click.stop="$emit('card-tag-click', tag)"
           >
             {{ tag }}
@@ -95,6 +108,7 @@ import { OfIcon } from '../../Icon'
 import type { IKanbanCard } from '../types'
 import { getInitials } from '../utils'
 import { Item } from '../../../lib/items_list'
+import { useLanguage } from '../../../lib/language'
 
 export default defineComponent({
   name: 'OfKanbanCard',
@@ -109,6 +123,10 @@ export default defineComponent({
     columnId: {
       type: String,
       required: true
+    },
+    columnTitle: {
+      type: String,
+      default: ''
     },
     isSelected: {
       type: Boolean,
@@ -157,11 +175,25 @@ export default defineComponent({
     'hover-change': (_isHovering: boolean) => true
   },
   setup(props, { emit }) {
+    const lang = useLanguage()
+    const cardAccessibleLabel = computed(() => {
+      const raw = props.card.title?.trim()
+      const title = raw || lang.value.kanbanUntitledCard
+      const col = props.columnTitle?.trim()
+      return col ? `${title}, ${col}` : title
+    })
     const isCardDragging = computed<boolean>(
       () => props.draggedCardId === props.card.id
     )
 
+    const isFocused = ref(false)
+
+    const handleFocus = () => {
+      isFocused.value = true
+    }
+
     const handleBlur = () => {
+      isFocused.value = false
       emit('card-blur', props.card)
     }
 
@@ -371,9 +403,13 @@ export default defineComponent({
     }
 
     return {
+      lang,
+      cardAccessibleLabel,
       isCardDragging,
       handleDragStart,
       assigneeInitials,
+      isFocused,
+      handleFocus,
       handleBlur,
       handleCardClick,
       handleTouchStart,

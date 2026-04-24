@@ -45,32 +45,13 @@ export const OfRadioField = defineComponent({
     })
     const stateValue = ref()
     const focused = ref(false)
-    const focusIndex = ref()
-    const setFocusIndex = (
-      delta: number | undefined = undefined,
-      index: number | undefined = undefined
-    ) => {
-      if (index !== undefined && focusIndex.value !== undefined) {
-        focusIndex.value = index
-      } else if (delta) {
-        const newIndex = focusIndex.value + delta
-        const length = items.value.length - 1
-        focusIndex.value =
-          newIndex > length ? 0 : newIndex < 0 ? length : newIndex
-      } else if (focused.value) {
-        const currentIndex = items.value.findIndex(
-          (item: any) => item.value == stateValue.value
-        )
-        focusIndex.value = currentIndex == -1 ? 0 : currentIndex
-      }
-    }
+    const focusIndex = ref<number>()
 
     watch(
       () => fieldCtx.value,
       (val) => {
         if (val === undefined || val === '') val = null
         stateValue.value = val
-        setFocusIndex()
       },
       {
         immediate: true
@@ -97,6 +78,15 @@ export const OfRadioField = defineComponent({
       }
       return false
     }
+    const selectAdjacent = (delta: 1 | -1) => {
+      const list = items.value
+      const len = list.length
+      if (len === 0 || !fieldCtx.editable) return
+      let idx = list.findIndex((item: any) => item.value == stateValue.value)
+      if (idx === -1) idx = focusIndex.value ?? 0
+      idx = (idx + delta + len) % len
+      clickToggle(list[idx].value)
+    }
     const hooks = {
       onBlur(_evt: FocusEvent) {
         focused.value = false
@@ -104,7 +94,7 @@ export const OfRadioField = defineComponent({
       },
       onFocus(index: number) {
         focused.value = true
-        setFocusIndex(undefined, index)
+        focusIndex.value = index
       },
       onInputMounted(vnode: VNode) {
         elt.value = vnode.el as HTMLInputElement
@@ -136,38 +126,51 @@ export const OfRadioField = defineComponent({
                 ],
                 id: inputId.value,
                 ref: elt,
-                tabindex: fieldCtx.mode === 'fixed' ? -1 : 0,
-                ariaLabel:
+                tabindex: -1,
+                'aria-label':
                   fieldCtx.ariaLabel ?? props.label ?? stateValue.value ?? ' ',
+                'aria-disabled': 'true',
+                'aria-readonly': 'true',
+                'aria-invalid': props.invalid ? 'true' : undefined,
                 ...hooks
               },
               selectedItemText.value
             )
           ]
-        return h('div', { class: ['radio-group', gridClass(props.grid)] }, [
-          items.value.map((item: any, index: number) =>
-            h(
-              RadioInner,
-              {
-                onSelectItem: (value: string | number) => {
-                  clickToggle(value)
+        return h(
+          'div',
+          {
+            class: ['radio-group', gridClass(props.grid)],
+            role: 'radiogroup',
+            'aria-label': fieldCtx.ariaLabel ?? props.label ?? undefined
+          },
+          [
+            items.value.map((item: any, index: number) =>
+              h(
+                RadioInner,
+                {
+                  onSelectItem: (value: string | number) => {
+                    clickToggle(value)
+                  },
+                  checked: stateValue.value === item.value,
+                  focused: focusIndex.value === index,
+                  index,
+                  label: item.text,
+                  value: item.value,
+                  inputId: inputId.value + item.value,
+                  align: props.align,
+                  name: props.name ?? inputId.value,
+                  mode: fieldCtx.mode,
+                  scale: props.scale,
+                  invalid: props.invalid,
+                  ariaDescription: fieldCtx.ariaModeDescription,
+                  ...hooks
                 },
-                checked: stateValue.value === item.value,
-                focused: focusIndex.value === index,
-                index,
-                label: item.text,
-                value: item.value,
-                inputId: inputId.value + item.value,
-                align: props.align,
-                name: props.name ?? inputId.value,
-                mode: fieldCtx.mode,
-                scale: props.scale,
-                ...hooks
-              },
-              { icon: ctx.slots.icon }
+                { icon: ctx.slots.icon }
+              )
             )
-          )
-        ])
+          ]
+        )
       }
     }
 
@@ -185,15 +188,20 @@ export const OfRadioField = defineComponent({
       value: stateValue,
       fieldContext: fieldCtx,
       keydown: (event: KeyboardEvent) => {
+        if (!fieldCtx.editable) return
         let consumed = false
         if (['ArrowRight', 'ArrowDown'].includes(event.code)) {
-          setFocusIndex(+1)
+          selectAdjacent(1)
           consumed = true
         } else if (['ArrowLeft', 'ArrowUp'].includes(event.code)) {
-          setFocusIndex(-1)
+          selectAdjacent(-1)
           consumed = true
         } else if (['Enter', 'Space'].includes(event.code)) {
-          clickToggle(items.value[focusIndex.value].value)
+          const i =
+            focusIndex.value ??
+            items.value.findIndex((item: any) => item.value == stateValue.value)
+          const idx = i >= 0 ? i : 0
+          if (items.value[idx]) clickToggle(items.value[idx].value)
           consumed = true
         }
         if (consumed) {

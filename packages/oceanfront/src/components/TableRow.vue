@@ -1,6 +1,7 @@
 <template>
   <div
     class="of-data-table-row"
+    role="row"
     ref="itemRef"
     @mousemove="dragInfo?.draggable && mouseMove($event)"
     @touchmove="dragInfo?.draggable && mouseMove($event)"
@@ -18,19 +19,21 @@
     <div
       v-if="dragInfo?.draggable"
       class="grab-button"
+      role="cell"
+      :aria-label="lang.tableRowDragToReorder"
       @mousedown="item.draggable && dragStart($event)"
       @touchstart="item.draggable && dragStart($event)"
       :class="{ draggable: item.draggable }"
     >
-      <of-icon v-if="item.draggable" name="menu"></of-icon>
+      <of-icon v-if="item.draggable" name="menu" decorative></of-icon>
     </div>
-    <div v-if="rowsSelector">
+    <div v-if="rowsSelector" role="cell">
       <slot name="rows-selector" :record="rowsRecord" :item="row">
         <of-field
           type="toggle"
           variant="basic"
           class="row-selector"
-          aria-label="Row Selector"
+          :aria-label="lang.tableRowSelector"
           :locked="selectLocked"
           :mode="selectLocked ? 'disabled' : 'editable'"
           :record="selectLocked ? undefined : rowsRecord"
@@ -42,6 +45,7 @@
     </div>
     <div
       v-for="(col, colidx) of rowItem.columns"
+      role="cell"
       :style="[col.value === dragInfo?.nestedIndicator ? nestedStyle : {}]"
       :class="col.class"
       :key="colidx"
@@ -55,7 +59,9 @@
         viewBox="0 0 24 24"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        aria-labelledby="previousAltIconTitle"
+        role="img"
+        :aria-label="lang.tableRowNestedUnderParent"
+        focusable="false"
         stroke="#000000"
         stroke-width="2"
         stroke-linecap="round"
@@ -162,6 +168,7 @@ import { computed, defineComponent, reactive, ref, watch } from 'vue'
 import { OfField } from './Field'
 import { OfIcon } from './Icon'
 import OfEditableField from './Editable.vue'
+import { useLanguage } from '../lib/language'
 
 export default defineComponent({
   name: 'OfTableRow',
@@ -195,6 +202,7 @@ export default defineComponent({
   },
   emits: ['dragstart', 'update:row', 'setCoords', 'setDepth', 'update:field'],
   setup(props, ctx) {
+    const lang = useLanguage()
     const index = computed(() => props.idx)
     const active = computed(() => props.row?.active || false)
     const currentCords = ref(props.coords)
@@ -607,6 +615,7 @@ export default defineComponent({
       return
     }
     return {
+      lang,
       item,
       itemRef,
       index,

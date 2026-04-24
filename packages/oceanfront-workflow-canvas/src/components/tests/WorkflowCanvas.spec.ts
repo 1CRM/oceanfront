@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import WorkflowCanvas from '../WorkflowCanvas.vue'
 import type { WorkflowGraph } from '../../types/workflow'
@@ -242,6 +242,124 @@ describe('WorkflowCanvas Component', () => {
 
       const customNodes = wrapper.findAll('.custom-node')
       expect(customNodes.length).toBe(2)
+    })
+  })
+
+  describe('Keyboard navigation', () => {
+    beforeEach(() => {
+      vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({
+        width: 250,
+        height: 100,
+        top: 0,
+        left: 0,
+        bottom: 100,
+        right: 250,
+        x: 0,
+        y: 0,
+        toJSON: () => ({})
+      } as DOMRect)
+    })
+
+    afterEach(() => {
+      vi.restoreAllMocks()
+    })
+
+    function dispatchKey(key: string, init?: Partial<KeyboardEventInit>) {
+      document.dispatchEvent(
+        new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...init })
+      )
+    }
+
+    it('ArrowDown moves selection to the node below', async () => {
+      const wrapper = mount(WorkflowCanvas, {
+        props: {
+          modelValue: mockGraph,
+          record: mockRecord,
+          mode: 'edit',
+          selectedId: 'node-1'
+        }
+      })
+      dispatchKey('ArrowDown')
+      await wrapper.vm.$nextTick()
+      expect(wrapper.emitted('update:selectedId')?.at(-1)?.[0]).toBe('node-2')
+    })
+
+    it('ArrowRight moves selection to a node to the right', async () => {
+      const graph: WorkflowGraph = {
+        nodes: [
+          { id: 'node-left', kind: 'trigger', position: { x: 50, y: 100 } },
+          { id: 'node-right', kind: 'action', position: { x: 500, y: 100 } }
+        ],
+        edges: [],
+        groups: []
+      }
+      const wrapper = mount(WorkflowCanvas, {
+        props: {
+          modelValue: graph,
+          record: mockRecord,
+          mode: 'edit',
+          selectedId: 'node-left'
+        }
+      })
+      dispatchKey('ArrowRight')
+      await wrapper.vm.$nextTick()
+      expect(wrapper.emitted('update:selectedId')?.at(-1)?.[0]).toBe('node-right')
+    })
+
+    it('Home selects the top-left entity', async () => {
+      const wrapper = mount(WorkflowCanvas, {
+        props: {
+          modelValue: mockGraph,
+          record: mockRecord,
+          mode: 'edit',
+          selectedId: 'node-2'
+        }
+      })
+      dispatchKey('Home')
+      await wrapper.vm.$nextTick()
+      expect(wrapper.emitted('update:selectedId')?.at(-1)?.[0]).toBe('node-1')
+    })
+
+    it('Escape clears selection when not in fullscreen', async () => {
+      const wrapper = mount(WorkflowCanvas, {
+        props: {
+          modelValue: mockGraph,
+          record: mockRecord,
+          mode: 'edit',
+          selectedId: 'node-1'
+        }
+      })
+      dispatchKey('Escape')
+      await wrapper.vm.$nextTick()
+      expect(wrapper.emitted('update:selectedId')?.at(-1)?.[0]).toBeNull()
+    })
+
+    it('Enter emits node-click for the selected node', async () => {
+      const wrapper = mount(WorkflowCanvas, {
+        props: {
+          modelValue: mockGraph,
+          record: mockRecord,
+          mode: 'edit',
+          selectedId: 'node-1'
+        }
+      })
+      dispatchKey('Enter')
+      await wrapper.vm.$nextTick()
+      expect(wrapper.emitted('node-click')?.at(-1)?.[0]).toBe('node-1')
+    })
+
+    it('does not delete in view mode on Backspace', async () => {
+      const wrapper = mount(WorkflowCanvas, {
+        props: {
+          modelValue: mockGraph,
+          record: mockRecord,
+          mode: 'view',
+          selectedId: 'node-1'
+        }
+      })
+      dispatchKey('Backspace')
+      await wrapper.vm.$nextTick()
+      expect(wrapper.emitted('node-delete')).toBeUndefined()
     })
   })
 })

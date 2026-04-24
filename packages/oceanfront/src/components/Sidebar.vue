@@ -15,6 +15,7 @@
           :class="classAttr"
           :id="idVal"
           role="navigation"
+          :aria-label="navigationLabel || undefined"
           v-if="activeSlot"
         >
           <slot></slot>
@@ -45,7 +46,8 @@ export default defineComponent({
     shade: {
       type: Boolean,
       default: true
-    }
+    },
+    navigationLabel: { type: String, default: undefined }
   },
   emits: ['update:modelValue'],
   setup(props, ctx) {

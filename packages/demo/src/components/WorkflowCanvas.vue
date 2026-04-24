@@ -10,6 +10,7 @@
           <strong>Canvas Mode:</strong>
           <select
             v-model="canvasMode"
+            aria-label="Canvas Mode"
             style="
               margin-left: 8px;
               padding: 6px 8px;
@@ -32,6 +33,7 @@
             v-model.number="maxGroupDepth"
             min="0"
             placeholder="No limit"
+            aria-label="Max Group Depth"
             style="width: 80px; margin-left: 8px"
           />
           <span style="margin-left: 8px; color: #666; font-size: 13px">
@@ -43,6 +45,7 @@
           <input
             type="checkbox"
             v-model="hideEmptyHandles"
+            aria-label="Hide Empty Handles"
             style="margin-left: 8px"
           />
           <span style="margin-left: 8px; color: #666; font-size: 13px">
@@ -54,6 +57,7 @@
           <input
             type="checkbox"
             v-model="hidePathAdd"
+            aria-label="Hide Path Add"
             style="margin-left: 8px"
           />
           <span style="margin-left: 8px; color: #666; font-size: 13px">
@@ -65,6 +69,7 @@
           <input
             type="checkbox"
             v-model="edgesLocked"
+            aria-label="Lock All Edges"
             style="margin-left: 8px"
           />
           <span style="margin-left: 8px; color: #666; font-size: 13px">
@@ -414,6 +419,8 @@ const groupTypes: GroupTypeConfig = {
 
 // Initial workflow data (separate from graph structure) - flat format
 const initialRecordData: Record<string, unknown> = {
+  'workflow-canvas-fullWidthToggle': 'Toggle full width layout',
+  'workflow-canvas-panelClose': 'Close configuration panel',
   'trigger-1-title': 'New Order',
   'trigger-1-description': 'Triggered when a customer places an order',
   'trigger-1-event': 'new_quote',

@@ -7,6 +7,12 @@
   line-height: $line-height-input;
 }
 
+// Keyboard focus ring on .of-field-main for primary input/content; inner tab stops use their own ring (see block below).
+@mixin field-keyboard-focus-ring {
+  @include of-focus-visible-ring;
+  border-radius: var(--field-border-radius);
+}
+
 .of--small {
   --field-font-size: #{$font-size-input-sm};
 }
@@ -71,8 +77,8 @@
   color: #{use-color(field-label, hover)};
   opacity: #{use-opacity(field-label, hover)};
 }
-.of-group:focus-within,
-.of-group.of--focused {
+.of-group:focus-within:not(:has(:focus-visible)),
+.of-group.of--focused:not(:has(:focus-visible)) {
   --elevation-level: 0.3;
   > .of-group-label {
     color: #{use-color(field-label, focus)};
@@ -121,9 +127,6 @@
       cursor: inherit;
     }
   }
-  .of-icon-clear-file:focus-visible {
-    outline: 1px solid var(--of-primary-tint);
-  }
 }
 
 .of-file-input {
@@ -159,7 +162,15 @@
     (
       hover: var(--of-primary-tint) 60%,
       disabled: var(--of-primary-tint) 60%,
-      focus: var(--of-primary-tint) 100%,
+      // Blend toward on-surface so .of--layer-brd meets non-text contrast (≥3:1) on pale surfaces (WCAG 1.4.11).
+      focus: (
+          color-mix(
+            in srgb,
+            var(--of-primary-tint) 80%,
+            var(--of-color-on-surface) 20%
+          ),
+          100%
+        ),
       invalid: var(--of-color-error) 100%
     )
   );
@@ -286,9 +297,6 @@
     --field-border-opacity: #{use-opacity(field-border, invalid)};
   }
   &.of--mode-fixed {
-    &:focus[tabindex='0'] {
-      outline: 1px solid var(--of-primary-tint);
-    }
     .of-toggle-input {
       --field-color: #{use-color(field-color, disabled)};
       --field-opacity: #{use-opacity(field-color, disabled)};
@@ -507,6 +515,100 @@
   // letter-spacing
 }
 
+// Keyboard focus ring on .of-field-main for the primary control only — inner tab stops
+// (badge remove icons, clear buttons, etc.) keep their own :focus-visible outline.
+.of-field:focus-visible > .of-field-main,
+.of-field-main:has(.of-field-input:focus-visible),
+.of-field-main:has(textarea:focus-visible),
+.of-field-main:has(.of-field-content-text:focus-visible) {
+  @include field-keyboard-focus-ring;
+}
+
+// .of--layer-brd already shows focus; skip the duplicate “Oreo” ring on .of-field-main.
+.of-field.of--interactive.of--focused:not(.of--undecorated):has(
+    > .of-field-main > .of--layer-brd
+  ) {
+  &:focus-visible > .of-field-main,
+  .of-field-main:has(.of-field-input:focus-visible),
+  .of-field-main:has(textarea:focus-visible),
+  .of-field-main:has(.of-field-content-text:focus-visible) {
+    outline: none;
+    box-shadow: none;
+    z-index: auto;
+  }
+}
+
+.of-field:focus-visible > .of-field-main .of-field-input:focus-visible,
+.of-field:focus-visible > .of-field-main textarea:focus-visible,
+.of-field:focus-visible > .of-field-main .of-field-content-text:focus-visible,
+.of-field-main:has(.of-field-input:focus-visible) .of-field-input:focus-visible,
+.of-field-main:has(textarea:focus-visible) textarea:focus-visible,
+.of-field-main:has(.of-field-content-text:focus-visible)
+  .of-field-content-text:focus-visible {
+  outline: none;
+}
+
+// Inner tab stops: match field ring weight (wrapper ring is suppressed while these are focused)
+.of-field .remove-item:focus-visible,
+.of-field .of-icon-clear-calendar:focus-visible,
+.of-field .of-icon-clear-file:focus-visible {
+  @include of-focus-visible-ring;
+  border-radius: 2px;
+}
+
+// Text inputs match :focus-visible on pointer in many browsers; show keyboard ring only for Tab et al.
+.of-field.of-text-field.of--suppress-keyboard-focus-ring {
+  &:focus-visible > .of-field-main,
+  .of-field-main:has(.of-field-input:focus-visible),
+  .of-field-main:has(textarea:focus-visible),
+  .of-field-main:has(.of-field-content-text:focus-visible) {
+    outline: none;
+    box-shadow: none;
+    z-index: auto;
+  }
+
+  &.of--variant-outlined.of--label-frame.of--interactive.of--focused {
+    --field-border-width: 1px;
+  }
+
+  &.of--variant-filled.of--interactive.of--focused {
+    --field-background: #{use-color(field-filled-bg)};
+    --field-background-opacity: #{use-opacity(field-filled-bg)};
+    --field-label-color: #{use-color(field-filled-label)};
+    --field-label-opacity: #{use-opacity(field-filled-label)};
+
+    .of--layer-brd::after {
+      opacity: 0;
+      transform: scaleX(0);
+    }
+  }
+}
+
+// Slider/Toggle: no field-level focus ring — the thumb/icon provides visual feedback.
+.of-field.of-slider-field,
+.of-field.of-toggle-field {
+  &:focus-visible > .of-field-main,
+  .of-field-main:has(.of-field-input:focus-visible),
+  .of-field-main:has(textarea:focus-visible),
+  .of-field-main:has(.of-field-content-text:focus-visible) {
+    outline: none;
+    box-shadow: none;
+    z-index: auto;
+  }
+}
+
+// Slider: on pointer focus keep the default thumb shadow (suppress the hover glow).
+.of-field.of-slider-field.of--suppress-keyboard-focus-ring {
+  .of-slider.of--focused .of-slider-thumb:not(.of--moved) {
+    box-shadow: 0 2px 1px 0 rgba(100, 100, 100, 0.15);
+  }
+}
+
+// Slider: on keyboard focus-visible, match the hover visual on the thumb.
+.of-slider:has(.of-field-input:focus-visible) .of-slider-thumb {
+  box-shadow: 0 0 5px 9px rgba(100, 100, 100, 0.15);
+}
+
 .of-field-content-text {
   box-sizing: content-box;
   min-height: 1.25em;
@@ -542,6 +644,7 @@
     border-color: var(--field-border-color);
     opacity: var(--field-border-opacity);
   }
+
   > .of-field-inner {
     margin-top: -1px;
   }
@@ -631,7 +734,9 @@
       }
     }
 
-    &.of--interactive.of--focused {
+    &.of--interactive.of--focused:not(:has(:focus-visible)):not(
+        .of-toggle-field
+      ) {
       --field-border-width: 2px;
     }
 
@@ -640,8 +745,6 @@
     &.of--interactive.of--focused,
     &.of--active {
       > .of-field-main {
-        box-shadow: none;
-
         > .of-field-header {
           .of-field-header-label {
             &::after {
@@ -660,6 +763,15 @@
       }
     }
   }
+}
+
+.of-field.of-editor.of--interactive:not(.of--focused):not(.of--undecorated):not(
+    .of--mode-disabled
+  )
+  .editor-toolbar
+  .editor-action
+  .of--layer.of--layer-brd {
+  box-shadow: none;
 }
 
 .of-field.of--variant-filled {
@@ -693,7 +805,9 @@
     --field-label-color: #{use-color(field-filled-label, disabled)};
     --field-label-opacity: #{use-opacity(field-filled-label, disabled)};
   }
-  &.of--interactive.of--focused {
+  &.of--interactive.of--focused:not(:has(:focus-visible)):not(
+      .of-toggle-field
+    ) {
     --field-background: #{use-color(field-filled-bg, focus)};
     --field-background-opacity: #{use-opacity(field-filled-bg, focus)};
     --field-label-color: #{use-color(field-filled-label, focus)};
@@ -720,7 +834,8 @@
   &.of--interactive.of--invalid .of--layer-brd::after {
     background: #{use-color(field-border, invalid)};
   }
-  &.of--interactive.of--focused .of--layer-brd::after {
+  &.of--interactive.of--focused:not(:has(:focus-visible)):not(.of-toggle-field)
+    .of--layer-brd::after {
     opacity: #{use-opacity(field-border, focus)};
     transform: scaleX(1);
   }
@@ -734,7 +849,9 @@
     --field-label-opacity: #{use-opacity(field-filled-label, disabled)};
   }
 
-  &.of--interactive.of--focused {
+  &.of--interactive.of--focused:not(:has(:focus-visible)):not(
+      .of-toggle-field
+    ) {
     --field-label-color: #{use-color(field-filled-label, focus)};
     --field-label-opacity: #{use-opacity(field-filled-label, focus)};
   }
@@ -831,14 +948,6 @@
   display: inline-flex;
   outline: none;
 }
-.of-field.of--focused
-  .of-toggle-input.of--focused:not(.of-toggle-input-switch) {
-  .of-toggle-icon {
-    box-shadow: 0 0 2px 4px rgba(100, 100, 100, 0.15);
-    background-color: rgba(100, 100, 100, 0.15);
-    border-radius: 50%;
-  }
-}
 .of-switch {
   align-items: center;
   box-sizing: border-box;
@@ -904,15 +1013,39 @@
       opacity: 72%;
     }
   }
-  &:hover {
-    .of-switch-thumb {
-      box-shadow: 0 0 5px 9px rgba(100, 100, 100, 0.15);
+}
+
+.of-field.of-toggle-field .of-toggle-input:hover,
+.of-field.of-toggle-field .of-toggle-input:has(.of-field-input:focus-visible) {
+  .of-switch-thumb {
+    box-shadow: 0 0 5px 9px rgba(100, 100, 100, 0.15);
+  }
+
+  .of-toggle-icon {
+    position: relative;
+    z-index: 1;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: -6px;
+      left: -6px;
+      width: calc(100% + 12px);
+      height: calc(100% + 12px);
+      background: radial-gradient(
+        circle,
+        rgba(100, 100, 100, 0.15) 0%,
+        rgba(100, 100, 100, 0.12) 55%,
+        rgba(100, 100, 100, 0.02) 100%
+      );
+      border-radius: 50%;
     }
   }
-  .of--focused & {
-    .of-switch-thumb {
-      box-shadow: 0 0 0 9px rgba(100, 100, 100, 0.2);
-    }
+}
+
+.of-field.of-toggle-field .of-toggle-input:has(.of-field-input:focus-visible) {
+  .of-switch-thumb {
+    box-shadow: 0 0 0 9px rgba(100, 100, 100, 0.2);
   }
 }
 
@@ -975,7 +1108,7 @@
       box-shadow: 0 0 5px 9px rgba(100, 100, 100, 0.15);
     }
   }
-  &.of--focused {
+  &.of--focused:not(:has(:focus-visible)) {
     .of-slider-thumb {
       box-shadow: 0 0 0 9px rgba(100, 100, 100, 0.2);
     }
@@ -1032,10 +1165,6 @@
   box-sizing: border-box;
   width: 2.5em;
   height: 1.2em;
-}
-
-.of-field.of-select-field .remove-item:focus-visible {
-  outline: 1px solid var(--of-primary-tint);
 }
 
 .of-field.of-toggle-field.of--mode-fixed {

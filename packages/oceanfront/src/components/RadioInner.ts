@@ -13,7 +13,9 @@ export const RadioInner = defineComponent({
     value: [String, Number],
     scale: [String, Number],
     focused: [Boolean],
-    index: [Number]
+    index: [Number],
+    invalid: Boolean,
+    ariaDescription: String
   },
   emits: ['focus', 'blur', 'inputMounted', 'selectItem'],
   setup(props, ctx) {
@@ -62,11 +64,19 @@ export const RadioInner = defineComponent({
                 ctx.emit('selectItem', props.value)
               },
               id: props.inputId,
-              // disabled: disabled.value,
-              tabindex: props.mode === 'fixed' ? -1 : 0,
+              disabled: props.mode === 'disabled',
+              tabindex:
+                props.mode === 'fixed' || props.mode === 'disabled' ? -1 : 0,
               name: props.name,
               type: 'radio',
               value: props.value,
+              'aria-readonly':
+                props.mode &&
+                ['readonly', 'locked', 'static'].includes(props.mode)
+                  ? 'true'
+                  : undefined,
+              'aria-invalid': props.invalid ? 'true' : undefined,
+              'aria-description': props.ariaDescription || undefined,
               ...hooks
             }),
             ctx.slots.icon
@@ -74,7 +84,8 @@ export const RadioInner = defineComponent({
               : h(OfIcon, {
                   class: 'of-toggle-icon',
                   name: icon.value,
-                  scale: props.scale || 'input'
+                  scale: props.scale || 'input',
+                  decorative: !!inputLabel
                 })
           ]
         )

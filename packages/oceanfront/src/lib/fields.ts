@@ -10,6 +10,7 @@ import {
   VNode
 } from 'vue'
 import { ItemList } from './items_list'
+import { useLanguage } from './language'
 import { FormRecord, useRecords } from './records'
 import { useThemeOptions } from './theme'
 import { extendReactive, extractRefs } from './util'
@@ -29,6 +30,7 @@ export interface FieldRender {
   blank?: boolean
   class?: string | string[] | Record<string, boolean>
   click?: (evt?: MouseEvent) => boolean | void
+  onMousedown?: (evt?: MouseEvent) => void
   onMouseleave?: (evt?: MouseEvent) => boolean | void
   onMouseenter?: (evt?: MouseEvent) => boolean | void
   keydown?: (evt?: KeyboardEvent) => boolean | void
@@ -108,6 +110,10 @@ export interface FieldContext {
   scale?: string
   width?: string
   block?: boolean
+  inputDisabled?: boolean
+  inputReadonly?: boolean
+  invalid?: boolean
+  ariaModeDescription?: string
 }
 
 export interface FieldProps {
@@ -310,6 +316,18 @@ export function makeFieldContext<C>(
   )
   const editable = computed(() => mode.value === 'editable')
   const interactive = computed(() => mode.value !== 'fixed')
+  const inputDisabled = computed(() => mode.value === 'disabled')
+  const inputReadonly = computed(
+    () => !editable.value && mode.value !== 'disabled' && mode.value !== 'fixed'
+  )
+  const invalid = computed(() => !!props.invalid)
+  const lang = useLanguage()
+  const ariaModeDescription = computed(() => {
+    const m = mode.value
+    if (m === 'locked') return lang.value.fieldModeLocked
+    if (m === 'readonly') return lang.value.fieldModeReadonly
+    return undefined
+  })
   const fieldType = computed(() => {
     const fmt = props.format
     return (
@@ -379,6 +397,10 @@ export function makeFieldContext<C>(
       if (props.name && record.value) record.value.value[props.name] = value
       else (ctx.emit as any)('update:modelValue', value)
     },
+    inputDisabled,
+    inputReadonly,
+    invalid,
+    ariaModeDescription,
     ...extractRefs(props, [
       'id',
       'inline',

@@ -2,6 +2,7 @@
   <div
     role="menu"
     class="of-menu options"
+    :id="menuRootId || undefined"
     :class="menuClass"
     :style="menuStyle"
     @keydown="onKeyPress"
@@ -21,15 +22,21 @@
         tabindex="0"
       >
         <template #prepend>
-          <of-icon name="search" />
+          <of-icon name="search" decorative />
         </template>
         <template #append>
           <of-icon
             v-if="searchNotEmpty"
             name="cancel circle"
-            style="cursor: pointer"
             size="input"
+            class="of-option-list-clear-search"
+            style="cursor: pointer"
+            :aria-label="lang.optionListClearSearch"
+            :decorative="false"
+            tabindex="0"
             @click="clearSearch"
+            @keydown.enter.prevent="clearSearch"
+            @keydown.space.prevent="clearSearch"
           />
         </template>
       </of-field>
@@ -41,12 +48,20 @@
         </slot>
       </div>
       <template v-if="!isEmpty">
-        <div class="of-list-outer" role="menuitem" ref="listOuter">
+        <div class="of-list-outer" ref="listOuter">
           <template v-for="(item, idx) of filterItems" :key="idx">
-            <div class="of-list-header" v-if="item.special === 'header'">
+            <div
+              class="of-list-header"
+              v-if="item.special === 'header'"
+              role="presentation"
+            >
               {{ item.text }}
             </div>
-            <div class="of-list-divider" v-if="item.special === 'divider'" />
+            <div
+              class="of-list-divider"
+              v-if="item.special === 'divider'"
+              role="separator"
+            />
             <of-list-item
               v-if="!item.special"
               :active="item.selected"
@@ -57,7 +72,7 @@
               @blur="onItemBlur"
               @focus="onItemFocus"
               @button-click="buttonClick"
-              :attrs="item.attrs"
+              :attrs="{ role: 'menuitem', ...(item.attrs || {}) }"
               :key="idx"
               :field="item.field"
             >
@@ -121,7 +136,8 @@ const OfOptionList = defineComponent({
       default: () => []
     },
     addSearch: { type: Boolean, default: false },
-    alwaysShowSearch: { type: Boolean, default: false }
+    alwaysShowSearch: { type: Boolean, default: false },
+    menuId: { type: String, default: undefined }
   },
   emits: ['blur', 'click', 'close', 'focused'],
   setup(props, ctx) {
@@ -136,6 +152,7 @@ const OfOptionList = defineComponent({
     const isEmpty = computed(() => filterItems.value.length == 0)
     const menuClass = computed(() => props.class)
     const menuStyle = computed(() => props.style)
+    const menuRootId = computed(() => props.menuId)
     const itemFocused: Ref<boolean> = ref(false)
     const listOuter = ref<any>(null)
     const lang = useLanguage()
@@ -186,10 +203,20 @@ const OfOptionList = defineComponent({
       searchText.value = ''
     }
 
+    const applyInitialFocus = () => {
+      if (!isEmpty.value) {
+        focusFirstItem()
+      } else if (showSearch.value) {
+        focusSearch()
+      } else {
+        focusFirstItem()
+      }
+    }
+
     watch(
       () => props.focus,
       (val) => {
-        if (val) focusFirstItem()
+        if (val) applyInitialFocus()
       }
     )
 
@@ -303,8 +330,7 @@ const OfOptionList = defineComponent({
 
     if (props.focus) {
       nextTick(() => {
-        if (showSearch.value) focusSearch()
-        else focusFirstItem()
+        applyInitialFocus()
       })
     }
 
@@ -314,6 +340,7 @@ const OfOptionList = defineComponent({
       filterItems,
       menuClass,
       menuStyle,
+      menuRootId,
       click,
       listOuter,
 

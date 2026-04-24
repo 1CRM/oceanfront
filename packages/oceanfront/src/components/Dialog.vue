@@ -1,11 +1,15 @@
 <template>
-  <of-overlay :active="active" @blur="hideOnBlur ? hide() : undefined">
+  <of-overlay :active="active" :capture="capture" @blur="onOverlayBlur">
     <template #default="{ active: dialogActive }">
       <div class="of-dialog-outer">
         <div
           ref="dialog"
           role="dialog"
+          aria-modal="true"
           :id="id"
+          :aria-label="ariaLabel || undefined"
+          :aria-labelledby="ariaLabelledby || undefined"
+          :aria-describedby="ariaDescribedby || undefined"
           class="of-dialog"
           :class="classAttr"
           v-if="dialogActive"
@@ -20,10 +24,11 @@
               v-if="showCloseButton"
               class="dialog-close"
               tabindex="0"
+              :aria-label="lang.dialogClose"
               @click="hide()"
-              @keydown.enter="hide()"
+              @keydown="onCloseButtonKeydown"
             >
-              <of-icon name="cancel" />
+              <of-icon name="cancel" decorative />
             </div>
             <slot name="header" />
           </div>
@@ -32,7 +37,7 @@
           </div>
           <div class="of-dialog-footer">
             <div v-if="resize" class="dialog-resizer" @mousedown="resizeAction">
-              <of-icon name="popup resize" />
+              <of-icon name="popup resize" decorative />
             </div>
             <slot name="footer" />
           </div>
@@ -43,8 +48,18 @@
 </template>
 
 <script lang="ts">
-import { ref, defineComponent, computed, watch, Ref, onUnmounted } from 'vue'
+import {
+  ref,
+  defineComponent,
+  computed,
+  watch,
+  Ref,
+  onUnmounted,
+  nextTick
+} from 'vue'
 import { OfOverlay } from './Overlay'
+import { focusManage } from '../lib/util'
+import { useLanguage } from '../lib/language'
 
 export default defineComponent({
   name: 'OfDialog',
@@ -59,13 +74,18 @@ export default defineComponent({
     dragAndDrop: { type: Boolean, default: true },
     transition: { type: String, default: 'slide-down' },
     hideOnBlur: { type: Boolean, default: true },
-    showCloseButton: { type: Boolean, default: false }
+    showCloseButton: { type: Boolean, default: false },
+    capture: { type: Boolean, default: true },
+    ariaLabel: { type: String, default: undefined },
+    ariaLabelledby: { type: String, default: undefined },
+    ariaDescribedby: { type: String, default: undefined }
   },
   emits: ['update:modelValue'],
   setup: function (props, ctx) {
+    const lang = useLanguage()
     const dialog = ref<any>()
     const focusableElements =
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"]'
+      'button, [href], input, select, textarea, [contenteditable="true"], [tabindex]:not([tabindex="-1"])'
     const handelKeyDown = (e: KeyboardEvent) => {
       const firstFocusableElement =
         dialog.value.querySelectorAll(focusableElements)[0]
@@ -115,6 +135,36 @@ export default defineComponent({
       2: 0,
       3: 0,
       4: 0
+    })
+
+    /** Element that had focus before the overlay moved focus into the dialog (e.g. open button). */
+    let triggerElement: HTMLElement | null = null
+    watch(active, (isActive) => {
+      if (isActive) {
+        const el = document.activeElement
+        if (
+          el instanceof HTMLElement &&
+          el !== document.body &&
+          el !== document.documentElement
+        ) {
+          triggerElement = el
+        } else {
+          triggerElement = null
+        }
+      } else {
+        const toRestore = triggerElement
+        triggerElement = null
+        nextTick(() => {
+          const current = document.activeElement
+          const focusLost =
+            !current ||
+            current === document.body ||
+            current === document.documentElement
+          if (focusLost && toRestore && document.contains(toRestore)) {
+            focusManage(toRestore)
+          }
+        })
+      }
     })
 
     let startWidth = ref()
@@ -257,7 +307,21 @@ export default defineComponent({
     }
     const show = () => (active.value = true)
 
+    const onCloseButtonKeydown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === 'NumpadEnter' || e.key === ' ') {
+        e.preventDefault()
+        hide()
+      }
+    }
+
+    const onOverlayBlur = (isEscape?: boolean) => {
+      if (props.hideOnBlur || (isEscape && props.showCloseButton)) {
+        hide()
+      }
+    }
+
     return {
+      lang,
       active,
       classAttr,
       hide,
@@ -265,7 +329,9 @@ export default defineComponent({
       dialog,
       dialogHeader,
       dragAndDropAction,
-      resizeAction
+      resizeAction,
+      onCloseButtonKeydown,
+      onOverlayBlur
     }
   }
 })

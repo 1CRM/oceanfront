@@ -29,16 +29,30 @@
       <template #create-button>Create Issue</template>
       <template #filters></template>
       <template #card-title="{ card }">
-        <div class="custom-title" @click="onCardTitleClick(card)">
+        <div
+          class="custom-title"
+          role="button"
+          tabindex="0"
+          @click="onCardTitleClick(card)"
+          @keydown.enter="onCardTitleClick(card)"
+          @keydown.space.prevent="onCardTitleClick(card)"
+        >
           {{ card.title }}
         </div>
       </template>
       <template #project="{ card }">
         <div class="project-icon">
-          <of-icon :name="card.project?.icon ?? 'mobile'" />
+          <of-icon :name="card.project?.icon ?? 'mobile'" aria-hidden="true" />
         </div>
         <div class="project-name">
-          <div class="project-text" @click="onProjectClick(card.project)">
+          <div
+            class="project-text"
+            role="button"
+            tabindex="0"
+            @click="onProjectClick(card.project)"
+            @keydown.enter="onProjectClick(card.project)"
+            @keydown.space.prevent="onProjectClick(card.project)"
+          >
             {{ card.project?.name }}
           </div>
         </div>

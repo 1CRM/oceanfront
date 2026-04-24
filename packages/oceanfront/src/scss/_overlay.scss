@@ -1,3 +1,5 @@
+@use 'variables' as *;
+
 .of-overlay-capture {
   position: fixed;
   top: 0;
@@ -119,12 +121,11 @@
       right: 0;
       z-index: 300;
       float: right;
-      padding: 0.2em;
+      margin: 0.5em;
       display: flex;
       cursor: pointer;
       &:focus-visible {
-        outline-offset: -3px;
-        outline: 1px solid var(--of-primary-tint);
+        @include of-focus-visible-ring;
       }
     }
     .dialog-resizer {
@@ -279,6 +280,13 @@
     &:focus,
     &:focus-visible {
       outline: none;
+    }
+
+    // List items use .of--focused border highlight; suppress duplicate focus ring outline.
+    .of-list-item:focus-visible {
+      outline: none;
+      z-index: auto;
+      box-shadow: none;
     }
 
     .search-row {

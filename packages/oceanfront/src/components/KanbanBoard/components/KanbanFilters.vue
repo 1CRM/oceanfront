@@ -2,13 +2,18 @@
   <div class="of-kanban-filters">
     <div class="of-kanban-filters-content">
       <div class="of-kanban-filters-left">
-        <div class="of-default-filters">
+        <div
+          class="of-default-filters"
+          role="group"
+          :aria-label="lang.kanbanFiltersGroup"
+        >
           <of-field
             class="of-filter-input"
             v-model="keyword"
             type="text"
             @input="handleKeywordChange"
-            :placeholder="searchInputPlaceholder"
+            :placeholder="searchPlaceholder"
+            :aria-label="lang.kanbanSearchCards"
           />
           <div class="of-kanban-avatars">
             <template v-for="assignee in assignees" :key="assignee.id">
@@ -17,7 +22,13 @@
                   'of-kanban-avatar': true,
                   'of--selected': selectedAssignees.includes(assignee.id)
                 }"
+                role="button"
+                tabindex="0"
+                :aria-pressed="selectedAssignees.includes(assignee.id)"
+                :aria-label="assignee.name"
                 @click="toggleAssignee(assignee.id)"
+                @keydown.enter.prevent="toggleAssignee(assignee.id)"
+                @keydown.space.prevent="toggleAssignee(assignee.id)"
                 :title="assignee.name"
               >
                 <img
@@ -38,7 +49,7 @@
             @click="handleClearFilters"
             variant="text"
           >
-            <slot name="clear-filters"> Clear filters </slot>
+            <slot name="clear-filters">{{ lang.kanbanClearFilters }}</slot>
           </of-button>
         </div>
       </div>
@@ -49,7 +60,8 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, PropType, ref, onUnmounted } from 'vue'
+import { defineComponent, PropType, ref, onUnmounted, computed } from 'vue'
+import { useLanguage } from '../../../lib/language'
 import { IKanbanCardAssignee } from '../types'
 import { getInitials } from '../utils'
 
@@ -63,7 +75,7 @@ export default defineComponent({
     },
     searchInputPlaceholder: {
       type: String,
-      default: 'Search by keyword...'
+      default: undefined
     },
     tags: {
       type: Set as PropType<Set<string>>,
@@ -78,6 +90,10 @@ export default defineComponent({
   emits: ['filter-change', 'clear-filters'],
 
   setup(props, { emit }) {
+    const lang = useLanguage()
+    const searchPlaceholder = computed(
+      () => props.searchInputPlaceholder ?? lang.value.kanbanSearchPlaceholder
+    )
     const keyword = ref('')
     const selectedAssignees = ref<(string | number)[]>([])
     let debounceTimeout: ReturnType<typeof setTimeout>
@@ -127,6 +143,8 @@ export default defineComponent({
     })
 
     return {
+      lang,
+      searchPlaceholder,
       keyword,
       selectedAssignees,
       handleKeywordChange,

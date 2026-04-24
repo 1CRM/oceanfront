@@ -90,6 +90,16 @@ export const OfSliderField = defineComponent({
     const trackProcessElt = shallowRef<HTMLDivElement | undefined>()
     const trackWidth = ref(0)
     const focused = ref(false)
+    const pendingPointerFocus = ref(false)
+    const suppressKeyboardFocusRing = ref(false)
+
+    const markPendingPointerFocus = () => {
+      pendingPointerFocus.value = true
+      requestAnimationFrame(() => {
+        if (!focused.value) pendingPointerFocus.value = false
+      })
+    }
+
     const focus = () => {
       inputElt.value?.focus()
     }
@@ -104,11 +114,15 @@ export const OfSliderField = defineComponent({
     const inputHooks = {
       onBlur(_evt: FocusEvent) {
         focused.value = false
+        suppressKeyboardFocusRing.value = false
       },
       onFocus(_evt: FocusEvent) {
+        suppressKeyboardFocusRing.value = pendingPointerFocus.value
+        pendingPointerFocus.value = false
         focused.value = true
       },
       onKeydown(evt: KeyboardEvent) {
+        if (!fieldCtx.editable) return
         if (evt.key == 'ArrowUp' || evt.key == 'ArrowRight') {
           setValue(fixValue(pendingValue.value + opts.value.step))
         } else if (evt.key == 'ArrowDown' || evt.key == 'ArrowLeft') {
@@ -123,6 +137,7 @@ export const OfSliderField = defineComponent({
       onMousedown(evt: MouseEvent) {
         const elt = thumbElt.value
         if (!elt || !fieldCtx.editable || evt.button !== 0) return
+        markPendingPointerFocus()
         evt.stopPropagation()
         evt.preventDefault()
         focus()
@@ -134,6 +149,7 @@ export const OfSliderField = defineComponent({
         handleMove(evt)
       },
       onTouchstart(evt: TouchEvent) {
+        markPendingPointerFocus()
         evt.stopPropagation()
         if (evt.cancelable) evt.preventDefault()
         startX = evt.targetTouches[0].pageX
@@ -149,6 +165,7 @@ export const OfSliderField = defineComponent({
         if (!tg || !fieldCtx.editable || evt.button !== 0) return
         const dims = tg.getBoundingClientRect()
         if (!dims?.width) return
+        markPendingPointerFocus()
         evt.stopPropagation()
         evt.preventDefault()
         focus()
@@ -265,11 +282,17 @@ export const OfSliderField = defineComponent({
               class: 'of-field-input',
               value: lazyInputValue,
               role: 'slider',
-              'aria-describedby': props.label,
+              tabindex:
+                fieldCtx.mode === 'fixed' || fieldCtx.inputDisabled ? -1 : 0,
+              'aria-label': fieldCtx.ariaLabel ?? props.label ?? undefined,
               'aria-valuemin': opts.value.min,
               'aria-valuemax': opts.value.max,
               'aria-valuenow': lazyInputValue,
               'aria-orientation': 'horizontal',
+              'aria-disabled': fieldCtx.inputDisabled ? 'true' : undefined,
+              'aria-readonly': fieldCtx.inputReadonly ? 'true' : undefined,
+              'aria-invalid': props.invalid ? 'true' : undefined,
+              'aria-description': fieldCtx.ariaModeDescription,
               ...inputHooks
             }),
             h(
@@ -304,9 +327,13 @@ export const OfSliderField = defineComponent({
       }
     }
     const fRender = fieldRender({
-      class: 'of-slider-field',
+      class: computed(() => ({
+        'of-slider-field': true,
+        'of--suppress-keyboard-focus-ring': suppressKeyboardFocusRing.value
+      })),
       focus,
       focused,
+      onMousedown: markPendingPointerFocus,
       inputId,
       pendingValue,
       updated: computed(() => initialValue.value !== stateValue.value),

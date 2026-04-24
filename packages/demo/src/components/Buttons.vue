@@ -39,20 +39,36 @@
           {{ variant }}
         </div>
         <div class="column spaced">
-          <of-button v-bind="params" :variant="variant">Submit</of-button>
-          <of-button v-bind="params" :variant="variant" disabled
+          <of-button v-bind="params" :variant="variant" aria-label="Submit"
+            >Submit</of-button
+          >
+          <of-button
+            v-bind="params"
+            :variant="variant"
+            disabled
+            aria-label="Disabled"
             >Disabled</of-button
           >
-          <of-button v-bind="params" :variant="variant" icon="gear"></of-button>
+          <of-button
+            v-bind="params"
+            :variant="variant"
+            icon="gear"
+            aria-label="Settings"
+          ></of-button>
           <of-button
             v-bind="params"
             :variant="variant"
             split
             :items="testItems"
+            aria-label="Settings and menu"
             @click="menuClick"
             icon="gear"
           ></of-button>
-          <of-button v-bind="params" :variant="variant" icon="gear"
+          <of-button
+            v-bind="params"
+            :variant="variant"
+            icon="gear"
+            aria-label="Gear"
             >Gear</of-button
           >
           <of-button
@@ -60,6 +76,7 @@
             :variant="variant"
             split
             :items="testItems"
+            aria-label="Split and menu"
             @click="menuClick"
             >Split</of-button
           >
@@ -68,6 +85,7 @@
             :variant="variant"
             icon="gear"
             :items="testItems"
+            aria-label="Menu"
             >Menu</of-button
           >
         </div>
@@ -83,7 +101,11 @@
               'of--elevated': variant == 'elevated'
             }"
           >
-            <of-button v-bind="params" :variant="variant" icon="accept"
+            <of-button
+              v-bind="params"
+              :variant="variant"
+              icon="accept"
+              aria-label="Save"
               >Save</of-button
             >
             <of-button
@@ -91,6 +113,7 @@
               :variant="variant"
               icon="refresh"
               disabled
+              aria-label="Refresh"
               >Refresh</of-button
             >
             <of-button
@@ -98,9 +121,14 @@
               :variant="variant"
               icon="gear"
               :items="testItems"
+              aria-label="Menu"
               >Menu</of-button
             >
-            <of-button v-bind="params" :variant="variant" icon="cancel"
+            <of-button
+              v-bind="params"
+              :variant="variant"
+              icon="cancel"
+              aria-label="Cancel"
               >Cancel</of-button
             >
           </span>
@@ -113,15 +141,30 @@
               'of--elevated': variant == 'elevated'
             }"
           >
-            <of-button v-bind="params" :variant="variant">1</of-button>
-            <of-button v-bind="params" :variant="variant" active>2</of-button>
-            <of-button v-bind="params" :variant="variant">3</of-button>
-            <of-button v-bind="params" :variant="variant">4</of-button>
-            <of-button v-bind="params" :variant="variant">5</of-button>
+            <of-button v-bind="params" :variant="variant" aria-label="One"
+              >1</of-button
+            >
+            <of-button
+              v-bind="params"
+              :variant="variant"
+              active
+              aria-label="Two"
+              >2</of-button
+            >
+            <of-button v-bind="params" :variant="variant" aria-label="Three"
+              >3</of-button
+            >
+            <of-button v-bind="params" :variant="variant" aria-label="Four"
+              >4</of-button
+            >
+            <of-button v-bind="params" :variant="variant" aria-label="Five"
+              >5</of-button
+            >
             <of-button
               v-bind="params"
               :variant="variant"
               icon="page last"
+              aria-label="Last page"
             ></of-button>
           </span>
         </div>

@@ -28,7 +28,8 @@
         scale="sm"
         @click.stop="handleMenuClick"
         @mousedown.stop
-        :title="effectiveLabels.configureButton"
+        :title="tileMenuAccessibleName || effectiveLabels.configureButton"
+        :aria-label="tileMenuAccessibleName || undefined"
       >
         <of-icon scale="sm" name="more alt" />
       </of-button>
@@ -64,6 +65,7 @@ import { defineComponent, computed } from 'vue'
 import type { WorkflowNode, WorkflowCanvasLabels, NodeTypeConfig } from '../types/workflow'
 import type { FormRecord } from 'oceanfront'
 import { DEFAULT_LABELS } from '../constants/labels'
+import { readRecordTrimmed } from '../utils/workflow-record-a11y'
 
 export default defineComponent({
   name: 'WorkflowTile',
@@ -219,6 +221,13 @@ export default defineComponent({
 
     const handleMenuClick = () => emit('menu-click')
 
+    const tileMenuAccessibleName = computed(() => {
+      const id = props.node.id
+      const explicit = readRecordTrimmed(props.record.value, `${id}-tileMenu`)
+      if (explicit) return explicit
+      return readRecordTrimmed(props.record.value, `${id}-title`)
+    })
+
     return {
       effectiveLabels,
       nodeData,
@@ -231,7 +240,8 @@ export default defineComponent({
       fieldsToShow,
       getFieldValue,
       handleMenuClick,
-      isComponent
+      isComponent,
+      tileMenuAccessibleName
     }
   }
 })

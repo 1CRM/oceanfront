@@ -321,4 +321,7 @@ export interface WorkflowCanvasLabels {
 
   // Dynamic text formatters
   nestedGroupLabel: (kind: string) => string
+
+  /** Accessible name when the canvas is focused for keyboard navigation */
+  canvasAriaLabel: string
 }
