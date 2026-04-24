@@ -585,8 +585,9 @@
   }
 }
 
-// Slider: thumb uses .of--focused:not(:has(:focus-visible)); field ring uses :has(:focus-visible) on hidden input — suppress both for pointer like of-text-field.
-.of-field.of-slider-field.of--suppress-keyboard-focus-ring {
+// Slider/Toggle: no field-level focus ring — the thumb/icon provides visual feedback.
+.of-field.of-slider-field,
+.of-field.of-toggle-field {
   &:focus-visible > .of-field-main,
   .of-field-main:has(.of-field-input:focus-visible),
   .of-field-main:has(textarea:focus-visible),
@@ -595,10 +596,18 @@
     box-shadow: none;
     z-index: auto;
   }
+}
 
+// Slider: on pointer focus keep the default thumb shadow (suppress the hover glow).
+.of-field.of-slider-field.of--suppress-keyboard-focus-ring {
   .of-slider.of--focused .of-slider-thumb:not(.of--moved) {
     box-shadow: 0 2px 1px 0 rgba(100, 100, 100, 0.15);
   }
+}
+
+// Slider: on keyboard focus-visible, match the hover visual on the thumb.
+.of-slider:has(.of-field-input:focus-visible) .of-slider-thumb {
+  box-shadow: 0 0 5px 9px rgba(100, 100, 100, 0.15);
 }
 
 .of-field-content-text {
@@ -644,7 +653,8 @@
 
   &:not(.of--label-frame).of--interactive:not(.of--focused):not(
       .of--undecorated
-    ):not(.of--mode-disabled) .of--layer-brd {
+    ):not(.of--mode-disabled)
+    .of--layer-brd {
     border-color: transparent;
     box-shadow: inset 0 0 0 var(--field-border-width) var(--field-border-color);
   }
@@ -767,6 +777,14 @@
       }
     }
   }
+}
+
+.of-field.of-editor.of--interactive:not(.of--focused):not(.of--undecorated):not(
+    .of--mode-disabled
+  )
+  .editor-toolbar
+  .of--layer.of--layer-brd {
+  box-shadow: none;
 }
 
 .of-field.of--variant-filled {
@@ -957,14 +975,6 @@
   display: inline-flex;
   outline: none;
 }
-.of-field.of-toggle-field.of--focused:has(.of-field-input:focus-visible)
-  .of-toggle-input.of--focused:not(.of-toggle-input-switch) {
-  .of-toggle-icon {
-    box-shadow: 0 0 2px 4px rgba(100, 100, 100, 0.15);
-    background-color: rgba(100, 100, 100, 0.15);
-    border-radius: 50%;
-  }
-}
 .of-switch {
   align-items: center;
   box-sizing: border-box;
@@ -1030,9 +1040,32 @@
       opacity: 72%;
     }
   }
-  &:hover {
-    .of-switch-thumb {
-      box-shadow: 0 0 5px 9px rgba(100, 100, 100, 0.15);
+}
+
+.of-field.of-toggle-field .of-toggle-input:hover,
+.of-field.of-toggle-field .of-toggle-input:has(.of-field-input:focus-visible) {
+  .of-switch-thumb {
+    box-shadow: 0 0 5px 9px rgba(100, 100, 100, 0.15);
+  }
+
+  .of-toggle-icon {
+    position: relative;
+    z-index: 1;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: -6px;
+      left: -6px;
+      width: calc(100% + 12px);
+      height: calc(100% + 12px);
+      background: radial-gradient(
+        circle,
+        rgba(100, 100, 100, 0.15) 0%,
+        rgba(100, 100, 100, 0.12) 55%,
+        rgba(100, 100, 100, 0.02) 100%
+      );
+      border-radius: 50%;
     }
   }
 }
