@@ -32,7 +32,7 @@
     btn-elv-color,
     (var(--of-primary-tint), 100%),
     (
-      disabled: var(--of-color-on-surface) 38%
+      disabled: var(--of-color-on-surface) 45%
     )
   );
   @include define-color-opacity(
@@ -57,7 +57,7 @@
     btn-fill-color,
     (var(--of-color-on-primary), 100%),
     (
-      disabled: var(--of-color-on-surface) 38%
+      disabled: var(--of-color-on-surface) 45%
     )
   );
   @include define-color-opacity(
@@ -80,7 +80,7 @@
     btn-tonal-color,
     (var(--of-on-container-tint), 100%),
     (
-      disabled: var(--of-color-on-surface) 38%
+      disabled: var(--of-color-on-surface) 45%
     )
   );
   @include define-color-opacity(
@@ -112,7 +112,7 @@
     btn-outl-color,
     (var(--of-on-container-tint), 100%),
     (
-      disabled: var(--of-color-on-surface) 38%
+      disabled: var(--of-color-on-surface) 45%
     )
   );
   @include define-color-opacity(
@@ -128,7 +128,7 @@
     btn-text-color,
     (var(--of-primary-tint), 100%),
     (
-      disabled: var(--of-color-on-surface) 38%
+      disabled: var(--of-color-on-surface) 45%
     )
   );
   @include define-color-opacity(

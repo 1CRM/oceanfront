@@ -34,7 +34,7 @@
     (var(--of-color-on-background), 100%),
     (
       active: var(--of-primary-tint) 100%,
-      disabled: var(--of-color-on-background) 38%
+      disabled: var(--of-color-on-background) 45%
     )
   );
   @include define-color-opacity(mat-st, (transparent, 0), ());
@@ -49,7 +49,7 @@
   );
   @include define-color-opacity(
     att-brd,
-    (--of-primary-tint, 100%),
+    (var(--of-primary-tint), 100%),
     (
       active: var(--of-primary-tint) 100%
     )
@@ -59,7 +59,7 @@
     (var(--of-color-on-background), 100%),
     (
       active: var(--of-primary-tint) 100%,
-      disabled: var(--of-color-on-background) 38%
+      disabled: var(--of-color-on-background) 45%
     )
   );
   @include define-color-opacity(att-st, (transparent, 0), ());
@@ -78,7 +78,7 @@
     (
       hover: var(--of-color-inverse-on-surface) 100%,
       active: var(--of-color-inverse-on-surface) 100%,
-      disabled: var(--of-color-on-surface) 38%
+      disabled: var(--of-color-on-surface) 45%
     )
   );
   @include define-color-opacity(osx-st, (transparent, 0), ());

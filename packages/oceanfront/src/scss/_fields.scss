@@ -196,16 +196,16 @@
     field-color,
     (var(--of-color-on-surface), 100%),
     (
-      disabled: var(--of-color-on-surface) 38%,
-      placeholder: var(--of-color-on-surface) 55%
+      disabled: var(--of-color-on-surface) 65%,
+      placeholder: var(--of-color-on-surface) 70%
     )
   );
   @include define-color-opacity(
     field-filled-color,
     (var(--of-color-on-surface), 100%),
     (
-      disabled: var(--of-color-on-surface) 38%,
-      placeholder: var(--of-color-on-surface) 55%
+      disabled: var(--of-color-on-surface) 65%,
+      placeholder: var(--of-color-on-surface) 70%
     )
   );
 }

@@ -37,7 +37,7 @@
     (var(--of-on-container-tint), 100%),
     (
       hover: var(--of-color-on-surface) 100%,
-      disabled: var(--of-color-on-surface) 38%,
+      disabled: var(--of-color-on-surface) 45%,
       exp: var(--of-color-on-surface-variant) 100%
     )
   );
@@ -192,7 +192,11 @@
   &::before {
     content: '';
     display: block;
-    background: rgba(0, 0, 0, 0.25);
+    background: color-mix(
+      in srgb,
+      var(--of-color-on-surface) 22%,
+      transparent
+    );
     height: 1px;
     margin: 0.15em 0.5em;
   }
