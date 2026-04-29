@@ -23,10 +23,18 @@ const defaults = {
   dataTableSelectAll: 'Select All',
   dataTableDeselectAll: 'Deselect All',
   dataTableTotalAmounts: 'Total amounts',
+  dataTableColumnAriaActiveAscending:
+    '{column}. Table is sorted by this column in ascending order. Press to change.',
+  dataTableColumnAriaActiveDescending:
+    '{column}. Table is sorted by this column in descending order. Press to change.',
+  dataTableColumnAriaInactive: '{column}. Press to sort by this column.',
+  dataTableSortAnnouncedAscending: 'Table sorted by {column}, ascending.',
+  dataTableSortAnnouncedDescending: 'Table sorted by {column}, descending.',
 
   tableRowDragToReorder: 'Drag to reorder',
   tableRowSelector: 'Row Selector',
   tableRowNestedUnderParent: 'Nested under parent row',
+  tableColumn: 'Column',
 
   tabsScrollLeft: 'Scroll tabs left',
   tabsScrollRight: 'Scroll tabs right',
