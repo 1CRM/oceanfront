@@ -160,6 +160,11 @@ export const OfOverlay = defineComponent({
             }
           }
 
+          if (props.focus && (!active || active === document.body)) {
+            focus()
+            if (checkFocused(currentOuter)) return
+          }
+
           focused = false
           ctx.emit('blur', false)
           removeFromStack(currentOuter)

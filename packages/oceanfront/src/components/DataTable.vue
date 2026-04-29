@@ -7,6 +7,9 @@
     :id="outerId"
     ref="tableElt"
   >
+    <div role="status" aria-live="polite" aria-atomic="true" class="of-sr-only">
+      {{ sortAnnouncement }}
+    </div>
     <div class="of-data-table-header" role="row">
       <div
         v-if="draggable"
@@ -73,8 +76,10 @@
       >
         <span
           v-if="col.sortable !== false"
+          role="button"
           :id="createColId(idx)"
           :tabindex="col.sortable !== false ? '0' : undefined"
+          :aria-label="sortHeaderAriaLabel(col)"
           @mouseenter="
             col.extra_sort_fields
               ? sortColEnter('#' + createColId(idx), col.extra_sort_fields)
@@ -989,6 +994,8 @@ export default defineComponent({
       }
     ])
 
+    const sortAnnouncement = ref('')
+
     const onSort = function (
       column: string,
       field: ExtraSortField | undefined = undefined
@@ -1001,9 +1008,32 @@ export default defineComponent({
           : sort.value.order == RowSortOrders.asc
             ? RowSortOrders.desc
             : RowSortOrders.asc
-      setSort(column, field?.order || autoOrder)
+      const appliedOrder = field?.order || autoOrder
+      setSort(column, appliedOrder)
       selectRows(RowsSelectorValues.DeselectAll)
+
+      announceSortChange(column, appliedOrder as RowSortOrders)
+
       ctx.emit('rows-sorted', sort.value)
+    }
+
+    const announceSortChange = (column: string, order: RowSortOrders) => {
+      const colHeader = columns.value.find((c) => c.value === column)
+      const colName =
+        String(colHeader?.text ?? column).trim() || lang.value.tableColumn
+      const templateKey =
+        order === RowSortOrders.desc
+          ? 'dataTableSortAnnouncedDescending'
+          : 'dataTableSortAnnouncedAscending'
+      sortAnnouncement.value = ''
+      // Reset first so the same message re-triggers the live region when sorted
+      // twice by the same column in the same direction.
+      requestAnimationFrame(() => {
+        sortAnnouncement.value = (lang.value[templateKey] as string).replace(
+          /\{column\}/g,
+          colName
+        )
+      })
     }
     const density = computed(() => {
       let d = props.density
@@ -1035,6 +1065,24 @@ export default defineComponent({
         : 'ascending'
     }
 
+    const sortHeaderAriaLabel = (col: DataTableHeader) => {
+      const trimmed = String(col.text ?? '').trim()
+      const column = trimmed || lang.value.tableColumn
+      let templateKey:
+        | 'dataTableColumnAriaInactive'
+        | 'dataTableColumnAriaActiveDescending'
+        | 'dataTableColumnAriaActiveAscending'
+      if (sort.value.column !== col.value) {
+        templateKey = 'dataTableColumnAriaInactive'
+      } else if (sort.value.order === RowSortOrders.desc) {
+        templateKey = 'dataTableColumnAriaActiveDescending'
+      } else {
+        templateKey = 'dataTableColumnAriaActiveAscending'
+      }
+      const template = lang.value[templateKey] as string | undefined
+      return (template ?? '').replace(/\{column\}/g, column)
+    }
+
     return {
       lang,
       columns,
@@ -1055,6 +1103,8 @@ export default defineComponent({
       currentNested,
       tableClass,
       colAriaSort,
+      sortHeaderAriaLabel,
+      sortAnnouncement,
       outerId,
       RowSortOrders,
       sortPopupTarget,

@@ -12,6 +12,7 @@
           :aria-describedby="ariaDescribedby || undefined"
           class="of-dialog"
           :class="classAttr"
+          tabindex="-1"
           v-if="dialogActive"
         >
           <div
@@ -87,17 +88,21 @@ export default defineComponent({
     const focusableElements =
       'button, [href], input, select, textarea, [contenteditable="true"], [tabindex]:not([tabindex="-1"])'
     const handelKeyDown = (e: KeyboardEvent) => {
-      const firstFocusableElement =
-        dialog.value.querySelectorAll(focusableElements)[0]
       const focusableContent = dialog.value.querySelectorAll(focusableElements)
-      const lastFocusableElement = focusableContent[focusableContent.length - 1]
+      if (focusableContent.length === 0) {
+        return
+      }
+      const firstFocusableElement = focusableContent[0] as HTMLElement
+      const lastFocusableElement = focusableContent[
+        focusableContent.length - 1
+      ] as HTMLElement
       let isTabPressed = e.key === 'Tab' || e.keyCode === 9
       if (!isTabPressed) {
         return
       }
       if (e.shiftKey) {
         if (document.activeElement === firstFocusableElement) {
-          lastFocusableElement.focus()
+          focusManage(lastFocusableElement)
           e.preventDefault()
         }
       } else {
@@ -105,7 +110,7 @@ export default defineComponent({
           document.activeElement === lastFocusableElement ||
           !dialog.value.contains(document.activeElement)
         ) {
-          firstFocusableElement.focus()
+          focusManage(firstFocusableElement)
           e.preventDefault()
         }
       }
@@ -118,6 +123,9 @@ export default defineComponent({
           return
         }
         document.addEventListener('keydown', handelKeyDown)
+        if (active.value && !value.contains(document.activeElement)) {
+          focusInitialInDialog()
+        }
       }
     )
     onUnmounted(() => {
@@ -139,6 +147,18 @@ export default defineComponent({
 
     /** Element that had focus before the overlay moved focus into the dialog (e.g. open button). */
     let triggerElement: HTMLElement | null = null
+    const focusInitialInDialog = () => {
+      const root = dialog.value as HTMLElement | undefined
+      if (!root || !active.value) return
+      const nodes = root.querySelectorAll(focusableElements)
+      const first = nodes[0] as HTMLElement | undefined
+      if (first?.isConnected) {
+        focusManage(first)
+        return
+      }
+      focusManage(root)
+    }
+
     watch(active, (isActive) => {
       if (isActive) {
         const el = document.activeElement
@@ -151,6 +171,13 @@ export default defineComponent({
         } else {
           triggerElement = null
         }
+        // Match OfOverlay: defer two ticks so v-if dialog content is in the DOM, then
+        // move focus inside role="dialog" (not only the overlay shell).
+        nextTick(() => {
+          nextTick(() => {
+            focusInitialInDialog()
+          })
+        })
       } else {
         const toRestore = triggerElement
         triggerElement = null
