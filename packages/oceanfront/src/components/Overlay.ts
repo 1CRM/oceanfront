@@ -101,7 +101,10 @@ export const OfOverlay = defineComponent({
     shade: { type: Boolean, default: true },
     target: { type: [Element, String] } as any as PropType<Element | string>,
     transition: String,
-    sticky: { type: Boolean, default: true }
+    sticky: { type: Boolean, default: true },
+    blurOnBackdropClick: { type: Boolean, default: true },
+    blurOnEscape: { type: Boolean, default: true },
+    blurOnFocusOut: { type: Boolean, default: true }
   },
   emits: ['blur'],
   setup(props, ctx) {
@@ -120,25 +123,32 @@ export const OfOverlay = defineComponent({
         focusoutTimer = null
       }
     }
+    const dismissFromBlur = (
+      outer: HTMLElement | undefined,
+      escape: boolean
+    ) => {
+      focused = false
+      ctx.emit('blur', escape)
+      removeFromStack(outer)
+    }
     const handlers = {
       onClick(evt: MouseEvent) {
+        if (!props.blurOnBackdropClick) return
         const outer = elt.value
         if (!outer) return
         if (evt.target === outer || evt.target === clickCapture.value) {
-          focused = false
-          ctx.emit('blur')
-          removeFromStack(outer)
+          dismissFromBlur(outer, false)
         }
       },
       onKeydown(evt: KeyboardEvent) {
         if (evt.key == 'Escape') {
+          if (!props.blurOnEscape) return
           evt.stopPropagation()
-          focused = false
-          ctx.emit('blur', true)
-          removeFromStack(elt.value)
+          dismissFromBlur(elt.value, true)
         }
       },
       onFocusout(evt: FocusEvent) {
+        if (!props.blurOnFocusOut) return
         const outer = elt.value
         if (!outer || !props.active) return
         const related = evt.relatedTarget as Node | null
@@ -165,9 +175,7 @@ export const OfOverlay = defineComponent({
             if (checkFocused(currentOuter)) return
           }
 
-          focused = false
-          ctx.emit('blur', false)
-          removeFromStack(currentOuter)
+          dismissFromBlur(currentOuter, false)
         }, 0)
       }
     }
@@ -191,9 +199,8 @@ export const OfOverlay = defineComponent({
       }
 
       overlayEscCallbacks.set(elt.value, () => {
-        focused = false
-        ctx.emit('blur', true)
-        removeFromStack(elt.value)
+        if (!props.blurOnEscape) return
+        dismissFromBlur(elt.value, true)
       })
 
       overlayStack.push(elt.value)
