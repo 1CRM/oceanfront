@@ -124,9 +124,9 @@ export const monthGrid = (
   let rowIdx = 0
   const grid = []
   const today = new Date()
-  // there are always at least 4 rows, and we want to stop as soon as we
-  // hit another month
-  while (rowIdx < 4 || date.getMonth() == month) {
+  // Always 6 rows so calendar UIs (e.g. date picker popup) keep a stable height
+  // when switching months; pad with trailing days from adjacent month as needed.
+  while (rowIdx < 6) {
     rowIdx++
     const row = []
     for (let i = 0; i < 7; i++) {
