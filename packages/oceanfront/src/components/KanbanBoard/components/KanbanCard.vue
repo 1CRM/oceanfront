@@ -18,6 +18,7 @@
     @touchstart="handleTouchStart"
     @touchmove="handleTouchMove"
     @touchend="handleTouchEnd"
+    @touchcancel="handleTouchCancel"
     @click="handleCardClick"
     @keydown.enter.prevent="handleCardClick"
     @keydown.space.prevent.stop="handleCardClick"
@@ -253,6 +254,10 @@ export default defineComponent({
     })
 
     const handleDragStart = (event: DragEvent) => {
+      if (isTouchInteraction) {
+        event.preventDefault()
+        return
+      }
       if (!event.dataTransfer) return
 
       event.dataTransfer.effectAllowed = 'move'
@@ -267,19 +272,47 @@ export default defineComponent({
       emit('drag-start', props.card)
     }
 
+    const panCancelMoveTolerance = 14
     let touchTimeout: number | null = null
     let isDragging = false
+    let isTouchInteraction = false
     let initialTouchY = 0
     let initialTouchX = 0
+    let touchOffsetX = 0
+    let touchOffsetY = 0
     let cardElement: HTMLElement | null = null
     let initialCardRect: DOMRect | null = null
+
+    const cancelPendingDragStart = () => {
+      if (!touchTimeout) return
+      clearTimeout(touchTimeout)
+      touchTimeout = null
+    }
+
+    const cleanupDraggedCardStyles = () => {
+      if (!cardElement) return
+      cardElement.style.position = ''
+      cardElement.style.top = ''
+      cardElement.style.left = ''
+      cardElement.style.width = ''
+      cardElement.style.zIndex = ''
+      cardElement.style.transform = ''
+      cardElement.style.pointerEvents = ''
+      cardElement.classList.remove('of--is-dragging')
+      cardElement.removeAttribute('data-drag-data')
+      cardElement.draggable = true
+    }
 
     const handleTouchStart = (event: TouchEvent) => {
       cardElement = event.currentTarget as HTMLElement
       const touch = event.touches[0]
+      isTouchInteraction = true
       initialTouchY = touch.clientY
       initialTouchX = touch.clientX
       initialCardRect = cardElement.getBoundingClientRect()
+      touchOffsetX = touch.clientX - initialCardRect.left
+      touchOffsetY = touch.clientY - initialCardRect.top
+      cardElement.draggable = false
 
       touchTimeout = window.setTimeout(() => {
         isDragging = true
@@ -308,24 +341,31 @@ export default defineComponent({
     const handleTouchMove = (event: TouchEvent) => {
       if (!isDragging || !cardElement || !initialCardRect) {
         if (touchTimeout) {
-          clearTimeout(touchTimeout)
-          touchTimeout = null
+          const touch = event.touches[0]
+          const moveX = touch.clientX - initialTouchX
+          const moveY = touch.clientY - initialTouchY
+          const moveDistance = Math.hypot(moveX, moveY)
+
+          // Keep long-press drag available despite minor finger jitter.
+          // Once the user clearly starts panning, cancel pending drag start.
+          if (moveDistance > panCancelMoveTolerance) {
+            cancelPendingDragStart()
+          }
         }
         return
       }
 
       event.preventDefault()
       const touch = event.touches[0]
-      const moveX = touch.clientX - initialTouchX
-      const moveY = touch.clientY - initialTouchY
 
       // Set the initial position before applying transform
       cardElement.style.position = 'fixed'
-      cardElement.style.top = `${initialCardRect.top}px`
-      cardElement.style.left = `${initialCardRect.left}px`
+      cardElement.style.top = `${touch.clientY - touchOffsetY}px`
+      cardElement.style.left = `${touch.clientX - touchOffsetX}px`
       cardElement.style.width = `${initialCardRect.width}px`
       cardElement.style.zIndex = '1000'
-      cardElement.style.transform = `translate(${moveX}px, ${moveY}px)`
+      cardElement.style.pointerEvents = 'none'
+      cardElement.style.transform = 'none'
 
       // Get the element under the touch point
       const elementUnderTouch = document.elementFromPoint(
@@ -353,24 +393,16 @@ export default defineComponent({
     }
 
     const handleTouchEnd = (event: TouchEvent) => {
-      if (touchTimeout) {
-        clearTimeout(touchTimeout)
-        touchTimeout = null
-      }
+      cancelPendingDragStart()
 
-      if (!isDragging || !cardElement || !initialCardRect) return
+      if (!isDragging || !cardElement || !initialCardRect) {
+        isTouchInteraction = false
+        if (cardElement) cardElement.draggable = true
+        return
+      }
 
       event.preventDefault()
       isDragging = false
-
-      // Reset card styles
-      cardElement.style.position = ''
-      cardElement.style.top = ''
-      cardElement.style.left = ''
-      cardElement.style.width = ''
-      cardElement.style.zIndex = ''
-      cardElement.style.transform = ''
-      cardElement.classList.remove('of--is-dragging')
 
       // Get the element under the touch point
       const touch = event.changedTouches[0]
@@ -397,7 +429,17 @@ export default defineComponent({
         )
       }
 
-      cardElement.removeAttribute('data-drag-data')
+      cleanupDraggedCardStyles()
+      isTouchInteraction = false
+      cardElement = null
+      initialCardRect = null
+    }
+
+    const handleTouchCancel = () => {
+      cancelPendingDragStart()
+      isDragging = false
+      cleanupDraggedCardStyles()
+      isTouchInteraction = false
       cardElement = null
       initialCardRect = null
     }
@@ -415,6 +457,7 @@ export default defineComponent({
       handleTouchStart,
       handleTouchMove,
       handleTouchEnd,
+      handleTouchCancel,
       handleMouseEnter,
       handleMouseLeave,
       isHovering,
