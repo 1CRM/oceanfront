@@ -323,11 +323,11 @@
   }
 
   .of-field-main-label,
-  &.of-toggle-field.of--label-frame .of-field-frame-label {
+  &.of--label-frame .of-field-frame-label {
     display: flex;
   }
 
-  &.of-toggle-field.of--label-frame.of--variant-outlined
+  &.of--label-frame.of--variant-outlined
     .of-field-frame-label
     .of-tooltip {
     font-size: 0.59em;
@@ -386,7 +386,6 @@
   &.of--label-none {
     .of-tooltip {
       position: relative;
-      bottom: calc(0.25em + 1px);
     }
   }
 

@@ -358,7 +358,7 @@ export const OfFieldBase = defineComponent({
           showMainLabel.value
             ? h('div', { class: 'of-field-main-label' }, [
                 labelNode.value,
-                tooltipNode.value
+                labelPosition.value !== 'frame' ? tooltipNode.value : undefined
               ])
             : props.type === 'toggle' || props.type === 'radio'
               ? undefined
@@ -384,9 +384,7 @@ export const OfFieldBase = defineComponent({
                       { class: 'of-field-header-label' },
                       h('div', { class: 'of-field-frame-label' }, [
                         label,
-                        props.type === 'toggle' || props.type === 'radio'
-                          ? tooltipNode.value
-                          : undefined
+                        tooltipNode.value
                       ])
                     )
                   : undefined
