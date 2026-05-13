@@ -260,7 +260,17 @@ export const OfOverlay = defineComponent({
           return
         }
 
-        const parentRect = relativeParentRect(outer)
+        const parentRect =
+          getComputedStyle(outer).position === 'fixed'
+            ? {
+                left: 0,
+                top: 0,
+                width: window.innerWidth,
+                height: window.innerHeight,
+                bottom: window.innerHeight,
+                right: window.innerWidth
+              }
+            : relativeParentRect(outer)
         const outerRect = outer?.getBoundingClientRect()
         const targetRect = targetElt?.getBoundingClientRect()
         if (!targetRect || !parentRect || !outerRect || !targetRect) return // or hide?
