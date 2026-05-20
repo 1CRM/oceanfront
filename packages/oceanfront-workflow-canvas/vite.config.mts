@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 import { resolve } from 'path'
 import vue from '@vitejs/plugin-vue'
-import dts from 'vite-plugin-dts'
+import dts from 'unplugin-dts/vite'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export default defineConfig(({ command, mode }): any => {
@@ -9,7 +9,8 @@ export default defineConfig(({ command, mode }): any => {
   const plugins = [
     vue(),
     dts({
-      rollupTypes: true,
+      bundleTypes: true,
+      processor: 'vue',
       tsconfigPath: './tsconfig.json'
     })
   ]
