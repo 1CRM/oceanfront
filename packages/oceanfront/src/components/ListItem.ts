@@ -155,11 +155,20 @@ export const OfListItem = defineComponent({
                 tabIndex: props.disabled ? -1 : 0,
                 'aria-disabled': props.disabled ? true : undefined,
                 onClick(evt: MouseEvent) {
-                  if (link.href) activate(evt)
+                  // Router links: navigate on click so history.state stays in sync
+                  if (link.href && props.to) activate(evt)
                 },
                 onMousedown(evt: MouseEvent) {
                   if (evt.button != null && evt.button !== 0) return
                   ctx.emit('mousedown', evt)
+                  if (!link.href) return
+                  if (props.to) {
+                    // Block native <a> hash navigation; router runs on click
+                    evt.preventDefault()
+                    return
+                  }
+                  // Plain href (defaultLink): navigate on mousedown, not click
+                  activate(evt)
                 },
                 onKeydown(evt: KeyboardEvent) {
                   if (evt.key === ' ' || evt.key === 'Enter') {
