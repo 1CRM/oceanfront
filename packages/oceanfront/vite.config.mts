@@ -1,17 +1,22 @@
 import { defineConfig } from 'vite'
 import { resolve } from 'path'
 import vue from '@vitejs/plugin-vue'
-import dts from 'vite-plugin-dts'
+import dts from 'unplugin-dts/vite'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export default defineConfig(({ command, mode }): any => {
   const dev = mode === 'development'
   const plugins = [
     vue(),
-    dts({
-      rollupTypes: true,
-      tsconfigPath: './tsconfig.json'
-    })
+    ...(dev
+      ? []
+      : [
+          dts({
+            bundleTypes: true,
+            processor: 'vue',
+            tsconfigPath: './tsconfig.build.json'
+          })
+        ])
   ]
   return {
     build: {

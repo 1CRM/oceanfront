@@ -7,23 +7,21 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "turbo run build --no-daemon",
-    "build-dev": "turbo run build-dev --no-daemon",
+    "build": "turbo run build",
+    "build-dev": "turbo run build-dev",
     "package": "turbo run package",
     "clean": "turbo run clean && rm -rf node_modules",
-    "coverage": "turbo run coverage --no-daemon",
-    "demo": "turbo run demo --no-daemon",
-    "lint": "turbo run lint --no-daemon",
-    "test": "turbo run test --no-daemon"
+    "coverage": "turbo run coverage",
+    "demo": "turbo run demo",
+    "lint": "turbo run lint",
+    "test": "turbo run test"
   },
   "devDependencies": {
-    "turbo": "^2.6.2"
+    "turbo": "^2.9.14"
   },
   "resolutions": {
     "vue": "~3.5.25",
-    "minimatch": "^10.2.4",
-    "lodash": "^4.17.23",
-    "flatted": "^3.4.0",
-    "brace-expansion": "^5.0.2"
+    "minimatch": "^10.2.5",
+    "glob": "^13.0.6"
   }
 }
