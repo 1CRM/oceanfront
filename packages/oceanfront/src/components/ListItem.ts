@@ -154,11 +154,12 @@ export const OfListItem = defineComponent({
                 ref: elt,
                 tabIndex: props.disabled ? -1 : 0,
                 'aria-disabled': props.disabled ? true : undefined,
+                onClick(evt: MouseEvent) {
+                  if (link.href) activate(evt)
+                },
                 onMousedown(evt: MouseEvent) {
                   if (evt.button != null && evt.button !== 0) return
                   ctx.emit('mousedown', evt)
-                  activate(evt)
-                  return false
                 },
                 onKeydown(evt: KeyboardEvent) {
                   if (evt.key === ' ' || evt.key === 'Enter') {

@@ -3,13 +3,13 @@
   "version": "0.1.0",
   "license": "MIT",
   "private": true,
-  "main": "dist/oceanfront-colorscheme-editor.umd.js",
-  "module": "dist/oceanfront-colorscheme-editor.mjs",
+  "main": "dist/oceanfront-colorscheme-editor.mjs",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/oceanfront-colorscheme-editor.mjs",
-      "require": "./dist/oceanfront-colorscheme-editor.umd.js"
+      "default": "./dist/oceanfront-colorscheme-editor.mjs"
     },
     "./css": "./dist/oceanfront-colorscheme-editor.css"
   },
@@ -35,8 +35,8 @@
     "@eslint/js": "^10.0.1",
     "@typescript-eslint/eslint-plugin": "^8.57.0",
     "@typescript-eslint/parser": "^8.57.0",
-    "@vitejs/plugin-vue": "~6.0.4",
-    "@vitest/coverage-v8": "^4.0.18",
+    "@vitejs/plugin-vue": "~6.0.7",
+    "@vitest/coverage-v8": "^4.1.7",
     "@vue/test-utils": "2.4.6",
     "eslint": "^10.0.3",
     "eslint-config-prettier": "^10.1.8",
@@ -48,11 +48,11 @@
     "tslib": "~2.8.1",
     "typescript": "~5.9.3",
     "unplugin-auto-import": "^0.19.0",
-    "vite": "~7.3.1",
+    "vite": "~8.0.13",
     "@microsoft/api-extractor": "^7.58.7",
     "@vue/language-core": "~3.3.0",
     "unplugin-dts": "~1.0.1",
-    "vitest": "^4.0.18",
+    "vitest": "^4.1.7",
     "vue": "~3.5.25",
     "vue-eslint-parser": "^10.4.0"
   },

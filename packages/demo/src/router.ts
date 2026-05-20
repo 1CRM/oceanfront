@@ -27,7 +27,7 @@ import ElevationDemo from './components/ElevationDemo.vue'
 import HtmlEditor from './components/HtmlEditor.vue'
 import ColorScheme from './components/ColorScheme.vue'
 import WorkflowCanvasDemo from './components/WorkflowCanvas.vue'
-export const routerHistory = createWebHashHistory('/ofdocs')
+export const routerHistory = createWebHashHistory(import.meta.env.BASE_URL)
 export const router = createRouter({
   history: routerHistory,
   routes: [

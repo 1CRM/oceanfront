@@ -8,33 +8,28 @@ export default defineConfig(({ command, mode }): any => {
   const dev = mode === 'development'
   const plugins = [
     vue(),
-    dts({
-      bundleTypes: true,
-      processor: 'vue',
-      tsconfigPath: './tsconfig.json'
-    })
+    ...(dev
+      ? []
+      : [
+          dts({
+            bundleTypes: true,
+            processor: 'vue',
+            tsconfigPath: './tsconfig.build.json'
+          })
+        ])
   ]
   return {
     build: {
       lib: {
         entry: resolve(__dirname, 'src/index.ts'),
         name: 'oceanfront-workflow-canvas',
-        // the proper extensions will be added
-        fileName: 'oceanfront-workflow-canvas'
+        fileName: 'oceanfront-workflow-canvas',
+        formats: ['es']
       },
       emptyOutDir: !dev,
       rollupOptions: {
-        // make sure to externalize deps that shouldn't be bundled
-        // into your library
         external: ['vue', 'oceanfront'],
         output: {
-          // Provide global variables to use in the UMD build
-          // for externalized deps
-          globals: {
-            vue: 'Vue',
-            oceanfront: 'Oceanfront'
-          },
-          // Rename combined CSS output from style.css
           assetFileNames: 'oceanfront-workflow-canvas.[ext]'
         }
       },

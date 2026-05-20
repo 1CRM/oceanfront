@@ -8,11 +8,15 @@ export default defineConfig(({ command, mode }): any => {
   const dev = mode === 'development'
   const plugins = [
     vue(),
-    dts({
-      bundleTypes: true,
-      processor: 'vue',
-      tsconfigPath: './tsconfig.json'
-    })
+    ...(dev
+      ? []
+      : [
+          dts({
+            bundleTypes: true,
+            processor: 'vue',
+            tsconfigPath: './tsconfig.build.json'
+          })
+        ])
   ]
   return {
     build: {
