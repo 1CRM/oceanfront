@@ -327,14 +327,15 @@
     display: flex;
   }
 
-  &.of--label-frame.of--variant-outlined
-    .of-field-frame-label
-    .of-tooltip {
+  &.of--label-frame.of--variant-outlined .of-field-frame-label .of-tooltip {
     font-size: 0.59em;
     z-index: 2;
-    padding-left: 1em;
+    padding-left: 2.3em;
     position: relative;
-    bottom: 3px;
+    bottom: -8px;
+    transition:
+      bottom 150ms,
+      padding-left 150ms;
     .of-tooltip-text {
       font-size: 1.2em;
     }
@@ -752,6 +753,10 @@
 
             .of-field-label {
               transform: translateY(-0.675em);
+            }
+            .of-tooltip {
+              bottom: 4px;
+              padding-left: 1em;
             }
           }
         }
