@@ -1,12 +1,23 @@
 import {
+  getCurrentInstance,
   inject,
   provide,
   reactive,
   InjectionKey,
   ComputedRef,
   computed,
-  Ref
+  Ref,
+  type ComponentInternalInstance
 } from 'vue'
+
+type ComponentInstanceWithProvides = ComponentInternalInstance & {
+  provides: Record<symbol | string, unknown>
+}
+
+const getInstanceProvides = (
+  instance: ComponentInternalInstance
+): Record<symbol | string, unknown> =>
+  (instance as ComponentInstanceWithProvides).provides
 
 export type Config = ConfigState
 export type ConfigFunction = (state: Config) => void
@@ -66,6 +77,22 @@ export function extendDefaultConfig(cb: () => void | Array<() => void>): void {
 
 export function useConfig(): Config {
   return inject(injectKey, defaultConfig)
+}
+
+/**
+ * Resolves the active OfConfig for the current component without calling
+ * inject(). Safe to use from Options API computed properties and methods.
+ */
+export function resolveConfig(): Config {
+  let instance = getCurrentInstance()
+  while (instance) {
+    const config = getInstanceProvides(instance)[injectKey as symbol] as
+      | Config
+      | undefined
+    if (config) return config
+    instance = instance.parent
+  }
+  return defaultConfig
 }
 
 export function extendConfig(cb: () => void): void {

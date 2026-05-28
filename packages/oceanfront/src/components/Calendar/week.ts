@@ -1,6 +1,5 @@
 import { toTimestamp, Timestamp } from '../../lib/calendar'
 import { addDays, parseDay } from '../../lib/datetime'
-import { useLocale } from '../../lib/locale'
 import { defineComponent } from 'vue'
 import DayCalendar from './day'
 import calendarProps from './props'
@@ -13,10 +12,9 @@ export default defineComponent({
   },
   computed: {
     weekStartLocale(): number {
-      const locale = useLocale()
       const day =
         this.weekStart === undefined
-          ? (locale.localeParams?.weekStart ?? 1)
+          ? (this.locale.localeParams?.weekStart ?? 1)
           : this.weekStart
       return parseDay(day)
     }

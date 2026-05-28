@@ -1,6 +1,7 @@
 import { DateTimeFormatterOptions } from '../../formats/DateTime'
 import { sameDate } from '../../lib/datetime'
-import { useFormats } from '../../lib/formats'
+import { resolveFormats } from '../../lib/formats'
+import { resolveLocale } from '../../lib/locale'
 import { defineComponent, h } from 'vue'
 
 const weekDayFormat: DateTimeFormatterOptions = {
@@ -13,7 +14,12 @@ const dayFormat: DateTimeFormatterOptions = {
 
 export default defineComponent({
   computed: {
-    formatMgr: () => useFormats()
+    formatMgr() {
+      return resolveFormats()
+    },
+    locale() {
+      return resolveLocale()
+    }
   },
   methods: {
     renderSlot(name: string, param: any, fallback: Function) {

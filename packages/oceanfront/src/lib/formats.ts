@@ -1,5 +1,5 @@
 import { Component } from 'vue'
-import { Config, ConfigManager } from './config'
+import { Config, ConfigManager, resolveConfig } from './config'
 import { FormRecord } from './records'
 import { readonlyUnref } from './util'
 import { Renderable } from './fields'
@@ -143,4 +143,12 @@ export function setDefaultFieldType(name: string): void {
 export function useFormats(config?: Config): FormatState {
   const mgr = configManager.inject(config)
   return readonlyUnref(mgr)
+}
+
+/**
+ * Format manager for the current component tree. Does not use inject(), so it
+ * is safe inside Options API computed getters (e.g. Oceanfront calendar views).
+ */
+export function resolveFormats(config?: Config): FormatState {
+  return configManager.getCached(config ?? resolveConfig())
 }

@@ -16,8 +16,6 @@ import {
   MonthGridCell,
   MonthGridData
 } from '../../lib/datetime'
-import { useFormats } from '../../lib/formats'
-import { useLocale } from '../../lib/locale'
 import { defineComponent, h } from 'vue'
 import Base from './base'
 import calendarProps from './props'
@@ -54,16 +52,14 @@ export default defineComponent({
     },
     parsedEvents(): InternalEvent[] {
       const events: CalendarEvent[] = this.$props.events || []
-      const mgr = useFormats()
       return events
-        .map((e) => parseEvent(e, mgr))
+        .map((e) => parseEvent(e, this.formatMgr))
         .filter((e) => e !== undefined) as InternalEvent[]
     },
     weekStartLocale(): number {
-      const locale = useLocale()
       const day =
         this.weekStart === undefined
-          ? (locale.localeParams?.weekStart ?? 1)
+          ? (this.locale.localeParams?.weekStart ?? 1)
           : this.weekStart
       return parseDay(day)
     }
