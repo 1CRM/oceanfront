@@ -1,6 +1,5 @@
 import { toTimestamp, withZeroTime, Timestamp } from '../../lib/calendar'
 import { addDays } from '../../lib/datetime'
-import { useFormats } from '../../lib/formats'
 import { defineComponent, h } from 'vue'
 import Base from './base'
 import dayColumns from './daycolumn'
@@ -11,9 +10,6 @@ export default defineComponent({
   props: {
     ...calendarProps.internal,
     ...calendarProps.common
-  },
-  computed: {
-    formatMgr: () => useFormats()
   },
   methods: {
     getVisibleRange(): Timestamp[] {

@@ -1,7 +1,7 @@
 import { DateTimeFormatterOptions } from '../../formats/DateTime'
 import { BusyInfo, layoutAllday } from '../../lib/calendar/layout/allday'
 import { addMinutes } from '../../lib/datetime'
-import { FormatState, useFormats } from '../../lib/formats'
+import { FormatState } from '../../lib/formats'
 import { defineComponent, h, VNode } from 'vue'
 import { OfOverlay } from '../Overlay'
 import {
@@ -113,12 +113,10 @@ export default defineComponent({
     },
     parsedEvents(): InternalEvent[] {
       const events: CalendarEvent[] = this.$props.events || []
-      const mgr = useFormats()
       return events
-        .map((e) => parseEvent(e, mgr))
+        .map((e) => parseEvent(e, this.formatMgr))
         .filter((e) => e !== undefined) as InternalEvent[]
     },
-    formatMgr: () => useFormats(),
     layoutFunc(): layoutFunc {
       return this.$props.layout === 'stack' ? StackLayout : ColumnLayout
     },

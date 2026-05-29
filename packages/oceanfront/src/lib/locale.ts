@@ -1,4 +1,4 @@
-import { Config, ConfigManager } from './config'
+import { Config, ConfigManager, resolveConfig } from './config'
 import { readonlyUnref } from './util'
 
 export interface LocaleNumberFormat {
@@ -47,4 +47,12 @@ export function setLocaleParams(params: LocaleParams): void {
 export function useLocale(config?: Config): LocaleState {
   const mgr = configManager.inject(config)
   return readonlyUnref(mgr)
+}
+
+/**
+ * Locale state for the current component tree. Does not use inject(), so it is
+ * safe inside Options API computed getters (e.g. Oceanfront calendar views).
+ */
+export function resolveLocale(config?: Config): LocaleState {
+  return configManager.getCached(config ?? resolveConfig())
 }
