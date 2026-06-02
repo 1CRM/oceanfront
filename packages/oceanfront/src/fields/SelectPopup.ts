@@ -2,7 +2,7 @@ import { useConfig } from '../lib/config'
 import { computed, defineComponent, h, PropType, ref } from 'vue'
 import { OfButton } from '../components/Button'
 import OfOptionList from '../components/OptionList.vue'
-import { transformItemsList, useItems } from '../lib/items'
+import { resolveItemLabel, transformItemsList, useItems } from '../lib/items'
 import { ItemList } from '../lib/items_list'
 import { useLanguage } from '../lib/language'
 
@@ -105,12 +105,15 @@ export const OfSelectPopup = defineComponent({
             value: item
           })
         } else if (typeof item === 'object') {
+          const value = resolved.valueKey && item[resolved.valueKey]
+          const text = resolved.textKey && item[resolved.textKey]
+          const selectedText =
+            resolved.selectedTextKey && item[resolved.selectedTextKey]
           rows.push({
             disabled: resolved.disabledKey && item[resolved.disabledKey],
-            text: resolved.textKey && item[resolved.textKey],
-            selectedText:
-              resolved.selectedTextKey && item[resolved.selectedTextKey],
-            value: resolved.valueKey && item[resolved.valueKey],
+            text: resolveItemLabel({ text, selectedText, value }),
+            selectedText,
+            value,
             selected: resolved.valueKey && isSelected(item[resolved.valueKey]),
             special: resolved.specialKey && item[resolved.specialKey],
             icon: (resolved.iconKey && item[resolved.iconKey]) ?? '',

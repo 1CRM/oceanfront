@@ -55,7 +55,7 @@
               v-if="item.special === 'header'"
               role="presentation"
             >
-              {{ item.text }}
+              {{ itemLabel(item) }}
             </div>
             <div
               class="of-list-divider"
@@ -80,7 +80,7 @@
                 <of-icon v-if="item.icon" :name="item.icon" size="input" />
               </slot>
               <div class="of-list-item-text">
-                {{ item.text }}
+                {{ itemLabel(item) }}
               </div>
               <div v-if="item.postfix" class="of-list-item-postfix">
                 <component v-if="isVNode(item.postfix)" :is="item.postfix" />
@@ -116,7 +116,7 @@ import {
 import { OfField } from '../components/Field'
 import { OfNavGroup } from '../components/NavGroup'
 import { OfListItem } from '../components/ListItem'
-import { ItemsProp, useItems } from '../lib/items'
+import { ItemsProp, resolveItemLabel, useItems } from '../lib/items'
 import { throttle } from '../lib/util'
 import { useLanguage } from '../lib/language'
 
@@ -157,6 +157,12 @@ const OfOptionList = defineComponent({
     const listOuter = ref<any>(null)
     const lang = useLanguage()
 
+    const itemLabel = (item: {
+      text?: string | number | null
+      selectedText?: string | number | null
+      value?: string | number | null
+    }) => resolveItemLabel(item)
+
     const searchField = ref<any>(null)
     const searchText: Ref<string> = ref('')
     const searchNotEmpty = computed(() => searchText.value !== '')
@@ -181,7 +187,7 @@ const OfOptionList = defineComponent({
       let itemList = allItems.value.items.filter((item) => {
         if (item.special) return true
         if (item.value !== undefined) {
-          const optionText: string = item.text
+          const optionText = itemLabel(item)
           return showAll || optionText.toLowerCase().includes(normQuery)
         }
       })
@@ -336,6 +342,7 @@ const OfOptionList = defineComponent({
 
     return {
       lang,
+      itemLabel,
       isEmpty,
       filterItems,
       menuClass,

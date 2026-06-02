@@ -6,6 +6,28 @@ import { Item, ItemList } from './items_list'
 
 export type ItemsProp = ItemList | string | any[]
 
+/** Display label for select/list options: selectedText, then text, then value. */
+export function resolveItemLabel(parts: {
+  text?: string | number | null
+  selectedText?: string | number | null
+  value?: string | number | null
+}): string {
+  for (const candidate of [parts.selectedText, parts.text]) {
+    if (
+      candidate !== undefined &&
+      candidate !== null &&
+      String(candidate) !== ''
+    ) {
+      return String(candidate)
+    }
+  }
+  const { value } = parts
+  if (value !== undefined && value !== null && String(value) !== '') {
+    return String(value)
+  }
+  return ''
+}
+
 export const transformItemsList = (
   mgr: ItemsState,
   source?: string | any[] | ItemList,
