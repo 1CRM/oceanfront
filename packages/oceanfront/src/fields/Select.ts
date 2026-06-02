@@ -12,7 +12,7 @@ import {
   newFieldId,
   provideFieldRender
 } from '../lib/fields'
-import { transformItemsList, useItems } from '../lib/items'
+import { resolveItemLabel, transformItemsList, useItems } from '../lib/items'
 import { useLanguage } from '../lib/language'
 import { focusManage } from '../lib/util'
 
@@ -189,7 +189,21 @@ export const OfSelectField = defineComponent({
 
     const itemText = (value: any) => {
       const item = itemForValue(value)
-      const result = item.item?.selectedText || item.item?.text || ''
+      const resolved = items.value
+      const raw = item.item
+      const result = resolveItemLabel({
+        selectedText:
+          raw &&
+          typeof raw === 'object' &&
+          resolved.selectedTextKey &&
+          raw[resolved.selectedTextKey],
+        text:
+          raw &&
+          typeof raw === 'object' &&
+          resolved.textKey &&
+          raw[resolved.textKey],
+        value
+      })
 
       if (item.item?.class) {
         return h('span', { class: item.item.class }, result)
