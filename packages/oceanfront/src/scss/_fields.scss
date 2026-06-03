@@ -766,7 +766,32 @@
         }
       }
     }
+
+    // Multi-select chips are shorter than a text line; room under the frame label.
+    &.of-select-field.of--multi.of--active
+      > .of-field-main
+      > .of-field-body
+      > .of-field-inner
+      > .of-field-content-text {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.15em 0.25em;
+      padding-top: calc(var(--field-v-pad) + 0.35em);
+    }
   }
+}
+
+// Filled frame multi-select: chip row layout (label band uses margin-top on inner).
+.of-field.of--variant-filled.of--label-frame.of-select-field.of--multi.of--active
+  > .of-field-main
+  > .of-field-body
+  > .of-field-inner
+  > .of-field-content-text {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.15em 0.25em;
 }
 
 .of-field.of-editor.of--interactive:not(.of--focused):not(.of--undecorated):not(
