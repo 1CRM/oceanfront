@@ -337,7 +337,10 @@ export const OfSelectField = defineComponent({
         const val = inputValue.value
         return val === undefined || val === null || val === ''
       }),
-      class: 'of-select-field',
+      class: {
+        'of-select-field': true,
+        'of--multi': props.multi
+      },
       click: clickOpen,
       ...selectMouseEvents,
       cursor: computed(() => (fieldCtx.editable ? 'pointer' : null)),
