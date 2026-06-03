@@ -46,7 +46,7 @@
 
   .editor-footer {
     display: flex;
-    overflow: hidden;
+    overflow: visible;
     flex-direction: row;
     flex-wrap: wrap;
     row-gap: 0.1em;
@@ -54,11 +54,12 @@
 
     .of-field {
       margin: 0.3em;
-      flex: 20em;
+      flex: 1 1 20em;
+      min-width: 0;
     }
     .of-button {
       margin: 0.3em;
-      flex: 1em;
+      flex: 0 1 auto;
     }
   }
 
@@ -90,40 +91,43 @@
       .editor-action {
         position: relative;
         display: inline-block;
+
         .tooltip {
-          font-size: 0.8em;
-          visibility: hidden;
-          width: 120px;
-          text-align: center;
           position: absolute;
-          z-index: 1;
-          bottom: 125%;
+          bottom: 100%;
           left: 50%;
-          margin-left: -60px;
-          opacity: 0;
+          transform: translateX(calc(-50% + var(--tooltip-shift-x, 0px)));
+          margin-bottom: 0.35em;
+          z-index: 1;
+          width: max-content;
+          max-width: 90vw;
+          font-size: 0.8em;
+          text-align: center;
+          display: none;
+          pointer-events: none;
+
           .tooltip-text {
-            width: fit-content;
+            padding: 4px 8px;
             background-color: #555;
             color: #fff;
-            padding: 4px 8px;
-            transition: opacity 0.3s;
             border-radius: 6px;
-            margin: 0 auto;
+            word-wrap: break-word;
           }
+
           &::after {
             content: '';
             position: absolute;
             top: 100%;
             left: 50%;
-            margin-left: -5px;
-            border-width: 5px;
-            border-style: solid;
-            border-color: #555 transparent transparent transparent;
+            transform: translateX(calc(-50% - var(--tooltip-shift-x, 0px)));
+            border: 5px solid transparent;
+            border-top-color: #555;
           }
         }
-        &:hover .tooltip {
-          visibility: visible;
-          opacity: 1;
+
+        &:hover .tooltip,
+        &:focus-within .tooltip {
+          display: block;
         }
       }
     }

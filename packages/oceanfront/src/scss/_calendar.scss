@@ -10,6 +10,7 @@
   --calendar-weekday-color: var(--of-color-on-surface);
 
   background-color: var(--calendar-background);
+  overflow: auto;
 }
 
 .of-datepicker-grid {
@@ -101,7 +102,7 @@ div.of-date-picker-cur-year {
 
 .of-datepicker-popup {
   display: flex;
-  max-width: 280px;
+  max-width: min(280px, 100vw);
   flex-direction: column;
 
   & .of-datepicker-selectors {
@@ -112,7 +113,7 @@ div.of-date-picker-cur-year {
   }
 
   &.with-time.with-date {
-    max-width: 320px;
+    max-width: min(320px, 100vw);
     & .of-datepicker-selectors {
       grid-template-columns: auto auto;
     }

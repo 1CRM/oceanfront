@@ -1,4 +1,7 @@
 <template>
+  <div role="status" aria-live="polite" aria-atomic="true" class="of-sr-only">
+    {{ sortAnnouncement }}
+  </div>
   <div
     role="table"
     :aria-label="tableLabel || undefined"
@@ -7,9 +10,6 @@
     :id="outerId"
     ref="tableElt"
   >
-    <div role="status" aria-live="polite" aria-atomic="true" class="of-sr-only">
-      {{ sortAnnouncement }}
-    </div>
     <div class="of-data-table-header" role="row">
       <div
         v-if="draggable"
@@ -311,6 +311,7 @@ export default defineComponent({
     OfOverlay,
     OfIcon
   },
+  inheritAttrs: false,
   // components: { OfFormat },
   props: {
     footerItems: { type: Array as PropType<any[]>, default: () => [] },

@@ -428,6 +428,7 @@ export default OfEditableField
   }
   outline: none;
   min-width: 250px;
+  max-width: 100%;
   background: var(--of-color-menu-bg, var(--of-color-surface-variant));
   padding: 7px;
   box-shadow:
