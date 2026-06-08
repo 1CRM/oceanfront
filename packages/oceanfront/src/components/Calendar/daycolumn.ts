@@ -27,6 +27,10 @@ import ColumnLayout from '../../lib/calendar/layout/columns'
 import StackLayout from '../../lib/calendar/layout/stack'
 import Base from './base'
 import calendarProps from './props'
+import {
+  adjustCalendarEventHoverPosition,
+  resetCalendarEventHoverPosition
+} from './eventUtils'
 
 function formatRange(mgr: FormatState, e: InternalEvent, withinDate: Date) {
   const [startTS, endTS] = getNormalizedTSRange(e, withinDate)
@@ -335,9 +339,11 @@ export default defineComponent({
               event.stopPropagation()
             },
             onMouseenter: (event: any) => {
+              adjustCalendarEventHoverPosition(event.currentTarget)
               this.$emit('enter:event', event, e.event)
             },
             onMouseleave: (event: any) => {
+              resetCalendarEventHoverPosition(event.currentTarget)
               this.$emit('leave:event', event, e.event)
               event.stopPropagation()
             },
@@ -632,11 +638,13 @@ export default defineComponent({
         },
         onMouseenter: (event: any) => {
           if (!this.selecting) {
+            adjustCalendarEventHoverPosition(event.currentTarget)
             this.$emit('enter:event', event, e)
           }
         },
         onMouseleave: (event: any) => {
           if (!this.selecting) {
+            resetCalendarEventHoverPosition(event.currentTarget)
             this.$emit('leave:event', event, e)
           }
         },

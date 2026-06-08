@@ -113,9 +113,6 @@ export default defineComponent({
 </script>
 
 <style lang="scss">
-.container {
-  min-width: 25em;
-}
 .attrs {
   border-radius: 4px;
   padding: 1em;

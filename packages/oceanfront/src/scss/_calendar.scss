@@ -332,6 +332,7 @@ div.of-date-picker-cur-year {
   height: var(--of-event-height, auto);
   position: absolute;
   margin: 0 5px;
+  text-wrap: nowrap;
   &:focus {
     outline: solid 1px var(--calendar-grid-color);
     outline-offset: -2px;
@@ -371,6 +372,7 @@ div.of-date-picker-cur-year {
     z-index: 9999 !important;
     min-height: calc(var(--of-event-height, 20px) - 2px);
     min-width: fit-content;
+    transform: translateX(var(--of-event-hover-shift, 0px));
     &.two-lines {
       min-height: calc(2 * calc(var(--of-event-height, 20px) - 2px));
     }

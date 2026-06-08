@@ -153,7 +153,7 @@
 .of-dialog {
   background: var(--of-color-surface);
   min-height: var(--of-dialog-min-height, 200px);
-  max-height: var(--of-dialog-max-height, 500px);
+  max-height: min(var(--of-dialog-max-height, 500px), calc(100dvh - 40px));
   min-width: var(--of-dialog-min-width, 100%);
   max-width: var(--of-dialog-max-width, 100%);
   overflow: hidden;
@@ -166,7 +166,8 @@
   position: absolute;
 
   .of-dialog-content {
-    overflow-y: scroll;
+    flex: 1 1 0;
+    overflow-y: auto;
     margin: 0;
     min-height: var(--of-dialog-content-min-height, 200px);
     min-width: var(--of-dialog-content-min-width, 100%);

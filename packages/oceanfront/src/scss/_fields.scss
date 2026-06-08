@@ -325,6 +325,7 @@
   .of-field-main-label,
   &.of--label-frame .of-field-frame-label {
     display: flex;
+    min-width: 0;
   }
 
   &.of--label-frame.of--variant-outlined .of-field-frame-label .of-tooltip {
@@ -344,6 +345,7 @@
   &:not(.of-toggle-field) .of-field-label,
   &.of-radio-field .of-field-label {
     flex: 1;
+    min-width: 0;
   }
 
   &.of-toggle-field .of-field-main-label .of-field-label {
@@ -358,6 +360,7 @@
     > .of-field-main-label {
       align-items: center;
       display: flex;
+      min-width: 0;
       padding: 0 var(--field-h-pad);
     }
 
@@ -365,7 +368,8 @@
       display: inline-grid;
     }
     .of-field-label {
-      flex: 0;
+      flex: 0 1 auto;
+      min-width: 0;
     }
     .of-tooltip {
       padding: 0 1em;
@@ -699,6 +703,7 @@
 
         .of-field-header-label {
           max-width: calc(100% - 2 * var(--field-h-pad));
+          min-width: 0;
           padding: 0 0.25em;
           position: relative;
 
@@ -723,6 +728,7 @@
             top: 0.25em;
             display: block;
             font-size: 0.666em;
+            max-width: 100%;
             transform: translateX(var(--field-size-prepend)) scale(1.3333)
               translateY(var(--field-v-pad));
             transform-origin: left top;
@@ -752,6 +758,9 @@
             }
 
             .of-field-label {
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
               transform: translateY(-0.675em);
             }
             .of-tooltip {
@@ -966,10 +975,16 @@
   opacity: var(--field-label-opacity);
   // cursor: inherit;
   font-size: 0.8em;
+  max-width: 100%;
+  min-width: 0;
   text-overflow: ellipsis;
   transition: color 100ms;
   white-space: nowrap;
   word-wrap: break-word;
+}
+
+.of-field:not(.of--label-frame) .of-field-main-label .of-field-label {
+  overflow: hidden;
 }
 
 // container around inline toggle field (checkbox or switch)

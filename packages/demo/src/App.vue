@@ -273,6 +273,7 @@ export default defineComponent({
   display: flex;
   flex: none;
   height: 3rem;
+  overflow: hidden;
   position: relative;
 
   & .app-header-gradient {
@@ -301,6 +302,8 @@ export default defineComponent({
   align-items: center;
   display: flex;
   flex: auto;
+  min-width: 0;
+  overflow: hidden;
 }
 .app-menu-source,
 .app-config-source {

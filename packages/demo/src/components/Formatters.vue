@@ -1,7 +1,7 @@
 <template>
   <div class="container">
     <h1>Value Formatters</h1>
-    <div class="row content">
+    <div class="row content sm-unstack">
       <div class="column">
         <div class="demo-form of--elevated-1">
           <div class="row form-row" style="column-gap: 1em">
@@ -62,21 +62,21 @@ export default defineComponent({
       number: 100125.99,
       duration: 100,
       url: 'https://example.com/',
-      color: '#336699',
+      color: '#336699'
     })
     const localeOpts = [
       { text: '(browser default)', value: '' },
       { text: 'en-CA', value: 'en-CA' },
       { text: 'de-CH', value: 'de-CH' },
       { text: 'de-DE', value: 'de-DE' },
-      { text: 'fr-FR', value: 'fr-FR' },
+      { text: 'fr-FR', value: 'fr-FR' }
     ]
     const locale = ref('')
     return {
       locale,
       localeOpts,
-      values,
+      values
     }
-  },
+  }
 })
 </script>

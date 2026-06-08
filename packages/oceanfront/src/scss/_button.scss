@@ -457,6 +457,8 @@
 .of-buttonset {
   display: flex;
   width: fit-content;
+  max-width: 100%;
+  overflow-x: auto;
   --buttonset-border-radius: 3px;
   &.of-buttonset--rounded {
     --buttonset-border-radius: 2em;
