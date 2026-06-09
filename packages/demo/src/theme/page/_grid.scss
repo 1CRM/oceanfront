@@ -4,7 +4,10 @@
 .container {
   box-sizing: border-box;
   margin: 0 0 $container-bottom-gutter 0;
-  padding: 0 $grid-gutter-size;
+  padding: 0 0.5rem;
+  @include screen-sm-min {
+    padding: 0 $grid-gutter-size;
+  }
   // @include screen-sm-min {
   //   width: ($screen-sm - 20);
   // }

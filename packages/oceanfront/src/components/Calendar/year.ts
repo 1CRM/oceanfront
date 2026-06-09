@@ -11,6 +11,10 @@ import { parseDay, sameDate, YearGridCell } from '../../lib/datetime'
 import { defineComponent, h } from 'vue'
 import Base from './base'
 import calendarProps from './props'
+import {
+  adjustCalendarEventHoverPosition,
+  resetCalendarEventHoverPosition
+} from './eventUtils'
 
 export default defineComponent({
   mixins: [Base],
@@ -153,9 +157,11 @@ export default defineComponent({
             event.stopPropagation()
           },
           onMouseenter: (event: any) => {
+            adjustCalendarEventHoverPosition(event.currentTarget)
             this.$emit('enter:event', event, e)
           },
           onMouseleave: (event: any) => {
+            resetCalendarEventHoverPosition(event.currentTarget)
             this.$emit('leave:event', event, e)
           },
           onKeypress: (event: KeyboardEvent) => {

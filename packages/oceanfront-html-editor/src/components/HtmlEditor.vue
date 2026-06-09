@@ -41,7 +41,12 @@
                       v-bind="item"
                       density="3"
                     />
-                    <div class="editor-action" v-else>
+                    <div
+                      class="editor-action"
+                      v-else
+                      @mouseenter="positionEditorTooltip"
+                      @focusin="positionEditorTooltip"
+                    >
                       <div class="tooltip">
                         <div class="tooltip-text">{{ item.title }}</div>
                       </div>
@@ -1067,9 +1072,39 @@ export default defineComponent({
       source.value = editor.value?.getHTML()
     })
 
+    const positionEditorTooltip = (e: MouseEvent | FocusEvent) => {
+      const action = e.currentTarget as HTMLElement | null
+      const tooltip = action?.querySelector('.tooltip') as HTMLElement | null
+      if (!action || !tooltip) return
+
+      nextTick(() => {
+        const edgeMargin = 8
+        const actionRect = action.getBoundingClientRect()
+        const tooltipRect = tooltip.getBoundingClientRect()
+        const viewportWidth = document.documentElement.clientWidth
+
+        const centerX = actionRect.left + actionRect.width / 2
+        const tooltipLeft = centerX - tooltipRect.width / 2
+        let shift = 0
+
+        if (tooltipLeft < edgeMargin) {
+          shift = edgeMargin - tooltipLeft
+        } else {
+          const tooltipRight = tooltipLeft + tooltipRect.width
+          const maxRight = viewportWidth - edgeMargin
+          if (tooltipRight > maxRight) {
+            shift = maxRight - tooltipRight
+          }
+        }
+
+        tooltip.style.setProperty('--tooltip-shift-x', `${Math.round(shift)}px`)
+      })
+    }
+
     return {
       editor,
       isEditable,
+      positionEditorTooltip,
       focused,
       setFocus,
       unfocus,

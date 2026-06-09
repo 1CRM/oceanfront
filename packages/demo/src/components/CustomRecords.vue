@@ -261,7 +261,7 @@ export default defineComponent({
   margin-top: 1.5rem;
 
   > div {
-    min-width: 20em;
+    min-width: min(320px, 100%);
   }
 }
 .record-info {

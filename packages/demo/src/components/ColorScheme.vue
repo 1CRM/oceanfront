@@ -126,7 +126,7 @@ export default defineComponent({
       min-width: 15em;
     }
     &:last-child {
-      min-width: 20em;
+      min-width: min(320px, 100%);
     }
   }
 }

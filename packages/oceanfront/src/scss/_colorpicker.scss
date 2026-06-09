@@ -6,7 +6,7 @@
 }
 
 .of-colorpicker-popup {
-  max-width: 300px;
+  max-width: min(300px, 100vw);
 
   .color-picker-input-hex {
     width: 80%;
@@ -46,6 +46,7 @@
     user-select: none;
     padding: 10px;
     width: 300px;
+    max-width: 100%;
 
     .saturation {
       position: relative;

@@ -24,6 +24,7 @@
             <div
               v-if="showCloseButton"
               class="dialog-close"
+              role="button"
               tabindex="0"
               :aria-label="lang.dialogClose"
               @click="hide()"

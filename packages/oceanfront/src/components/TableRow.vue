@@ -47,7 +47,6 @@
       v-for="(col, colidx) of rowItem.columns"
       role="cell"
       :aria-roledescription="col.text + ' ' + lang.tableColumn"
-      aria-orientation="horizontal"
       :style="[col.value === dragInfo?.nestedIndicator ? nestedStyle : {}]"
       :class="col.class"
       :key="colidx"
