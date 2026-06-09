@@ -166,12 +166,22 @@
   position: absolute;
 
   .of-dialog-content {
-    flex: 1 1 0;
     overflow-y: auto;
     margin: 0;
     min-height: var(--of-dialog-content-min-height, 200px);
     min-width: var(--of-dialog-content-min-width, 100%);
   }
+}
+
+.of-overlay.of--overlay .of-dialog {
+  max-height: min(
+    var(--of-dialog-max-height, 500px),
+    calc(100dvh - 2 * var(--overlay-pad, 0px))
+  );
+  max-width: min(
+    var(--of-dialog-max-width, 100%),
+    calc(100dvw - 2 * var(--overlay-pad, 0px))
+  );
 }
 
 @media (min-width: 768px) {
