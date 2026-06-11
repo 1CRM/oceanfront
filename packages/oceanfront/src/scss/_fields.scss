@@ -950,6 +950,16 @@
         }
       }
     }
+
+    // Select, date, etc. use content-text; match text input vertical padding in edit mode.
+    &.of--mode-editable
+      > .of-field-main
+      > .of-field-body
+      > .of-field-inner
+      > .of-field-content-text:not(:has(.of-field-input)) {
+      padding: calc(var(--field-v-pad) / 2) var(--field-h-pad) var(--field-v-pad);
+      box-sizing: border-box;
+    }
   }
 }
 
