@@ -12,6 +12,7 @@ export interface NumberFormatterOptions {
   decimalSeparator?: string
   groupSeparator?: string
   locale?: string
+  maxlength?: number
   minimumIntegerDigits?: number
   maximumFractionDigits?: number
   minimumFractionDigits?: number
@@ -302,6 +303,25 @@ export class NumberFormatter implements TextFormatter {
     if (selEnd < selStart) {
       selEnd = selStart
       selStart = input.selectionEnd
+    }
+    const { maxlength } = this.options
+    if (
+      maxlength !== undefined &&
+      evt.key.length === 1 &&
+      !evt.ctrlKey &&
+      !evt.metaKey &&
+      !evt.altKey
+    ) {
+      const start = selStart ?? 0
+      const end = selEnd ?? start
+      const newInput =
+        input.value.substring(0, start) + evt.key + input.value.substring(end)
+      const newParsed = this.parseInput(newInput, start + 1)
+      const digitCount = (newParsed.parsed.match(/[0-9]/g) ?? []).length
+      if (digitCount > maxlength) {
+        evt.preventDefault()
+        return
+      }
     }
     if (evt.key === 'Backspace' || evt.key === 'Delete') {
       // move over separator
