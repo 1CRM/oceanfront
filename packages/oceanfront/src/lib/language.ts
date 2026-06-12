@@ -40,6 +40,7 @@ const defaults = {
   tabsScrollRight: 'Scroll tabs right',
 
   optionListClearSearch: 'Clear search',
+  optionListSearch: 'Search options',
 
   spinnerLoading: 'Loading',
 

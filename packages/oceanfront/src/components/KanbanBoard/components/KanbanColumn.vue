@@ -41,6 +41,7 @@
     </div>
     <div
       class="of-kanban-column-content"
+      role="group"
       :data-column-id="column.id"
       :aria-label="`${column.title}, ${lang.kanbanColumnCards}`"
       tabindex="-1"

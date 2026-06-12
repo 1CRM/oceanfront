@@ -49,7 +49,8 @@
     }
 
     &.other-month {
-      opacity: 0.4;
+      opacity: 0.8;
+      color: var(--of-color-on-surface-variant);
       cursor: default;
     }
 
