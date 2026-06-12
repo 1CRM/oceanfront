@@ -167,6 +167,7 @@
 
   .of-dialog-content {
     overflow-y: auto;
+    overscroll-behavior: contain;
     margin: 0;
     min-height: var(--of-dialog-content-min-height, 200px);
     min-width: var(--of-dialog-content-min-width, 100%);

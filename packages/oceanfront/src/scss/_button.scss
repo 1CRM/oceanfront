@@ -511,6 +511,17 @@
       --button-border-right-radius: var(--buttonset-border-radius);
       margin-right: 0;
     }
+    &:has(> button:focus-visible) > .of--layer.of--layer-brd {
+      @include of-focus-visible-ring(-2px, 2px, 2px);
+      opacity: 1;
+      border: none;
+    }
+
+    > button:focus-visible {
+      outline: none;
+      box-shadow: none;
+      z-index: auto;
+    }
   }
 }
 

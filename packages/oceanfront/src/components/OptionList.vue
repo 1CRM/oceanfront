@@ -1,6 +1,5 @@
 <template>
   <div
-    role="menu"
     class="of-menu options"
     :id="menuRootId || undefined"
     :class="menuClass"
@@ -19,7 +18,8 @@
         v-model="searchText"
         @input="onSearchInput"
         ref="searchField"
-        tabindex="0"
+        label-position="none"
+        :aria-label="lang.optionListSearch"
       >
         <template #prepend>
           <of-icon name="search" decorative />
@@ -41,58 +41,66 @@
         </template>
       </of-field>
     </div>
-    <of-nav-group>
-      <div v-if="isEmpty" style="padding: 0 0.5em">
-        <slot name="empty">
-          {{ lang.listNoItems }}
-        </slot>
-      </div>
-      <template v-if="!isEmpty">
-        <div class="of-list-outer" ref="listOuter">
-          <template v-for="(item, idx) of filterItems" :key="idx">
-            <div
-              class="of-list-header"
-              v-if="item.special === 'header'"
-              role="presentation"
-            >
-              {{ itemLabel(item) }}
-            </div>
-            <div
-              class="of-list-divider"
-              v-if="item.special === 'divider'"
-              role="separator"
-            />
-            <of-list-item
-              v-if="!item.special"
-              :active="item.selected"
-              :disabled="item.disabled"
-              :class="item.class"
-              @mousedown="(event: any) => click(item, event)"
-              @keydown="(event: any) => click(item, event)"
-              @blur="onItemBlur"
-              @focus="onItemFocus"
-              @button-click="buttonClick"
-              :attrs="{ role: 'menuitem', ...(item.attrs || {}) }"
-              :key="idx"
-              :field="item.field"
-            >
-              <slot name="option-icon" v-bind="item">
-                <of-icon v-if="item.icon" :name="item.icon" size="input" />
-              </slot>
-              <div class="of-list-item-text">
+    <div role="menu">
+      <of-nav-group>
+        <div
+          v-if="isEmpty"
+          role="menuitem"
+          aria-disabled="true"
+          tabindex="-1"
+          style="padding: 0 0.5em"
+        >
+          <slot name="empty">
+            {{ lang.listNoItems }}
+          </slot>
+        </div>
+        <template v-if="!isEmpty">
+          <div class="of-list-outer" ref="listOuter">
+            <template v-for="(item, idx) of filterItems" :key="idx">
+              <div
+                class="of-list-header"
+                v-if="item.special === 'header'"
+                role="presentation"
+              >
                 {{ itemLabel(item) }}
               </div>
-              <div v-if="item.postfix" class="of-list-item-postfix">
-                <component v-if="isVNode(item.postfix)" :is="item.postfix" />
-                <div v-else>
-                  {{ item.postfix }}
+              <div
+                class="of-list-divider"
+                v-if="item.special === 'divider'"
+                role="separator"
+              />
+              <of-list-item
+                v-if="!item.special"
+                :active="item.selected"
+                :disabled="item.disabled"
+                :class="item.class"
+                @mousedown="(event: any) => click(item, event)"
+                @keydown="(event: any) => click(item, event)"
+                @blur="onItemBlur"
+                @focus="onItemFocus"
+                @button-click="buttonClick"
+                :attrs="{ role: 'menuitem', ...(item.attrs || {}) }"
+                :key="idx"
+                :field="item.field"
+              >
+                <slot name="option-icon" v-bind="item">
+                  <of-icon v-if="item.icon" :name="item.icon" size="input" />
+                </slot>
+                <div class="of-list-item-text">
+                  {{ itemLabel(item) }}
                 </div>
-              </div>
-            </of-list-item>
-          </template>
-        </div>
-      </template>
-    </of-nav-group>
+                <div v-if="item.postfix" class="of-list-item-postfix">
+                  <component v-if="isVNode(item.postfix)" :is="item.postfix" />
+                  <div v-else>
+                    {{ item.postfix }}
+                  </div>
+                </div>
+              </of-list-item>
+            </template>
+          </div>
+        </template>
+      </of-nav-group>
+    </div>
     <slot
       name="footer"
       :add-search="addSearch"
