@@ -728,7 +728,7 @@
             top: 0.25em;
             display: block;
             font-size: 0.666em;
-            max-width: 100%;
+            max-width: 80%;
             transform: translateX(var(--field-size-prepend)) scale(1.3333)
               translateY(var(--field-v-pad));
             transform-origin: left top;
@@ -758,6 +758,7 @@
             }
 
             .of-field-label {
+              max-width: 100%;
               overflow: hidden;
               text-overflow: ellipsis;
               white-space: nowrap;
@@ -915,6 +916,8 @@
           display: flex;
           box-sizing: border-box;
           line-height: 1;
+          max-width: 100%;
+          min-width: 0;
           padding: calc(var(--field-v-pad))
             calc(var(--field-size-append) + var(--field-h-pad)) 0
             calc(var(--field-size-prepend) + var(--field-h-pad));
@@ -957,7 +960,8 @@
       > .of-field-body
       > .of-field-inner
       > .of-field-content-text:not(:has(.of-field-input)) {
-      padding: calc(var(--field-v-pad) / 2) var(--field-h-pad) var(--field-v-pad);
+      padding: calc(var(--field-v-pad) / 2) var(--field-h-pad)
+        var(--field-v-pad);
       box-sizing: border-box;
     }
   }
@@ -993,7 +997,8 @@
   word-wrap: break-word;
 }
 
-.of-field:not(.of--label-frame) .of-field-main-label .of-field-label {
+.of-field:not(.of--label-frame) .of-field-main-label .of-field-label,
+.of-field.of--label-frame .of-field-frame-label .of-field-label {
   overflow: hidden;
 }
 
