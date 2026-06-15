@@ -10,7 +10,10 @@
     :id="outerId"
     ref="tableElt"
   >
-    <div class="of-data-table-header" role="row">
+    <div
+      class="of-data-table-header"
+      :role="draggable || addRowsSelector || columns.length ? 'row' : undefined"
+    >
       <div
         v-if="draggable"
         role="columnheader"
