@@ -669,6 +669,7 @@
       }
 
       > .of-field-header {
+        container-type: inline-size;
         display: flex;
         position: absolute;
         top: 0;
@@ -728,7 +729,13 @@
             top: 0.25em;
             display: block;
             font-size: 0.666em;
-            max-width: 80%;
+            max-width: calc(
+              100cqw /
+                1.3333 - max(
+                  var(--field-h-pad),
+                  var(--field-border-radius)
+                ) - var(--field-h-pad)
+            );
             transform: translateX(var(--field-size-prepend)) scale(1.3333)
               translateY(var(--field-v-pad));
             transform-origin: left top;
