@@ -7,6 +7,8 @@
   right: 0;
   bottom: 0;
   z-index: 200;
+  overflow: hidden;
+  overscroll-behavior: contain;
 }
 
 .of-overlay.of--overlay {
@@ -44,6 +46,8 @@
 
 .of-overlay.of--capture {
   pointer-events: initial;
+  overflow: hidden;
+  overscroll-behavior: contain;
 }
 
 .of-overlay.of--center {
@@ -278,6 +282,7 @@
     min-width: auto;
   }
   overflow: hidden auto;
+  overscroll-behavior: contain;
 
   &.options {
     max-height: 40%;
@@ -314,8 +319,14 @@
       }
     }
 
+    [role='menu'] {
+      min-height: 0;
+      flex: 0 1 auto;
+    }
+
     .of-list-outer {
       overflow: hidden auto;
+      overscroll-behavior: contain;
       height: 100%;
       padding-top: 0;
       padding-bottom: 0;
