@@ -154,6 +154,26 @@ export const OfSelectField = defineComponent({
       focusManage(elt.value)
     }
 
+    const isPopupSearchFocused = () =>
+      !!document.activeElement?.closest('.of-menu.options .search-row')
+
+    const onOutsidePointerDown = (evt: MouseEvent) => {
+      if (!opened.value) return
+      const target = evt.target as Node | null
+      if (!target) return
+      if (document.getElementById(inputId.value + '-outer')?.contains(target))
+        return
+      if (document.getElementById(popupMenuId.value)?.contains(target)) return
+      closePopup()
+    }
+    watch(opened, (isOpen, _, onCleanup) => {
+      if (!isOpen) return
+      document.addEventListener('mousedown', onOutsidePointerDown, true)
+      onCleanup(() => {
+        document.removeEventListener('mousedown', onOutsidePointerDown, true)
+      })
+    })
+
     const toggleValue = (val: any): any => {
       if (!props.multi) return val
       if (!Array.isArray(inputValue.value)) {
@@ -322,6 +342,7 @@ export const OfSelectField = defineComponent({
       },
       onMouseleave: () => {
         if (!opened.value) return false
+        if (isPopupSearchFocused()) return false
         selectTimerId = window.setTimeout(() => {
           closePopup(true)
         }, 500)
