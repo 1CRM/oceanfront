@@ -1,31 +1,16 @@
 import {
-  getDayIdentifier,
-  getEventsOfDay,
-  toTimestamp,
-  CalendarEvent,
-  InternalEvent,
-  parseEvent,
-  uniqEvent
-} from '../../lib/calendar'
-import {
   addDays,
   firstMonday,
   isoWeekNumber,
-  parseDay,
   monthGrid,
   MonthGridCell,
   MonthGridData
 } from '../../lib/datetime'
-import { defineComponent, h } from 'vue'
-import Base from './base'
+import { computed, defineComponent, h } from 'vue'
+import { resolveWeekStart, useMonthGridEvents } from './base'
 import calendarProps from './props'
-import {
-  adjustCalendarEventHoverPosition,
-  resetCalendarEventHoverPosition
-} from './eventUtils'
 
 export default defineComponent({
-  mixins: [Base],
   props: {
     ...calendarProps.internal,
     ...calendarProps.common,
@@ -41,55 +26,33 @@ export default defineComponent({
     'focus:day',
     'blur:day'
   ],
-  computed: {
-    eventsLimitNumber(): number {
-      const limit = parseInt(this.$props.eventsLimit as any as string) || 5
-      if (limit < 2) return 2
-      return limit
-    },
-    eventHeightNumber(): number {
-      return parseInt(this.$props.eventHeight as unknown as string) || 20
-    },
+  setup(props, { slots, emit }) {
+    const {
+      locale,
+      renderWeekDay,
+      renderDayNumber,
+      header,
+      footer,
+      eventsLimitNumber,
+      eventHeightNumber,
+      dayEvents,
+      limitDayEvents,
+      hideDate,
+      renderMoreLink,
+      renderRowDayEvent
+    } = useMonthGridEvents(props, slots, emit)
 
-    monthGrid(): MonthGridData {
-      return monthGrid(this.day, this.weekStartLocale)
-    },
-    parsedEvents(): InternalEvent[] {
-      const events: CalendarEvent[] = this.$props.events || []
-      return events
-        .map((e) => parseEvent(e, this.formatMgr))
-        .filter((e) => e !== undefined) as InternalEvent[]
-    },
-    weekStartLocale(): number {
-      const day =
-        this.weekStart === undefined
-          ? (this.locale.localeParams?.weekStart ?? 1)
-          : this.weekStart
-      return parseDay(day)
-    }
-  },
-  methods: {
-    dayEvents(day: Date): InternalEvent[] {
-      return getEventsOfDay(
-        this.parsedEvents,
-        getDayIdentifier(toTimestamp(day)),
-        'ignore'
-      ).map((e) => uniqEvent(e, { category: '', date: day }))
-    },
-    hideDate(date: Date) {
-      return this.$props.hideWeekends && [6, 0].includes(date.getDay())
-    },
-    header() {
-      const slot = this.$slots['header']
-      return slot?.()
-    },
-    footer() {
-      const slot = this.$slots['footer']
-      return slot?.()
-    },
-    renderDayNumberOrSlot(day: Date) {
-      const slot = this.$slots['day-title']
-      const content = slot ? slot(day) : this.renderDayNumber(day, false)
+    const weekStartLocale = computed(() =>
+      resolveWeekStart(props.weekStart, locale.value)
+    )
+
+    const monthGridData = computed((): MonthGridData => {
+      return monthGrid(props.day, weekStartLocale.value)
+    })
+
+    function renderDayNumberOrSlot(day: Date) {
+      const slot = slots['day-title']
+      const content = slot ? slot(day) : renderDayNumber(day, false)
       return h(
         'div',
         {
@@ -98,130 +61,53 @@ export default defineComponent({
         },
         content
       )
-    },
-    renderMoreLink(count: number, day: Date, top: number) {
-      if (count < 1) return null
-      const slot = this.$slots['more']
-      return h(
-        'div',
-        {
-          class: 'of-calendar-more',
-          tabindex: '0',
-          onClick: (event: any) => {
-            this.$emit('click:more', event, day)
-          },
-          onKeypress: (event: KeyboardEvent) => {
-            if (['Enter', 'Space'].includes(event.code)) {
-              event.preventDefault()
-              this.$emit('click:day', event, day)
-            }
-          },
-          style: {
-            top: '' + top + 'px'
-          }
-        },
-        slot ? slot(count) : `${count} more`
-      )
-    },
-    renderRowDayEvent(e: InternalEvent, idx: number) {
-      const top = this.eventHeightNumber * idx
-      const finalColor = this.$props.eventColor?.(e) ?? e.color
-      const eventClass =
-        this.$props.eventClass?.(e) ?? (e.class ? { [e.class]: true } : {})
-      return h(
-        'div',
-        {
-          class: { ...eventClass, 'of-calendar-event': true },
-          style: {
-            'background-color': finalColor,
-            top: `${top}px`
-          },
-          tabindex: '0',
-          onClick: (event: any) => {
-            this.$emit('click:event', event, { ...e, color: finalColor })
-            event.stopPropagation()
-          },
-          onMouseenter: (event: any) => {
-            adjustCalendarEventHoverPosition(event.currentTarget)
-            this.$emit('enter:event', event, e)
-          },
-          onMouseleave: (event: any) => {
-            resetCalendarEventHoverPosition(event.currentTarget)
-            this.$emit('leave:event', event, e)
-          },
-          onKeypress: (event: KeyboardEvent) => {
-            if (['Enter', 'Space'].includes(event.code)) {
-              event.preventDefault()
-              this.$emit('click:event', event, { ...e, color: finalColor })
-              event.stopPropagation()
-            }
-          },
-          onFocus: () => {
-            this.$emit('focus:day')
-          },
-          onBlur: () => {
-            this.$emit('blur:day')
-          }
-        },
-        this.renderSlot('allday-event-content', { event: e }, () =>
-          h('strong', e.name)
-        )
-      )
-    },
-    renderRowDay(day: MonthGridCell) {
-      const dayEvents = this.dayEvents(day.date)
-      let limit = this.eventsLimitNumber
-      let more = 0
-      if (dayEvents.length > limit) {
-        limit -= 1
-        more = dayEvents.length - limit
-      }
-      const events = dayEvents.slice(0, limit)
+    }
+
+    function renderRowDay(day: MonthGridCell) {
+      const { events, more } = limitDayEvents(dayEvents(day.date))
       const dayHeight = events.length + (more ? 1 : 0)
-      const style = this.$props.fixedRowHeight
+      const style = props.fixedRowHeight
         ? {}
         : {
             '--of-month-day-heigth':
-              '' + dayHeight * this.eventHeightNumber + 'px'
+              '' + dayHeight * eventHeightNumber.value + 'px'
           }
-      if (!this.$props.fixedRowHeight) {
-        //--of-month-day-heigth
-      }
-      if (this.hideDate(day.date)) return
+      if (hideDate(day.date)) return
       return h(
         'div',
         {
           class: ['of-calendar-month-day', 'week-day-' + day.date.getDay()],
           style,
           onClick: (event: any) => {
-            this.$emit('click:day', event, day.date)
+            emit('click:day', event, day.date)
           },
           onKeypress: (event: KeyboardEvent) => {
             if (['Enter', 'Space'].includes(event.code)) {
               event.preventDefault()
-              this.$emit('click:day', event, day.date)
+              emit('click:day', event, day.date)
             }
           }
         },
-        day.otherMonth && this.hideOtherMonths
+        day.otherMonth && props.hideOtherMonths
           ? []
           : [
-              this.renderDayNumberOrSlot(day.date),
+              renderDayNumberOrSlot(day.date),
               h('div', { class: 'events' }, [
-                events.map(this.renderRowDayEvent),
-                this.renderMoreLink(
+                events.map(renderRowDayEvent),
+                renderMoreLink(
                   more,
                   day.date,
-                  events.length * this.eventHeightNumber
+                  events.length * eventHeightNumber.value
                 )
               ])
             ]
       )
-    },
-    renderRow(rowDays: MonthGridCell[], weekNumber: number) {
-      const firstDay = addDays(firstMonday(this.day), weekNumber * 7)
+    }
+
+    function renderRow(rowDays: MonthGridCell[], weekNumber: number) {
+      const firstDay = addDays(firstMonday(props.day), weekNumber * 7)
       const wn = isoWeekNumber(firstDay)
-      const wnSlot = this.$slots['week-number']
+      const wnSlot = slots['week-number']
       return h('div', { class: 'of-calendar-month-row' }, [
         h(
           'div',
@@ -229,31 +115,32 @@ export default defineComponent({
             class: 'of-calendar-gutter of-week-number',
             tabindex: '0',
             onClick: (event: any) => {
-              this.$emit('click:week', event, wn, firstDay)
+              emit('click:week', event, wn, firstDay)
             },
             onKeypress: (event: KeyboardEvent) => {
               if (['Enter', 'Space'].includes(event.code)) {
                 event.preventDefault()
-                this.$emit('click:week', event, wn, firstDay)
+                emit('click:week', event, wn, firstDay)
               }
             }
           },
           wnSlot ? wnSlot(wn) : wn
         ),
-        rowDays.map(this.renderRowDay)
+        rowDays.map(renderRowDay)
       ])
-    },
-    renderGrid() {
-      const fm = firstMonday(this.day)
+    }
+
+    function renderGrid() {
+      const fm = firstMonday(props.day)
       const wd = fm.getDay() || 7
       const firstDayMonth = addDays(
         fm,
-        this.weekStartLocale - (wd >= this.weekStartLocale ? wd : wd + 7)
+        weekStartLocale.value - (wd >= weekStartLocale.value ? wd : wd + 7)
       )
-      const style = this.fixedRowHeight
+      const style = props.fixedRowHeight
         ? {
             '--of-month-day-heigth':
-              '' + this.eventHeightNumber * this.eventsLimitNumber + 'px'
+              '' + eventHeightNumber.value * eventsLimitNumber.value + 'px'
           }
         : {}
       return h('div', { class: 'of-calendar-month-grid', style }, [
@@ -261,7 +148,7 @@ export default defineComponent({
           h('div', { class: 'of-calendar-gutter' }),
           Array.from({ length: 7 }, (_, i) => {
             const weekDay = addDays(firstDayMonth, i)
-            if (this.hideDate(weekDay)) return
+            if (hideDate(weekDay)) return
             return h(
               'div',
               {
@@ -273,29 +160,29 @@ export default defineComponent({
               h(
                 'div',
                 { class: 'of-calendar-day-title' },
-                this.renderWeekDay(weekDay)
+                renderWeekDay(weekDay)
               )
             )
           })
         ]),
-        this.monthGrid.grid.map(this.renderRow)
+        monthGridData.value.grid.map(renderRow)
       ])
     }
-  },
-  render() {
-    return h(
-      'div',
-      {
-        class: 'container of--calendar',
-        style: {
-          '--of-event-height': `${this.eventHeightNumber}px`,
-          '--of-categories-num': 8
+
+    return () =>
+      h(
+        'div',
+        {
+          class: 'container of--calendar',
+          style: {
+            '--of-event-height': `${eventHeightNumber.value}px`,
+            '--of-categories-num': 8
+          },
+          onSelectStart(e: Event) {
+            e.preventDefault()
+          }
         },
-        onSelectStart(e: Event) {
-          e.preventDefault()
-        }
-      },
-      [this.header(), this.renderGrid(), this.footer()]
-    )
+        [header(), renderGrid(), footer()]
+      )
   }
 })

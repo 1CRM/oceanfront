@@ -1,42 +1,51 @@
 import { toTimestamp, Timestamp } from '../../lib/calendar'
-import { addDays, parseDay } from '../../lib/datetime'
-import { defineComponent } from 'vue'
-import DayCalendar from './day'
+import { addDays } from '../../lib/datetime'
+import { computed, defineComponent } from 'vue'
+import { resolveWeekStart, useCalendarBase } from './base'
+import { useDayGridCalendar } from './day'
 import calendarProps from './props'
 
 export default defineComponent({
-  mixins: [DayCalendar],
   props: {
+    ...calendarProps.internal,
     ...calendarProps.common,
     ...calendarProps.week
   },
-  computed: {
-    weekStartLocale(): number {
-      const day =
-        this.weekStart === undefined
-          ? (this.locale.localeParams?.weekStart ?? 1)
-          : this.weekStart
-      return parseDay(day)
-    }
-  },
-  methods: {
-    getVisibleRange(): Timestamp[] {
-      const weekDay = this.$props.day.getDay() || 7
-      const firstDay = addDays(this.$props.day, 1 - weekDay)
+  setup(props, { slots }) {
+    const base = useCalendarBase(slots)
+
+    const weekStartLocale = computed(() =>
+      resolveWeekStart(props.weekStart, base.locale.value)
+    )
+
+    function getVisibleRange(): Timestamp[] {
+      // Sunday is 0; treat it as 7 so the week starts on Monday by default.
+      const weekDay = props.day.getDay() || 7
+      const firstDay = addDays(props.day, 1 - weekDay)
       const lastDay = addDays(firstDay, 7)
-      const firstTS = { ...toTimestamp(firstDay), hours: 0, minutes: 0 }
-      const lastTS = { ...toTimestamp(lastDay), hours: 0, minutes: 0 }
-      return [firstTS, lastTS]
-    },
-    getCategoriesList() {
-      const weekDay = this.$props.day.getDay() ?? 7
+      return [
+        { ...toTimestamp(firstDay), hours: 0, minutes: 0 },
+        { ...toTimestamp(lastDay), hours: 0, minutes: 0 }
+      ]
+    }
+
+    function getCategoriesList() {
+      const weekDay = props.day.getDay() || 7
       const offset =
-        this.weekStartLocale -
-        (weekDay >= this.weekStartLocale ? weekDay : weekDay + 7)
+        weekStartLocale.value -
+        (weekDay >= weekStartLocale.value ? weekDay : weekDay + 7)
       return Array.from({ length: 7 }, (_, i) => ({
         category: '' + i,
-        date: addDays(this.$props.day, i + offset)
+        date: addDays(props.day, i + offset)
       }))
     }
+
+    const { render } = useDayGridCalendar(
+      props,
+      slots,
+      { getVisibleRange, getCategoriesList },
+      base
+    )
+    return render
   }
 })

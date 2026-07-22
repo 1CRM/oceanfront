@@ -2,7 +2,16 @@ import { DateTimeFormatterOptions } from '../../formats/DateTime'
 import { BusyInfo, layoutAllday } from '../../lib/calendar/layout/allday'
 import { addMinutes } from '../../lib/datetime'
 import { FormatState } from '../../lib/formats'
-import { defineComponent, h, VNode } from 'vue'
+import {
+  computed,
+  ComponentPublicInstance,
+  defineComponent,
+  h,
+  onMounted,
+  reactive,
+  ref,
+  VNode
+} from 'vue'
 import { OfOverlay } from '../Overlay'
 import {
   eventsStartingAtDay,
@@ -25,7 +34,7 @@ import {
 } from '../../lib/calendar'
 import ColumnLayout from '../../lib/calendar/layout/columns'
 import StackLayout from '../../lib/calendar/layout/stack'
-import Base from './base'
+import { useCalendarBase } from './base'
 import calendarProps from './props'
 import {
   adjustCalendarEventHoverPosition,
@@ -69,7 +78,6 @@ function formatRange(mgr: FormatState, e: InternalEvent, withinDate: Date) {
 }
 
 export default defineComponent({
-  mixins: [Base],
   props: {
     ...calendarProps.internal,
     ...calendarProps.common,
@@ -91,74 +99,91 @@ export default defineComponent({
     'focus:day',
     'blur:day'
   ],
-  data() {
-    const selecting = false
-    return {
-      selecting: selecting as 'start' | 'end' | false,
-      selectionStart: 0,
-      selectionEnd: 0,
-      selectionCategory: '',
-      dayEl: undefined as HTMLElement | undefined,
-      eventMaxWidth: 250,
-      allDayPopups: {
-        active: {},
-        closeTimerId: {},
-        width: {},
-        height: {}
-      } as any
-    }
-  },
-  computed: {
-    overlapThresholdNumber(): number {
-      return parseInt(this.$props.overlapThreshold as unknown as string) || 0
-    },
-    numHourIntervals(): number {
-      return parseInt(this.$props.hourIntervals as unknown as string) || 4
-    },
-    parsedEvents(): InternalEvent[] {
-      const events: CalendarEvent[] = this.$props.events || []
+  setup(props, { slots, emit }) {
+    const { formatMgr, renderSlot, header, footer } = useCalendarBase(slots)
+
+    const selecting = ref<'start' | 'end' | false>(false)
+    const selectionStart = ref(0)
+    const selectionEnd = ref(0)
+    const selectionCategory = ref('')
+    const dayEl = ref<HTMLElement | undefined>(undefined)
+    const eventMaxWidth = ref(250)
+    const allDayPopups = reactive<{
+      active: Record<string, boolean>
+      closeTimerId: Record<string, number | undefined>
+      width: Record<string, number>
+      height: Record<string, number>
+    }>({
+      active: {},
+      closeTimerId: {},
+      width: {},
+      height: {}
+    })
+
+    const overlapThresholdNumber = computed(
+      () => parseInt(props.overlapThreshold as unknown as string) || 0
+    )
+
+    const numHourIntervals = computed(
+      () => parseInt(props.hourIntervals as unknown as string) || 4
+    )
+
+    const parsedEvents = computed((): InternalEvent[] => {
+      const events: CalendarEvent[] = props.events || []
       return events
-        .map((e) => parseEvent(e, this.formatMgr))
+        .map((e) => parseEvent(e, formatMgr.value))
         .filter((e) => e !== undefined) as InternalEvent[]
-    },
-    layoutFunc(): layoutFunc {
-      return this.$props.layout === 'stack' ? StackLayout : ColumnLayout
-    },
-    hasAllDay(): boolean {
-      return (this.$props.events?.filter((e) => e.allDay).length || 0) > 0
-    },
-    groupAllDay(): boolean {
-      return (
-        this.$props.groupAllDayEvents === true &&
-        ['week', 'day'].includes(this.$props.type ?? '')
-      )
-    },
-    allDayEvents() {
-      const visRange = this.visibleRange || []
+    })
+
+    const layoutFuncValue = computed(
+      (): layoutFunc => (props.layout === 'stack' ? StackLayout : ColumnLayout)
+    )
+
+    const hasAllDay = computed(
+      () => (props.events?.filter((e) => e.allDay).length || 0) > 0
+    )
+
+    const groupAllDay = computed(
+      () =>
+        props.groupAllDayEvents === true &&
+        ['week', 'day'].includes(props.type ?? '')
+    )
+
+    const hoursInterval = computed(() => {
+      let start = parseInt(props.dayStart as unknown as string) || 0
+      let end = parseInt(props.dayEnd as unknown as string) || 0
+      if (start >= end) [start, end] = [0, 24]
+      start = Math.max(0, start)
+      end = Math.min(24, end)
+      return [start, end]
+    })
+
+    const allDayEvents = computed(() => {
+      const visRange = props.visibleRange || []
       const rangeStart = getDayIdentifier(visRange[0])
-      const allDayEvents = {} as any
+      const allDayEventsResult = {} as any
       let busyInfo: BusyInfo = { busyColumns: [], currentColumn: 0 }
-      for (const cat of this.$props.categoriesList || []) {
+      for (const cat of props.categoriesList || []) {
         const day = getDayIdentifier(toTimestamp(cat.date))
-        const dayEvents = getEventsOfDay(
-          this.parsedEvents,
+        const dayEventsList = getEventsOfDay(
+          parsedEvents.value,
           day,
           true,
-          this.ignoreCategories ? undefined : cat.category,
+          props.ignoreCategories ? undefined : cat.category,
           true
         )
-        const evs = this.groupAllDay
-          ? dayEvents
-          : eventsStartingAtDay(dayEvents, day, rangeStart)
+        const evs = groupAllDay.value
+          ? dayEventsList
+          : eventsStartingAtDay(dayEventsList, day, rangeStart)
         const layedOut = layoutAllday(evs, visRange, busyInfo)
-        if (this.$props.type == 'category')
+        if (props.type == 'category')
           busyInfo = { busyColumns: [], currentColumn: 0 }
         let top = -1
-        allDayEvents[cat.category] = layedOut.map((p) => {
+        allDayEventsResult[cat.category] = layedOut.map((p) => {
           top++
           return {
             ...p,
-            ...(this.groupAllDay
+            ...(groupAllDay.value
               ? {
                   top,
                   daysSpan: 1
@@ -168,24 +193,25 @@ export default defineComponent({
           }
         })
       }
-      return allDayEvents
-    },
-    dayEvents() {
-      const dayEvents = {} as any
-      for (const cat of this.$props.categoriesList || []) {
+      return allDayEventsResult
+    })
+
+    const dayEvents = computed(() => {
+      const dayEventsResult = {} as any
+      for (const cat of props.categoriesList || []) {
         const day = getDayIdentifier(toTimestamp(cat.date))
-        const threshold = this.overlapThresholdNumber
-        const forCategory = this.ignoreCategories ? undefined : cat.category
+        const threshold = overlapThresholdNumber.value
+        const forCategory = props.ignoreCategories ? undefined : cat.category
         const groups = getGroups(
-          this.parsedEvents,
+          parsedEvents.value,
           day,
           false,
           forCategory,
-          this.layoutFunc,
+          layoutFuncValue.value,
           threshold,
-          this.hoursInterval
+          hoursInterval.value
         )
-        dayEvents[cat.category] = groups
+        dayEventsResult[cat.category] = groups
           .map((g) =>
             g.placements.map((p) => {
               return {
@@ -196,43 +222,48 @@ export default defineComponent({
           )
           .flat(1)
       }
-      return dayEvents
-    },
-    hoursInterval() {
-      let start: number = parseInt(this.dayStart as unknown as string) || 0
-      let end: number = parseInt(this.dayEnd as unknown as string) || 0
-      if (start >= end) [start, end] = [0, 24]
-      if (start < 0) start = 0
-      if (end > 24) end = 24
-      return [start, end]
+      return dayEventsResult
+    })
+
+    // Every day/category column shares this same ref, so `lastDayEl` ends
+    // up holding whichever column was rendered last (matching the original
+    // Options API behavior, where a shared string ref had the same effect).
+    // It is captured in a plain variable rather than `dayEl` directly:
+    // `dayEl` is read during render (see `dayRowEvent`), so mutating it
+    // synchronously while refs are applied would make the render effect
+    // trigger itself repeatedly across day columns.
+    let lastDayEl: HTMLElement | undefined
+    function setDayEl(el: Element | ComponentPublicInstance | null) {
+      lastDayEl = (el as HTMLElement) ?? undefined
     }
-  },
-  mounted: function () {
-    this.$data.dayEl = this.$refs.dayEl as HTMLElement | undefined
-  },
-  methods: {
-    intervals() {
-      const [start, end] = this.hoursInterval
+    onMounted(() => {
+      dayEl.value = lastDayEl
+    })
+
+    function intervals() {
+      const [start, end] = hoursInterval.value
       return Array.from({ length: end - start }, (_, i) => i + start)
-    },
-    hideDate(date: Date) {
+    }
+
+    function hideDate(date: Date) {
       return (
-        this.$props.type != 'category' &&
-        this.$props.type === 'week' &&
-        this.$props.hideWeekends &&
+        props.type === 'week' &&
+        props.hideWeekends &&
         [6, 0].includes(date.getDay())
       )
-    },
-    getEventIntervalRange(ts: Timestamp): number[] {
+    }
+
+    function getEventIntervalRange(ts: Timestamp): number[] {
       const startTsId = getTimestampIdintifier(ts)
       const endTsId = getTimestampIdintifier(
-        toTimestamp(addMinutes(ts.date, 60 / this.numHourIntervals))
+        toTimestamp(addMinutes(ts.date, 60 / numHourIntervals.value))
       )
       return [startTsId, endTsId]
-    },
-    getEventTimestamp(e: MouseEvent | TouchEvent, day: Timestamp) {
-      const hours = this.hoursInterval
-      const precision = 60 / this.numHourIntervals
+    }
+
+    function getEventTimestamp(e: MouseEvent | TouchEvent, day: Timestamp) {
+      const hours = hoursInterval.value
+      const precision = 60 / numHourIntervals.value
       const bounds = (e.currentTarget as HTMLElement).getBoundingClientRect()
       const touchEvent: TouchEvent = e as TouchEvent
       const mouseEvent: MouseEvent = e as MouseEvent
@@ -247,68 +278,72 @@ export default defineComponent({
       minutes += hours[0] * 60
       const ts = toTimestamp(addMinutes(withZeroTime(day).date, minutes))
       return ts
-    },
+    }
 
-    superTitle() {
-      const slot = this.$slots['super-title']
+    function superTitle() {
+      const slot = slots['super-title']
       if (!slot) return ''
       return [
         h('div', { class: 'of-calendar-gutter' }),
         h('div', { class: 'of-calendar-day-supertitle' }, slot())
       ]
-    },
-    renderCategoryTitle(cat: categoryItem) {
-      const isDate = this.$props.type != 'category'
+    }
+
+    function renderCategoryTitle(cat: categoryItem) {
+      const isDate = props.type != 'category'
       const slotName = isDate ? 'day-title' : 'category-title'
       const theDay = cat.date
       const slotArgs = isDate ? theDay : cat.category
       const eventName = isDate ? 'click:day' : 'click:category'
       const weekDayCls = isDate ? 'week-day-' + cat.date.getDay() : false
-      if (this.hideDate(cat.date)) return
+      if (hideDate(cat.date)) return
       return h(
         'div',
         {
           class: ['of-calendar-category-title', weekDayCls],
           tabindex: '0',
-          onClick: (event: any) => this.$emit(eventName, event, slotArgs),
+          onClick: (event: any) => emit(eventName as any, event, slotArgs),
           onKeypress: (event: KeyboardEvent) => {
             if (['Enter', 'Space'].includes(event.code)) {
               event.preventDefault()
-              this.$emit(eventName, event, slotArgs)
+              emit(eventName as any, event, slotArgs)
             }
           }
         },
-        this.renderSlot(slotName, slotArgs, () => cat.category)
+        renderSlot(slotName, slotArgs, () => cat.category)
       )
-    },
-    title() {
-      if (!this.$props.categoryTitles || this.$props.type === 'custom') {
+    }
+
+    function title() {
+      if (!props.categoryTitles || props.type === 'custom') {
         return ''
       }
-      const titles = !this.$props.categoriesList
+      const titles = !props.categoriesList
         ? ''
-        : this.$props.categoriesList.map(this.renderCategoryTitle)
+        : props.categoriesList.map(renderCategoryTitle)
 
       return h('div', { class: 'of-calendar-day-titles' }, [
         h('div', { class: 'of-calendar-gutter' }),
         titles
       ])
-    },
-    allDayLabel() {
-      const slot = this.$slots['all-day-label']
+    }
+
+    function allDayLabel() {
+      const slot = slots['all-day-label']
       return slot?.()
-    },
-    allDayRowEvent(
+    }
+
+    function allDayRowEvent(
       acc: { height: number; columns: any[] },
       eventHeight: number
     ) {
       return (e: CalendarAlldayEventPlacement) => {
         acc.height = Math.max(e.top, acc.height)
-        const finalColor = this.$props.eventColor?.(e.event) ?? e.event.color
+        const finalColor = props.eventColor?.(e.event) ?? e.event.color
         const eventClass =
-          this.$props.eventClass?.(e.event) ??
+          props.eventClass?.(e.event) ??
           (e.event.class ? { [e.event.class]: true } : {})
-        const slot = this.$slots['allday-event-content']
+        const slot = slots['allday-event-content']
         return h(
           'div',
           {
@@ -317,11 +352,11 @@ export default defineComponent({
               'background-color': finalColor,
               width: 'calc(' + (e.daysSpan || 1) * 100 + '% - 10px)',
               top: '' + e.top * eventHeight + 'px',
-              'max-width': this.$data.eventMaxWidth + 'px'
+              'max-width': eventMaxWidth.value + 'px'
             },
             tabindex: '0',
             onClick: (event: any) => {
-              this.$emit('click:event', event, {
+              emit('click:event', event, {
                 ...e.event,
                 color: finalColor
               })
@@ -329,7 +364,7 @@ export default defineComponent({
             onKeypress: (event: KeyboardEvent) => {
               if (['Enter', 'Space'].includes(event.code)) {
                 event.preventDefault()
-                this.$emit('click:event', event, {
+                emit('click:event', event, {
                   ...e.event,
                   color: finalColor
                 })
@@ -340,30 +375,33 @@ export default defineComponent({
             },
             onMouseenter: (event: any) => {
               adjustCalendarEventHoverPosition(event.currentTarget)
-              this.$emit('enter:event', event, e.event)
+              emit('enter:event', event, e.event)
             },
             onMouseleave: (event: any) => {
               resetCalendarEventHoverPosition(event.currentTarget)
-              this.$emit('leave:event', event, e.event)
+              emit('leave:event', event, e.event)
               event.stopPropagation()
             },
             onFocus: () => {
-              this.$emit('focus:day')
+              emit('focus:day')
             },
             onBlur: () => {
-              this.$emit('blur:day')
+              emit('blur:day')
             }
           },
           slot ? slot({ event: e.event }) : h('strong', e.event.name)
         )
       }
-    },
-    allDayRowCell(acc: { height: number; columns: any[] }, cat: categoryItem) {
-      const isDate = this.$props.type != 'category'
-      const eventHeight =
-        parseInt(this.$props.eventHeight as unknown as string) || 20
+    }
+
+    function allDayRowCell(
+      acc: { height: number; columns: any[] },
+      cat: categoryItem
+    ) {
+      const isDate = props.type != 'category'
+      const eventHeight = parseInt(props.eventHeight as unknown as string) || 20
       const events =
-        (this.allDayEvents[cat.category] as CalendarAlldayEventPlacement[]) ||
+        (allDayEvents.value[cat.category] as CalendarAlldayEventPlacement[]) ||
         []
       const weekDay = cat.date.getDay()
       const vnode = h(
@@ -373,22 +411,23 @@ export default defineComponent({
             'of-calendar-day',
             {
               selected:
-                this.selecting &&
-                this.$data.selectionCategory === 'allday-' + weekDay,
+                selecting.value &&
+                selectionCategory.value === 'allday-' + weekDay,
               ['week-day-' + weekDay]: isDate
             }
           ],
-          ...this.allDaySelectingHandlers(cat.date)
+          ...allDaySelectingHandlers(cat.date)
         },
-        events.map(this.allDayRowEvent(acc, eventHeight))
+        events.map(allDayRowEvent(acc, eventHeight))
       )
-      if (!this.hideDate(cat.date)) acc.columns.push(vnode)
+      if (!hideDate(cat.date)) acc.columns.push(vnode)
       return acc
-    },
-    allDayCount() {
+    }
+
+    function allDayCount() {
       const titles = {} as any
       const count = {} as any
-      Object.entries(this.allDayEvents).forEach(([key, val]) => {
+      Object.entries(allDayEvents.value).forEach(([key, val]) => {
         const events: any = val
         const grouped = events.reduce((acc: any, item: any) => {
           acc[item.event.category] = [...(acc[item.event.category] || []), item]
@@ -398,49 +437,49 @@ export default defineComponent({
           const events: any = val
           titles[key] = [
             ...(titles[key] || []),
-            events.length + ' ' + category + this.$props.groupPostfix
+            events.length + ' ' + category + props.groupPostfix
           ]
           count[key] = (count[key] ?? 0) + events.length
         })
         titles[key] = titles[key] ? titles[key].join(', ') : ''
       })
       return { titles, count }
-    },
-    allDayRow() {
-      if (!this.hasAllDay || this.$props.type === 'custom') return ''
-      const eventHeight =
-        parseInt(this.$props.eventHeight as unknown as string) || 20
-      const { height, columns } = !this.$props.categoriesList
+    }
+
+    function allDayRow() {
+      if (!hasAllDay.value || props.type === 'custom') return ''
+      const eventHeight = parseInt(props.eventHeight as unknown as string) || 20
+      const { height, columns } = !props.categoriesList
         ? { height: 0, columns: [] as any[] }
-        : this.$props.categoriesList.reduce(this.allDayRowCell, {
+        : props.categoriesList.reduce(allDayRowCell, {
             height: 0,
             columns: [] as any[]
           })
-      const allDayheight = this.groupAllDay
+      const allDayheight = groupAllDay.value
         ? eventHeight * 2
         : height * eventHeight + eventHeight
       const clearCloseTimer = (id: string) => {
-        if (this.$data.allDayPopups['closeTimerId'][id]) {
-          clearTimeout(this.$data.allDayPopups['closeTimerId'][id])
-          this.$data.allDayPopups['closeTimerId'][id] = undefined
+        if (allDayPopups.closeTimerId[id]) {
+          clearTimeout(allDayPopups.closeTimerId[id])
+          allDayPopups.closeTimerId[id] = undefined
         }
       }
       const closeAllDay = (id: string) => {
-        this.$data.allDayPopups['closeTimerId'][id] = window.setTimeout(() => {
-          this.$data.allDayPopups['active'][id] = false
+        allDayPopups.closeTimerId[id] = window.setTimeout(() => {
+          allDayPopups.active[id] = false
         }, 50)
       }
       const openAllDay = (e: MouseEvent, id: string) => {
         clearCloseTimer(id)
         const el = e.target as HTMLElement
-        this.$data.allDayPopups['active'][id] = true
-        this.$data.allDayPopups['width'][id] = el.clientWidth
+        allDayPopups.active[id] = true
+        allDayPopups.width[id] = el.clientWidth
       }
       const allDay = (eventsNodes: VNode, index: number | string) => {
         const id = 'all-day-' + index
-        const { titles, count } = this.groupAllDay
-          ? this.allDayCount()
-          : { titles: '', count: 0 }
+        const { titles, count } = groupAllDay.value
+          ? allDayCount()
+          : { titles: '' as any, count: 0 as any }
         return h(
           'div',
           {
@@ -459,21 +498,21 @@ export default defineComponent({
                   'grouped-title': count[index]
                 },
                 style: {
-                  height: this.$data.allDayPopups['active'][id]
+                  height: allDayPopups.active[id]
                     ? 'auto'
                     : allDayheight - 7 + 'px',
                   'min-height': allDayheight - 7 + 'px'
                 },
                 onMouseenter: (event: any) => openAllDay(event, id),
                 onMouseleave: () =>
-                  this.$data.allDayPopups['active'][id] ? closeAllDay(id) : null
+                  allDayPopups.active[id] ? closeAllDay(id) : null
               },
               titles[index]
             ),
             h(
               OfOverlay,
               {
-                active: this.$data.allDayPopups['active'][id],
+                active: allDayPopups.active[id],
                 capture: false,
                 shade: false,
                 target: '#' + id,
@@ -484,7 +523,7 @@ export default defineComponent({
                   'div',
                   {
                     style: {
-                      width: this.$data.allDayPopups['width'][id] + 'px',
+                      width: allDayPopups.width[id] + 'px',
                       height: count[index] * eventHeight + 'px'
                     },
                     class: 'of--elevated-1 of-calendar-grouped-popup',
@@ -499,7 +538,7 @@ export default defineComponent({
         )
       }
       const grouped =
-        this.$props.type == 'week'
+        props.type == 'week'
           ? columns.map((dayColumns, index) => allDay(dayColumns, index))
           : allDay(columns[0], 'Today')
 
@@ -517,91 +556,93 @@ export default defineComponent({
             'div',
             {
               class: 'of-calendar-gutter',
-              style: this.groupAllDay ? 'height: inherit;' : ''
+              style: groupAllDay.value ? 'height: inherit;' : ''
             },
-            this.allDayLabel()
+            allDayLabel()
           ),
-          this.groupAllDay ? grouped : columns
+          groupAllDay.value ? grouped : columns
         ]
       )
-    },
-    allDaySelectingHandlers(date: Date) {
+    }
+
+    function allDaySelectingHandlers(date: Date) {
       return {
         onMousedown: (e: MouseEvent) => {
           const leftPressed = (e as MouseEvent).buttons === 1
-          if (this.selectable && leftPressed) {
-            this.selecting = 'start'
-            this.$data.selectionCategory = 'allday-' + date.getDay()
+          if (props.selectable && leftPressed) {
+            selecting.value = 'start'
+            selectionCategory.value = 'allday-' + date.getDay()
           }
         },
         onMouseup: (e: MouseEvent) => {
           const leftReleased = ((e as MouseEvent).buttons & 1) === 0
-          if (this.selecting && leftReleased) {
-            this.$emit('selection:allday', date)
-            this.selecting = false
-            this.$data.selectionCategory = ''
+          if (selecting.value && leftReleased) {
+            emit('selection:allday', date)
+            selecting.value = false
+            selectionCategory.value = ''
           }
         },
         onMouseleave: () => {
-          this.selecting = false
-          this.$data.selectionCategory = ''
+          selecting.value = false
+          selectionCategory.value = ''
         }
       }
-    },
-    intervalSelectionHandlers(cat: categoryItem) {
+    }
+
+    function intervalSelectionHandlers(cat: categoryItem) {
       const onStartSelect = (e: MouseEvent | TouchEvent) => {
-        const ts = this.getEventTimestamp(e, toTimestamp(cat.date))
-        const [startTsId, endTsId] = this.getEventIntervalRange(ts)
-        this.$emit('mousedown:time', e, ts)
-        if (this.selectable) {
-          this.$data.selecting = 'end'
-          this.$data.selectionStart = startTsId
-          this.$data.selectionEnd = endTsId
-          this.$data.selectionCategory = cat.category
-          this.$emit(
+        const ts = getEventTimestamp(e, toTimestamp(cat.date))
+        const [startTsId, endTsId] = getEventIntervalRange(ts)
+        emit('mousedown:time', e, ts)
+        if (props.selectable) {
+          selecting.value = 'end'
+          selectionStart.value = startTsId
+          selectionEnd.value = endTsId
+          selectionCategory.value = cat.category
+          emit(
             'selection:change',
-            this.selectionStart,
-            this.selectionEnd,
-            this.selectionCategory
+            selectionStart.value,
+            selectionEnd.value,
+            selectionCategory.value
           )
         }
       }
 
       const onEndSelect = (e: MouseEvent | TouchEvent) => {
-        const ts = this.getEventTimestamp(e, toTimestamp(cat.date))
-        this.$emit('mouseup:time', e, ts)
-        if (this.selecting) {
-          this.$emit(
+        const ts = getEventTimestamp(e, toTimestamp(cat.date))
+        emit('mouseup:time', e, ts)
+        if (selecting.value) {
+          emit(
             'selection:end',
-            this.selectionStart,
-            this.selectionEnd,
-            this.selectionCategory
+            selectionStart.value,
+            selectionEnd.value,
+            selectionCategory.value
           )
-          this.selecting = false
+          selecting.value = false
         }
       }
 
       const onMove = (e: MouseEvent | TouchEvent) => {
-        const ts = this.getEventTimestamp(e, toTimestamp(cat.date))
-        this.$emit('mousemove:time', e, ts)
-        if (this.selecting) {
-          const [startTs, endTs] = this.getEventIntervalRange(ts)
-          if (startTs < this.selectionStart) {
-            this.selecting = 'start'
-            this.selectionStart = startTs
-          } else if (endTs > this.selectionEnd) {
-            this.selecting = 'end'
-            this.selectionEnd = endTs
-          } else if (this.selecting == 'start') {
-            this.selectionStart = startTs
-          } else if (this.selecting == 'end') {
-            this.selectionEnd = endTs
+        const ts = getEventTimestamp(e, toTimestamp(cat.date))
+        emit('mousemove:time', e, ts)
+        if (selecting.value) {
+          const [startTs, endTs] = getEventIntervalRange(ts)
+          if (startTs < selectionStart.value) {
+            selecting.value = 'start'
+            selectionStart.value = startTs
+          } else if (endTs > selectionEnd.value) {
+            selecting.value = 'end'
+            selectionEnd.value = endTs
+          } else if (selecting.value == 'start') {
+            selectionStart.value = startTs
+          } else if (selecting.value == 'end') {
+            selectionEnd.value = endTs
           }
-          this.$emit(
+          emit(
             'selection:change',
-            this.selectionStart,
-            this.selectionEnd,
-            this.selectionCategory
+            selectionStart.value,
+            selectionEnd.value,
+            selectionCategory.value
           )
         }
       }
@@ -627,63 +668,64 @@ export default defineComponent({
         },
         onTouchend: (e: TouchEvent) => onEndSelect(e)
       }
-    },
-    dayRowEventHandlers(e: InternalEvent) {
+    }
+
+    function dayRowEventHandlers(e: InternalEvent) {
       return {
         onClick: (event: any) => {
-          this.$emit('click:event', event, e)
+          emit('click:event', event, e)
         },
         onMousedown: (event: any) => {
           event.stopPropagation()
         },
         onMouseenter: (event: any) => {
-          if (!this.selecting) {
+          if (!selecting.value) {
             adjustCalendarEventHoverPosition(event.currentTarget)
-            this.$emit('enter:event', event, e)
+            emit('enter:event', event, e)
           }
         },
         onMouseleave: (event: any) => {
-          if (!this.selecting) {
+          if (!selecting.value) {
             resetCalendarEventHoverPosition(event.currentTarget)
-            this.$emit('leave:event', event, e)
+            emit('leave:event', event, e)
           }
         },
         onKeypress: (event: KeyboardEvent) => {
           if (['Enter', 'Space'].includes(event.code)) {
             event.preventDefault()
-            this.$emit('click:event', event, e)
+            emit('click:event', event, e)
           }
         },
         onFocus: () => {
-          this.$emit('focus:day')
+          emit('focus:day')
         },
         onBlur: () => {
-          this.$emit('blur:day')
+          emit('blur:day')
         }
       }
-    },
-    dayRowEvent(cat: categoryItem) {
+    }
+
+    function dayRowEvent(cat: categoryItem) {
       return (e: CalendarEventPlacement) => {
-        const brk = e.event.end - e.event.start > this.overlapThresholdNumber
+        const brk = e.event.end - e.event.start > overlapThresholdNumber.value
         const separator = !brk ? ' ' : h('br')
-        const formattedRange = formatRange(this.formatMgr, e.event, cat.date)
-        const finalColor = this.$props.eventColor?.(e.event) ?? e.event.color
+        const formattedRange = formatRange(formatMgr.value, e.event, cat.date)
+        const finalColor = props.eventColor?.(e.event) ?? e.event.color
         const eventClass =
-          this.$props.eventClass?.(e.event) ??
+          props.eventClass?.(e.event) ??
           (e.event.class ? { [e.event.class]: true } : {})
         const finalEvent = { ...e.event, color: finalColor }
 
         const eventsGap = 5
         const dayWidth =
-          this.$data.dayEl?.getBoundingClientRect().width ??
-          this.$data.eventMaxWidth
+          dayEl.value?.getBoundingClientRect().width ?? eventMaxWidth.value
         const columnsNum = 1 / e.width
-        const maxWidth = columnsNum * this.$data.eventMaxWidth < dayWidth
+        const maxWidth = columnsNum * eventMaxWidth.value < dayWidth
         const left = maxWidth
-          ? this.$data.eventMaxWidth * e.columnNum + eventsGap + 'px'
+          ? eventMaxWidth.value * e.columnNum + eventsGap + 'px'
           : 'calc(' + e.left * 100 + '% + ' + eventsGap + 'px)'
         const width = maxWidth
-          ? this.$data.eventMaxWidth - eventsGap * 2 + 'px'
+          ? eventMaxWidth.value - eventsGap * 2 + 'px'
           : 'calc(' + (e.width * 100 + '% - ' + eventsGap * 2) + 'px)'
 
         return h(
@@ -696,7 +738,7 @@ export default defineComponent({
               'two-lines': brk
             },
             style: {
-              'max-width': this.$data.eventMaxWidth + 'px',
+              'max-width': eventMaxWidth.value + 'px',
               'background-color': finalColor,
               'z-index': e.zIndex,
               left,
@@ -706,21 +748,22 @@ export default defineComponent({
               'min-height': 'calc(' + e.height + '% - 3px)'
             },
             tabindex: '0',
-            ...this.dayRowEventHandlers(finalEvent)
+            ...dayRowEventHandlers(finalEvent)
           },
-          this.renderSlot(
+          renderSlot(
             'event-content',
             { event: finalEvent, brk, formattedRange },
             () => [h('strong', finalEvent.name), separator, formattedRange]
           )
         )
       }
-    },
-    dayRowInterval(cat: categoryItem, intervalNumber: number) {
+    }
+
+    function dayRowInterval(cat: categoryItem, intervalNumber: number) {
       return (_: any, subIntervalNumber: number) => {
         const theDayTS = withZeroTime(toTimestamp(cat.date))
-        const numSubIntervals = this.numHourIntervals
-        const [startHour] = this.hoursInterval
+        const numSubIntervals = numHourIntervals.value
+        const [startHour] = hoursInterval.value
         const minutes =
           60 * intervalNumber +
           (60 / numSubIntervals) * subIntervalNumber +
@@ -732,21 +775,22 @@ export default defineComponent({
           class: {
             'of-calendar-subinterval': true,
             selected:
-              this.$data.selecting &&
-              intervalTime >= this.$data.selectionStart &&
-              intervalTime < this.$data.selectionEnd &&
-              this.$data.selectionCategory == cat.category
+              selecting.value &&
+              intervalTime >= selectionStart.value &&
+              intervalTime < selectionEnd.value &&
+              selectionCategory.value == cat.category
           }
         })
       }
-    },
-    dayRowCell(cat: categoryItem) {
-      const isDate = this.$props.type != 'category'
-      const numSubIntervals = this.numHourIntervals
-      const intervals = this.intervals().map((_, intervalNumber) => {
+    }
+
+    function dayRowCell(cat: categoryItem) {
+      const isDate = props.type != 'category'
+      const numSubIntervals = numHourIntervals.value
+      const intervalsList = intervals().map((_, intervalNumber) => {
         const subIntevals = Array.from(
           { length: numSubIntervals },
-          this.dayRowInterval(cat, intervalNumber)
+          dayRowInterval(cat, intervalNumber)
         )
         return h(
           'div',
@@ -757,41 +801,42 @@ export default defineComponent({
         )
       })
       const es =
-        (this.dayEvents[cat.category] as CalendarEventPlacement[]) || []
-      const events = es.map(this.dayRowEvent(cat))
+        (dayEvents.value[cat.category] as CalendarEventPlacement[]) || []
+      const events = es.map(dayRowEvent(cat))
       const weekDayCls = isDate ? 'week-day-' + cat.date.getDay() : false
-      if (this.hideDate(cat.date)) return
+      if (hideDate(cat.date)) return
       return h(
         'div',
         {
           class: ['of-calendar-day', weekDayCls],
-          ...this.intervalSelectionHandlers(cat),
-          ref: 'dayEl'
+          ...intervalSelectionHandlers(cat),
+          ref: setDayEl
         },
-        [...intervals, ...events]
+        [...intervalsList, ...events]
       )
-    },
-    dayRow() {
-      if (this.$props.type === 'custom') {
-        const slot = this.$slots['custom']
+    }
+
+    function dayRow() {
+      if (props.type === 'custom') {
+        const slot = slots['custom']
         return slot?.()
       }
-      const intervals = this.intervals().map((interval) =>
+      const intervalsList = intervals().map((interval) =>
         h(
           'div',
           { class: 'of-calendar-interval' },
           h('div', { class: 'of-calendar-interval-label' }, interval + ':00')
         )
       )
-      const days = (this.$props.categoriesList || []).map(this.dayRowCell)
+      const days = (props.categoriesList || []).map(dayRowCell)
       return h(
         'div',
         {
           class: 'of-calendar-day-row',
           onMouseleave: (_: MouseEvent | TouchEvent) => {
-            if (this.selecting) {
-              this.$emit('selection:cancel')
-              this.selecting = false
+            if (selecting.value) {
+              emit('selection:cancel')
+              selecting.value = false
             }
           }
         },
@@ -801,53 +846,39 @@ export default defineComponent({
             {
               class: 'of-calendar-gutter'
             },
-            intervals
+            intervalsList
           ),
           days
         ]
       )
-    },
-    header() {
-      const slot = this.$slots['header']
-      return slot?.()
-    },
-    footer() {
-      const slot = this.$slots['footer']
-      return slot?.()
     }
-  },
-  render() {
-    const eventHeight =
-      parseInt(this.$props.eventHeight as unknown as string) || 20
-    const hourHeight =
-      parseInt(this.$props.hourHeight as unknown as string) || 48
-    const conflictColor = this.$props.conflictColor || null
-    const subIntervalHeight = '' + 100 / this.numHourIntervals + '%'
-    return h(
-      'div',
-      {
-        class: 'container of--calendar',
-        style: {
-          '--of-calendar-iterval-height': `${hourHeight}px`,
-          '--of-event-height': `${eventHeight}px`,
-          '--of-calendar-conflict-color': conflictColor,
-          '--of-calendar-subinterval-height': subIntervalHeight,
-          '--of-categories-num': (this.$props.categoriesList?.length ?? 0) + 1
+
+    return () => {
+      const eventHeight = parseInt(props.eventHeight as unknown as string) || 20
+      const hourHeight = parseInt(props.hourHeight as unknown as string) || 48
+      const conflictColor = props.conflictColor || null
+      const subIntervalHeight = '' + 100 / numHourIntervals.value + '%'
+      return h(
+        'div',
+        {
+          class: 'container of--calendar',
+          style: {
+            '--of-calendar-iterval-height': `${hourHeight}px`,
+            '--of-event-height': `${eventHeight}px`,
+            '--of-calendar-conflict-color': conflictColor,
+            '--of-calendar-subinterval-height': subIntervalHeight,
+            '--of-categories-num': (props.categoriesList?.length ?? 0) + 1
+          },
+          onselectstart(e: Event) {
+            e.preventDefault()
+          }
         },
-        onselectstart(e: Event) {
-          e.preventDefault()
-        }
-      },
-      [
-        this.header(),
-        h('div', [
-          this.superTitle(),
-          this.title(),
-          this.allDayRow(),
-          this.dayRow()
-        ]),
-        this.footer()
-      ]
-    )
+        [
+          header(),
+          h('div', [superTitle(), title(), allDayRow(), dayRow()]),
+          footer()
+        ]
+      )
+    }
   }
 })
