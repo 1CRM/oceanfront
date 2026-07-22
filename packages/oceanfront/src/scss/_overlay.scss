@@ -78,6 +78,10 @@
   --overlay-pad: 24px;
 }
 
+.of-overlay.of--embed {
+  flex-shrink: 0;
+}
+
 .of-overlay.of--fit-content {
   width: fit-content;
   padding-left: 0;
