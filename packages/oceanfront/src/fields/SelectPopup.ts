@@ -117,7 +117,8 @@ export const OfSelectPopup = defineComponent({
             selected: resolved.valueKey && isSelected(item[resolved.valueKey]),
             special: resolved.specialKey && item[resolved.specialKey],
             icon: (resolved.iconKey && item[resolved.iconKey]) ?? '',
-            class: (resolved.classKey && item[resolved.classKey]) ?? ''
+            class: (resolved.classKey && item[resolved.classKey]) ?? '',
+            postfix: (resolved.postfixKey && item[resolved.postfixKey]) ?? ''
           })
         }
       }
