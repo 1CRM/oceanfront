@@ -30,8 +30,7 @@ export function computeVirtualWindow(input: VirtualWindowInput): VirtualWindow {
   }
 
   const first = Math.floor(input.scrolledPast / rowHeight) - input.overscan
-  const start =
-    Math.floor(Math.min(total, Math.max(0, first)) / step) * step
+  const start = Math.floor(Math.min(total, Math.max(0, first)) / step) * step
   const visibleCount =
     Math.ceil(input.viewportHeight / rowHeight) + input.overscan * 2
   const end = Math.max(start, Math.min(total, start + visibleCount))
