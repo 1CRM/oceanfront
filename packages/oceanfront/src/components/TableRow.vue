@@ -98,7 +98,10 @@
                   'total-amount-fields': hasTotalAmount
                 }"
               >
-                <of-data-type :value="item[col.value][idxs]"></of-data-type>
+                <of-data-type
+                  :value="item[col.value][idxs]"
+                  :fresh-vnode="virtualScrollActive"
+                ></of-data-type>
               </div>
             </template>
           </template>
@@ -122,7 +125,10 @@
             class="field-value"
             :class="{ 'total-amount-fields': hasTotalAmount }"
           >
-            <of-data-type :value="item[col.value]"></of-data-type>
+            <of-data-type
+              :value="item[col.value]"
+              :fresh-vnode="virtualScrollActive"
+            ></of-data-type>
           </div>
         </template>
       </template>
@@ -165,11 +171,14 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, reactive, ref, watch } from 'vue'
+import { computed, defineComponent, inject, reactive, ref, watch } from 'vue'
 import { OfField } from './Field'
 import { OfIcon } from './Icon'
 import OfEditableField from './Editable.vue'
 import { useLanguage } from '../lib/language'
+import { dataTableVirtualScrollKey } from '../lib/virtual_scroll_vnode'
+
+const notVirtualScroll = computed(() => false)
 
 export default defineComponent({
   name: 'OfTableRow',
@@ -204,6 +213,10 @@ export default defineComponent({
   emits: ['dragstart', 'update:row', 'setCoords', 'setDepth', 'update:field'],
   setup(props, ctx) {
     const lang = useLanguage()
+    const virtualScrollActive = inject(
+      dataTableVirtualScrollKey,
+      notVirtualScroll
+    )
     const index = computed(() => props.idx)
     const active = computed(() => props.row?.active || false)
     const currentCords = ref(props.coords)
@@ -637,7 +650,8 @@ export default defineComponent({
       fieldEdited,
       rowEditable,
       editingRow,
-      hasTotalAmount
+      hasTotalAmount,
+      virtualScrollActive
     }
   }
 })

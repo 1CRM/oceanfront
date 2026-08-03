@@ -82,7 +82,10 @@
         "
         class="hint-value"
       >
-        <of-data-type :value="showItem"></of-data-type>
+        <of-data-type
+          :value="showItem"
+          :fresh-vnode="virtualScrollActive"
+        ></of-data-type>
       </span>
     </div>
   </template>
@@ -147,6 +150,10 @@ import { DataTypeValue } from '../lib/datatype'
 import { focusManage } from '../lib/util'
 import { OfButton } from './Button'
 import { OfField } from './Field'
+import { dataTableVirtualScrollKey } from '../lib/virtual_scroll_vnode'
+
+const notVirtualScroll = computed(() => false)
+
 const supportedTypes = [
   'select',
   'toggle',
@@ -171,6 +178,10 @@ const OfEditableField = defineComponent({
   },
   emits: ['update:modelValue', 'valueChanged'],
   setup(props, ctx) {
+    const virtualScrollActive = inject(
+      dataTableVirtualScrollKey,
+      notVirtualScroll
+    )
     const itemValue: any = ref(props.modelValue || ({} as DataTypeValue))
     const isInvalid = ref(false)
     watch(
@@ -301,7 +312,8 @@ const OfEditableField = defineComponent({
       supportedTypes,
       updateValue,
       isInvalid,
-      focusManage
+      focusManage,
+      virtualScrollActive
     }
   }
 })
