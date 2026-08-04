@@ -430,7 +430,8 @@ export const OfOverlay = defineComponent({
         'of--overlay': state.value === 'overlay',
         'of--pad': props.pad,
         'of--shade': props.shade,
-        'of--fit-content': target.value
+        'of--fit-content': target.value,
+        'of--sticky': props.sticky
       }
       if (state.value !== 'embed' && !target.value && props.align)
         (cls as any)['of--' + props.align] = true

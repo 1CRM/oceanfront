@@ -59,7 +59,7 @@ export const OfTextField = defineComponent({
     ...BaseFieldProps,
     rows: [Number, String],
     inputType: String,
-    focusItems: { type: Boolean, default: true },
+    focusItems: { type: Boolean, default: false },
     filterItems: { type: Boolean, default: true },
     showEmptyList: { type: Boolean, default: false },
     openItemsOnChange: { type: Boolean, default: false },
