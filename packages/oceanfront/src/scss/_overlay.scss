@@ -50,6 +50,10 @@
   overscroll-behavior: contain;
 }
 
+.of-overlay.of--capture:not(.of--sticky) {
+  overflow: visible;
+}
+
 .of-overlay.of--center {
   justify-content: center;
 }
