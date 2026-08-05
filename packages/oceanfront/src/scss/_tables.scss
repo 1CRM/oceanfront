@@ -29,6 +29,20 @@
   grid-template-columns: var(--of-table-columns);
   overflow: auto;
 
+  // Isolate virtual-scroll row churn; avoid contain:paint (clips popups)
+  // and standing transform/will-change (tall tables can blank on GPU).
+  isolation: isolate;
+  contain: layout style;
+
+  &.of--scrolling {
+    will-change: contents;
+  }
+
+  // Opt-in fixed row tracks via `virtual-row-height` (no wrapping cells).
+  &.of--fixed-row-height {
+    grid-auto-rows: var(--of-table-row-height);
+  }
+
   .of-data-table-rows-selector {
     padding: 0;
     margin: 0;
@@ -131,9 +145,75 @@
   > .of-data-table-header + .of-data-table-footer > div {
     border-top: 3px double var(--table-border-color);
   }
+
+  // Reserves scrollbar space for rows outside the rendered window.
+  > .of-data-table-virtual-spacer {
+    grid-column: 1 / -1;
+  }
+  // Restores the bottom border lost when a spacer becomes the last child.
+  > .of-data-table-row:has(+ .of-data-table-virtual-spacer:last-child)
+    > div {
+    border-bottom: 1px solid var(--table-border-color);
+  }
+
+  > .of-data-table-row-skeleton {
+    --of-table-skeleton-bg: color-mix(
+      in srgb,
+      var(--of-color-on-surface) 12%,
+      transparent
+    );
+    --of-table-skeleton-bg-mid: color-mix(
+      in srgb,
+      var(--of-color-on-surface) 22%,
+      transparent
+    );
+
+    .-of-theme-dark & {
+      --of-table-skeleton-bg: color-mix(
+        in srgb,
+        var(--of-color-on-surface) 20%,
+        transparent
+      );
+      --of-table-skeleton-bg-mid: color-mix(
+        in srgb,
+        var(--of-color-on-surface) 34%,
+        transparent
+      );
+    }
+  }
+
+  .of-table-skeleton-bar {
+    display: inline-block;
+    height: 0.85em;
+    width: 70%;
+    border-radius: 3px;
+    background: linear-gradient(
+      90deg,
+      var(--of-table-skeleton-bg) 25%,
+      var(--of-table-skeleton-bg-mid) 50%,
+      var(--of-table-skeleton-bg) 75%
+    );
+    background-size: 200% 100%;
+    animation: of-table-shimmer 1.4s ease-in-out infinite;
+
+    &--checkbox {
+      width: 1.1em;
+      height: 1.1em;
+      border-radius: 2px;
+    }
+  }
 }
 .of-extra-sort-popup {
   .of-icon {
     margin-right: 0.25em;
+  }
+}
+
+@keyframes of-table-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
   }
 }

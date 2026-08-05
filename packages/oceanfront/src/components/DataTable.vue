@@ -33,7 +33,8 @@
             split
             @click="() => (!selectLocked ? onUpdateHeaderRowsSelector() : null)"
             :aria-label="
-              selectRowsItems.find((r: any) => r.key === 'page')?.text
+              selectRowsItems.find((r: any) => r.key === 'page')?.text ||
+              selectRowsItems.find((r: any) => r.key === 'all')?.text
             "
             :items="selectRowsItems"
           >
@@ -108,28 +109,49 @@
         </div>
       </div>
     </div>
-    <template :key="rowidx" v-for="(row, rowidx) of rows">
+    <template v-if="loading">
+      <of-table-row-skeleton
+        v-for="skeletonIdx in loadingRowsCount"
+        :key="'skeleton-' + skeletonIdx"
+        :columns="columns"
+        :rows-selector="addRowsSelector"
+        :draggable="draggable"
+        :row-index="skeletonIdx"
+      />
+    </template>
+    <of-table-virtual-body
+      v-else-if="virtualScroll"
+      :rows="rows"
+      :columns="columns"
+      :range-start="virtualRangeStart"
+      :range-end="virtualRangeEnd"
+      :top-spacer="virtualTopSpacer"
+      :bottom-spacer="virtualBottomSpacer"
+      :drag-info="rowDragInfo"
+      :drag-events="dragEvents"
+      :rows-selector="addRowsSelector"
+      :select-locked="selectLocked"
+      :edit-type="editType"
+      :editable="editable"
+      :show-old-values="showOldValues"
+      :rows-record="rowsRecord"
+      :is-touchable="isTouchable"
+      @update:row="updateRow"
+      @update:field="updateField"
+    >
+      <template #rows-selector="slotProps">
+        <slot name="rows-selector" v-bind="slotProps" />
+      </template>
+      <template #first-cell="slotProps">
+        <slot name="first-cell" v-bind="slotProps" />
+      </template>
+    </of-table-virtual-body>
+    <template v-else :key="rowidx" v-for="(row, rowidx) of rows">
       <of-table-row
         :row="row"
-        :drag-info="{
-          draggable: draggable,
-          dragInProgress: dragInProgress,
-          nestedIndicator: nestedIndicator,
-          currentCoords,
-          nested: draggingOptions.nested,
-          currentCanBeNested:
-            draggingOptions.nested &&
-            (draggingOptions.allNested || currentCanBeNested),
-          draggingItem,
-          nestedLimit: draggingOptions.nestedLimit,
-          allParent: draggingOptions.allParent,
-          listedRows,
-          tableLeft,
-          highlightLastMoved,
-          currentInnerDepth
-        }"
+        :drag-info="rowDragInfo"
         :coords="[rowidx]"
-        :point-next="[rowidx + 1]"
+        :point-next="[Number(rowidx) + 1]"
         v-on="dragEvents"
         :rows-selector="addRowsSelector"
         :select-locked="selectLocked"
@@ -155,23 +177,7 @@
       v-if="sumTotalColumns.length"
       :total-amount="true"
       :row="sumTotals"
-      :drag-info="{
-        draggable: draggable,
-        dragInProgress: dragInProgress,
-        nestedIndicator: nestedIndicator,
-        currentCoords,
-        nested: draggingOptions.nested,
-        currentCanBeNested:
-          draggingOptions.nested &&
-          (draggingOptions.allNested || currentCanBeNested),
-        draggingItem,
-        nestedLimit: draggingOptions.nestedLimit,
-        allParent: draggingOptions.allParent,
-        listedRows,
-        tableLeft,
-        highlightLastMoved,
-        currentInnerDepth
-      }"
+      :drag-info="rowDragInfo"
       :coords="[rows.length + 1]"
       :point-next="[rows.length + 1]"
       v-on="dragEvents"
@@ -259,6 +265,7 @@ import { FormRecord, makeRecord } from '../lib/records'
 import {
   computed,
   defineComponent,
+  provide,
   ref,
   watch,
   PropType,
@@ -274,7 +281,11 @@ import { OfOverlay } from './Overlay'
 import OfOptionList from './OptionList.vue'
 import { OfButton } from './Button'
 import OfTableRow from './TableRow.vue'
+import OfTableRowSkeleton from './TableRowSkeleton.vue'
+import OfTableVirtualBody from './TableVirtualBody.vue'
 import { useLanguage } from '../lib/language'
+import { useDataTableVirtualScroll } from '../lib/data_table_virtual_scroll'
+import { dataTableVirtualScrollKey } from '../lib/virtual_scroll_vnode'
 
 enum RowsSelectorValues {
   Page = 'page',
@@ -295,13 +306,9 @@ interface ExtraSortField {
   order?: string
 }
 
-const showSelector = (hasSelector: boolean, rows: any[]): boolean => {
-  let issetId = false
-  if (rows && rows.hasOwnProperty(0) && rows[0].hasOwnProperty('id')) {
-    issetId = true
-  }
-  return (hasSelector && issetId) ?? false
-}
+const showSelector = (hasSelector: boolean, rows: any[]): boolean =>
+  // Sparse virtual-scroll arrays may have a hole at index 0 after eviction.
+  !!hasSelector && !!rows?.some((row) => row?.hasOwnProperty('id'))
 
 let sysDataTableIndex = 0
 
@@ -309,6 +316,8 @@ export default defineComponent({
   name: 'OfDataTable',
   components: {
     OfTableRow,
+    OfTableRowSkeleton,
+    OfTableVirtualBody,
     OfButton,
     OfOptionList,
     OfOverlay,
@@ -350,7 +359,34 @@ export default defineComponent({
       default: 'name'
     },
     density: [String, Number],
-    tableLabel: { type: String, default: undefined }
+    tableLabel: { type: String, default: undefined },
+    /** External source of truth for row selection (survives row object churn). */
+    selectedIds: {
+      type: Object as any as object & PropType<Set<string> | undefined>,
+      default: undefined
+    },
+    virtualScroll: {
+      type: Boolean,
+      default: false
+    },
+    /** Logical row count; may exceed `items.length` while rows are still loading. */
+    totalRows: {
+      type: Number,
+      default: undefined
+    },
+    /** Row height override (px); auto-measured from a rendered row when unset. */
+    virtualRowHeight: {
+      type: Number,
+      default: undefined
+    },
+    loading: {
+      type: Boolean,
+      default: false
+    },
+    loadingRowsCount: {
+      type: Number,
+      default: 3
+    }
   },
   emits: {
     'rows-selected': null,
@@ -361,11 +397,18 @@ export default defineComponent({
     'rows-sorted': null,
     'rows-moved': null,
     'rows-edited': null,
-    'row-edited': null
+    'row-edited': null,
+    'range-change': null
   },
   setup(props, ctx) {
     const lang = useLanguage()
     const themeOptions = useThemeOptions()
+    // Lets `of-data-type`/`of-link` know they're rendering inside a
+    // virtual-scroll row, so only they pay for the VNode-rebuild fix.
+    provide(
+      dataTableVirtualScrollKey,
+      computed(() => props.virtualScroll)
+    )
     const sort = ref({ column: '', order: '' })
     const items = ref(props.items || [])
     const tableElt = shallowRef<HTMLDivElement | undefined>()
@@ -527,6 +570,7 @@ export default defineComponent({
         })
     }
     const clearHighlight = (item: any) => {
+      if (!item) return
       if (item.highlighted) {
         delete item.highlighted
         return
@@ -569,6 +613,8 @@ export default defineComponent({
       coords: string,
       depth: number
     ) => {
+      // `item` may be a not-yet-loaded hole in a sparse virtual-scroll rows array.
+      if (!item) return
       let clone = { ...item }
       delete clone.subitems
       clone.coordIndex = coords
@@ -583,12 +629,33 @@ export default defineComponent({
     }
 
     const listedRows = computed(() => {
+      // Virtual lists skip the O(n) flatten unless a drag is in progress
+      // (drag positioning still needs the flat coord list).
+      if (props.virtualScroll && !dragInProgress.value) return []
       let arr: any = []
       rows.value.map((v: any, i: number) => {
         fillListedRows(v, arr, i + '', 0)
       })
       return arr
     })
+
+    const rowDragInfo = computed(() => ({
+      draggable: props.draggable,
+      dragInProgress: dragInProgress.value,
+      nestedIndicator: props.nestedIndicator,
+      currentCoords: currentCoords.value,
+      nested: draggingOptions.nested,
+      currentCanBeNested:
+        draggingOptions.nested &&
+        (draggingOptions.allNested || currentCanBeNested.value),
+      draggingItem: draggingItem.value,
+      nestedLimit: draggingOptions.nestedLimit,
+      allParent: draggingOptions.allParent,
+      listedRows: listedRows.value,
+      tableLeft: tableLeft.value,
+      highlightLastMoved: highlightLastMoved.value,
+      currentInnerDepth: currentInnerDepth.value
+    }))
 
     const outerId = computed(() => {
       return 'of-data-table-' + ++sysDataTableIndex
@@ -731,6 +798,7 @@ export default defineComponent({
         let value = 0
         const fieldName = columns.value[col].value
         items.value?.forEach((v: any) => {
+          if (!v) return
           if (Array.isArray(v[fieldName])) {
             let i = 0
             v[fieldName].forEach((column: any, index: number) => {
@@ -798,7 +866,13 @@ export default defineComponent({
       { immediate: true }
     )
     watch(
-      () => props.items,
+      () => {
+        if (!sumTotalColumns.value.length) return null
+        // Under virtual scroll, only recompute when the loaded length changes
+        // instead of deep-walking the growing sparse array on every chunk.
+        if (props.virtualScroll) return (props.items as any[])?.length ?? 0
+        return props.items
+      },
       () => {
         updateSumTotal()
       },
@@ -825,9 +899,13 @@ export default defineComponent({
           return w
         })
         .join(' ')
-      return {
+      const style: Record<string, string> = {
         '--of-table-columns': `${dragWidth} ${selectorWidth} ${widths}`
       }
+      if (virtualScroll.rowHeightVar.value) {
+        style['--of-table-row-height'] = virtualScroll.rowHeightVar.value
+      }
+      return style
     })
 
     const footerRows = computed(() => {
@@ -840,6 +918,8 @@ export default defineComponent({
     const selectAll = computed(() => props.selectAll)
 
     const orderItems = (item: any, idx: number) => {
+      // Sparse-array hole (not-yet-loaded row) under virtual scroll.
+      if (!item) return item
       item.order = item.hasOwnProperty('order') ? item.order : idx
       if (item.subitems?.length) {
         item.subitems.forEach((v: any, i: number) => {
@@ -850,6 +930,7 @@ export default defineComponent({
     }
 
     const checkItems = (item: any) => {
+      if (!item) return item
       const selectedValues = rowsRecord.value.value
       item.selected =
         item.selected || (selectedValues && selectedValues[item.id])
@@ -864,9 +945,13 @@ export default defineComponent({
     }
 
     const rows = computed(() => {
+      const propItems: any = items.value
+      // Virtual-scroll rows are a flat, non-reorderable window into a
+      // (potentially huge) loaded dataset - skip the ordering pass entirely
+      // rather than re-running it over every loaded row on every scroll tick.
+      if (props.virtualScroll) return propItems
       const result = []
       let count = perPage.value
-      let propItems: any = items.value
       for (
         let idx = iterStart.value;
         count > 0 && idx < propItems.length;
@@ -884,14 +969,18 @@ export default defineComponent({
 
       if (selectAll.value) {
         ids = { all: true }
-      } else {
-        if (addRowsSelector.value) {
-          for (const row of rows.value) {
-            ids[row.id] = row.selected || false
-            if (row.subitems) {
-              for (const subrow of row.subitems) {
-                ids[subrow.id] = subrow.selected || false
-              }
+      } else if (addRowsSelector.value) {
+        const externalSelectedIds = props.selectedIds
+        for (const row of rows.value) {
+          if (!row) continue
+          ids[row.id] = externalSelectedIds
+            ? externalSelectedIds.has(row.id)
+            : row.selected || false
+          if (row.subitems) {
+            for (const subrow of row.subitems) {
+              ids[subrow.id] = externalSelectedIds
+                ? externalSelectedIds.has(subrow.id)
+                : subrow.selected || false
             }
           }
         }
@@ -899,9 +988,14 @@ export default defineComponent({
       return makeRecord(ids)
     })
 
+    // Only needed for the legacy mutation-based model (no `selectedIds`):
+    // resolving to `null` when `selectedIds` is set skips the deep-watch
+    // traversal entirely, instead of paying for it and bailing inside the
+    // callback - `rows` can hold thousands of rows under virtual scroll.
     watch(
-      rows,
+      () => (props.selectedIds ? null : rows.value),
       (newRows) => {
+        if (!newRows) return
         const selectedAll =
           rowsRecord.value.value?.[RowsSelectorValues.All] ?? false
         if (selectedAll) return
@@ -941,6 +1035,7 @@ export default defineComponent({
 
       if (val === RowsSelectorValues.All) {
         for (const row of rows.value) {
+          if (!row) continue
           rowsRecord.value.value[row.id] = true
           if (row.subitems) {
             for (const subrow of row.subitems) {
@@ -962,6 +1057,7 @@ export default defineComponent({
           ctx.emit('rows-select-page')
         }
         for (const row of rows.value) {
+          if (!row) continue
           rowsRecord.value.value[row.id] = checked
           if (row.subitems) {
             for (const subrow of row.subitems) {
@@ -980,23 +1076,29 @@ export default defineComponent({
 
       selectRows(select)
     }
-    const selectRowsItems = computed(() => [
-      {
-        key: 'page',
-        text: lang.value.dataTableSelectPage,
-        value: () => selectRows(RowsSelectorValues.Page)
-      },
-      {
-        key: 'all',
-        text: lang.value.dataTableSelectAll,
-        value: () => selectRows(RowsSelectorValues.All)
-      },
-      {
-        key: 'clear',
-        text: lang.value.dataTableDeselectAll,
-        value: () => selectRows(RowsSelectorValues.DeselectAll)
+    const selectRowsItems = computed(() => {
+      const items = [
+        {
+          key: 'all',
+          text: lang.value.dataTableSelectAll,
+          value: () => selectRows(RowsSelectorValues.All)
+        },
+        {
+          key: 'clear',
+          text: lang.value.dataTableDeselectAll,
+          value: () => selectRows(RowsSelectorValues.DeselectAll)
+        }
+      ]
+      // Infinite/virtual scroll has no discrete page — omit "Select Page".
+      if (!props.virtualScroll) {
+        items.unshift({
+          key: 'page',
+          text: lang.value.dataTableSelectPage,
+          value: () => selectRows(RowsSelectorValues.Page)
+        })
       }
-    ])
+      return items
+    })
 
     const sortAnnouncement = ref('')
 
@@ -1056,9 +1158,23 @@ export default defineComponent({
       return Math.max(0, Math.min(3, d || 0))
     })
 
+    const virtualScroll = useDataTableVirtualScroll({
+      containerRef: tableElt,
+      enabled: computed(() => props.virtualScroll),
+      rows,
+      density,
+      rowHeightOverride: computed(() => props.virtualRowHeight),
+      totalRows: computed(() => props.totalRows),
+      onRangeChange: (range) => ctx.emit('range-change', range)
+    })
+
     const tableClass = computed(() => [
       'of-data-table',
-      'of--density-' + density.value
+      'of--density-' + density.value,
+      {
+        'of--scrolling': virtualScroll.isScrolling.value,
+        'of--fixed-row-height': virtualScroll.fixedRowHeight.value
+      }
     ])
 
     const colAriaSort = (col: DataTableHeader) => {
@@ -1106,6 +1222,11 @@ export default defineComponent({
       arrowTop,
       currentNested,
       tableClass,
+      virtualRangeStart: virtualScroll.rangeStart,
+      virtualRangeEnd: virtualScroll.rangeEnd,
+      virtualTopSpacer: virtualScroll.topSpacer,
+      virtualBottomSpacer: virtualScroll.bottomSpacer,
+      scrollToOffset: virtualScroll.scrollToOffset,
       colAriaSort,
       sortHeaderAriaLabel,
       sortAnnouncement,
@@ -1124,6 +1245,7 @@ export default defineComponent({
       draggingOptions,
       dragInProgress,
       listedRows,
+      rowDragInfo,
       tableLeft,
       currentCanBeNested,
       currentInnerDepth,
