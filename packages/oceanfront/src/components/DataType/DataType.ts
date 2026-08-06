@@ -1,5 +1,6 @@
 import { PropType, defineComponent, h } from 'vue'
 import { DataTypeValue } from '../../lib/datatype'
+import { OfFormat } from '../Format'
 
 import Currency from './currency'
 import Link from './link'
@@ -15,16 +16,23 @@ export default defineComponent({
   },
   render() {
     if (this.$props.value && typeof this.$props.value === 'object') {
-      switch (
-        (this.$props.value.format as any)?.type ||
-        this.$props.value.format
-      ) {
+      const format = this.$props.value.format as any
+      const formatType = format?.type || format
+      switch (formatType) {
         case 'currency':
           return h(Currency, this.$props as any, this.$slots)
         case 'link':
           return h(Link, this.$props as any, this.$slots)
-        default:
+        default: {
+          if (typeof formatType === 'string' && formatType) {
+            return h(OfFormat, {
+              type: formatType,
+              options: format?.formatOptions,
+              value: this.$props.value.value
+            })
+          }
           return this.$props.value.value
+        }
       }
     }
 
