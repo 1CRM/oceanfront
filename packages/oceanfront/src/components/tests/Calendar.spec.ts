@@ -56,6 +56,25 @@ describe('OfCalendar', () => {
     expect(wrapper.findAll('.of-calendar-category-title').length).toBe(7)
   })
 
+  it('starts the week on the configured weekStart day', () => {
+    // day is Wednesday 2024-01-17; weekStart 2 = Tuesday
+    const wrapper = mountCalendar({ type: 'week', weekStart: 2 })
+    const titles = wrapper.findAll('.of-calendar-category-title')
+    expect(titles.length).toBe(7)
+    expect(titles[0].text()).toMatch(/Tue|17/i)
+    // First column date should be Tuesday Jan 16
+    expect(titles[0].text()).toContain('16')
+    // Last column should be Monday Jan 22
+    expect(titles[6].text()).toContain('22')
+  })
+
+  it('defaults week view to Monday–Sunday when weekStart is omitted', () => {
+    const wrapper = mountCalendar({ type: 'week' })
+    const titles = wrapper.findAll('.of-calendar-category-title')
+    expect(titles[0].text()).toContain('15') // Mon Jan 15
+    expect(titles[6].text()).toContain('21') // Sun Jan 21
+  })
+
   it('renders the configured number of columns for ndays', () => {
     const wrapper = mountCalendar({ type: 'ndays', numDays: '4' })
     expect(wrapper.findAll('.of-calendar-category-title').length).toBe(4)
@@ -91,6 +110,87 @@ describe('OfCalendar', () => {
     const wrapper = mountCalendar({ 'onClick:event': onClickEvent })
     await wrapper.find('.of-calendar-event').trigger('click')
     expect(onClickEvent).toHaveBeenCalledTimes(1)
+  })
+
+  it('emits move:end when a movable timed event is dragged', async () => {
+    const onMoveEnd = vi.fn()
+    const wrapper = mountCalendar({
+      type: 'day',
+      movable: true,
+      dayStart: 8,
+      dayEnd: 18,
+      hourHeight: 48,
+      'onMove:end': onMoveEnd
+    })
+    const timed = wrapper
+      .findAll('.of-calendar-day-row .of-calendar-event')
+      .find((el) => el.text().includes('Timed event'))
+    expect(timed).toBeTruthy()
+    const dayCol = wrapper.find('.of-calendar-day-row .of-calendar-day')
+    const dayRect = {
+      top: 0,
+      left: 0,
+      width: 200,
+      height: 480,
+      bottom: 480,
+      right: 200,
+      x: 0,
+      y: 0,
+      toJSON: () => ({})
+    } as DOMRect
+    vi.spyOn(dayCol.element, 'getBoundingClientRect').mockReturnValue(dayRect)
+    vi.spyOn(timed!.element, 'getBoundingClientRect').mockReturnValue({
+      top: 48,
+      left: 10,
+      width: 100,
+      height: 48,
+      bottom: 96,
+      right: 110,
+      x: 10,
+      y: 48,
+      toJSON: () => ({})
+    } as DOMRect)
+    document.elementFromPoint = vi.fn().mockReturnValue(dayCol.element)
+
+    await timed!.trigger('mousedown', {
+      buttons: 1,
+      clientX: 20,
+      clientY: 60
+    })
+    window.dispatchEvent(
+      new MouseEvent('mousemove', { buttons: 1, clientX: 20, clientY: 200 })
+    )
+    window.dispatchEvent(
+      new MouseEvent('mouseup', { buttons: 0, clientX: 20, clientY: 200 })
+    )
+    expect(onMoveEnd).toHaveBeenCalledTimes(1)
+    expect(onMoveEnd.mock.calls[0][4]).toEqual({ allDay: false })
+  })
+
+  it('does not start a move when eventMovable returns false', async () => {
+    const onMoveStart = vi.fn()
+    const wrapper = mountCalendar({
+      type: 'day',
+      movable: true,
+      eventMovable: () => false,
+      'onMove:start': onMoveStart
+    })
+    const timed = wrapper
+      .findAll('.of-calendar-day-row .of-calendar-event')
+      .find((el) => el.text().includes('Timed event'))
+    expect(timed).toBeTruthy()
+    await timed!.trigger('mousedown', {
+      buttons: 1,
+      clientX: 20,
+      clientY: 60
+    })
+    window.dispatchEvent(
+      new MouseEvent('mousemove', { buttons: 1, clientX: 20, clientY: 200 })
+    )
+    window.dispatchEvent(
+      new MouseEvent('mouseup', { buttons: 0, clientX: 20, clientY: 200 })
+    )
+    expect(onMoveStart).not.toHaveBeenCalled()
   })
 
   it('renders 12 months in the year view', () => {

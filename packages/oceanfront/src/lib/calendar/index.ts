@@ -2,7 +2,7 @@ import { addDays, addMonths, addMinutes, allDayEnd } from '../datetime'
 import { DateTimeFormatter } from '../../formats/DateTime'
 import { FormatState } from '../../lib/formats'
 
-const OFFSET_TIMESTAMP = 10000
+export const OFFSET_TIMESTAMP = 10000
 const OFFSET_YEAR = 10000
 const OFFSET_MONTH = 100
 export const MINUTES_IN_DAY = 60 * 24
@@ -92,6 +92,22 @@ export const getTimeIdentifier = (date: Timestamp): TimeIdentifier => {
 
 export const getTimestampIdintifier = (date: Timestamp): DayIdentifier => {
   return getDayIdentifier(date) * OFFSET_TIMESTAMP + getTimeIdentifier(date)
+}
+
+/** Reverse of {@link getTimestampIdintifier}: timestamp id → local Date. */
+export const timestampIdToDate = (id: TimestampIdentifier): Date => {
+  const minutes = id % OFFSET_TIMESTAMP
+  const dayId = Math.floor(id / OFFSET_TIMESTAMP)
+  const day = dayId % OFFSET_MONTH
+  const month = Math.floor((dayId % OFFSET_YEAR) / OFFSET_MONTH)
+  const year = Math.floor(dayId / OFFSET_YEAR)
+  return new Date(
+    year,
+    month,
+    day,
+    Math.floor(minutes / MINUTES_IN_HOUR),
+    minutes % MINUTES_IN_HOUR
+  )
 }
 
 export const isEventInRange = (

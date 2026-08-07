@@ -40,6 +40,7 @@ import {
   adjustCalendarEventHoverPosition,
   resetCalendarEventHoverPosition
 } from './eventUtils'
+import { useCalendarEventMove } from './useCalendarEventMove'
 
 function formatRange(mgr: FormatState, e: InternalEvent, withinDate: Date) {
   const [startTS, endTS] = getNormalizedTSRange(e, withinDate)
@@ -96,6 +97,10 @@ export default defineComponent({
     'selection:end',
     'selection:cancel',
     'selection:allday',
+    'move:start',
+    'move:change',
+    'move:end',
+    'move:cancel',
     'focus:day',
     'blur:day'
   ],
@@ -156,6 +161,26 @@ export default defineComponent({
       start = Math.max(0, start)
       end = Math.min(24, end)
       return [start, end]
+    })
+
+    const {
+      showAllDayForMove,
+      eventMoveBindings,
+      timedMoveGhost,
+      allDayMoveGhost,
+      isTimedMoveHighlight,
+      isAllDayMoveHighlight,
+      categoryAttr
+    } = useCalendarEventMove({
+      props,
+      emit,
+      hoursInterval,
+      numHourIntervals,
+      eventMaxWidth,
+      clearSelection: () => {
+        selecting.value = false
+        selectionCategory.value = ''
+      }
     })
 
     const allDayEvents = computed(() => {
@@ -344,10 +369,16 @@ export default defineComponent({
           props.eventClass?.(e.event) ??
           (e.event.class ? { [e.event.class]: true } : {})
         const slot = slots['allday-event-content']
+        const finalEvent = { ...e.event, color: finalColor }
+        const move = eventMoveBindings(e.event, true)
         return h(
           'div',
           {
-            class: { ...eventClass, 'of-calendar-event': true },
+            class: {
+              ...eventClass,
+              'of-calendar-event': true,
+              ...move.class
+            },
             style: {
               'background-color': finalColor,
               width: 'calc(' + (e.daysSpan || 1) * 100 + '% - 10px)',
@@ -356,28 +387,23 @@ export default defineComponent({
             },
             tabindex: '0',
             onClick: (event: any) => {
-              emit('click:event', event, {
-                ...e.event,
-                color: finalColor
-              })
+              if (move.shouldIgnoreClick()) return
+              emit('click:event', event, finalEvent)
             },
             onKeypress: (event: KeyboardEvent) => {
               if (['Enter', 'Space'].includes(event.code)) {
                 event.preventDefault()
-                emit('click:event', event, {
-                  ...e.event,
-                  color: finalColor
-                })
+                emit('click:event', event, finalEvent)
               }
             },
-            onMousedown: (event: any) => {
-              event.stopPropagation()
-            },
+            onMousedown: move.onMousedown,
             onMouseenter: (event: any) => {
+              if (move.isMoveActive()) return
               adjustCalendarEventHoverPosition(event.currentTarget)
               emit('enter:event', event, e.event)
             },
             onMouseleave: (event: any) => {
+              if (move.isMoveActive()) return
               resetCalendarEventHoverPosition(event.currentTarget)
               emit('leave:event', event, e.event)
               event.stopPropagation()
@@ -404,6 +430,7 @@ export default defineComponent({
         (allDayEvents.value[cat.category] as CalendarAlldayEventPlacement[]) ||
         []
       const weekDay = cat.date.getDay()
+      const ghost = allDayMoveGhost(cat)
       const vnode = h(
         'div',
         {
@@ -411,14 +438,19 @@ export default defineComponent({
             'of-calendar-day',
             {
               selected:
-                selecting.value &&
-                selectionCategory.value === 'allday-' + weekDay,
+                (selecting.value &&
+                  selectionCategory.value === 'allday-' + weekDay) ||
+                isAllDayMoveHighlight(cat),
               ['week-day-' + weekDay]: isDate
             }
           ],
+          ...categoryAttr(cat),
           ...allDaySelectingHandlers(cat.date)
         },
-        events.map(allDayRowEvent(acc, eventHeight))
+        [
+          ...events.map(allDayRowEvent(acc, eventHeight)),
+          ...(ghost ? [ghost] : [])
+        ]
       )
       if (!hideDate(cat.date)) acc.columns.push(vnode)
       return acc
@@ -447,7 +479,11 @@ export default defineComponent({
     }
 
     function allDayRow() {
-      if (!hasAllDay.value || props.type === 'custom') return ''
+      if (
+        (!hasAllDay.value && !showAllDayForMove.value) ||
+        props.type === 'custom'
+      )
+        return ''
       const eventHeight = parseInt(props.eventHeight as unknown as string) || 20
       const { height, columns } = !props.categoriesList
         ? { height: 0, columns: [] as any[] }
@@ -671,21 +707,22 @@ export default defineComponent({
     }
 
     function dayRowEventHandlers(e: InternalEvent) {
+      const move = eventMoveBindings(e, false)
       return {
+        class: move.class,
         onClick: (event: any) => {
+          if (move.shouldIgnoreClick()) return
           emit('click:event', event, e)
         },
-        onMousedown: (event: any) => {
-          event.stopPropagation()
-        },
+        onMousedown: move.onMousedown,
         onMouseenter: (event: any) => {
-          if (!selecting.value) {
+          if (!selecting.value && !move.isMoveActive()) {
             adjustCalendarEventHoverPosition(event.currentTarget)
             emit('enter:event', event, e)
           }
         },
         onMouseleave: (event: any) => {
-          if (!selecting.value) {
+          if (!selecting.value && !move.isMoveActive()) {
             resetCalendarEventHoverPosition(event.currentTarget)
             emit('leave:event', event, e)
           }
@@ -715,6 +752,8 @@ export default defineComponent({
           props.eventClass?.(e.event) ??
           (e.event.class ? { [e.event.class]: true } : {})
         const finalEvent = { ...e.event, color: finalColor }
+        const { class: moveClass, ...handlers } =
+          dayRowEventHandlers(finalEvent)
 
         const eventsGap = 5
         const dayWidth =
@@ -734,6 +773,7 @@ export default defineComponent({
             class: {
               ...eventClass,
               'of-calendar-event': true,
+              ...moveClass,
               conflict: e.conflict,
               'two-lines': brk
             },
@@ -748,7 +788,7 @@ export default defineComponent({
               'min-height': 'calc(' + e.height + '% - 3px)'
             },
             tabindex: '0',
-            ...dayRowEventHandlers(finalEvent)
+            ...handlers
           },
           renderSlot(
             'event-content',
@@ -775,10 +815,11 @@ export default defineComponent({
           class: {
             'of-calendar-subinterval': true,
             selected:
-              selecting.value &&
-              intervalTime >= selectionStart.value &&
-              intervalTime < selectionEnd.value &&
-              selectionCategory.value == cat.category
+              (selecting.value &&
+                intervalTime >= selectionStart.value &&
+                intervalTime < selectionEnd.value &&
+                selectionCategory.value == cat.category) ||
+              isTimedMoveHighlight(intervalTime, cat)
           }
         })
       }
@@ -803,16 +844,18 @@ export default defineComponent({
       const es =
         (dayEvents.value[cat.category] as CalendarEventPlacement[]) || []
       const events = es.map(dayRowEvent(cat))
+      const ghost = timedMoveGhost(cat)
       const weekDayCls = isDate ? 'week-day-' + cat.date.getDay() : false
       if (hideDate(cat.date)) return
       return h(
         'div',
         {
           class: ['of-calendar-day', weekDayCls],
+          ...categoryAttr(cat),
           ...intervalSelectionHandlers(cat),
           ref: setDayEl
         },
-        [...intervalsList, ...events]
+        [...intervalsList, ...events, ...(ghost ? [ghost] : [])]
       )
     }
 
