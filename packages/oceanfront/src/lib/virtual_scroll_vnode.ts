@@ -23,7 +23,8 @@ export const notVirtualScroll = computed(() => false)
 
 /**
  * Rebuilds a VNode tree so it can be mounted again. Cached cell VNodes are
- * single-use; virtual-scroll remounts need a fresh tree or they render blank.
+ * single-use; remounts (virtual window moves, or leaving virtual scroll for a
+ * classic body) need a fresh tree or they render blank.
  */
 export function freshVNode(input: unknown): unknown {
   if (Array.isArray(input)) {
@@ -56,8 +57,13 @@ export function freshVNode(input: unknown): unknown {
   return h(node.type as any, node.props, newChildren as any)
 }
 
-/** Clone VNode/array content for a virtual-scroll remount (with Suspense). */
-export function wrapFreshVNode(input: unknown, enabled: boolean): unknown {
-  if (!enabled || !(isVNode(input) || Array.isArray(input))) return input
+/**
+ * Clone cached cell VNodes for remount safety.
+ * When `withSuspense` is set (virtual scroll), wrap in Suspense so async cell
+ * trees can remount cleanly with the virtual window.
+ */
+export function wrapFreshVNode(input: unknown, withSuspense = false): unknown {
+  if (!(isVNode(input) || Array.isArray(input))) return input
+  if (!withSuspense) return freshVNode(toRaw(input))
   return h(Suspense, null, { default: () => freshVNode(toRaw(input)) as any })
 }

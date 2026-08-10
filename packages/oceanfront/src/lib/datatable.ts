@@ -16,33 +16,29 @@ export interface DataTableHeader {
 }
 
 /**
- * Resolve a header width into a CSS grid track size.
+ * Classic (non-virtual) page window from a possibly sparse items array.
  *
- * Plain `Nfr` is `minmax(auto, Nfr)`: the track's floor is content-based. Under
- * virtual scroll only the current row window is in the DOM, so that floor
- * jumps as different cells mount and columns visibly resize. When
- * `ignoreContentMin` is set, use `minmax(0, …)` so tracks stay proportional to
- * the container (and explicit px/em widths stay absolute) regardless of which
- * rows are rendered.
+ * When infinite scroll is toggled off, DataTable may briefly still hold a
+ * sparse eviction map. Walk at most `pageSize` slots from `start`, skip holes,
+ * and do not backfill from later indices (that would show the wrong page).
+ * Returned `index` values are the original absolute slots (for row order).
  */
-export const resolveDataTableColumnTrack = (
-  width: string | number | null | undefined,
-  options?: { ignoreContentMin?: boolean }
-): string => {
-  const ignoreContentMin = !!options?.ignoreContentMin
-  if (width == null || width === '') {
-    return ignoreContentMin ? 'minmax(0, 1fr)' : 'auto'
+export const selectClassicPageRows = <T>(
+  items: ArrayLike<T | undefined> | null | undefined,
+  start: number,
+  pageSize: number
+): { item: T; index: number }[] => {
+  if (!items || pageSize <= 0) return []
+  const length = items.length
+  const result: { item: T; index: number }[] = []
+  let remaining = pageSize
+  for (let idx = Math.max(0, start); remaining > 0 && idx < length; idx++) {
+    remaining--
+    const item = items[idx]
+    if (item == null) continue
+    result.push({ item: item as T, index: idx })
   }
-  const w = width.toString()
-  if (w.endsWith('%') || w.match(/^[0-9]+(\.[0-9]*)?$/)) {
-    const widthNumber = parseFloat(w)
-    if (isNaN(widthNumber)) {
-      return ignoreContentMin ? 'minmax(0, 1fr)' : 'auto'
-    }
-    const fr = widthNumber + 'fr'
-    return ignoreContentMin ? `minmax(0, ${fr})` : fr
-  }
-  return w
+  return result
 }
 
 /**

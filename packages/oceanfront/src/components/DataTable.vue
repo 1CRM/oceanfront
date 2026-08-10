@@ -149,6 +149,7 @@
     </of-table-virtual-body>
     <template v-else :key="rowidx" v-for="(row, rowidx) of rows">
       <of-table-row
+        v-if="row"
         :row="row"
         :drag-info="rowDragInfo"
         :coords="[rowidx]"
@@ -278,8 +279,8 @@ import {
 import {
   DataTableHeader,
   firstLoadedRow,
-  resolveDataTableColumnTrack,
   resolveSumTotalFormat,
+  selectClassicPageRows,
   sumTotalColumnsSignature
 } from '../lib/datatable'
 import { useThemeOptions } from '../lib/theme'
@@ -923,12 +924,17 @@ export default defineComponent({
       const selectorWidth = showSelector(props.rowsSelector, rows.value)
         ? 'min-content'
         : ''
-      // Virtual scroll only mounts a row window; content-sized tracks (`auto` /
-      // plain `fr`) would resize columns as that window slides. Lock tracks to
-      // container-relative sizes instead (see resolveDataTableColumnTrack).
-      const trackOpts = { ignoreContentMin: props.virtualScroll }
       const widths = props.headers
-        ?.map((h) => resolveDataTableColumnTrack(h.width, trackOpts))
+        ?.map((h) => {
+          if (!h.width) return 'auto'
+          const w = h.width.toString()
+          if (w.endsWith('%') || w.match(/^[0-9]+(\.[0-9]*)?$/)) {
+            const widthNumber = parseFloat(w)
+            if (isNaN(widthNumber)) return 'auto'
+            return '' + widthNumber + 'fr'
+          }
+          return w
+        })
         .join(' ')
       const style: Record<string, string> = {
         '--of-table-columns': `${dragWidth} ${selectorWidth} ${widths}`
@@ -981,18 +987,13 @@ export default defineComponent({
       // (potentially huge) loaded dataset - skip the ordering pass entirely
       // rather than re-running it over every loaded row on every scroll tick.
       if (props.virtualScroll) return propItems
-      const result = []
-      let count = perPage.value
-      for (
-        let idx = iterStart.value;
-        count > 0 && idx < propItems.length;
-        idx++
-      ) {
-        let item: any = propItems[idx]
-        item = orderItems(item, idx)
-        result.push(item)
-      }
-      return result
+      // Sparse holes (infinite-scroll eviction) must not become TableRow
+      // props — `item.nested` would throw while toggling virtual scroll off.
+      return selectClassicPageRows(
+        propItems,
+        iterStart.value,
+        perPage.value
+      ).map(({ item, index }) => orderItems(item, index))
     })
 
     const rowsRecord: ComputedRef<FormRecord> = computed(() => {

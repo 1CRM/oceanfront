@@ -1,21 +1,10 @@
-import { PropType, defineComponent, h, inject, isVNode } from 'vue'
+import { PropType, defineComponent, h, isVNode } from 'vue'
 import { DataTypeValue } from '../../lib/datatype'
-import {
-  dataTableVirtualScrollKey,
-  freshVNode,
-  notVirtualScroll
-} from '../../lib/virtual_scroll_vnode'
+import { freshVNode } from '../../lib/virtual_scroll_vnode'
 import { OfLink } from '../Link'
 
 export default defineComponent({
   props: { value: { type: Object as PropType<DataTypeValue>, required: true } },
-  setup() {
-    const virtualScrollActive = inject(
-      dataTableVirtualScrollKey,
-      notVirtualScroll
-    )
-    return { virtualScrollActive }
-  },
   render() {
     return h(
       OfLink as any,
@@ -29,7 +18,8 @@ export default defineComponent({
         default: () => {
           const inner = this.$props.value.value
           if (!(isVNode(inner) || Array.isArray(inner))) return inner
-          return this.virtualScrollActive ? freshVNode(inner) : inner
+          // Always clone: cached list-cell VNodes are single-use.
+          return freshVNode(inner)
         }
       }
     )

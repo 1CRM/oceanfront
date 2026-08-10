@@ -1,7 +1,7 @@
 <template>
   <div
     class="of-data-table-virtual-spacer"
-    :style="{ height: topSpacer + 'px' }"
+    :style="{ height: topSpacer + 'px', gridColumn: '1 / -1' }"
     aria-hidden="true"
   ></div>
   <template v-for="rowIdx in visibleIndices" :key="rowIdx">
@@ -43,7 +43,7 @@
   </template>
   <div
     class="of-data-table-virtual-spacer"
-    :style="{ height: bottomSpacer + 'px' }"
+    :style="{ height: bottomSpacer + 'px', gridColumn: '1 / -1' }"
     aria-hidden="true"
   ></div>
 </template>

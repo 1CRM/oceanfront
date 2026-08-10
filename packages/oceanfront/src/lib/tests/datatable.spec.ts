@@ -2,52 +2,44 @@ import { describe, expect, it } from 'vitest'
 import {
   DataTableHeader,
   firstLoadedRow,
-  resolveDataTableColumnTrack,
   resolveSumTotalFormat,
+  selectClassicPageRows,
   sumTotalColumnsSignature
 } from '../datatable'
 
-describe('resolveDataTableColumnTrack', () => {
-  it('defaults missing widths to auto (content-sized)', () => {
-    expect(resolveDataTableColumnTrack(undefined)).toBe('auto')
-    expect(resolveDataTableColumnTrack(null)).toBe('auto')
-    expect(resolveDataTableColumnTrack('')).toBe('auto')
+describe('selectClassicPageRows', () => {
+  it('returns a dense page from a dense array', () => {
+    const rows = [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }]
+    expect(selectClassicPageRows(rows, 1, 2)).toEqual([
+      { item: rows[1], index: 1 },
+      { item: rows[2], index: 2 }
+    ])
   })
 
-  it('uses minmax(0, 1fr) for missing widths when ignoring content min', () => {
-    expect(
-      resolveDataTableColumnTrack(undefined, { ignoreContentMin: true })
-    ).toBe('minmax(0, 1fr)')
+  it('skips sparse holes without backfilling later indices', () => {
+    const rows: any[] = []
+    rows[0] = undefined
+    rows[1] = { id: 1 }
+    rows[2] = undefined
+    rows[5] = { id: 5 }
+    rows.length = 10
+
+    // Page size 3 walks slots 0,1,2 — only slot 1 is present.
+    expect(selectClassicPageRows(rows, 0, 3)).toEqual([
+      { item: rows[1], index: 1 }
+    ])
   })
 
-  it('maps percentages and unitless numbers to fr tracks', () => {
-    expect(resolveDataTableColumnTrack('30%')).toBe('30fr')
-    expect(resolveDataTableColumnTrack(30)).toBe('30fr')
-    expect(resolveDataTableColumnTrack('12.5')).toBe('12.5fr')
+  it('does not iterate the full sparse length when pageSize is small', () => {
+    const rows: any[] = []
+    rows[500] = { id: 500 }
+    rows.length = 1000
+    expect(selectClassicPageRows(rows, 0, 5)).toEqual([])
   })
 
-  it('wraps fr tracks in minmax(0, …) when ignoring content min', () => {
-    expect(resolveDataTableColumnTrack('30%', { ignoreContentMin: true })).toBe(
-      'minmax(0, 30fr)'
-    )
-    expect(resolveDataTableColumnTrack(30, { ignoreContentMin: true })).toBe(
-      'minmax(0, 30fr)'
-    )
-  })
-
-  it('passes through absolute CSS lengths unchanged', () => {
-    expect(resolveDataTableColumnTrack('115px')).toBe('115px')
-    expect(resolveDataTableColumnTrack('12em')).toBe('12em')
-    expect(
-      resolveDataTableColumnTrack('115px', { ignoreContentMin: true })
-    ).toBe('115px')
-  })
-
-  it('treats non-numeric percentages as missing', () => {
-    expect(resolveDataTableColumnTrack('%')).toBe('auto')
-    expect(resolveDataTableColumnTrack('%', { ignoreContentMin: true })).toBe(
-      'minmax(0, 1fr)'
-    )
+  it('returns empty for missing input or non-positive page size', () => {
+    expect(selectClassicPageRows(undefined, 0, 10)).toEqual([])
+    expect(selectClassicPageRows([{ id: 1 }], 0, 0)).toEqual([])
   })
 })
 
@@ -149,11 +141,7 @@ describe('resolveSumTotalFormat', () => {
     const rows: any[] = []
     rows[20] = { amount: { rawValue: 12.5, value: 12.5 } }
     expect(
-      resolveSumTotalFormat(
-        { currency: { symbol: '$' } },
-        rows,
-        'amount'
-      )
+      resolveSumTotalFormat({ currency: { symbol: '$' } }, rows, 'amount')
     ).toEqual({ type: 'currency' })
   })
 

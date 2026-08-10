@@ -38,17 +38,6 @@
   &.of--virtual-scroll {
     overflow-x: auto;
     overflow-y: hidden;
-
-    // Pair with `minmax(0, Nfr)` tracks: grid items default to `min-width:
-    // auto`, which would still let nowrap cell content inflate columns as the
-    // virtual window changes. Allow shrinking and clip overflow instead.
-    > .of-data-table-header > div,
-    > .of-data-table-row > div,
-    > .of-data-table-footer > div {
-      min-width: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
   }
 
   // Isolate virtual-scroll row churn; avoid contain:paint (clips popups)
