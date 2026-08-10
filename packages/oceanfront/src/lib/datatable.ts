@@ -65,6 +65,63 @@ export const firstLoadedRow = (rows: any[] | null | undefined): any => {
   return undefined
 }
 
+/** Format metadata a sum-total cell carries for the totals row. */
+export const cellSumTotalFormat = (cell: any): any => {
+  if (!cell || typeof cell !== 'object') return undefined
+  if (Array.isArray(cell)) {
+    for (let i = 0; i < cell.length; i++) {
+      const fmt = cell[i]?.format ?? cell[i]?.totalFormat
+      if (fmt) return fmt
+    }
+    return undefined
+  }
+  return cell.format ?? cell.totalFormat
+}
+
+const isUsableSumTotalFormat = (format: any): boolean => {
+  if (format == null || format === '') return false
+  if (typeof format === 'string') return true
+  if (typeof format !== 'object') return false
+  if (format.type) return true
+  return Object.keys(format).length > 0
+}
+
+/**
+ * Resolve the display format for a DataTable totals-row cell.
+ *
+ * ListView stores currency format on cells as `totalFormat` (not always on
+ * `format`), and under virtual scroll early rows may be evicted — so the first
+ * loaded row is not a reliable sample. Prefer column-level hints (including
+ * `currency`, which ListView attaches for sum_total currency fields) and scan
+ * all resident rows before falling back to the previously rendered total.
+ */
+export const resolveSumTotalFormat = (
+  column: any,
+  rows: any[] | null | undefined,
+  fieldName: string,
+  previousFormat?: any
+): any => {
+  if (isUsableSumTotalFormat(column?.total_format)) {
+    return column.total_format
+  }
+  // `currency` on the header survives sparse-row eviction; use it even when no
+  // resident sample cell still carries totalFormat/format.
+  if (column?.currency) {
+    return { type: 'currency' }
+  }
+  if (rows) {
+    for (const key in rows) {
+      if (!Object.prototype.hasOwnProperty.call(rows, key)) continue
+      const row = (rows as any)[key]
+      if (row == null) continue
+      const fmt = cellSumTotalFormat(row[fieldName])
+      if (isUsableSumTotalFormat(fmt)) return fmt
+    }
+  }
+  if (isUsableSumTotalFormat(previousFormat)) return previousFormat
+  return {}
+}
+
 /**
  * Cheap change-detection key for a sparse virtual-scroll rows array's
  * sum-total columns, used to decide when totals need recomputing without

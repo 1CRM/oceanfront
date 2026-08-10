@@ -279,6 +279,7 @@ import {
   DataTableHeader,
   firstLoadedRow,
   resolveDataTableColumnTrack,
+  resolveSumTotalFormat,
   sumTotalColumnsSignature
 } from '../lib/datatable'
 import { useThemeOptions } from '../lib/theme'
@@ -842,15 +843,26 @@ export default defineComponent({
           }
         })
         if (values.length) {
-          row[fieldName] = values
+          const format = resolveSumTotalFormat(
+            columns.value[col],
+            items.value as any[],
+            fieldName,
+            (sumTotals.value as any)?.[fieldName]?.[0]?.format ??
+              (sumTotals.value as any)?.[fieldName]?.[0]?.totalFormat
+          )
+          row[fieldName] = values.map((entry: any) => ({
+            ...entry,
+            format: entry?.format ?? entry?.totalFormat ?? format
+          }))
         } else {
           row[fieldName] = {
             value: value || '',
-            format:
-              columns.value[col]?.total_format ??
-              (items.value as any[])?.[0]?.[fieldName]?.format ??
-              (items.value as any[])?.[0]?.[fieldName]?.totalFormat ??
-              {},
+            format: resolveSumTotalFormat(
+              columns.value[col],
+              items.value as any[],
+              fieldName,
+              (sumTotals.value as any)?.[fieldName]?.format
+            ),
             params: columns.value[col]?.currency
               ? { symbol: columns.value[col].currency.symbol }
               : {}

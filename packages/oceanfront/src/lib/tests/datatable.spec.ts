@@ -3,6 +3,7 @@ import {
   DataTableHeader,
   firstLoadedRow,
   resolveDataTableColumnTrack,
+  resolveSumTotalFormat,
   sumTotalColumnsSignature
 } from '../datatable'
 
@@ -130,5 +131,48 @@ describe('sumTotalColumnsSignature', () => {
   it('is a no-op signature when there are no sum-total columns', () => {
     const rows = [{ amount: { rawValue: 10 } }]
     expect(sumTotalColumnsSignature(rows, [], columns)).toBe('1:1:0')
+  })
+})
+
+describe('resolveSumTotalFormat', () => {
+  it('prefers column.total_format', () => {
+    expect(
+      resolveSumTotalFormat(
+        { total_format: { type: 'number' } },
+        [{ amount: { totalFormat: { type: 'currency' } } }],
+        'amount'
+      )
+    ).toEqual({ type: 'number' })
+  })
+
+  it('uses column.currency when sample cells have no format', () => {
+    const rows: any[] = []
+    rows[20] = { amount: { rawValue: 12.5, value: 12.5 } }
+    expect(
+      resolveSumTotalFormat(
+        { currency: { symbol: '$' } },
+        rows,
+        'amount'
+      )
+    ).toEqual({ type: 'currency' })
+  })
+
+  it('scans sparse resident rows for totalFormat after index 0 is evicted', () => {
+    const rows: any[] = []
+    rows[0] = { amount: { rawValue: '' } } // present but no format metadata
+    rows[25] = { amount: { rawValue: 10, totalFormat: { type: 'currency' } } }
+    expect(resolveSumTotalFormat({}, rows, 'amount')).toEqual({
+      type: 'currency'
+    })
+  })
+
+  it('keeps the previously rendered total format when no sample remains', () => {
+    expect(
+      resolveSumTotalFormat({}, [], 'amount', { type: 'currency' })
+    ).toEqual({ type: 'currency' })
+  })
+
+  it('returns {} when nothing usable is available', () => {
+    expect(resolveSumTotalFormat({}, undefined, 'amount')).toEqual({})
   })
 })
