@@ -237,6 +237,8 @@ export type {
 } from './lib/virtual_rows'
 export { computeVirtualWindow } from './lib/virtual_range'
 export type { VirtualWindow, VirtualWindowInput } from './lib/virtual_range'
+export { resolveDataTableColumnTrack } from './lib/datatable'
+export type { DataTableHeader } from './lib/datatable'
 export type {
   IKanbanCard,
   IKanbanColumn,

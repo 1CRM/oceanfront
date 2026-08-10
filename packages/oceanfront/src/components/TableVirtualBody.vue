@@ -7,6 +7,7 @@
   <template v-for="rowIdx in visibleIndices" :key="rowIdx">
     <of-table-row-skeleton
       v-if="!rows[rowIdx]"
+      :ref="(inst: any) => registerRow(rowIdx, inst)"
       :columns="columns"
       :rows-selector="rowsSelector"
       :draggable="!!dragInfo?.draggable"
@@ -14,6 +15,7 @@
     />
     <of-table-row
       v-else
+      :ref="(inst: any) => registerRow(rowIdx, inst)"
       :row="rows[rowIdx]"
       :drag-info="dragInfo"
       :coords="[rowIdx]"
@@ -47,7 +49,13 @@
 </template>
 
 <script lang="ts">
-import { PropType, computed, defineComponent } from 'vue'
+import {
+  ComponentPublicInstance,
+  PropType,
+  computed,
+  defineComponent,
+  onBeforeUnmount
+} from 'vue'
 import { DataTableHeader } from '../lib/datatable'
 import { FormRecord } from '../lib/records'
 import OfTableRow from './TableRow.vue'
@@ -78,7 +86,12 @@ export default defineComponent({
       type: Object as PropType<FormRecord>,
       required: true
     },
-    isTouchable: Boolean
+    isTouchable: Boolean,
+    /** Feeds each rendered row's real height back to the height cache. */
+    reportRowHeight: {
+      type: Function as PropType<(index: number, height: number) => void>,
+      required: true
+    }
   },
   emits: ['update:row', 'update:field'],
   setup(props) {
@@ -89,7 +102,50 @@ export default defineComponent({
       for (let i = 0; i < count; i++) indices[i] = start + i
       return indices
     })
-    return { visibleIndices }
+
+    // Rows are `display: contents` (see _tables.scss), so measure the first
+    // cell — CSS Grid stretches every cell in a row to the same track
+    // height by default, so any one cell's height equals the row's height.
+    const rowEls = new Map<number, Element>()
+    const elIndices = new WeakMap<Element, number>()
+
+    const resizeObserver =
+      typeof ResizeObserver !== 'undefined'
+        ? new ResizeObserver((entries) => {
+            for (const entry of entries) {
+              const rowIdx = elIndices.get(entry.target)
+              if (rowIdx === undefined) continue
+              const height =
+                entry.borderBoxSize?.[0]?.blockSize ??
+                entry.target.getBoundingClientRect().height
+              if (height > 0) props.reportRowHeight(rowIdx, height)
+            }
+          })
+        : undefined
+
+    const registerRow = (
+      rowIdx: number,
+      inst: ComponentPublicInstance | Element | null
+    ) => {
+      const prevEl = rowEls.get(rowIdx)
+      if (prevEl) {
+        resizeObserver?.unobserve(prevEl)
+        elIndices.delete(prevEl)
+        rowEls.delete(rowIdx)
+      }
+      if (!inst) return
+      const rootEl = ((inst as ComponentPublicInstance).$el ??
+        inst) as HTMLElement
+      const cell = rootEl?.querySelector?.('[role="cell"]')
+      if (!cell) return
+      rowEls.set(rowIdx, cell)
+      elIndices.set(cell, rowIdx)
+      resizeObserver?.observe(cell)
+    }
+
+    onBeforeUnmount(() => resizeObserver?.disconnect())
+
+    return { visibleIndices, registerRow }
   }
 })
 </script>

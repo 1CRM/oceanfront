@@ -1,9 +1,11 @@
-/** Pure fixed-row-height window math for virtual scrolling. */
+/** Pure virtual-scroll window math, backed by a `RowMetrics` height source. */
+
+import { RowMetrics } from './virtual_row_heights'
 
 export interface VirtualWindowInput {
   scrolledPast: number
   viewportHeight: number
-  rowHeight: number
+  metrics: RowMetrics
   totalCount: number
   overscan: number
   /** Snap range start to multiples of this many rows (fewer range-change events). */
@@ -18,24 +20,31 @@ export interface VirtualWindow {
 }
 
 export function computeVirtualWindow(input: VirtualWindowInput): VirtualWindow {
-  const rowHeight = Math.max(1, input.rowHeight || 1)
   const total = Math.max(0, input.totalCount)
   const step = Math.max(1, input.rangeStep)
+  const overscan = Math.max(0, input.overscan)
+  const metrics = input.metrics
 
   if (total <= 0) {
     return { start: 0, end: 0, topSpacer: 0, bottomSpacer: 0 }
   }
 
-  const first = Math.floor(input.scrolledPast / rowHeight) - input.overscan
-  const start = Math.floor(Math.min(total, Math.max(0, first)) / step) * step
-  const visibleCount =
-    Math.ceil(input.viewportHeight / rowHeight) + input.overscan * 2
-  const end = Math.max(start, Math.min(total, start + visibleCount))
+  const startIdx = metrics.indexAtOffset(input.scrolledPast, total)
+  const start =
+    Math.floor(Math.min(total, Math.max(0, startIdx - overscan)) / step) * step
+  const endIdx =
+    metrics.indexAtOffset(input.scrolledPast + input.viewportHeight, total) +
+    1 +
+    overscan
+  const end = Math.max(start, Math.min(total, endIdx))
 
   return {
     start,
     end,
-    topSpacer: start * rowHeight,
-    bottomSpacer: Math.max(0, total - end) * rowHeight
+    topSpacer: metrics.offsetOf(start),
+    bottomSpacer: Math.max(
+      0,
+      metrics.totalHeight(total) - metrics.offsetOf(end)
+    )
   }
 }

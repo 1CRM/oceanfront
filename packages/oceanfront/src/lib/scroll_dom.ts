@@ -3,7 +3,14 @@ export type ScrollRoot = HTMLElement | Window
 const isScrollableOverflow = (overflow: string) =>
   overflow === 'auto' || overflow === 'scroll' || overflow === 'overlay'
 
-/** Nearest scrolling ancestor, or `window`. */
+/**
+ * Nearest scrolling ancestor, or `window`.
+ *
+ * Starts at `parentElement` on purpose: virtual rows expect `el` to grow with
+ * content while the page/shell scrolls. Checking `el` itself would pick up
+ * height-constrained `overflow: auto` boxes (e.g. `.of-data-table` without
+ * `.of--virtual-scroll`) whose scrollTop is invisible to viewport measure.
+ */
 export const findScrollParent = (el: HTMLElement): ScrollRoot => {
   let parent = el.parentElement
   while (parent) {

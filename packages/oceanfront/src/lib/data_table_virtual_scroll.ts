@@ -1,13 +1,10 @@
-import {
-  ComputedRef,
-  Ref,
-  computed,
-  nextTick,
-  onMounted,
-  ref,
-  watch
-} from 'vue'
+import { ComputedRef, Ref, computed, watch } from 'vue'
 import { VirtualRowsRange, useVirtualRows } from './virtual_rows'
+import {
+  RowMetrics,
+  createFixedRowMetrics,
+  createRowHeightCache
+} from './virtual_row_heights'
 
 export interface UseDataTableVirtualScrollOptions {
   containerRef: Ref<HTMLDivElement | undefined>
@@ -27,6 +24,8 @@ export interface UseDataTableVirtualScrollReturn {
   isScrolling: ComputedRef<boolean>
   fixedRowHeight: ComputedRef<boolean>
   rowHeightVar: ComputedRef<string | undefined>
+  /** Feeds a rendered row's real height back into the variable-height cache. */
+  reportRowHeight: (index: number, height: number) => void
   scrollToOffset: (offset: number) => void
 }
 
@@ -35,32 +34,44 @@ const estimateRowHeight = (density: number) => {
   return Math.round(16 * vpadRem * 2 + 24)
 }
 
-/** DataTable adapter: row-height measurement + virtual windowing hooks. */
+/**
+ * DataTable adapter: row-height tracking + virtual windowing hooks.
+ *
+ * `virtual-row-height` (rowHeightOverride) is an explicit "rows are single
+ * line / uniform height" contract from the consumer — it stays O(1) fixed
+ * math with no measurement. Otherwise, rows are auto-measured per-render
+ * (via `reportRowHeight`, fed by a `ResizeObserver` in
+ * `TableVirtualBody.vue`) and tracked in a `RowHeightCache` so wrapped
+ * multiline rows get correct spacers/scroll math instead of assuming every
+ * row shares one fixed height.
+ */
 export function useDataTableVirtualScroll(
   options: UseDataTableVirtualScrollOptions
 ): UseDataTableVirtualScrollReturn {
-  const measuredRowHeight = ref<number | undefined>(undefined)
-
-  const rowHeight = computed(
-    () =>
-      options.rowHeightOverride.value ??
-      measuredRowHeight.value ??
-      estimateRowHeight(options.density.value)
+  const rowHeightCache = createRowHeightCache(
+    estimateRowHeight(options.density.value)
   )
 
-  const measureRowHeight = () => {
-    if (!options.enabled.value) return
-    const cell = options.containerRef.value?.querySelector(
-      '.of-data-table-row:not(.of-data-table-row-skeleton) > [role="cell"]'
-    ) as HTMLElement | null
-    const height = cell?.getBoundingClientRect().height
-    if (height && height > 0) measuredRowHeight.value = height
-  }
-
-  onMounted(measureRowHeight)
+  // Reference-equality watch: fires on a genuine data reload/sort (new
+  // array) or a density change, not on in-place sparse-array hole fills
+  // used by chunked/infinite loading — so measured heights survive
+  // incremental loads instead of being thrown away on every chunk.
   watch([options.rows, options.density], () => {
-    if (options.enabled.value) nextTick().then(measureRowHeight)
+    if (!options.enabled.value) return
+    rowHeightCache.reset(estimateRowHeight(options.density.value))
   })
+
+  const metrics = computed<RowMetrics>(() =>
+    options.rowHeightOverride.value != null
+      ? createFixedRowMetrics(options.rowHeightOverride.value)
+      : rowHeightCache
+  )
+
+  const reportRowHeight = (index: number, height: number) => {
+    if (!options.enabled.value || options.rowHeightOverride.value != null)
+      return
+    rowHeightCache.setSize(index, height)
+  }
 
   const virtualRows = useVirtualRows({
     enabled: options.enabled,
@@ -68,7 +79,7 @@ export function useDataTableVirtualScroll(
     totalCount: computed(
       () => options.totalRows.value ?? options.rows.value.length
     ),
-    rowHeight,
+    metrics,
     onRangeChange: options.onRangeChange
   })
 
@@ -86,6 +97,7 @@ export function useDataTableVirtualScroll(
     rowHeightVar: computed(() =>
       fixedRowHeight.value ? options.rowHeightOverride.value + 'px' : undefined
     ),
+    reportRowHeight,
     scrollToOffset: virtualRows.scrollToOffset
   }
 }

@@ -27,7 +27,29 @@
   width: 100%;
   display: grid;
   grid-template-columns: var(--of-table-columns);
+  // Horizontal clip/scroll for wide tables. Vertical `auto` lets height-
+  // constrained consumers scroll inside the table (detail panels, etc.).
   overflow: auto;
+
+  // Virtual scroll assumes page/shell scroll and a growing table
+  // (`findScrollParent` walks parents; measure uses -rect.top). If this
+  // element stays `overflow-y: auto` under a max-height, it becomes the
+  // scrollport, scrolledPast stays 0, and the window never advances.
+  &.of--virtual-scroll {
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    // Pair with `minmax(0, Nfr)` tracks: grid items default to `min-width:
+    // auto`, which would still let nowrap cell content inflate columns as the
+    // virtual window changes. Allow shrinking and clip overflow instead.
+    > .of-data-table-header > div,
+    > .of-data-table-row > div,
+    > .of-data-table-footer > div {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
 
   // Isolate virtual-scroll row churn; avoid contain:paint (clips popups)
   // and standing transform/will-change (tall tables can blank on GPU).
@@ -149,10 +171,12 @@
   // Reserves scrollbar space for rows outside the rendered window.
   > .of-data-table-virtual-spacer {
     grid-column: 1 / -1;
+    // Spacer height changes with the virtual window; opt out of scroll
+    // anchoring so the browser doesn't rewrite scrollY on every remount.
+    overflow-anchor: none;
   }
   // Restores the bottom border lost when a spacer becomes the last child.
-  > .of-data-table-row:has(+ .of-data-table-virtual-spacer:last-child)
-    > div {
+  > .of-data-table-row:has(+ .of-data-table-virtual-spacer:last-child) > div {
     border-bottom: 1px solid var(--table-border-color);
   }
 

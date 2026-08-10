@@ -136,6 +136,7 @@
       :show-old-values="showOldValues"
       :rows-record="rowsRecord"
       :is-touchable="isTouchable"
+      :report-row-height="reportRowHeight"
       @update:row="updateRow"
       @update:field="updateField"
     >
@@ -274,7 +275,12 @@ import {
   shallowRef,
   reactive
 } from 'vue'
-import { DataTableHeader } from '../lib/datatable'
+import {
+  DataTableHeader,
+  firstLoadedRow,
+  resolveDataTableColumnTrack,
+  sumTotalColumnsSignature
+} from '../lib/datatable'
 import { useThemeOptions } from '../lib/theme'
 import { OfIcon } from './Icon'
 import { OfOverlay } from './Overlay'
@@ -307,8 +313,7 @@ interface ExtraSortField {
 }
 
 const showSelector = (hasSelector: boolean, rows: any[]): boolean =>
-  // Sparse virtual-scroll arrays may have a hole at index 0 after eviction.
-  !!hasSelector && !!rows?.some((row) => row?.hasOwnProperty('id'))
+  !!hasSelector && !!firstLoadedRow(rows)?.hasOwnProperty('id')
 
 let sysDataTableIndex = 0
 
@@ -374,7 +379,19 @@ export default defineComponent({
       type: Number,
       default: undefined
     },
-    /** Row height override (px); auto-measured from a rendered row when unset. */
+    /**
+     * Row height override (px). This is an explicit contract that every row
+     * is exactly this tall (single-line cells, no wrapping) — it enforces a
+     * fixed CSS grid track height (`of--fixed-row-height`) and uses O(1)
+     * `index * height` math for virtual-scroll spacers/scroll position.
+     * Wrapped/multiline content will visually overflow its row track in
+     * this mode.
+     *
+     * Omit it (the default) to get automatic per-row measurement instead:
+     * each rendered row's real height feeds a height cache, so rows that
+     * wrap to 2-3 lines get correct spacers and scroll math even though
+     * rows aren't a uniform height.
+     */
     virtualRowHeight: {
       type: Number,
       default: undefined
@@ -868,9 +885,16 @@ export default defineComponent({
     watch(
       () => {
         if (!sumTotalColumns.value.length) return null
-        // Under virtual scroll, only recompute when the loaded length changes
-        // instead of deep-walking the growing sparse array on every chunk.
-        if (props.virtualScroll) return (props.items as any[])?.length ?? 0
+        // Under virtual scroll, avoid deep-walking the sparse array. Length alone
+        // misses hole fills (`items[i]=row` with length unchanged), so key off
+        // loaded count + a cheap sum-column content signature instead.
+        if (props.virtualScroll) {
+          return sumTotalColumnsSignature(
+            props.items as any[] | undefined,
+            sumTotalColumns.value,
+            columns.value
+          )
+        }
         return props.items
       },
       () => {
@@ -887,17 +911,12 @@ export default defineComponent({
       const selectorWidth = showSelector(props.rowsSelector, rows.value)
         ? 'min-content'
         : ''
+      // Virtual scroll only mounts a row window; content-sized tracks (`auto` /
+      // plain `fr`) would resize columns as that window slides. Lock tracks to
+      // container-relative sizes instead (see resolveDataTableColumnTrack).
+      const trackOpts = { ignoreContentMin: props.virtualScroll }
       const widths = props.headers
-        ?.map((h) => {
-          if (!h.width) return 'auto'
-          const w = h.width.toString()
-          if (w.endsWith('%') || w.match(/^[0-9]+(\.[0-9]*)?$/)) {
-            const widthNumber = parseFloat(w)
-            if (isNaN(widthNumber)) return 'auto'
-            return '' + widthNumber + 'fr'
-          }
-          return w
-        })
+        ?.map((h) => resolveDataTableColumnTrack(h.width, trackOpts))
         .join(' ')
       const style: Record<string, string> = {
         '--of-table-columns': `${dragWidth} ${selectorWidth} ${widths}`
@@ -1172,6 +1191,7 @@ export default defineComponent({
       'of-data-table',
       'of--density-' + density.value,
       {
+        'of--virtual-scroll': props.virtualScroll,
         'of--scrolling': virtualScroll.isScrolling.value,
         'of--fixed-row-height': virtualScroll.fixedRowHeight.value
       }
@@ -1226,6 +1246,7 @@ export default defineComponent({
       virtualRangeEnd: virtualScroll.rangeEnd,
       virtualTopSpacer: virtualScroll.topSpacer,
       virtualBottomSpacer: virtualScroll.bottomSpacer,
+      reportRowHeight: virtualScroll.reportRowHeight,
       scrollToOffset: virtualScroll.scrollToOffset,
       colAriaSort,
       sortHeaderAriaLabel,

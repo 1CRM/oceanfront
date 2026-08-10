@@ -15,6 +15,7 @@ import {
 } from './scroll_dom'
 import { createScrollSpeedLimit } from './scroll_speed_limit'
 import { computeVirtualWindow } from './virtual_range'
+import { RowMetrics } from './virtual_row_heights'
 
 export const VIRTUAL_ROWS_DEFAULT_OVERSCAN = 10
 export const VIRTUAL_ROWS_SCROLL_IDLE_MS = 150
@@ -31,7 +32,8 @@ export interface UseVirtualRowsOptions {
   enabled?: ComputedRef<boolean> | Ref<boolean>
   containerRef: Ref<HTMLElement | null | undefined>
   totalCount: ComputedRef<number> | Ref<number>
-  rowHeight: ComputedRef<number> | Ref<number>
+  /** Row-height source: fixed math or a measured variable-height cache. */
+  metrics: ComputedRef<RowMetrics> | Ref<RowMetrics>
   overscan?: number
   onRangeChange?: (range: VirtualRowsRange) => void
 }
@@ -48,9 +50,11 @@ export interface UseVirtualRowsReturn {
 }
 
 /**
- * Fixed-row-height windowing. The container grows with content; scroll may
- * live on the page/app shell. Position comes from getBoundingClientRect;
- * scroll/wheel/resize are observed on window (capture).
+ * Fixed-row-height windowing. The container must grow with content; vertical
+ * scroll lives on the page/app shell (or a parent), never on the container.
+ * `scrolledPast` is how far the container top has moved above the viewport
+ * (`max(0, -rect.top)`). If the container itself is the scrollport, that
+ * stays 0 and the window never advances.
  */
 export function useVirtualRows(
   options: UseVirtualRowsOptions
@@ -66,6 +70,7 @@ export function useVirtualRows(
   let onScreen = false
   let scrollRoot: ScrollRoot = window
   let attachedEl: HTMLElement | null = null
+  let wheelTarget: EventTarget | null = null
   let resizeObserver: ResizeObserver | undefined
   let measureScheduled = false
   let scrollIdleTimer: ReturnType<typeof setTimeout> | undefined
@@ -85,12 +90,17 @@ export function useVirtualRows(
     const rect = el.getBoundingClientRect()
     const winHeight =
       window.innerHeight || document.documentElement.clientHeight || 0
+    // Stuck ListView headers add padding-top after taking header cells out of
+    // flow. Row/spacer content starts after that padding, so subtract it from
+    // scrolledPast or the window starts too early once the header pins.
+    const padTop = parseFloat(getComputedStyle(el).paddingTop) || 0
     onScreen = rect.bottom > 0 && rect.top < winHeight
-    scrolledPast.value = Math.max(0, -rect.top)
+    scrolledPast.value = Math.max(0, -rect.top - padTop)
     viewportHeight.value = Math.max(
       0,
       Math.min(rect.bottom, winHeight) - Math.max(rect.top, 0)
     )
+    syncWheelListener()
   }
 
   const markScrolling = () => {
@@ -124,6 +134,31 @@ export function useVirtualRows(
   }
   const onResize = () => scheduleMeasure()
 
+  // Non-passive capture wheel is expensive and can reshape input meant for
+  // other scroll boxes. Keep it on the real scroll root, and only while the
+  // virtual list intersects the viewport.
+  const removeWheelListener = () => {
+    if (!wheelTarget) return
+    wheelTarget.removeEventListener('wheel', onWheel as EventListener, {
+      capture: true
+    })
+    wheelTarget = null
+  }
+
+  const syncWheelListener = () => {
+    if (typeof window === 'undefined') return
+    const shouldListen = !!attachedEl && isEnabled() && onScreen
+    const nextTarget: EventTarget | null = shouldListen ? scrollRoot : null
+    if (wheelTarget === nextTarget) return
+    removeWheelListener()
+    if (!nextTarget) return
+    nextTarget.addEventListener('wheel', onWheel as EventListener, {
+      passive: false,
+      capture: true
+    })
+    wheelTarget = nextTarget
+  }
+
   const attach = (el: HTMLElement | null | undefined) => {
     if (!el || typeof window === 'undefined' || !isEnabled()) return
     if (attachedEl === el) return
@@ -135,7 +170,6 @@ export function useVirtualRows(
       passive: true,
       capture: true
     })
-    window.addEventListener('wheel', onWheel, { passive: false, capture: true })
     window.addEventListener('resize', onResize, { passive: true })
     if (typeof ResizeObserver !== 'undefined') {
       resizeObserver = new ResizeObserver(() => scheduleMeasure())
@@ -146,8 +180,8 @@ export function useVirtualRows(
 
   const detach = (_el?: HTMLElement | null | undefined) => {
     if (!attachedEl || typeof window === 'undefined') return
+    removeWheelListener()
     window.removeEventListener('scroll', onScroll, { capture: true })
-    window.removeEventListener('wheel', onWheel, { capture: true })
     window.removeEventListener('resize', onResize)
     resizeObserver?.disconnect()
     resizeObserver = undefined
@@ -173,10 +207,14 @@ export function useVirtualRows(
     if (!isEnabled()) {
       return { start: 0, end: 0, topSpacer: 0, bottomSpacer: 0 }
     }
+    const metrics = options.metrics.value
+    // Read `.version` so cache mutations (rows measured after render) mark
+    // this computed dirty even though `metrics` itself is the same object.
+    metrics.version.value
     return computeVirtualWindow({
       scrolledPast: scrolledPast.value,
       viewportHeight: viewportHeight.value,
-      rowHeight: options.rowHeight.value,
+      metrics,
       totalCount: options.totalCount.value,
       overscan,
       rangeStep
@@ -197,15 +235,22 @@ export function useVirtualRows(
     { immediate: true, flush: 'post' }
   )
 
+  // Best-effort: jumps to the offset the current metrics predict for `index`.
+  // For never-rendered rows under variable-height mode this uses the
+  // estimate and refines once those rows render and get measured — the same
+  // limitation every variable-size virtualizer has.
   const scrollToIndex = (index: number) => {
     const el = options.containerRef.value
     if (!el || typeof window === 'undefined' || !isEnabled()) return
-    const rowHeightPx = Math.max(1, options.rowHeight.value || 1)
+    const targetOffset = Math.max(
+      0,
+      options.metrics.value.offsetOf(Math.max(0, index))
+    )
     const root = scrollRoot || findScrollParent(el)
     const containerRect = el.getBoundingClientRect()
     if (root === window) {
       const containerDocTop = containerRect.top + window.scrollY
-      setScrollTop(root, containerDocTop + Math.max(0, index) * rowHeightPx)
+      setScrollTop(root, containerDocTop + targetOffset)
       speedLimit.reset()
       measure()
       return
@@ -214,9 +259,7 @@ export function useVirtualRows(
     const rootRect = rootEl.getBoundingClientRect()
     setScrollTop(
       root,
-      getScrollTop(rootEl) +
-        (containerRect.top - rootRect.top) +
-        Math.max(0, index) * rowHeightPx
+      getScrollTop(rootEl) + (containerRect.top - rootRect.top) + targetOffset
     )
     speedLimit.reset()
     measure()
