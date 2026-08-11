@@ -65,6 +65,8 @@ export default {
   },
   common: {
     selectable: Boolean,
+    movable: Boolean,
+    eventMovable: Function as PropType<(e: InternalEvent) => boolean>,
     hourIntervals: {
       type: [Number, String],
       default: 4
