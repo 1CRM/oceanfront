@@ -1,5 +1,6 @@
 import { addMinutes } from '../../lib/datetime'
 import {
+  daysInEvent,
   getTimestampIdintifier,
   toTimestamp,
   withZeroTime,
@@ -19,7 +20,15 @@ type MoveState = {
   originStart: number
   originEnd: number
   originAllDay: boolean
+  /** Timed duration used when dropping on a day column. */
   durationMinutes: number
+  /**
+   * Number of calendar days spanned while all-day.
+   * Multi-day all-day events keep this span on all-day drops; converting
+   * all-day → timed intentionally uses {@link durationMinutes} (≈30m), matching
+   * app-layer `wasDaylong` handling.
+   */
+  allDaySpanDays: number
   offsetMinutes: number
   startX: number
   startY: number
@@ -50,6 +59,49 @@ function precisionMinutes(numHourIntervals: number) {
   return 60 / numHourIntervals
 }
 
+/** Visible day length in minutes; never below one precision slot. */
+export function visibleDayLengthMinutes(
+  dayStartHour: number,
+  dayEndHour: number,
+  precision: number
+) {
+  return Math.max(precision, (dayEndHour - dayStartHour) * 60)
+}
+
+/**
+ * Timed duration for move previews. All-day → timed intentionally becomes one
+ * precision slot (at least 30m), not the multi-day all-day span.
+ */
+export function moveDurationMinutes(
+  event: InternalEvent,
+  precision: number
+): number {
+  if (event.allDay) return Math.max(30, precision)
+  return Math.max(
+    Math.round(
+      (event.endTS.date.getTime() - event.startTS.date.getTime()) / 60000
+    ),
+    precision
+  )
+}
+
+export function moveAllDaySpanDays(event: InternalEvent): number {
+  return event.allDay ? Math.max(1, daysInEvent(event)) : 1
+}
+
+/** Cap timed duration so the event fits in the visible day window. */
+export function capTimedDurationToDay(
+  durationMinutes: number,
+  dayStartHour: number,
+  dayEndHour: number,
+  precision: number
+) {
+  return Math.min(
+    durationMinutes,
+    visibleDayLengthMinutes(dayStartHour, dayEndHour, precision)
+  )
+}
+
 function timestampFromY(
   clientY: number,
   dayBoundEl: HTMLElement,
@@ -78,6 +130,13 @@ export function useCalendarEventMove(options: UseCalendarEventMoveOptions) {
 
   const moving = ref<MoveState | null>(null)
   let suppressClick = false
+  let suppressClickTimer: ReturnType<typeof setTimeout> | null = null
+
+  function clearSuppressClickTimer() {
+    if (suppressClickTimer == null) return
+    clearTimeout(suppressClickTimer)
+    suppressClickTimer = null
+  }
 
   function isEventMovable(e: InternalEvent): boolean {
     if (!props.movable) return false
@@ -127,14 +186,8 @@ export function useCalendarEventMove(options: UseCalendarEventMoveOptions) {
     nativeEvent.preventDefault()
 
     const precision = precisionMinutes(numHourIntervals.value)
-    const durationMinutes = event.allDay
-      ? Math.max(30, precision)
-      : Math.max(
-          Math.round(
-            (event.endTS.date.getTime() - event.startTS.date.getTime()) / 60000
-          ),
-          precision
-        )
+    const durationMinutes = moveDurationMinutes(event, precision)
+    const allDaySpanDays = moveAllDaySpanDays(event)
 
     let offsetMinutes = 0
     if (!fromAllDay && nativeEvent.currentTarget) {
@@ -154,6 +207,7 @@ export function useCalendarEventMove(options: UseCalendarEventMoveOptions) {
       originEnd: event.end,
       originAllDay: !!event.allDay,
       durationMinutes,
+      allDaySpanDays,
       offsetMinutes,
       startX: nativeEvent.clientX,
       startY: nativeEvent.clientY,
@@ -206,7 +260,9 @@ export function useCalendarEventMove(options: UseCalendarEventMoveOptions) {
         allDay: true,
         category: cat.category,
         previewStart: startId,
-        previewEnd: startId + next.durationMinutes
+        // Use day identifiers (OFFSET_TIMESTAMP), not minute duration, so
+        // multi-day all-day spans survive the drop preview.
+        previewEnd: startId + next.allDaySpanDays * OFFSET_TIMESTAMP
       }
       emitMove('change', moving.value, e)
       return
@@ -222,7 +278,12 @@ export function useCalendarEventMove(options: UseCalendarEventMoveOptions) {
       hoursInterval.value,
       precision
     )
-    const dur = next.durationMinutes
+    const dur = capTimedDurationToDay(
+      next.durationMinutes,
+      dayStartHour,
+      dayEndHour,
+      precision
+    )
     let startMinutes = ts.hours * 60 + ts.minutes - next.offsetMinutes
     const minM = dayStartHour * 60
     const maxStart = dayEndHour * 60 - dur
@@ -265,7 +326,15 @@ export function useCalendarEventMove(options: UseCalendarEventMoveOptions) {
     moving.value = null
     if (!m?.active) return
 
+    // Suppress the click that follows a completed drag. Clear on a short TTL so
+    // a missed click (mouseup outside the event) cannot swallow the next one.
+    clearSuppressClickTimer()
     suppressClick = true
+    suppressClickTimer = setTimeout(() => {
+      suppressClick = false
+      suppressClickTimer = null
+    }, 0)
+
     const changed =
       m.allDay !== m.originAllDay ||
       m.previewStart !== m.originStart ||
@@ -278,11 +347,15 @@ export function useCalendarEventMove(options: UseCalendarEventMoveOptions) {
     if (e.key === 'Escape') cancelMove(e)
   }
 
-  onUnmounted(cleanupListeners)
+  onUnmounted(() => {
+    cleanupListeners()
+    clearSuppressClickTimer()
+  })
 
   function consumeClickSuppress(): boolean {
     if (!suppressClick) return false
     suppressClick = false
+    clearSuppressClickTimer()
     return true
   }
 
@@ -321,16 +394,19 @@ export function useCalendarEventMove(options: UseCalendarEventMoveOptions) {
 
     const startMin = m.previewStart % OFFSET_TIMESTAMP
     const endMin = m.previewEnd % OFFSET_TIMESTAMP
-    const top = ((startMin - startHour * 60) / dayLength) * 100
-    const height = Math.max(
-      100 / dayLength,
-      ((endMin - startMin) / dayLength) * 100
+    const top = Math.max(
+      0,
+      Math.min(100, ((startMin - startHour * 60) / dayLength) * 100)
+    )
+    const height = Math.min(
+      100 - top,
+      Math.max(100 / dayLength, ((endMin - startMin) / dayLength) * 100)
     )
 
     return renderMoveGhost(m.event, {
       left: '5px',
       width: 'calc(100% - 10px)',
-      top: `calc(${Math.max(0, top)}% + 1px)`,
+      top: `calc(${top}% + 1px)`,
       height: `calc(${height}% - 3px)`,
       'min-height': `calc(${height}% - 3px)`
     })

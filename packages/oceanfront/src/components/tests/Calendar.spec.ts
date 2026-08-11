@@ -1,10 +1,20 @@
-import { mount } from '@vue/test-utils'
+import { mount, VueWrapper } from '@vue/test-utils'
 import { h } from 'vue'
 import OfCalendar from '../Calendar/Calendar'
-import { CalendarEvent } from '../../lib/calendar'
+import {
+  CalendarEvent,
+  OFFSET_TIMESTAMP,
+  timestampIdToDate,
+  toTimestamp
+} from '../../lib/calendar'
 import { extendDefaultConfig } from '../../lib/config'
 import { registerTextFormatter } from '../../lib/formats'
 import { DateFormatter, DateTimeFormatter } from '../../formats/DateTime'
+import {
+  capTimedDurationToDay,
+  moveAllDaySpanDays,
+  moveDurationMinutes
+} from '../Calendar/useCalendarEventMove'
 
 extendDefaultConfig(() => {
   registerTextFormatter('datetime', DateTimeFormatter)
@@ -33,6 +43,61 @@ function mountCalendar(props: Record<string, unknown> = {}, slots?: any) {
     props: { day, events, ...props },
     slots
   })
+}
+
+function mockRect(
+  top: number,
+  left: number,
+  width: number,
+  height: number
+): DOMRect {
+  return {
+    top,
+    left,
+    width,
+    height,
+    bottom: top + height,
+    right: left + width,
+    x: left,
+    y: top,
+    toJSON: () => ({})
+  } as DOMRect
+}
+
+async function dragEvent(
+  wrapper: VueWrapper<any>,
+  eventEl: ReturnType<VueWrapper<any>['find']>,
+  targetEl: Element,
+  from: { x: number; y: number },
+  to: { x: number; y: number },
+  eventRect = mockRect(48, 10, 100, 48)
+) {
+  const dayRect = mockRect(0, 0, 200, 480)
+  vi.spyOn(targetEl as HTMLElement, 'getBoundingClientRect').mockReturnValue(
+    dayRect
+  )
+  vi.spyOn(eventEl.element, 'getBoundingClientRect').mockReturnValue(eventRect)
+  document.elementFromPoint = vi.fn().mockReturnValue(targetEl)
+
+  await eventEl.trigger('mousedown', {
+    buttons: 1,
+    clientX: from.x,
+    clientY: from.y
+  })
+  window.dispatchEvent(
+    new MouseEvent('mousemove', {
+      buttons: 1,
+      clientX: to.x,
+      clientY: to.y
+    })
+  )
+  window.dispatchEvent(
+    new MouseEvent('mouseup', {
+      buttons: 0,
+      clientX: to.x,
+      clientY: to.y
+    })
+  )
 }
 
 describe('OfCalendar', () => {
@@ -127,41 +192,12 @@ describe('OfCalendar', () => {
       .find((el) => el.text().includes('Timed event'))
     expect(timed).toBeTruthy()
     const dayCol = wrapper.find('.of-calendar-day-row .of-calendar-day')
-    const dayRect = {
-      top: 0,
-      left: 0,
-      width: 200,
-      height: 480,
-      bottom: 480,
-      right: 200,
-      x: 0,
-      y: 0,
-      toJSON: () => ({})
-    } as DOMRect
-    vi.spyOn(dayCol.element, 'getBoundingClientRect').mockReturnValue(dayRect)
-    vi.spyOn(timed!.element, 'getBoundingClientRect').mockReturnValue({
-      top: 48,
-      left: 10,
-      width: 100,
-      height: 48,
-      bottom: 96,
-      right: 110,
-      x: 10,
-      y: 48,
-      toJSON: () => ({})
-    } as DOMRect)
-    document.elementFromPoint = vi.fn().mockReturnValue(dayCol.element)
-
-    await timed!.trigger('mousedown', {
-      buttons: 1,
-      clientX: 20,
-      clientY: 60
-    })
-    window.dispatchEvent(
-      new MouseEvent('mousemove', { buttons: 1, clientX: 20, clientY: 200 })
-    )
-    window.dispatchEvent(
-      new MouseEvent('mouseup', { buttons: 0, clientX: 20, clientY: 200 })
+    await dragEvent(
+      wrapper,
+      timed!,
+      dayCol.element,
+      { x: 20, y: 60 },
+      { x: 20, y: 200 }
     )
     expect(onMoveEnd).toHaveBeenCalledTimes(1)
     expect(onMoveEnd.mock.calls[0][4]).toEqual({ allDay: false })
@@ -191,6 +227,257 @@ describe('OfCalendar', () => {
       new MouseEvent('mouseup', { buttons: 0, clientX: 20, clientY: 200 })
     )
     expect(onMoveStart).not.toHaveBeenCalled()
+  })
+
+  it('emits move:end when an all-day event is dropped on the all-day row', async () => {
+    const onMoveEnd = vi.fn()
+    const wrapper = mountCalendar({
+      type: 'week',
+      movable: true,
+      dayStart: 8,
+      dayEnd: 18,
+      'onMove:end': onMoveEnd
+    })
+    const allDay = wrapper
+      .findAll('.of-calendar-allday-row .of-calendar-event')
+      .find((el) => el.text().includes('All day event'))
+    expect(allDay).toBeTruthy()
+    const allDayCells = wrapper.findAll(
+      '.of-calendar-allday-row .of-calendar-day'
+    )
+    // Drop onto Thursday (index 3 with Monday start: Mon=0 … Wed=2, Thu=3)
+    const target = allDayCells[3]
+    expect(target.exists()).toBe(true)
+    document.elementFromPoint = vi.fn().mockReturnValue(target.element)
+    vi.spyOn(allDay!.element, 'getBoundingClientRect').mockReturnValue(
+      mockRect(0, 0, 100, 20)
+    )
+    vi.spyOn(target.element, 'getBoundingClientRect').mockReturnValue(
+      mockRect(0, 300, 100, 40)
+    )
+
+    await allDay!.trigger('mousedown', {
+      buttons: 1,
+      clientX: 10,
+      clientY: 10
+    })
+    window.dispatchEvent(
+      new MouseEvent('mousemove', { buttons: 1, clientX: 320, clientY: 20 })
+    )
+    window.dispatchEvent(
+      new MouseEvent('mouseup', { buttons: 0, clientX: 320, clientY: 20 })
+    )
+
+    expect(onMoveEnd).toHaveBeenCalledTimes(1)
+    expect(onMoveEnd.mock.calls[0][4]).toEqual({ allDay: true })
+    const startId = onMoveEnd.mock.calls[0][1] as number
+    const endId = onMoveEnd.mock.calls[0][2] as number
+    expect(endId - startId).toBe(OFFSET_TIMESTAMP)
+    expect(timestampIdToDate(startId).getDate()).toBe(18) // Thu Jan 18
+  })
+
+  it('preserves multi-day all-day span in move:end ids', async () => {
+    const onMoveEnd = vi.fn()
+    const wrapper = mountCalendar({
+      type: 'week',
+      movable: true,
+      events: [
+        {
+          name: 'Multi day',
+          start: '2024-01-17 00:00',
+          end: '2024-01-20 00:00',
+          allDay: true
+        }
+      ],
+      'onMove:end': onMoveEnd
+    })
+    const allDay = wrapper
+      .findAll('.of-calendar-allday-row .of-calendar-event')
+      .find((el) => el.text().includes('Multi day'))
+    expect(allDay).toBeTruthy()
+    const target = wrapper.findAll('.of-calendar-allday-row .of-calendar-day')[1]
+    document.elementFromPoint = vi.fn().mockReturnValue(target.element)
+    vi.spyOn(allDay!.element, 'getBoundingClientRect').mockReturnValue(
+      mockRect(0, 0, 100, 20)
+    )
+
+    await allDay!.trigger('mousedown', {
+      buttons: 1,
+      clientX: 10,
+      clientY: 10
+    })
+    window.dispatchEvent(
+      new MouseEvent('mousemove', { buttons: 1, clientX: 120, clientY: 20 })
+    )
+    window.dispatchEvent(
+      new MouseEvent('mouseup', { buttons: 0, clientX: 120, clientY: 20 })
+    )
+
+    expect(onMoveEnd).toHaveBeenCalledTimes(1)
+    const startId = onMoveEnd.mock.calls[0][1] as number
+    const endId = onMoveEnd.mock.calls[0][2] as number
+    expect(endId - startId).toBe(3 * OFFSET_TIMESTAMP)
+  })
+
+  it('emits move:cancel when Escape is pressed during an active drag', async () => {
+    const onMoveCancel = vi.fn()
+    const onMoveEnd = vi.fn()
+    const wrapper = mountCalendar({
+      type: 'day',
+      movable: true,
+      dayStart: 8,
+      dayEnd: 18,
+      'onMove:cancel': onMoveCancel,
+      'onMove:end': onMoveEnd
+    })
+    const timed = wrapper
+      .findAll('.of-calendar-day-row .of-calendar-event')
+      .find((el) => el.text().includes('Timed event'))
+    expect(timed).toBeTruthy()
+    const dayCol = wrapper.find('.of-calendar-day-row .of-calendar-day')
+    vi.spyOn(dayCol.element, 'getBoundingClientRect').mockReturnValue(
+      mockRect(0, 0, 200, 480)
+    )
+    vi.spyOn(timed!.element, 'getBoundingClientRect').mockReturnValue(
+      mockRect(48, 10, 100, 48)
+    )
+    document.elementFromPoint = vi.fn().mockReturnValue(dayCol.element)
+
+    await timed!.trigger('mousedown', {
+      buttons: 1,
+      clientX: 20,
+      clientY: 60
+    })
+    window.dispatchEvent(
+      new MouseEvent('mousemove', { buttons: 1, clientX: 20, clientY: 200 })
+    )
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+
+    expect(onMoveCancel).toHaveBeenCalledTimes(1)
+    expect(onMoveEnd).not.toHaveBeenCalled()
+  })
+
+  it('emits move:end when a timed event is dragged to another day', async () => {
+    const onMoveEnd = vi.fn()
+    const wrapper = mountCalendar({
+      type: 'week',
+      movable: true,
+      dayStart: 8,
+      dayEnd: 18,
+      hourHeight: 48,
+      'onMove:end': onMoveEnd
+    })
+    const timed = wrapper
+      .findAll('.of-calendar-day-row .of-calendar-event')
+      .find((el) => el.text().includes('Timed event'))
+    expect(timed).toBeTruthy()
+    const dayCols = wrapper.findAll('.of-calendar-day-row .of-calendar-day')
+    // Wed is index 2 (Mon-start week); drop on Friday (index 4)
+    const target = dayCols[4]
+    expect(target.exists()).toBe(true)
+    await dragEvent(
+      wrapper,
+      timed!,
+      target.element,
+      { x: 20, y: 60 },
+      { x: 420, y: 200 }
+    )
+    expect(onMoveEnd).toHaveBeenCalledTimes(1)
+    expect(onMoveEnd.mock.calls[0][4]).toEqual({ allDay: false })
+    const startDate = timestampIdToDate(onMoveEnd.mock.calls[0][1] as number)
+    expect(startDate.getDate()).toBe(19) // Fri Jan 19
+  })
+
+  it('caps long timed events to the visible day on move:end', async () => {
+    const onMoveEnd = vi.fn()
+    const wrapper = mountCalendar({
+      type: 'day',
+      movable: true,
+      dayStart: 8,
+      dayEnd: 18,
+      hourHeight: 48,
+      events: [
+        {
+          name: 'Long event',
+          start: '2024-01-17 08:00',
+          duration: 20 * 60 // longer than visible 10h day
+        }
+      ],
+      'onMove:end': onMoveEnd
+    })
+    const timed = wrapper
+      .findAll('.of-calendar-day-row .of-calendar-event')
+      .find((el) => el.text().includes('Long event'))
+    expect(timed).toBeTruthy()
+    const dayCol = wrapper.find('.of-calendar-day-row .of-calendar-day')
+    await dragEvent(
+      wrapper,
+      timed!,
+      dayCol.element,
+      { x: 20, y: 20 },
+      { x: 20, y: 100 },
+      mockRect(0, 10, 100, 480)
+    )
+    expect(onMoveEnd).toHaveBeenCalledTimes(1)
+    const startId = onMoveEnd.mock.calls[0][1] as number
+    const endId = onMoveEnd.mock.calls[0][2] as number
+    const start = timestampIdToDate(startId)
+    const end = timestampIdToDate(endId)
+    const durationMin = (end.getTime() - start.getTime()) / 60000
+    expect(durationMin).toBe(10 * 60)
+    expect(start.getHours()).toBe(8)
+    expect(end.getHours()).toBe(18)
+  })
+
+  it('clears click suppression after a drag so the next event click works', async () => {
+    vi.useFakeTimers()
+    const onMoveEnd = vi.fn()
+    const onClickEvent = vi.fn()
+    const wrapper = mountCalendar({
+      type: 'day',
+      movable: true,
+      dayStart: 8,
+      dayEnd: 18,
+      hourHeight: 48,
+      'onMove:end': onMoveEnd,
+      'onClick:event': onClickEvent
+    })
+    const timed = wrapper
+      .findAll('.of-calendar-day-row .of-calendar-event')
+      .find((el) => el.text().includes('Timed event'))
+    expect(timed).toBeTruthy()
+    const dayCol = wrapper.find('.of-calendar-day-row .of-calendar-day')
+    await dragEvent(
+      wrapper,
+      timed!,
+      dayCol.element,
+      { x: 20, y: 60 },
+      { x: 20, y: 200 }
+    )
+    expect(onMoveEnd).toHaveBeenCalledTimes(1)
+
+    // No click fired after mouseup outside the event; TTL must clear suppress.
+    await vi.runAllTimersAsync()
+    await timed!.trigger('click')
+    expect(onClickEvent).toHaveBeenCalledTimes(1)
+    vi.useRealTimers()
+  })
+
+  describe('move duration helpers', () => {
+    it('caps timed duration to the visible day length', () => {
+      expect(capTimedDurationToDay(20 * 60, 8, 18, 30)).toBe(10 * 60)
+      expect(capTimedDurationToDay(45, 8, 18, 30)).toBe(45)
+    })
+
+    it('uses ~30m for all-day → timed and preserves all-day day span', () => {
+      const allDay = {
+        allDay: true,
+        startTS: toTimestamp(new Date(2024, 0, 17)),
+        endTS: toTimestamp(new Date(2024, 0, 20))
+      } as any
+      expect(moveDurationMinutes(allDay, 30)).toBe(30)
+      expect(moveAllDaySpanDays(allDay)).toBe(3)
+    })
   })
 
   it('renders 12 months in the year view', () => {
