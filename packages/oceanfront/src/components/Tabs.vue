@@ -62,7 +62,7 @@
                 }
               "
               @focus="onFocusTab(tab.key)"
-              @blur="onBlurTab(tab.key)"
+              @blur="(e: FocusEvent) => onBlurTab(tab.key, e)"
               @keydown="navigate($event)"
               :ref="(el: any) => (tabsRefs[idx] = el)"
               :tabindex="tab.disabled ? -1 : 0"
@@ -99,6 +99,17 @@
                   :decorative="!!tab.text"
                 />
                 <span v-if="tab.text">{{ tab.text }}</span>
+              </div>
+              <div
+                v-if="tab.postfix"
+                class="of-tab-postfix"
+                @pointerup.stop
+                @mousedown.stop
+                @click.stop
+                @keydown="onPostfixKeydown"
+              >
+                <component v-if="isVNode(tab.postfix)" :is="tab.postfix" />
+                <div v-else>{{ tab.postfix }}</div>
               </div>
               <div class="of--layer of--layer-state" />
               <div v-if="tab.count" class="of-tab-count">
@@ -188,7 +199,8 @@ import {
   computed,
   nextTick,
   watch,
-  onBeforeUnmount
+  onBeforeUnmount,
+  isVNode
 } from 'vue'
 import { watchPosition } from '../lib/util'
 import { ItemsProp, useItems } from '../lib/items'
@@ -253,7 +265,8 @@ const formatItems = (
       field: item.field,
       class: item.class ?? undefined,
       id: item.id,
-      count: item.count > 99 ? '99+' : item.count
+      count: item.count > 99 ? '99+' : item.count,
+      postfix: item.postfix
     } as Tab)
   }
 
@@ -894,29 +907,101 @@ export default defineComponent({
       })
     }
 
-    const onBlurTab = (key: number | undefined = undefined) => {
+    const onBlurTab = (
+      key: number | undefined = undefined,
+      evt?: FocusEvent
+    ) => {
+      const related = evt?.relatedTarget as Node | null
+      if (key !== undefined && related && tabsRefs[key]?.contains?.(related)) {
+        return
+      }
       focusedTabKey.value = undefined
       subMenuLeave(key)
     }
 
+    const getPostfixFocusable = (tabEl: HTMLElement | null | undefined) =>
+      tabEl?.querySelector?.(
+        '.of-tab-postfix button, .of-tab-postfix [href], .of-tab-postfix [tabindex]:not([tabindex="-1"])'
+      ) as HTMLElement | null
+
+    // Let Tab bubble to the tab header navigate handler; stop other keys so
+    // postfix controls don't trigger tab selection / arrow navigation.
+    const onPostfixKeydown = (evt: KeyboardEvent) => {
+      if (evt.key === 'Tab') return
+      evt.stopPropagation()
+    }
+
+    const isExitingTablist = (idx: number) =>
+      (showOverflowButton.value && idx == -1) ||
+      (!showOverflowButton.value && idx == lastActiveTabIdx.value)
+
     const navigate = (evt: KeyboardEvent) => {
       let consumed = true
+      let movedIntoPostfix = false
       let idx = items.value.items.findIndex(
         (item: { key: number }) => item.key === focusedTabKey.value
       )
 
       switch (evt.key) {
-        case 'Tab':
+        case 'Tab': {
+          const tabEl = focusedTab.value
+          const postfixFocusable = getPostfixFocusable(tabEl)
+          if (
+            !evt.shiftKey &&
+            postfixFocusable &&
+            document.activeElement === tabEl
+          ) {
+            postfixFocusable.focus()
+            movedIntoPostfix = true
+            break
+          }
+          if (
+            evt.shiftKey &&
+            postfixFocusable &&
+            document.activeElement === postfixFocusable
+          ) {
+            tabEl?.focus()
+            break
+          }
+          if (
+            !evt.shiftKey &&
+            postfixFocusable &&
+            document.activeElement === postfixFocusable
+          ) {
+            // Leaving postfix: exit the tablist from the last tab, otherwise
+            // fall through to move focus to the next tab header.
+            if (isExitingTablist(idx)) {
+              focusedTabKey.value = undefined
+              consumed = false
+              closeSubMenu()
+              break
+            }
+          } else if (
+            evt.shiftKey &&
+            document.activeElement === tabEl &&
+            idx === 0
+          ) {
+            consumed = false
+            break
+          }
+        }
+        // fallthrough
         case 'ArrowLeft':
         case 'ArrowRight': {
-          const prev =
-            evt.key === 'ArrowLeft' || (evt.key === 'Tab' && evt.shiftKey)
-          focusedTabKey.value = getNextTabKey(idx, prev)
-          if (evt.key === 'Tab' && evt.shiftKey && idx == 0) consumed = false
-          focusTab()
-          nextTick(() => {
-            if (!subMenuHidden.value) openFocusedSubMenu()
-          })
+          if (
+            evt.key === 'Tab' ||
+            evt.key === 'ArrowLeft' ||
+            evt.key === 'ArrowRight'
+          ) {
+            const prev =
+              evt.key === 'ArrowLeft' || (evt.key === 'Tab' && evt.shiftKey)
+            focusedTabKey.value = getNextTabKey(idx, prev)
+            if (evt.key === 'Tab' && evt.shiftKey && idx == 0) consumed = false
+            focusTab()
+            nextTick(() => {
+              if (!subMenuHidden.value) openFocusedSubMenu()
+            })
+          }
           break
         }
         case 'ArrowUp':
@@ -943,6 +1028,10 @@ export default defineComponent({
           break
         case ' ':
         case 'Enter':
+          if ((evt.target as HTMLElement)?.closest?.('.of-tab-postfix')) {
+            consumed = false
+            break
+          }
           subMenuHidden.value = true
           selectTab(focusedTabKey.value)
           break
@@ -951,8 +1040,8 @@ export default defineComponent({
       if (
         evt.key == 'Tab' &&
         !evt.shiftKey &&
-        ((showOverflowButton.value && idx == -1) ||
-          (!showOverflowButton.value && idx == lastActiveTabIdx.value))
+        !movedIntoPostfix &&
+        isExitingTablist(idx)
       ) {
         focusedTabKey.value = undefined
         consumed = false
@@ -1049,12 +1138,14 @@ export default defineComponent({
       navigate,
       onFocusTab,
       onBlurTab,
+      onPostfixKeydown,
       tabsRefs,
       focusedTabKey,
       openedMenuTabKey,
       firstActiveTabIdx,
       lastActiveTabIdx,
-      handleSelectTab
+      handleSelectTab,
+      isVNode
     }
   }
 })

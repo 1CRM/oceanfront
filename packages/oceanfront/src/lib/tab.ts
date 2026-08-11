@@ -1,4 +1,6 @@
-export interface Tab {
+import type { VNode } from 'vue'
+
+export type Tab = {
   key: number
   value: number
   text: string
@@ -13,4 +15,6 @@ export interface Tab {
   ariaLabel?: string | undefined
   id?: string
   count?: number
+  /** Optional trailing content (string or VNode), e.g. a create-record button */
+  postfix?: string | VNode
 }
