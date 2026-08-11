@@ -1260,7 +1260,7 @@ export default defineComponent({
       virtualTopSpacer: virtualScroll.topSpacer,
       virtualBottomSpacer: virtualScroll.bottomSpacer,
       reportRowHeight: virtualScroll.reportRowHeight,
-      scrollToOffset: virtualScroll.scrollToOffset,
+      scrollToIndex: virtualScroll.scrollToIndex,
       colAriaSort,
       sortHeaderAriaLabel,
       sortAnnouncement,

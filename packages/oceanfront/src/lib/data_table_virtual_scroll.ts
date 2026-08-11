@@ -26,7 +26,7 @@ export interface UseDataTableVirtualScrollReturn {
   rowHeightVar: ComputedRef<string | undefined>
   /** Feeds a rendered row's real height back into the variable-height cache. */
   reportRowHeight: (index: number, height: number) => void
-  scrollToOffset: (offset: number) => void
+  scrollToIndex: (index: number) => void
 }
 
 const estimateRowHeight = (density: number) => {
@@ -98,6 +98,6 @@ export function useDataTableVirtualScroll(
       fixedRowHeight.value ? options.rowHeightOverride.value + 'px' : undefined
     ),
     reportRowHeight,
-    scrollToOffset: virtualRows.scrollToOffset
+    scrollToIndex: virtualRows.scrollToIndex
   }
 }

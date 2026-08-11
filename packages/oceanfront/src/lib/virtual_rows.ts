@@ -45,7 +45,6 @@ export interface UseVirtualRowsReturn {
   bottomSpacerHeight: ComputedRef<number>
   isScrolling: ComputedRef<boolean>
   scrollToIndex: (index: number) => void
-  scrollToOffset: (offset: number) => void
   refresh: () => void
 }
 
@@ -186,6 +185,7 @@ export function useVirtualRows(
     resizeObserver?.disconnect()
     resizeObserver = undefined
     if (scrollIdleTimer !== undefined) clearTimeout(scrollIdleTimer)
+    speedLimit.reset()
     attachedEl = null
     onScreen = false
     isScrolling.value = false
@@ -265,13 +265,6 @@ export function useVirtualRows(
     measure()
   }
 
-  const scrollToOffset = (offset: number) => {
-    if (typeof window === 'undefined' || !isEnabled()) return
-    setScrollTop(scrollRoot, Math.max(0, offset))
-    speedLimit.reset()
-    measure()
-  }
-
   return {
     rangeStart,
     rangeEnd,
@@ -279,7 +272,6 @@ export function useVirtualRows(
     bottomSpacerHeight,
     isScrolling: computed(() => isEnabled() && isScrolling.value),
     scrollToIndex,
-    scrollToOffset,
     refresh: measure
   }
 }
