@@ -4,22 +4,22 @@
     :style="{ height: topSpacer + 'px', gridColumn: '1 / -1' }"
     aria-hidden="true"
   ></div>
-  <template v-for="rowIdx in visibleIndices" :key="rowIdx">
+  <template v-for="rowIdx in visibleIndices" :key="rowIdx + rowIndexOffset">
     <of-table-row-skeleton
-      v-if="!rows[rowIdx]"
+      v-if="!rowAt(rowIdx)"
       :ref="(inst: any) => registerRow(rowIdx, inst)"
       :columns="columns"
       :rows-selector="rowsSelector"
       :draggable="!!dragInfo?.draggable"
-      :row-index="rowIdx"
+      :row-index="rowIdx + rowIndexOffset"
     />
     <of-table-row
       v-else
       :ref="(inst: any) => registerRow(rowIdx, inst)"
-      :row="rows[rowIdx]"
+      :row="rowAt(rowIdx)"
       :drag-info="dragInfo"
-      :coords="[rowIdx]"
-      :point-next="[rowIdx + 1]"
+      :coords="[rowIdx + rowIndexOffset]"
+      :point-next="[rowIdx + rowIndexOffset + 1]"
       v-on="dragEvents"
       :rows-selector="rowsSelector"
       :select-locked="selectLocked"
@@ -28,16 +28,16 @@
       :show-old-values="showOldValues"
       :columns="columns"
       :rows-record="rowsRecord"
-      :idx="rowIdx"
+      :idx="rowIdx + rowIndexOffset"
       :is-touchable="isTouchable"
       @update:row="$emit('update:row', $event)"
       @update:field="$emit('update:field')"
     >
       <template #rows-selector>
-        <slot name="rows-selector" :record="rowsRecord" :item="rows[rowIdx]" />
+        <slot name="rows-selector" :record="rowsRecord" :item="rowAt(rowIdx)" />
       </template>
       <template #first-cell>
-        <slot name="first-cell" :record="rowsRecord" :item="rows[rowIdx]" />
+        <slot name="first-cell" :record="rowsRecord" :item="rowAt(rowIdx)" />
       </template>
     </of-table-row>
   </template>
@@ -58,10 +58,17 @@ import {
 } from 'vue'
 import { DataTableHeader } from '../lib/datatable'
 import { FormRecord } from '../lib/records'
+import { VIRTUAL_BODY_MAX_SKELETON_ROWS } from '../lib/virtual_range'
 import OfTableRow from './TableRow.vue'
 import OfTableRowSkeleton from './TableRowSkeleton.vue'
 
-/** Virtual-scroll body: spacers + visible real/skeleton rows. */
+export { VIRTUAL_BODY_MAX_SKELETON_ROWS }
+
+/**
+ * Virtual-scroll body: spacers + visible real/skeleton rows.
+ * The parent clamps the range so at most a few holes are present — every
+ * missing index here is a skeleton (no blank placeholder rows).
+ */
 export default defineComponent({
   name: 'OfTableVirtualBody',
   components: { OfTableRow, OfTableRowSkeleton },
@@ -87,6 +94,8 @@ export default defineComponent({
       required: true
     },
     isTouchable: Boolean,
+    /** Absolute index of local virtual row 0 (sliding window origin). */
+    rowIndexOffset: { type: Number, default: 0 },
     /** Feeds each rendered row's real height back to the height cache. */
     reportRowHeight: {
       type: Function as PropType<(index: number, height: number) => void>,
@@ -103,9 +112,9 @@ export default defineComponent({
       return indices
     })
 
-    // Rows are `display: contents` (see _tables.scss), so measure the first
-    // cell — CSS Grid stretches every cell in a row to the same track
-    // height by default, so any one cell's height equals the row's height.
+    const rowAt = (localIdx: number) =>
+      props.rows[localIdx + props.rowIndexOffset]
+
     const rowEls = new Map<number, Element>()
     const elIndices = new WeakMap<Element, number>()
 
@@ -123,6 +132,18 @@ export default defineComponent({
           })
         : undefined
 
+    const measureTarget = (
+      inst: ComponentPublicInstance | Element | null
+    ): Element | null => {
+      if (!inst) return null
+      if (inst instanceof Element) {
+        return inst.querySelector('[role="cell"]') ?? inst
+      }
+      const rootEl = (inst as ComponentPublicInstance).$el as HTMLElement | null
+      if (!rootEl || typeof rootEl.querySelector !== 'function') return null
+      return rootEl.querySelector('[role="cell"]')
+    }
+
     const registerRow = (
       rowIdx: number,
       inst: ComponentPublicInstance | Element | null
@@ -133,10 +154,7 @@ export default defineComponent({
         elIndices.delete(prevEl)
         rowEls.delete(rowIdx)
       }
-      if (!inst) return
-      const rootEl = ((inst as ComponentPublicInstance).$el ??
-        inst) as HTMLElement
-      const cell = rootEl?.querySelector?.('[role="cell"]')
+      const cell = measureTarget(inst)
       if (!cell) return
       rowEls.set(rowIdx, cell)
       elIndices.set(cell, rowIdx)
@@ -145,7 +163,7 @@ export default defineComponent({
 
     onBeforeUnmount(() => resizeObserver?.disconnect())
 
-    return { visibleIndices, registerRow }
+    return { visibleIndices, rowAt, registerRow }
   }
 })
 </script>

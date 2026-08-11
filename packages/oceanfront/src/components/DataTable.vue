@@ -127,6 +127,7 @@
       :range-end="virtualRangeEnd"
       :top-spacer="virtualTopSpacer"
       :bottom-spacer="virtualBottomSpacer"
+      :row-index-offset="virtualRowIndexOffset"
       :drag-info="rowDragInfo"
       :drag-events="dragEvents"
       :rows-selector="addRowsSelector"
@@ -380,6 +381,14 @@ export default defineComponent({
     totalRows: {
       type: Number,
       default: undefined
+    },
+    /**
+     * Absolute index of virtual row 0. Used with sliding-window infinite
+     * scroll so evicted leading rows leave the page height entirely.
+     */
+    rowIndexOffset: {
+      type: Number,
+      default: 0
     },
     /**
      * Row height override (px). This is an explicit contract that every row
@@ -1197,6 +1206,7 @@ export default defineComponent({
       density,
       rowHeightOverride: computed(() => props.virtualRowHeight),
       totalRows: computed(() => props.totalRows),
+      rowIndexOffset: computed(() => props.rowIndexOffset || 0),
       onRangeChange: (range) => ctx.emit('range-change', range)
     })
 
@@ -1259,6 +1269,7 @@ export default defineComponent({
       virtualRangeEnd: virtualScroll.rangeEnd,
       virtualTopSpacer: virtualScroll.topSpacer,
       virtualBottomSpacer: virtualScroll.bottomSpacer,
+      virtualRowIndexOffset: virtualScroll.rowIndexOffset,
       reportRowHeight: virtualScroll.reportRowHeight,
       scrollToIndex: virtualScroll.scrollToIndex,
       colAriaSort,

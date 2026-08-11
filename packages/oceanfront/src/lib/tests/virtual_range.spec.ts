@@ -1,6 +1,14 @@
 import { ref } from 'vue'
 import { describe, expect, it } from 'vitest'
-import { computeVirtualWindow } from '../virtual_range'
+import {
+  VIRTUAL_BODY_MAX_SKELETON_ROWS,
+  clampVirtualRangeToLoaded,
+  computeVirtualWindow,
+  hasUnloadedRowsInViewport,
+  isActivelyWindowing,
+  pickSkeletonIndices,
+  safeScrolledPastBoundsForRowHeight
+} from '../virtual_range'
 import { RowMetrics, createFixedRowMetrics } from '../virtual_row_heights'
 
 /** Deterministic RowMetrics built from an explicit list of row heights, for tests. */
@@ -118,5 +126,142 @@ describe('computeVirtualWindow', () => {
     })
     expect(result.end).toBeGreaterThanOrEqual(result.start)
     expect(result.end).toBeLessThanOrEqual(3)
+  })
+})
+
+describe('isActivelyWindowing', () => {
+  it('is false when the rendered window already covers every row', () => {
+    // Short list / all records visible: scroll listeners would only fight native scroll.
+    expect(isActivelyWindowing(0, 12, 12)).toBe(false)
+    expect(isActivelyWindowing(0, 0, 0)).toBe(false)
+  })
+
+  it('is true when rows exist outside the rendered window', () => {
+    expect(isActivelyWindowing(0, 40, 200)).toBe(true)
+    expect(isActivelyWindowing(50, 200, 200)).toBe(true)
+    expect(isActivelyWindowing(20, 60, 200)).toBe(true)
+  })
+})
+
+describe('hasUnloadedRowsInViewport', () => {
+  const metrics = createFixedRowMetrics(40)
+
+  it('is false when overscan would see a skeleton tail but the viewport does not', () => {
+    // 100 loaded rows + 3 skeleton tail slots. Viewport still fully in loaded
+    // rows; only an overscan window would reach the holes.
+    const rows: unknown[] = Array.from({ length: 100 }, (_, i) => ({ id: i }))
+    expect(
+      hasUnloadedRowsInViewport({
+        scrolledPast: 70 * 40,
+        viewportHeight: 20 * 40,
+        metrics,
+        totalCount: 103,
+        rows
+      })
+    ).toBe(false)
+  })
+
+  it('is true once unloaded rows enter the on-screen window', () => {
+    const rows: unknown[] = Array.from({ length: 100 }, (_, i) => ({ id: i }))
+    expect(
+      hasUnloadedRowsInViewport({
+        scrolledPast: 95 * 40,
+        viewportHeight: 10 * 40,
+        metrics,
+        totalCount: 103,
+        rows
+      })
+    ).toBe(true)
+  })
+
+  it('stays false mid-list even when overscan clamp cuts a skeleton tail', () => {
+    // Callers must lock on viewport holes only — not clampVirtualRangeToLoaded.didClamp.
+    const rows: unknown[] = Array.from({ length: 100 }, (_, i) => ({ id: i }))
+    const totalCount = 110
+    expect(
+      hasUnloadedRowsInViewport({
+        scrolledPast: 70 * 40,
+        viewportHeight: 20 * 40,
+        metrics,
+        totalCount,
+        rows
+      })
+    ).toBe(false)
+    expect(
+      clampVirtualRangeToLoaded({
+        start: 60,
+        end: 110,
+        rows,
+        maxSkeletonRows: 3
+      }).didClamp
+    ).toBe(true)
+  })
+})
+
+describe('pickSkeletonIndices', () => {
+  it('caps shimmer rows even when the window has many unloaded holes', () => {
+    const rows: unknown[] = []
+    rows[0] = { id: 'a' }
+    rows[1] = { id: 'b' }
+    const indices = Array.from({ length: 41 }, (_, i) => i)
+
+    const skeleton = pickSkeletonIndices(indices, rows)
+
+    expect(skeleton.size).toBe(VIRTUAL_BODY_MAX_SKELETON_ROWS)
+    expect([...skeleton]).toEqual([2, 3, 4])
+  })
+
+  it('maps local indices through a sliding-window row offset', () => {
+    const rows: unknown[] = []
+    rows[20] = { id: 'a' }
+    const skeleton = pickSkeletonIndices([0, 1, 2, 3, 4, 5], rows, 3, 17)
+    expect([...skeleton]).toEqual([0, 1, 2])
+  })
+
+  it('returns no skeleton indices when every visible row is loaded', () => {
+    const rows = [{ id: 'a' }, { id: 'b' }, { id: 'c' }]
+    expect(pickSkeletonIndices([0, 1, 2], rows).size).toBe(0)
+  })
+})
+
+describe('clampVirtualRangeToLoaded', () => {
+  it('cuts the window so a fast fling cannot expose more than max skeletons', () => {
+    const rows: unknown[] = Array.from({ length: 20 }, (_, i) => ({ id: i }))
+    // holes from 20 onward
+    const result = clampVirtualRangeToLoaded({
+      start: 10,
+      end: 50,
+      rows,
+      maxSkeletonRows: 3
+    })
+    expect(result).toEqual({ start: 10, end: 23, didClamp: true })
+  })
+
+  it('trims excess leading holes down to the skeleton budget', () => {
+    const rows: unknown[] = []
+    for (let i = 20; i < 40; i++) rows[i] = { id: i }
+    const result = clampVirtualRangeToLoaded({
+      start: 0,
+      end: 40,
+      rows,
+      maxSkeletonRows: 3
+    })
+    expect(result.start).toBe(17)
+    expect(result.didClamp).toBe(true)
+  })
+})
+
+describe('safeScrolledPastBounds', () => {
+  it('rewinds scroll so the viewport bottom cannot pass the skeleton edge', () => {
+    const rows: unknown[] = Array.from({ length: 20 }, (_, i) => ({ id: i }))
+    const bounds = safeScrolledPastBoundsForRowHeight(40, {
+      viewportHeight: 200,
+      totalCount: 40,
+      rows,
+      maxSkeletonRows: 3
+    })
+    // Showable through local index 23 (20..22 skeletons); bottom at 23*40.
+    expect(bounds.max).toBe(23 * 40 - 200)
+    expect(bounds.min).toBe(0)
   })
 })

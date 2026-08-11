@@ -119,4 +119,18 @@ describe('createRowHeightCache', () => {
     }
     expect(cache.totalHeight(count)).toBe(running)
   })
+
+  it('reports measured leading height for eviction scroll adjust (not estimate*rows)', () => {
+    const estimate = 40
+    const cache = createRowHeightCache(estimate)
+    // Evicting local rows 0..4 must subtract their measured sum before reset.
+    cache.setSize(0, 40)
+    cache.setSize(1, 120)
+    cache.setSize(2, 40)
+    cache.setSize(3, 80)
+    cache.setSize(4, 40)
+    const deltaRows = 5
+    expect(cache.offsetOf(deltaRows)).toBe(320)
+    expect(cache.offsetOf(deltaRows)).not.toBe(deltaRows * estimate)
+  })
 })

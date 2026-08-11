@@ -13,14 +13,13 @@ import {
   getScrollTop,
   setScrollTop
 } from './scroll_dom'
-import { createScrollSpeedLimit } from './scroll_speed_limit'
-import { computeVirtualWindow } from './virtual_range'
+import { createScrollLock } from './scroll_lock'
+import { computeVirtualWindow, isActivelyWindowing } from './virtual_range'
 import { RowMetrics } from './virtual_row_heights'
 
 export const VIRTUAL_ROWS_DEFAULT_OVERSCAN = 10
 export const VIRTUAL_ROWS_SCROLL_IDLE_MS = 150
 export const VIRTUAL_ROWS_RANGE_STEP = 5
-export const VIRTUAL_ROWS_MAX_SCROLL_SPEED_PX_PER_SEC = 4000
 
 export interface VirtualRowsRange {
   start: number
@@ -35,6 +34,11 @@ export interface UseVirtualRowsOptions {
   /** Row-height source: fixed math or a measured variable-height cache. */
   metrics: ComputedRef<RowMetrics> | Ref<RowMetrics>
   overscan?: number
+  /**
+   * When true, page scroll is frozen at the current position so chunked
+   * loading can catch up (no speed capping — a hard stop while waiting).
+   */
+  scrollLocked?: ComputedRef<boolean> | Ref<boolean> | (() => boolean)
   onRangeChange?: (range: VirtualRowsRange) => void
 }
 
@@ -44,6 +48,9 @@ export interface UseVirtualRowsReturn {
   topSpacerHeight: ComputedRef<number>
   bottomSpacerHeight: ComputedRef<number>
   isScrolling: ComputedRef<boolean>
+  /** Pixels of the container scrolled above the viewport (for viewport-only math). */
+  scrolledPast: ComputedRef<number>
+  viewportHeight: ComputedRef<number>
   scrollToIndex: (index: number) => void
   refresh: () => void
 }
@@ -61,12 +68,18 @@ export function useVirtualRows(
   const overscan = options.overscan ?? VIRTUAL_ROWS_DEFAULT_OVERSCAN
   const rangeStep = Math.max(1, VIRTUAL_ROWS_RANGE_STEP)
   const isEnabled = () => options.enabled?.value !== false
+  const isScrollLocked = () => {
+    const locked = options.scrollLocked
+    if (!locked) return false
+    return typeof locked === 'function' ? locked() : !!locked.value
+  }
 
   const scrolledPast = ref(0)
   const viewportHeight = ref(0)
   const isScrolling = ref(false)
 
   let onScreen = false
+  let activelyWindowing = false
   let scrollRoot: ScrollRoot = window
   let attachedEl: HTMLElement | null = null
   let wheelTarget: EventTarget | null = null
@@ -103,6 +116,11 @@ export function useVirtualRows(
   }
 
   const markScrolling = () => {
+    // will-change / of--scrolling only helps while rows are remounting.
+    if (!activelyWindowing) {
+      isScrolling.value = false
+      return
+    }
     isScrolling.value = true
     if (scrollIdleTimer !== undefined) clearTimeout(scrollIdleTimer)
     scrollIdleTimer = setTimeout(() => {
@@ -110,32 +128,29 @@ export function useVirtualRows(
     }, VIRTUAL_ROWS_SCROLL_IDLE_MS)
   }
 
-  const speedLimit = createScrollSpeedLimit({
-    maxPxPerSec: VIRTUAL_ROWS_MAX_SCROLL_SPEED_PX_PER_SEC,
+  const shouldListenWheel = () =>
+    isEnabled() && onScreen && (activelyWindowing || isScrollLocked())
+
+  const scrollLock = createScrollLock({
     getScrollRoot: () => scrollRoot,
     containerEl: () => options.containerRef.value,
-    isOnScreen: () => isEnabled() && onScreen,
-    onWheelClamp: () => {
-      markScrolling()
-      scheduleMeasure()
-    }
+    isLocked: () => isEnabled() && onScreen && isScrollLocked()
   })
 
   const onScroll = () => {
     if (!isEnabled()) return
-    speedLimit.handleScroll()
+    scrollLock.handleScroll()
     markScrolling()
     scheduleMeasure()
   }
   const onWheel = (e: WheelEvent) => {
     if (!isEnabled()) return
-    speedLimit.handleWheel(e)
+    scrollLock.handleWheel(e)
   }
   const onResize = () => scheduleMeasure()
 
-  // Non-passive capture wheel is expensive and can reshape input meant for
-  // other scroll boxes. Keep it on the real scroll root, and only while the
-  // virtual list intersects the viewport.
+  // Non-passive capture wheel is expensive; only attach while the list is on
+  // screen and either actively windowing or currently scroll-locked.
   const removeWheelListener = () => {
     if (!wheelTarget) return
     wheelTarget.removeEventListener('wheel', onWheel as EventListener, {
@@ -146,7 +161,7 @@ export function useVirtualRows(
 
   const syncWheelListener = () => {
     if (typeof window === 'undefined') return
-    const shouldListen = !!attachedEl && isEnabled() && onScreen
+    const shouldListen = !!attachedEl && shouldListenWheel()
     const nextTarget: EventTarget | null = shouldListen ? scrollRoot : null
     if (wheelTarget === nextTarget) return
     removeWheelListener()
@@ -164,7 +179,7 @@ export function useVirtualRows(
     detach()
     attachedEl = el
     scrollRoot = findScrollParent(el)
-    speedLimit.reset()
+    scrollLock.reset()
     window.addEventListener('scroll', onScroll, {
       passive: true,
       capture: true
@@ -185,7 +200,7 @@ export function useVirtualRows(
     resizeObserver?.disconnect()
     resizeObserver = undefined
     if (scrollIdleTimer !== undefined) clearTimeout(scrollIdleTimer)
-    speedLimit.reset()
+    scrollLock.reset()
     attachedEl = null
     onScreen = false
     isScrolling.value = false
@@ -229,10 +244,28 @@ export function useVirtualRows(
   watch(
     [rangeStart, rangeEnd, options.totalCount, () => options.enabled?.value],
     ([start, end, total]) => {
+      const next = isEnabled() && isActivelyWindowing(start, end, total)
+      if (next !== activelyWindowing) {
+        activelyWindowing = next
+        if (!next) {
+          isScrolling.value = false
+          if (scrollIdleTimer !== undefined) clearTimeout(scrollIdleTimer)
+        }
+        syncWheelListener()
+      }
       if (!isEnabled()) return
       options.onRangeChange?.({ start, end, total })
     },
     { immediate: true, flush: 'post' }
+  )
+
+  watch(
+    () => isScrollLocked(),
+    (locked) => {
+      if (locked) scrollLock.captureIfNeeded()
+      else scrollLock.reset()
+      syncWheelListener()
+    }
   )
 
   // Best-effort: jumps to the offset the current metrics predict for `index`.
@@ -251,7 +284,7 @@ export function useVirtualRows(
     if (root === window) {
       const containerDocTop = containerRect.top + window.scrollY
       setScrollTop(root, containerDocTop + targetOffset)
-      speedLimit.reset()
+      scrollLock.reset()
       measure()
       return
     }
@@ -261,7 +294,7 @@ export function useVirtualRows(
       root,
       getScrollTop(rootEl) + (containerRect.top - rootRect.top) + targetOffset
     )
-    speedLimit.reset()
+    scrollLock.reset()
     measure()
   }
 
@@ -271,6 +304,8 @@ export function useVirtualRows(
     topSpacerHeight,
     bottomSpacerHeight,
     isScrolling: computed(() => isEnabled() && isScrolling.value),
+    scrolledPast: computed(() => scrolledPast.value),
+    viewportHeight: computed(() => viewportHeight.value),
     scrollToIndex,
     refresh: measure
   }
