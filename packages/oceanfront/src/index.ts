@@ -224,6 +224,20 @@ export type {
   RecordMetadata
 } from './lib/records'
 export type { Tab } from './lib/tab'
+export {
+  useVirtualRows,
+  VIRTUAL_ROWS_DEFAULT_OVERSCAN,
+  VIRTUAL_ROWS_SCROLL_IDLE_MS,
+  VIRTUAL_ROWS_RANGE_STEP,
+  VIRTUAL_ROWS_MAX_SCROLL_SPEED_PX_PER_SEC
+} from './lib/virtual_rows'
+export type {
+  UseVirtualRowsOptions,
+  UseVirtualRowsReturn,
+  VirtualRowsRange
+} from './lib/virtual_rows'
+export { computeVirtualWindow } from './lib/virtual_range'
+export type { VirtualWindow, VirtualWindowInput } from './lib/virtual_range'
 export type {
   IKanbanCard,
   IKanbanColumn,

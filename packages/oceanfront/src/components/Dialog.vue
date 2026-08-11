@@ -1,11 +1,16 @@
 <template>
-  <of-overlay :active="active" :capture="capture" @blur="onOverlayBlur">
+  <of-overlay
+    :active="active"
+    :capture="capture"
+    :shade="shade"
+    @blur="onOverlayBlur"
+  >
     <template #default="{ active: dialogActive }">
       <div class="of-dialog-outer">
         <div
           ref="dialog"
           role="dialog"
-          aria-modal="true"
+          :aria-modal="capture ? 'true' : 'false'"
           :id="id"
           :aria-label="ariaLabel || undefined"
           :aria-labelledby="ariaLabelledby || undefined"
@@ -78,6 +83,7 @@ export default defineComponent({
     hideOnBlur: { type: Boolean, default: true },
     showCloseButton: { type: Boolean, default: false },
     capture: { type: Boolean, default: true },
+    shade: { type: Boolean, default: true },
     ariaLabel: { type: String, default: undefined },
     ariaLabelledby: { type: String, default: undefined },
     ariaDescribedby: { type: String, default: undefined }
@@ -89,6 +95,11 @@ export default defineComponent({
     const focusableElements =
       'button, [href], input, select, textarea, [contenteditable="true"], [tabindex]:not([tabindex="-1"])'
     const handelKeyDown = (e: KeyboardEvent) => {
+      // Non-capturing dialogs allow interacting with the page behind them
+      // (e.g. list checkboxes), so do not trap Tab focus inside the dialog.
+      if (!props.capture || !dialog.value) {
+        return
+      }
       const focusableContent = dialog.value.querySelectorAll(focusableElements)
       if (focusableContent.length === 0) {
         return
