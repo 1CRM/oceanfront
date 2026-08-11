@@ -295,7 +295,9 @@ describe('OfCalendar', () => {
       .findAll('.of-calendar-allday-row .of-calendar-event')
       .find((el) => el.text().includes('Multi day'))
     expect(allDay).toBeTruthy()
-    const target = wrapper.findAll('.of-calendar-allday-row .of-calendar-day')[1]
+    const target = wrapper.findAll(
+      '.of-calendar-allday-row .of-calendar-day'
+    )[1]
     document.elementFromPoint = vi.fn().mockReturnValue(target.element)
     vi.spyOn(allDay!.element, 'getBoundingClientRect').mockReturnValue(
       mockRect(0, 0, 100, 20)
