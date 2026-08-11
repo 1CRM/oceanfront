@@ -72,11 +72,13 @@
     <of-calendar
       fixed-row-height
       selectable
+      movable
       @click:event="eventClicked"
       @click:day="dayClicked"
       @click:more="dayClicked"
       @click:category="categoryClicked"
       @click:week="weekClicked"
+      @move:end="eventMoved"
       @blur:day="hidePopup"
       :type="values.type"
       :day="values.day"
@@ -156,7 +158,8 @@ import {
   InternalEvent,
   makeRecord,
   addDays,
-  addMinutes
+  addMinutes,
+  timestampIdToDate
 } from 'oceanfront'
 
 const types = [
@@ -290,6 +293,33 @@ export default defineComponent({
         detailsTarget.value = nativeEvent.target
         detailsEvent.value = event
         detailsVisible.value = true
+      },
+      eventMoved: (
+        event: InternalEvent,
+        startId: number,
+        endId: number,
+        _category: string,
+        meta: { allDay: boolean }
+      ) => {
+        const start = timestampIdToDate(startId)
+        const end = timestampIdToDate(endId)
+        const durationMins = Math.max(
+          15,
+          Math.round((end.getTime() - start.getTime()) / 60000)
+        )
+        const orig = event.orig as CalendarEvent
+        events.value = events.value.map((ev) =>
+          ev === orig
+            ? {
+                ...ev,
+                start: formatDate(start),
+                duration: meta.allDay ? ev.duration : durationMins,
+                allDay: meta.allDay,
+                end: undefined
+              }
+            : ev
+        )
+        detailsVisible.value = false
       },
       weekClicked: (nativeEvent: any, weekNumber: number, firstDay: Date) => {
         state.value = { ...state.value, type: 'week', day: firstDay }
