@@ -15,6 +15,10 @@ export type Tab = {
   ariaLabel?: string | undefined
   id?: string
   count?: number
-  /** Optional trailing content (string or VNode), e.g. a create-record button */
+  /**
+   * Optional trailing content (string or VNode), e.g. a create-record button.
+   * When focusable, this is an intentional ARIA exception to the tabs pattern
+   * (nested interactive content inside role="tab") — see Tabs.vue.
+   */
   postfix?: string | VNode
 }

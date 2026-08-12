@@ -100,6 +100,14 @@
                 />
                 <span v-if="tab.text">{{ tab.text }}</span>
               </div>
+              <!--
+                Intentional ARIA exception: postfix may contain a focusable
+                control (e.g. create-record) inside role="tab". Moving it
+                outside would break the tab chrome layout (shared background /
+                flex) and the header → postfix → next-header Tab order that
+                navigate() implements. Events are stopped so the control does
+                not activate the tab; Tab key still bubbles for focus mgmt.
+              -->
               <div
                 v-if="tab.postfix"
                 class="of-tab-postfix"
@@ -983,6 +991,31 @@ export default defineComponent({
           ) {
             consumed = false
             break
+          } else if (
+            evt.shiftKey &&
+            document.activeElement === tabEl &&
+            idx > 0
+          ) {
+            // Reverse of header → postfix → next header: land on previous
+            // tab's postfix when present before moving to that header.
+            // Set focusedTabKey first so app CSS that hides postfix until
+            // .of--focused / :focus-within (e.g. create buttons) can reveal
+            // it; focusing a display:none control is a no-op and the next
+            // Shift+Tab then skips to the previous header.
+            const prevKey = getNextTabKey(idx, true)
+            if (prevKey !== focusedTabKey.value) {
+              const prevPostfix = getPostfixFocusable(tabsRefs[prevKey])
+              if (prevPostfix) {
+                focusedTabKey.value = prevKey
+                nextTick(() => {
+                  getPostfixFocusable(tabsRefs[prevKey])?.focus()
+                  // onBlurTab of the starting tab clears focusedTabKey when
+                  // focus moves into another tab's postfix; restore it.
+                  focusedTabKey.value = prevKey
+                })
+                break
+              }
+            }
           }
         }
         // fallthrough
