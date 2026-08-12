@@ -29,20 +29,27 @@ export const findScrollParent = (el: HTMLElement): ScrollRoot => {
 export const getScrollTop = (root: ScrollRoot): number =>
   root === window ? window.scrollY : (root as HTMLElement).scrollTop
 
+/**
+ * How far `root` can still be scrolled in total. Changes whenever the content
+ * grows or shrinks, which is what makes it a usable signal for "this scroll
+ * offset moved because the layout did, not because anyone scrolled".
+ */
+export const getScrollRange = (root: ScrollRoot): number => {
+  if (root === window) {
+    const doc = document.documentElement
+    const height = window.innerHeight || doc.clientHeight || 0
+    return Math.max(0, (doc.scrollHeight || 0) - height)
+  }
+  const el = root as HTMLElement
+  return Math.max(0, el.scrollHeight - el.clientHeight)
+}
+
 export const setScrollTop = (root: ScrollRoot, top: number): void => {
   if (root === window) {
-    window.scrollTo({ top })
+    // Explicitly instant: smooth behaviour would turn height corrections
+    // into visible drift.
+    window.scrollTo({ top, behavior: 'auto' })
   } else {
     ;(root as HTMLElement).scrollTop = top
   }
-}
-
-/** Normalize wheel deltaY to CSS pixels. */
-export const wheelDeltaPx = (e: WheelEvent): number => {
-  let delta = e.deltaY
-  if (e.deltaMode === 1) delta *= 16
-  else if (e.deltaMode === 2) {
-    delta *= window.innerHeight || document.documentElement.clientHeight || 800
-  }
-  return delta
 }

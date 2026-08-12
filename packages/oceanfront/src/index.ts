@@ -226,16 +226,23 @@ export type { Tab } from './lib/tab'
 export {
   useVirtualRows,
   VIRTUAL_ROWS_DEFAULT_OVERSCAN,
-  VIRTUAL_ROWS_SCROLL_IDLE_MS,
-  VIRTUAL_ROWS_RANGE_STEP
+  VIRTUAL_ROWS_RANGE_STEP,
+  VIRTUAL_SCROLL_FAST_JUMP_RATIO,
+  VIRTUAL_SCROLL_FAST_SAMPLES,
+  VIRTUAL_SCROLL_SETTLE_MS
 } from './lib/virtual_rows'
 export type {
   UseVirtualRowsOptions,
   UseVirtualRowsReturn,
   VirtualRowsRange
 } from './lib/virtual_rows'
-export { computeVirtualWindow, isActivelyWindowing } from './lib/virtual_range'
+export {
+  computeVirtualWindow,
+  isActivelyWindowing,
+  MAX_RENDERED_ROWS
+} from './lib/virtual_range'
 export type { VirtualWindow, VirtualWindowInput } from './lib/virtual_range'
+export type { RowHeightSnapshot, RowMetrics } from './lib/virtual_row_heights'
 export type {
   IKanbanCard,
   IKanbanColumn,

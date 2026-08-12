@@ -127,7 +127,6 @@
       :range-end="virtualRangeEnd"
       :top-spacer="virtualTopSpacer"
       :bottom-spacer="virtualBottomSpacer"
-      :row-index-offset="virtualRowIndexOffset"
       :drag-info="rowDragInfo"
       :drag-events="dragEvents"
       :rows-selector="addRowsSelector"
@@ -138,6 +137,8 @@
       :rows-record="rowsRecord"
       :is-touchable="isTouchable"
       :report-row-height="reportRowHeight"
+      :row-height-at="rowHeightAt"
+      :force-skeleton="virtualFastScrolling"
       @update:row="updateRow"
       @update:field="updateField"
     >
@@ -294,6 +295,7 @@ import OfTableRowSkeleton from './TableRowSkeleton.vue'
 import OfTableVirtualBody from './TableVirtualBody.vue'
 import { useLanguage } from '../lib/language'
 import { useDataTableVirtualScroll } from '../lib/data_table_virtual_scroll'
+import type { RowHeightSnapshot } from '../lib/virtual_row_heights'
 import { dataTableVirtualScrollKey } from '../lib/virtual_scroll_vnode'
 
 enum RowsSelectorValues {
@@ -377,18 +379,30 @@ export default defineComponent({
       type: Boolean,
       default: false
     },
-    /** Logical row count; may exceed `items.length` while rows are still loading. */
+    /**
+     * Logical row count — normally the server-side total. The list always
+     * spans this many rows, whatever subset of `items` is currently loaded, so
+     * scroll height stays stable while chunks load and unload.
+     */
     totalRows: {
       type: Number,
       default: undefined
     },
     /**
-     * Absolute index of virtual row 0. Used with sliding-window infinite
-     * scroll so evicted leading rows leave the page height entirely.
+     * Previously measured row heights, so a list re-entered from elsewhere
+     * (back navigation, reload) renders at the same offsets right away.
      */
-    rowIndexOffset: {
-      type: Number,
-      default: 0
+    rowHeights: {
+      type: Object as PropType<RowHeightSnapshot | undefined>,
+      default: undefined
+    },
+    /**
+     * Change this whenever indices stop meaning the same records (sort,
+     * filter, module change) to discard remembered heights.
+     */
+    heightsKey: {
+      type: [String, Number] as PropType<string | number | undefined>,
+      default: undefined
     },
     /**
      * Row height override (px). This is an explicit contract that every row
@@ -928,6 +942,12 @@ export default defineComponent({
       if (props.itemsCount != null) return 0 // external navigation
       return Math.max(0, perPage.value * (page.value - 1))
     })
+    /**
+     * Used track sizes held across a fling. Sparse/skeleton cells hold no text
+     * then, so `auto` tracks would collapse to the header labels for the length
+     * of the gesture and snap back once denser rows return.
+     */
+    const heldColumnTracks = ref<string | undefined>()
     const columnsStyle = computed(() => {
       const dragWidth = props.draggable ? '50px ' : ''
       const selectorWidth = showSelector(props.rowsSelector, rows.value)
@@ -950,6 +970,9 @@ export default defineComponent({
       }
       if (virtualScroll.rowHeightVar.value) {
         style['--of-table-row-height'] = virtualScroll.rowHeightVar.value
+      }
+      if (heldColumnTracks.value) {
+        style.gridTemplateColumns = heldColumnTracks.value
       }
       return style
     })
@@ -1206,8 +1229,25 @@ export default defineComponent({
       density,
       rowHeightOverride: computed(() => props.virtualRowHeight),
       totalRows: computed(() => props.totalRows),
-      rowIndexOffset: computed(() => props.rowIndexOffset || 0),
+      rowHeights: computed(() => props.rowHeights),
+      heightsKey: computed(() => props.heightsKey),
       onRangeChange: (range) => ctx.emit('range-change', range)
+    })
+
+    // Pre-flush, so the measurement still comes from the layout the real rows
+    // produced and the release lands in the same commit that brings them back —
+    // the tracks are never briefly free while the window is all skeletons.
+    watch(virtualScroll.isFastScrolling, (fast) => {
+      if (!fast) {
+        heldColumnTracks.value = undefined
+        return
+      }
+      const el = tableElt.value
+      if (!el || typeof window === 'undefined') return
+      const tracks = getComputedStyle(el).gridTemplateColumns
+      // A grid that has been laid out resolves to pixel tracks; anything else
+      // (detached, `display: none`) is not worth holding.
+      heldColumnTracks.value = tracks.includes('px') ? tracks : undefined
     })
 
     const tableClass = computed(() => [
@@ -1269,9 +1309,17 @@ export default defineComponent({
       virtualRangeEnd: virtualScroll.rangeEnd,
       virtualTopSpacer: virtualScroll.topSpacer,
       virtualBottomSpacer: virtualScroll.bottomSpacer,
-      virtualRowIndexOffset: virtualScroll.rowIndexOffset,
+      virtualFastScrolling: virtualScroll.isFastScrolling,
       reportRowHeight: virtualScroll.reportRowHeight,
+      rowHeightAt: virtualScroll.rowHeightAt,
       scrollToIndex: virtualScroll.scrollToIndex,
+      scrollToOffset: virtualScroll.scrollToOffset,
+      getScrollState: () => ({
+        offset: virtualScroll.scrollOffset.value,
+        start: virtualScroll.rangeStart.value,
+        end: virtualScroll.rangeEnd.value,
+        rowHeights: virtualScroll.rowHeightsSnapshot()
+      }),
       colAriaSort,
       sortHeaderAriaLabel,
       sortAnnouncement,

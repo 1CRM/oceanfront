@@ -5,7 +5,7 @@
     v-if="item"
     class="of-data-table-row"
     role="row"
-    ref="itemRef"
+    :ref="setItemRef"
     @mousemove="dragInfo?.draggable && mouseMove($event)"
     @touchmove="dragInfo?.draggable && mouseMove($event)"
     :class="{
@@ -174,6 +174,13 @@ import { OfIcon } from './Icon'
 import OfEditableField from './Editable.vue'
 import { useLanguage } from '../lib/language'
 
+/**
+ * Nested sub-rows render as siblings of this row (they are cells of the same
+ * grid), so the component always has several root nodes and `$el` is the
+ * fragment's anchor text node, not the row. `itemRef` is therefore how anything
+ * outside gets at the row element — virtual scroll measures row heights through
+ * it, and without it every row is stuck at its estimated height.
+ */
 export default defineComponent({
   name: 'OfTableRow',
   components: { OfEditableField, OfIcon, OfField },
@@ -333,6 +340,12 @@ export default defineComponent({
     }
 
     const itemRef = ref()
+    // A function ref rather than `ref="itemRef"`: string refs are assigned in a
+    // post-render effect, which is after the parent has already been handed
+    // this row and asked it for its element.
+    const setItemRef = (el: any) => {
+      itemRef.value = el
+    }
     const childDepths: { [_: string]: any } = {}
 
     const events = {
@@ -622,6 +635,7 @@ export default defineComponent({
       lang,
       item,
       itemRef,
+      setItemRef,
       index,
       events,
       mouseMove,

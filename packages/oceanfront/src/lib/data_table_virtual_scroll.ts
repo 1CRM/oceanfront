@@ -1,16 +1,10 @@
-import { ComputedRef, Ref, computed, ref, watch, watchEffect } from 'vue'
-import { findScrollParent, getScrollTop, setScrollTop } from './scroll_dom'
+import { ComputedRef, Ref, computed, watch } from 'vue'
 import { VirtualRowsRange, useVirtualRows } from './virtual_rows'
 import {
-  VIRTUAL_BODY_MAX_SKELETON_ROWS,
-  clampVirtualRangeToLoaded,
-  hasUnloadedRowsInViewport,
-  safeScrolledPastBounds
-} from './virtual_range'
-import {
+  RowHeightSnapshot,
   RowMetrics,
   createFixedRowMetrics,
-  createRowHeightCache
+  createRowHeightStore
 } from './virtual_row_heights'
 
 export interface UseDataTableVirtualScrollOptions {
@@ -21,25 +15,41 @@ export interface UseDataTableVirtualScrollOptions {
   rowHeightOverride: ComputedRef<number | undefined>
   totalRows: ComputedRef<number | undefined>
   /**
-   * Absolute index of virtual row 0. Lets the table span only a sliding
-   * resident window while row data stays at absolute sparse offsets.
+   * Measurements to start from, so a revisited list keeps the heights (and
+   * therefore the scroll offset) it had before.
    */
-  rowIndexOffset?: ComputedRef<number> | Ref<number>
+  rowHeights?: ComputedRef<RowHeightSnapshot | undefined>
+  /**
+   * Bumping this discards all measurements — for changes that reshuffle which
+   * record sits at which index (sort, filter, module).
+   */
+  heightsKey?: ComputedRef<string | number | undefined>
   onRangeChange?: (range: VirtualRowsRange) => void
 }
 
 export interface UseDataTableVirtualScrollReturn {
+  /** Window to render; during a fling the body fills it with skeletons. */
   rangeStart: ComputedRef<number>
   rangeEnd: ComputedRef<number>
   topSpacer: ComputedRef<number>
   bottomSpacer: ComputedRef<number>
   isScrolling: ComputedRef<boolean>
+  /** True while flinging: body fills the window with cheap skeletons. */
+  isFastScrolling: ComputedRef<boolean>
   fixedRowHeight: ComputedRef<boolean>
   rowHeightVar: ComputedRef<string | undefined>
-  rowIndexOffset: ComputedRef<number>
-  /** Feeds a rendered row's real height back into the variable-height cache. */
+  /**
+   * Height a row occupies: its measurement when it has one, otherwise the
+   * estimate the spacer math assumes. Always a number, so a placeholder can
+   * never disagree with the height its index was budgeted.
+   */
+  rowHeightAt: (index: number) => number
+  /** Feeds a rendered row's real height back into the height store. */
   reportRowHeight: (index: number, height: number) => void
   scrollToIndex: (index: number) => void
+  scrollToOffset: (offset: number) => void
+  scrollOffset: ComputedRef<number>
+  rowHeightsSnapshot: () => RowHeightSnapshot
 }
 
 const estimateRowHeight = (density: number) => {
@@ -48,204 +58,84 @@ const estimateRowHeight = (density: number) => {
 }
 
 /**
- * DataTable adapter: row-height tracking + virtual windowing hooks.
+ * DataTable adapter: row-height tracking + virtual windowing.
  *
  * `virtual-row-height` (rowHeightOverride) is an explicit "rows are single
  * line / uniform height" contract from the consumer — it stays O(1) fixed
- * math with no measurement. Otherwise, rows are auto-measured per-render
- * (via `reportRowHeight`, fed by a `ResizeObserver` in
- * `TableVirtualBody.vue`) and tracked in a `RowHeightCache` so wrapped
- * multiline rows get correct spacers/scroll math even though rows aren't a
- * uniform height.
+ * math with no measurement. Otherwise rows are auto-measured per render (via
+ * `reportRowHeight`, fed by a `ResizeObserver` in `TableVirtualBody.vue`) and
+ * kept in a `RowHeightStore` keyed by absolute index, so unloaded and evicted
+ * rows still reserve exactly the space they had.
  */
 export function useDataTableVirtualScroll(
   options: UseDataTableVirtualScrollOptions
 ): UseDataTableVirtualScrollReturn {
-  const rowHeightCache = createRowHeightCache(
+  const heightStore = createRowHeightStore(
     estimateRowHeight(options.density.value)
   )
-  const rowIndexOffset = computed(() =>
-    Math.max(0, options.rowIndexOffset?.value ?? 0)
-  )
+  heightStore.hydrate(options.rowHeights?.value)
 
-  // Reference-equality watch: fires on a genuine data reload/sort (new
-  // array) or a density change, not on in-place sparse-array hole fills
-  // used by chunked/infinite loading — so measured heights survive
-  // incremental loads instead of being thrown away on every chunk.
-  watch([options.rows, options.density], () => {
+  // Only a genuine re-indexing of the list (sort/filter/module) invalidates
+  // measurements. Chunk loading and eviction leave them alone — that is what
+  // keeps revisited regions jump-free.
+  watch([options.heightsKey, options.density], () => {
     if (!options.enabled.value) return
-    rowHeightCache.reset(estimateRowHeight(options.density.value))
+    heightStore.reset(estimateRowHeight(options.density.value))
+    heightStore.hydrate(options.rowHeights?.value)
   })
 
   const metrics = computed<RowMetrics>(() =>
     options.rowHeightOverride.value != null
       ? createFixedRowMetrics(options.rowHeightOverride.value)
-      : rowHeightCache
+      : heightStore
   )
-
-  const reportRowHeight = (index: number, height: number) => {
-    if (!options.enabled.value || options.rowHeightOverride.value != null)
-      return
-    rowHeightCache.setSize(index, height)
-  }
 
   const totalCount = computed(
     () => options.totalRows.value ?? options.rows.value.length
   )
-
-  // Freeze page scroll once the viewport reaches unloaded rows (after we
-  // rewind to the safe edge). Prevents flings through empty placeholders.
-  const scrollLocked = ref(false)
 
   const virtualRows = useVirtualRows({
     enabled: options.enabled,
     containerRef: options.containerRef,
     totalCount,
     metrics,
-    scrollLocked,
-    onRangeChange: (range) => {
-      const offset = rowIndexOffset.value
-      options.onRangeChange?.({
-        start: range.start + offset,
-        end: range.end + offset,
-        total: range.total
-      })
-    }
+    onRangeChange: options.onRangeChange
   })
 
-  const clampedRange = computed(() =>
-    clampVirtualRangeToLoaded({
-      start: virtualRows.rangeStart.value,
-      end: virtualRows.rangeEnd.value,
-      rows: options.rows.value,
-      rowIndexOffset: rowIndexOffset.value,
-      maxSkeletonRows: VIRTUAL_BODY_MAX_SKELETON_ROWS
-    })
-  )
-
-  const rangeStart = computed(() => clampedRange.value.start)
-  const rangeEnd = computed(() => clampedRange.value.end)
-
-  // Spacers follow the clamped window so skipped holes become spacer space
-  // only briefly — scroll rewind below keeps them off-screen.
-  const topSpacer = computed(() => metrics.value.offsetOf(rangeStart.value))
-  const bottomSpacer = computed(() =>
-    Math.max(
-      0,
-      metrics.value.totalHeight(totalCount.value) -
-        metrics.value.offsetOf(rangeEnd.value)
-    )
-  )
-
-  let correctingScroll = false
-  const rewindToSafeScroll = () => {
-    if (!options.enabled.value || correctingScroll) return
-    const el = options.containerRef.value
-    if (!el) return
-
-    metrics.value.version.value
-    const bounds = safeScrolledPastBounds({
-      viewportHeight: virtualRows.viewportHeight.value,
-      metrics: metrics.value,
-      totalCount: totalCount.value,
-      rows: options.rows.value,
-      rowIndexOffset: rowIndexOffset.value,
-      maxSkeletonRows: VIRTUAL_BODY_MAX_SKELETON_ROWS
-    })
-    const past = virtualRows.scrolledPast.value
-    const excess =
-      past > bounds.max
-        ? past - bounds.max
-        : past < bounds.min
-          ? past - bounds.min
-          : null
-    if (excess == null) return
-
-    const root = findScrollParent(el)
-    correctingScroll = true
-    setScrollTop(root, Math.max(0, getScrollTop(root) - excess))
-    correctingScroll = false
-    scrollLocked.value = true
-    virtualRows.refresh()
-  }
-
-  watch(
-    [
-      virtualRows.scrolledPast,
-      virtualRows.viewportHeight,
-      totalCount,
-      rowIndexOffset,
-      options.rows,
-      options.enabled
-    ],
-    () => rewindToSafeScroll(),
-    // Sync so a fast fling cannot paint a frame of empty spacer before rewind.
-    { flush: 'sync' }
-  )
-
-  watchEffect(() => {
-    if (!options.enabled.value) {
-      scrollLocked.value = false
+  const reportRowHeight = (index: number, height: number) => {
+    if (!options.enabled.value || options.rowHeightOverride.value != null)
       return
+    const delta = heightStore.setSize(index, height)
+    // A row above the window changing height moves everything below it,
+    // including what the user is looking at. Cancel that out.
+    if (delta && index < virtualRows.rangeStart.value) {
+      virtualRows.compensateScroll(delta)
     }
-    metrics.value.version.value
-    // Lock only for on-screen holes. `didClamp` can stay true when overscan
-    // peeks past a skeleton tail while the viewport itself is fully loaded —
-    // OR-ing it here would freeze scroll at the top / mid-list incorrectly.
-    scrollLocked.value = hasUnloadedRowsInViewport({
-      scrolledPast: virtualRows.scrolledPast.value,
-      viewportHeight: virtualRows.viewportHeight.value,
-      metrics: metrics.value,
-      totalCount: totalCount.value,
-      rows: options.rows.value,
-      rowIndexOffset: rowIndexOffset.value
-    })
-  })
-
-  // When the sliding window origin moves, drop stale local height keys and
-  // shift scrollTop so the same absolute rows stay in view.
-  watch(rowIndexOffset, (next, prev) => {
-    if (!options.enabled.value || prev === undefined || next === prev) return
-    const deltaRows = next - prev
-    const el = options.containerRef.value
-    if (el) {
-      // Measure evicted leading height before resetting the cache. Variable-
-      // height lists diverge from estimate*rows and would jump otherwise.
-      const heightDelta =
-        deltaRows > 0
-          ? metrics.value.offsetOf(deltaRows)
-          : deltaRows *
-            (options.rowHeightOverride.value ??
-              estimateRowHeight(options.density.value))
-      const root = findScrollParent(el)
-      setScrollTop(root, Math.max(0, getScrollTop(root) - heightDelta))
-    }
-    if (options.rowHeightOverride.value == null) {
-      rowHeightCache.reset(estimateRowHeight(options.density.value))
-    }
-    virtualRows.refresh()
-  })
+  }
 
   const fixedRowHeight = computed(
     () => options.enabled.value && !!options.rowHeightOverride.value
   )
 
-  const scrollToIndex = (index: number) => {
-    virtualRows.scrollToIndex(Math.max(0, index - rowIndexOffset.value))
-  }
-
   return {
-    rangeStart,
-    rangeEnd,
-    topSpacer,
-    bottomSpacer,
+    rangeStart: virtualRows.rangeStart,
+    rangeEnd: virtualRows.rangeEnd,
+    topSpacer: virtualRows.topSpacerHeight,
+    bottomSpacer: virtualRows.bottomSpacerHeight,
     isScrolling: virtualRows.isScrolling,
+    isFastScrolling: virtualRows.isFastScrolling,
     fixedRowHeight,
     rowHeightVar: computed(() =>
       fixedRowHeight.value ? options.rowHeightOverride.value + 'px' : undefined
     ),
-    rowIndexOffset,
+    rowHeightAt: (index) =>
+      options.rowHeightOverride.value ??
+      heightStore.getSize(index) ??
+      heightStore.estimatedSize(),
     reportRowHeight,
-    scrollToIndex
+    scrollToIndex: virtualRows.scrollToIndex,
+    scrollToOffset: virtualRows.scrollToOffset,
+    scrollOffset: virtualRows.scrolledPast,
+    rowHeightsSnapshot: () => heightStore.snapshot()
   }
 }

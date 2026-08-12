@@ -21,6 +21,47 @@
     --table-cell-vpad: 0.1rem;
   }
 
+  // Height one unmeasured row is budgeted, used to draw row lines across the
+  // virtual spacers. Keep in sync with `estimateRowHeight()` in
+  // `data_table_virtual_scroll.ts`, which assumes the same 24px of content.
+  --of-table-row-pitch: calc(2 * var(--table-cell-vpad) + 24px);
+
+  // Shared by the skeleton rows and by the spacers standing in for rows that
+  // are not rendered, so both read as the same "not here yet" grey.
+  --of-table-skeleton-bg: color-mix(
+    in srgb,
+    var(--of-color-on-surface) 12%,
+    transparent
+  );
+  --of-table-skeleton-bg-mid: color-mix(
+    in srgb,
+    var(--of-color-on-surface) 22%,
+    transparent
+  );
+
+  .-of-theme-dark & {
+    --of-table-skeleton-bg: color-mix(
+      in srgb,
+      var(--of-color-on-surface) 20%,
+      transparent
+    );
+    --of-table-skeleton-bg-mid: color-mix(
+      in srgb,
+      var(--of-color-on-surface) 34%,
+      transparent
+    );
+  }
+
+  // A single row-height tile carrying one text bar, centred in the row. Sized
+  // and repeated by whoever uses it.
+  --of-table-skeleton-row-bar: linear-gradient(
+    to bottom,
+    transparent calc(50% - 0.43em),
+    var(--of-table-skeleton-bg) calc(50% - 0.43em),
+    var(--of-table-skeleton-bg) calc(50% + 0.43em),
+    transparent calc(50% + 0.43em)
+  );
+
   // border: 1px solid #ddd;
   border-radius: 4px;
   border-spacing: 0;
@@ -45,13 +86,19 @@
   isolation: isolate;
   contain: layout style;
 
-  &.of--scrolling {
-    will-change: contents;
+  // Placeholders are only cheap if they aren't also animating: the shimmer
+  // repaints every bar every frame, and the gradient behind it has to be
+  // rasterized per bar — the last things a scrolling table can afford. Both
+  // come back as soon as scrolling stops.
+  &.of--scrolling .of-table-skeleton-bar {
+    animation: none;
+    background: var(--of-table-skeleton-bg);
   }
 
   // Opt-in fixed row tracks via `virtual-row-height` (no wrapping cells).
   &.of--fixed-row-height {
     grid-auto-rows: var(--of-table-row-height);
+    --of-table-row-pitch: var(--of-table-row-height);
   }
 
   .of-data-table-rows-selector {
@@ -163,6 +210,27 @@
     // Spacer height changes with the virtual window; opt out of scroll
     // anchoring so the browser doesn't rewrite scrollY on every remount.
     overflow-anchor: none;
+
+    // Rows outside the window are drawn as rows: separators, and a bar or two
+    // where their text will be. Overscan and mid-fling skeleton rows cover the
+    // viewport itself; this paint only fills the spacer bands above/below.
+    // Tiled gradients on a box that already exists cost nothing per frame.
+    background-image: var(--of-table-skeleton-row-bar),
+      var(--of-table-skeleton-row-bar),
+      linear-gradient(
+        to bottom,
+        transparent calc(var(--of-table-row-pitch) - 1px),
+        var(--table-border-color) calc(var(--of-table-row-pitch) - 1px)
+      );
+    // One tile per row, so the bars land between the separators. The separator
+    // is a row-tall tile repeated by `background-repeat` rather than a
+    // `repeating-linear-gradient` spanning the box: Firefox degrades one of
+    // those into a solid fill as the box grows, and this box is the tall part
+    // of a whole list.
+    background-size: 18% var(--of-table-row-pitch),
+      9% var(--of-table-row-pitch), 100% var(--of-table-row-pitch);
+    background-position: 1rem 0, 42% 0, 0 0;
+    background-repeat: repeat-y, repeat-y, repeat;
   }
   // Restores the bottom border lost when a spacer becomes the last child.
   > .of-data-table-row:has(+ .of-data-table-virtual-spacer:last-child) > div {
@@ -170,28 +238,13 @@
   }
 
   > .of-data-table-row-skeleton {
-    --of-table-skeleton-bg: color-mix(
-      in srgb,
-      var(--of-color-on-surface) 12%,
-      transparent
-    );
-    --of-table-skeleton-bg-mid: color-mix(
-      in srgb,
-      var(--of-color-on-surface) 22%,
-      transparent
-    );
-
-    .-of-theme-dark & {
-      --of-table-skeleton-bg: color-mix(
-        in srgb,
-        var(--of-color-on-surface) 20%,
-        transparent
-      );
-      --of-table-skeleton-bg-mid: color-mix(
-        in srgb,
-        var(--of-color-on-surface) 34%,
-        transparent
-      );
+    // `--of-row-height` carries the height this row measured before its data
+    // was evicted (inherited through `display: contents`), so a placeholder
+    // holds exactly the space the record will need again.
+    > div {
+      box-sizing: border-box;
+      height: var(--of-row-height, auto);
+      overflow: hidden;
     }
   }
 

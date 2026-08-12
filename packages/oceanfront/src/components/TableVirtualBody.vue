@@ -4,22 +4,22 @@
     :style="{ height: topSpacer + 'px', gridColumn: '1 / -1' }"
     aria-hidden="true"
   ></div>
-  <template v-for="rowIdx in visibleIndices" :key="rowIdx + rowIndexOffset">
+  <template v-for="rowIdx in visibleIndices" :key="rowIdx">
     <of-table-row-skeleton
-      v-if="!rowAt(rowIdx)"
-      :ref="(inst: any) => registerRow(rowIdx, inst)"
+      v-if="forceSkeleton || !rows[rowIdx]"
       :columns="columns"
       :rows-selector="rowsSelector"
       :draggable="!!dragInfo?.draggable"
-      :row-index="rowIdx + rowIndexOffset"
+      :row-index="rowIdx"
+      :height="rowHeightAt(rowIdx)"
     />
     <of-table-row
       v-else
       :ref="(inst: any) => registerRow(rowIdx, inst)"
-      :row="rowAt(rowIdx)"
+      :row="rows[rowIdx]"
       :drag-info="dragInfo"
-      :coords="[rowIdx + rowIndexOffset]"
-      :point-next="[rowIdx + rowIndexOffset + 1]"
+      :coords="[rowIdx]"
+      :point-next="[rowIdx + 1]"
       v-on="dragEvents"
       :rows-selector="rowsSelector"
       :select-locked="selectLocked"
@@ -28,16 +28,16 @@
       :show-old-values="showOldValues"
       :columns="columns"
       :rows-record="rowsRecord"
-      :idx="rowIdx + rowIndexOffset"
+      :idx="rowIdx"
       :is-touchable="isTouchable"
       @update:row="$emit('update:row', $event)"
       @update:field="$emit('update:field')"
     >
       <template #rows-selector>
-        <slot name="rows-selector" :record="rowsRecord" :item="rowAt(rowIdx)" />
+        <slot name="rows-selector" :record="rowsRecord" :item="rows[rowIdx]" />
       </template>
       <template #first-cell>
-        <slot name="first-cell" :record="rowsRecord" :item="rowAt(rowIdx)" />
+        <slot name="first-cell" :record="rowsRecord" :item="rows[rowIdx]" />
       </template>
     </of-table-row>
   </template>
@@ -58,16 +58,19 @@ import {
 } from 'vue'
 import { DataTableHeader } from '../lib/datatable'
 import { FormRecord } from '../lib/records'
-import { VIRTUAL_BODY_MAX_SKELETON_ROWS } from '../lib/virtual_range'
 import OfTableRow from './TableRow.vue'
 import OfTableRowSkeleton from './TableRowSkeleton.vue'
 
-export { VIRTUAL_BODY_MAX_SKELETON_ROWS }
-
 /**
- * Virtual-scroll body: spacers + visible real/skeleton rows.
- * The parent clamps the range so at most a few holes are present — every
- * missing index here is a skeleton (no blank placeholder rows).
+ * Virtual-scroll body: spacers + the rows of the current window, addressed by
+ * absolute index. An index without data renders a skeleton sized to that row's
+ * remembered height, so a window may be all skeletons without the body
+ * changing height. During a true fling (`forceSkeleton`) every index is a
+ * cheap skeleton so the viewport stays filled without rebuilding formatted
+ * rows; ordinary scrolling always shows loaded data as real rows.
+ *
+ * Only real rows are measured — measuring placeholders would feed their
+ * fallback height back into the height store.
  */
 export default defineComponent({
   name: 'OfTableVirtualBody',
@@ -94,13 +97,21 @@ export default defineComponent({
       required: true
     },
     isTouchable: Boolean,
-    /** Absolute index of local virtual row 0 (sliding window origin). */
-    rowIndexOffset: { type: Number, default: 0 },
-    /** Feeds each rendered row's real height back to the height cache. */
+    /** Feeds each rendered row's real height back to the height store. */
     reportRowHeight: {
       type: Function as PropType<(index: number, height: number) => void>,
       required: true
-    }
+    },
+    /** Remembered height for an index, used to size skeleton placeholders. */
+    rowHeightAt: {
+      type: Function as PropType<(index: number) => number>,
+      required: true
+    },
+    /**
+     * True fling only: show skeletons for every index even when row data is
+     * present, so the viewport stays filled without mounting expensive rows.
+     */
+    forceSkeleton: Boolean
   },
   emits: ['update:row', 'update:field'],
   setup(props) {
@@ -111,9 +122,6 @@ export default defineComponent({
       for (let i = 0; i < count; i++) indices[i] = start + i
       return indices
     })
-
-    const rowAt = (localIdx: number) =>
-      props.rows[localIdx + props.rowIndexOffset]
 
     const rowEls = new Map<number, Element>()
     const elIndices = new WeakMap<Element, number>()
@@ -132,16 +140,26 @@ export default defineComponent({
           })
         : undefined
 
+    /**
+     * The row's own element. A row that renders nested sub-rows has several
+     * root nodes, and `$el` is then the fragment's anchor text node rather than
+     * the row — hence `itemRef`, which the row exposes for exactly this. `$el`
+     * still covers single-root rows.
+     */
+    const rowElementOf = (inst: ComponentPublicInstance): Element | null => {
+      const exposed = (inst as unknown as { itemRef?: unknown }).itemRef
+      if (exposed instanceof Element) return exposed
+      const rootEl = inst.$el
+      return rootEl instanceof Element ? rootEl : null
+    }
+
     const measureTarget = (
       inst: ComponentPublicInstance | Element | null
     ): Element | null => {
       if (!inst) return null
-      if (inst instanceof Element) {
-        return inst.querySelector('[role="cell"]') ?? inst
-      }
-      const rootEl = (inst as ComponentPublicInstance).$el as HTMLElement | null
-      if (!rootEl || typeof rootEl.querySelector !== 'function') return null
-      return rootEl.querySelector('[role="cell"]')
+      const rowEl = inst instanceof Element ? inst : rowElementOf(inst)
+      if (!rowEl) return null
+      return rowEl.querySelector('[role="cell"]') ?? rowEl
     }
 
     const registerRow = (
@@ -163,7 +181,7 @@ export default defineComponent({
 
     onBeforeUnmount(() => resizeObserver?.disconnect())
 
-    return { visibleIndices, rowAt, registerRow }
+    return { visibleIndices, registerRow }
   }
 })
 </script>
