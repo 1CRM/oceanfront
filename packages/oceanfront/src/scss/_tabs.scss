@@ -254,6 +254,8 @@
         .of-tab-text {
           z-index: 2;
           display: flex;
+          flex: 1;
+          min-width: 0;
           color: var(--tab-color);
           opacity: var(--tab-opacity);
           &:not(.only-icon) > .of-icon {
@@ -263,7 +265,18 @@
         * {
           pointer-events: none;
         }
-        .of--layer {
+        .of-tab-postfix {
+          z-index: 2;
+          display: flex;
+          align-items: center;
+          margin-left: auto;
+          flex-shrink: 0;
+          pointer-events: auto;
+          * {
+            pointer-events: auto;
+          }
+        }
+        > .of--layer {
           border-top-left-radius: var(--tab-border-radius);
           border-top-right-radius: var(--tab-border-radius);
 

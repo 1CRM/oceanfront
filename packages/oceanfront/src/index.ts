@@ -150,6 +150,7 @@ export { OfFieldBase } from './components/FieldBase'
 export { OfSelectPopup } from './fields/SelectPopup'
 
 export type { CalendarEvent, InternalEvent } from './lib/calendar'
+export { timestampIdToDate } from './lib/calendar'
 export { extendConfig, useConfig } from './lib/config'
 export type { Config, ConfigFunction } from './lib/config'
 export { addDays, addMonths, addMinutes, addYears } from './lib/datetime'

@@ -18,10 +18,15 @@ export default defineComponent({
       resolveWeekStart(props.weekStart, base.locale.value)
     )
 
+    /** Days from `props.day` back to the configured first weekday (0=Sun … 6=Sat). */
+    function weekStartOffset(): number {
+      const weekDay = props.day.getDay()
+      const ws = weekStartLocale.value
+      return ws - (weekDay >= ws ? weekDay : weekDay + 7)
+    }
+
     function getVisibleRange(): Timestamp[] {
-      // Sunday is 0; treat it as 7 so the week starts on Monday by default.
-      const weekDay = props.day.getDay() || 7
-      const firstDay = addDays(props.day, 1 - weekDay)
+      const firstDay = addDays(props.day, weekStartOffset())
       const lastDay = addDays(firstDay, 7)
       return [
         { ...toTimestamp(firstDay), hours: 0, minutes: 0 },
@@ -30,10 +35,7 @@ export default defineComponent({
     }
 
     function getCategoriesList() {
-      const weekDay = props.day.getDay() || 7
-      const offset =
-        weekStartLocale.value -
-        (weekDay >= weekStartLocale.value ? weekDay : weekDay + 7)
+      const offset = weekStartOffset()
       return Array.from({ length: 7 }, (_, i) => ({
         category: '' + i,
         date: addDays(props.day, i + offset)
