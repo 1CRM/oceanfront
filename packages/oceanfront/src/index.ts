@@ -225,6 +225,9 @@ export type {
 export type { Tab } from './lib/tab'
 export {
   useVirtualRows,
+  computeVirtualWindow,
+  isActivelyWindowing,
+  MAX_RENDERED_ROWS,
   VIRTUAL_ROWS_DEFAULT_OVERSCAN,
   VIRTUAL_ROWS_RANGE_STEP,
   VIRTUAL_SCROLL_FAST_JUMP_RATIO,
@@ -234,14 +237,10 @@ export {
 export type {
   UseVirtualRowsOptions,
   UseVirtualRowsReturn,
-  VirtualRowsRange
+  VirtualRowsRange,
+  VirtualWindow,
+  VirtualWindowInput
 } from './lib/virtual_rows'
-export {
-  computeVirtualWindow,
-  isActivelyWindowing,
-  MAX_RENDERED_ROWS
-} from './lib/virtual_range'
-export type { VirtualWindow, VirtualWindowInput } from './lib/virtual_range'
 export type { RowHeightSnapshot, RowMetrics } from './lib/virtual_row_heights'
 export type {
   IKanbanCard,

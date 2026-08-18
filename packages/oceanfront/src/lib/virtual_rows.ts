@@ -7,37 +7,231 @@ import {
   ref,
   watch
 } from 'vue'
-import {
-  ScrollRoot,
-  findScrollParent,
-  getScrollRange,
-  getScrollTop,
-  setScrollTop
-} from './scroll_dom'
-import {
-  MAX_RENDERED_ROWS,
-  computeVirtualWindow,
-  isActivelyWindowing
-} from './virtual_range'
 import { RowMetrics } from './virtual_row_heights'
 
-export const VIRTUAL_ROWS_DEFAULT_OVERSCAN = 10
-/** Scroll is considered settled this long after the last scroll event. */
+export const VIRTUAL_ROWS_DEFAULT_OVERSCAN = 5
+/** Extra overscan while flinging. Placeholders are recycled, so a wider window is cheap. */
+export const VIRTUAL_ROWS_FLING_OVERSCAN = 30
+/** Fraction of fling overscan kept behind the scroll direction (covers reversals). */
+export const VIRTUAL_ROWS_FLING_TRAILING_RATIO = 0.25
+/** Offset change below this is noise, not a change of direction. */
+export const DIRECTION_EPSILON_PX = 4
 export const VIRTUAL_SCROLL_SETTLE_MS = 120
+export const VIRTUAL_SCROLL_SETTLE_MAX_MS = 400
+/** Settle delay is at least this multiple of the gap between scroll samples. */
+export const VIRTUAL_SCROLL_SETTLE_SAMPLE_FACTOR = 1.5
+/** Gaps longer than this start a new gesture and are not averaged into sample cost. */
+export const VIRTUAL_SCROLL_SAMPLE_GAP_MAX_MS = 1000
 /**
- * How far one scroll sample may advance, as a fraction of the viewport, before
- * it counts toward fling mode.
- *
- * Deliberately a distance and not a px/ms speed: samples arrive no faster than
- * the main thread can build a window, so a speed would divide by that build
- * time and read an expensive window as a *slow* scroll — putting a fling on
- * the one path it cannot afford. A full viewport keeps ordinary wheel steps
- * (and a single laggy frame) from tripping fling mode.
+ * Jump size, as a fraction of the viewport, that counts toward fling mode.
+ * Distance, not speed: sample timing follows window-build cost, so a px/ms
+ * threshold would treat an expensive window as slow.
  */
 export const VIRTUAL_SCROLL_FAST_JUMP_RATIO = 1
-/** Consecutive oversized jumps required before fling mode engages. */
 export const VIRTUAL_SCROLL_FAST_SAMPLES = 2
 export const VIRTUAL_ROWS_RANGE_STEP = 5
+
+/** Cap on overscan, not the visible viewport — a tall screen may show more rows than this. */
+export const MAX_RENDERED_ROWS = 80
+
+export type ScrollRoot = HTMLElement | Window
+
+const isScrollableOverflow = (overflow: string) =>
+  overflow === 'auto' || overflow === 'scroll' || overflow === 'overlay'
+
+/** Nearest scrolling ancestor, or `window`. Starts at `parentElement` so `el` itself is never the root. */
+export const findScrollParent = (el: HTMLElement): ScrollRoot => {
+  let parent = el.parentElement
+  while (parent) {
+    const style = window.getComputedStyle(parent)
+    if (
+      isScrollableOverflow(style.overflowY) &&
+      parent.scrollHeight > parent.clientHeight
+    ) {
+      return parent
+    }
+    parent = parent.parentElement
+  }
+  return window
+}
+
+export const getScrollTop = (root: ScrollRoot): number =>
+  root === window ? window.scrollY : (root as HTMLElement).scrollTop
+
+export const getScrollRange = (root: ScrollRoot): number => {
+  if (root === window) {
+    const doc = document.documentElement
+    const height = window.innerHeight || doc.clientHeight || 0
+    return Math.max(0, (doc.scrollHeight || 0) - height)
+  }
+  const el = root as HTMLElement
+  return Math.max(0, el.scrollHeight - el.clientHeight)
+}
+
+/** Visible height of the scroll root, not of any particular child on screen. */
+export const getScrollViewport = (root: ScrollRoot): number =>
+  root === window
+    ? window.innerHeight || document.documentElement.clientHeight || 0
+    : (root as HTMLElement).clientHeight
+
+export const setScrollTop = (root: ScrollRoot, top: number): void => {
+  if (root === window) {
+    window.scrollTo({ top, behavior: 'auto' })
+  } else {
+    ;(root as HTMLElement).scrollTop = top
+  }
+}
+
+/** Fling detection and adaptive settle delay from scroll-sample distances. */
+const createScrollGesture = () => {
+  let lastOffset = 0
+  let lastScrollRange = 0
+  let hasOffsetSample = false
+  let fastJumpStreak = 0
+  let sampleIntervalMs = 0
+  let lastSampleAt = 0
+  let hasSampleTime = false
+
+  const baseline = (offset: number, scrollRange: number) => {
+    lastOffset = offset
+    lastScrollRange = scrollRange
+    hasOffsetSample = true
+  }
+
+  /** True once consecutive oversized jumps have engaged fling mode. */
+  const trackJump = (
+    offset: number,
+    viewport: number,
+    scrollRange: number
+  ): boolean => {
+    let engaged = false
+    if (hasOffsetSample && viewport > 0) {
+      const layoutMoved = Math.abs(scrollRange - lastScrollRange)
+      const jumped = Math.abs(offset - lastOffset)
+      const fastAt = viewport * VIRTUAL_SCROLL_FAST_JUMP_RATIO
+      if (jumped > layoutMoved + fastAt) {
+        fastJumpStreak += 1
+        if (fastJumpStreak >= VIRTUAL_SCROLL_FAST_SAMPLES) engaged = true
+      } else {
+        fastJumpStreak = 0
+      }
+    }
+    baseline(offset, scrollRange)
+    return engaged
+  }
+
+  const trackSample = (now: number) => {
+    const gap = hasSampleTime ? now - lastSampleAt : 0
+    lastSampleAt = now
+    hasSampleTime = true
+    if (gap <= 0 || gap > VIRTUAL_SCROLL_SAMPLE_GAP_MAX_MS) return
+    sampleIntervalMs = sampleIntervalMs
+      ? sampleIntervalMs * 0.6 + gap * 0.4
+      : gap
+  }
+
+  const settleDelay = () =>
+    Math.min(
+      VIRTUAL_SCROLL_SETTLE_MAX_MS,
+      Math.max(
+        VIRTUAL_SCROLL_SETTLE_MS,
+        Math.round(sampleIntervalMs * VIRTUAL_SCROLL_SETTLE_SAMPLE_FACTOR)
+      )
+    )
+
+  const resetFling = () => {
+    fastJumpStreak = 0
+  }
+
+  const reset = () => {
+    hasOffsetSample = false
+    fastJumpStreak = 0
+    sampleIntervalMs = 0
+    lastSampleAt = 0
+    hasSampleTime = false
+  }
+
+  return { baseline, trackJump, trackSample, settleDelay, resetFling, reset }
+}
+
+export interface VirtualWindowInput {
+  scrolledPast: number
+  viewportHeight: number
+  metrics: RowMetrics
+  totalCount: number
+  overscan: number
+  /** Rows of overscan above the viewport. Defaults to `overscan`. */
+  overscanLead?: number
+  /** Rows of overscan below the viewport. Defaults to `overscan`. */
+  overscanTrail?: number
+  /** Snap range start to multiples of this many rows (fewer range-change events). */
+  rangeStep: number
+  /** Defaults to `MAX_RENDERED_ROWS`. */
+  maxRenderedRows?: number
+}
+
+export interface VirtualWindow {
+  start: number
+  end: number
+  topSpacer: number
+  bottomSpacer: number
+}
+
+/**
+ * Rows covering the viewport plus overscan, and spacers for everything outside.
+ * The cap only trims overscan. Spacers span the whole list so scroll height stays stable.
+ */
+export function computeVirtualWindow(input: VirtualWindowInput): VirtualWindow {
+  const total = Math.max(0, input.totalCount)
+  const step = Math.max(1, input.rangeStep)
+  const overscan = Math.max(0, input.overscan)
+  const cap = Math.max(1, input.maxRenderedRows ?? MAX_RENDERED_ROWS)
+  const metrics = input.metrics
+
+  if (total <= 0) return { start: 0, end: 0, topSpacer: 0, bottomSpacer: 0 }
+
+  const firstVisible = metrics.indexAtOffset(input.scrolledPast, total)
+  const lastVisible = metrics.indexAtOffset(
+    input.scrolledPast + Math.max(0, input.viewportHeight),
+    total
+  )
+  const coreEnd = Math.min(total, lastVisible + 1)
+  const coreCount = Math.max(1, coreEnd - firstVisible)
+
+  const leadWanted = Math.max(0, input.overscanLead ?? overscan)
+  const trailWanted = Math.max(0, input.overscanTrail ?? overscan)
+  const wanted = leadWanted + trailWanted
+  const budget = Math.max(0, cap - coreCount)
+  // Share a tight budget in proportion so asymmetric (fling) overscan is not recentered.
+  const lead =
+    wanted > budget && wanted
+      ? Math.floor((budget * leadWanted) / wanted)
+      : leadWanted
+  const trail = wanted > budget ? budget - lead : trailWanted
+
+  const start = Math.floor(Math.max(0, firstVisible - lead) / step) * step
+  let end = Math.min(total, coreEnd + trail)
+  // Snap-to-step can inflate the window; trim trailing overscan only, keep the viewport.
+  if (end - start > cap) end = Math.max(coreEnd, start + cap)
+  end = Math.max(start, Math.min(total, end))
+
+  return {
+    start,
+    end,
+    topSpacer: metrics.offsetOf(start),
+    bottomSpacer: Math.max(
+      0,
+      metrics.totalHeight(total) - metrics.offsetOf(end)
+    )
+  }
+}
+
+/** True when the rendered window is a proper subset of the list. */
+export const isActivelyWindowing = (
+  start: number,
+  end: number,
+  total: number
+): boolean => total > 0 && (start > 0 || end < total)
 
 export interface VirtualRowsRange {
   start: number
@@ -51,7 +245,6 @@ export interface UseVirtualRowsOptions {
   enabled?: ComputedRef<boolean> | Ref<boolean>
   containerRef: Ref<HTMLElement | null | undefined>
   totalCount: ComputedRef<number> | Ref<number>
-  /** Row-height source: fixed math or a measured variable-height store. */
   metrics: ComputedRef<RowMetrics> | Ref<RowMetrics>
   overscan?: number
   maxRenderedRows?: number
@@ -59,46 +252,24 @@ export interface UseVirtualRowsOptions {
 }
 
 export interface UseVirtualRowsReturn {
-  /** Window to render, and to report upwards for loading. */
   rangeStart: ComputedRef<number>
   rangeEnd: ComputedRef<number>
-  /** Spacer heights holding the space of everything outside the window. */
   topSpacerHeight: ComputedRef<number>
   bottomSpacerHeight: ComputedRef<number>
   isScrolling: ComputedRef<boolean>
-  /**
-   * True only while sustained large jumps are still arriving. Consumers swap
-   * to skeletons for that window so the main thread is not rebuilding full
-   * rows mid-fling; the first ordinary sample clears it again.
-   */
   isFastScrolling: ComputedRef<boolean>
-  /** True once the scroll gesture has stopped; gate data fetching on this. */
   settled: ComputedRef<boolean>
-  /** Pixels of the container scrolled above the viewport (for viewport-only math). */
   scrolledPast: ComputedRef<number>
   viewportHeight: ComputedRef<number>
   scrollToIndex: (index: number) => void
   scrollToOffset: (offset: number) => void
-  /**
-   * Shifts the scroll root by `delta` px so rows on screen stay put after
-   * measurements above the window changed the list's height.
-   */
   compensateScroll: (delta: number) => void
 }
 
 /**
- * Row windowing for a container that grows with its content. Vertical scroll
- * lives on the page/app shell (or a parent), never on the container, so
- * `scrolledPast` is how far the container top moved above the viewport
- * (`max(0, -rect.top)`). If the container itself is the scrollport, that stays
- * 0 and the window never advances.
- *
- * Native scrolling is never intercepted. The window always tracks the scroll
- * position so the viewport never goes blank. During sustained large jumps
- * `isFastScrolling` asks the consumer for cheap placeholders instead of full
- * rows — that is what keeps a fling from falling behind into bare spacers —
- * and the first ordinary sample clears it so loaded data is not left hidden.
- * `settled` holds off data fetching until the gesture ends.
+ * Row windowing for a container that grows with its content. Scroll lives on
+ * a parent (or the page), so `scrolledPast` is how far the container top moved
+ * above the viewport.
  */
 export function useVirtualRows(
   options: UseVirtualRowsOptions
@@ -107,38 +278,34 @@ export function useVirtualRows(
   const maxRenderedRows = options.maxRenderedRows ?? MAX_RENDERED_ROWS
   const rangeStep = Math.max(1, VIRTUAL_ROWS_RANGE_STEP)
   const isEnabled = () => options.enabled?.value !== false
+  const gesture = createScrollGesture()
 
   const scrolledPast = ref(0)
   const viewportHeight = ref(0)
   const isScrolling = ref(false)
   const isFastScrolling = ref(false)
+  const scrollDirection = ref(1)
 
   let scrollRoot: ScrollRoot = window
   let attachedEl: HTMLElement | null = null
   let resizeObserver: ResizeObserver | undefined
   let measureScheduled = false
   let settleTimer: ReturnType<typeof setTimeout> | undefined
-  let lastOffset = 0
-  let lastScrollRange = 0
-  let hasOffsetSample = false
-  let fastJumpStreak = 0
+  let followRaf = 0
   let pendingCompensation = 0
   let compensationScheduled = false
-  // `padTop` needs a style read, which is too expensive to repeat on every
-  // scroll event. Anything that can change it also changes the container's
-  // border-box height, so the resize paths below mark it stale.
   let padTop = 0
   let padTopStale = true
-  // The position we last moved the scroll to ourselves, or null. Its event
-  // arrives a frame later and is recognised by value, not by count: row
-  // measurements make us correct the offset constantly, so dismissing "the next
-  // event" blindly would discard the user's own scrolling in the same frame.
   let programmaticScrollTop: number | null = null
 
   const readPadTop = (el: HTMLElement) => {
     padTop = parseFloat(getComputedStyle(el).paddingTop) || 0
     padTopStale = false
     return padTop
+  }
+
+  const resolveScrollRoot = (el: HTMLElement) => {
+    scrollRoot = findScrollParent(el)
   }
 
   const scheduleMeasure = () => {
@@ -156,84 +323,63 @@ export function useVirtualRows(
     const rect = el.getBoundingClientRect()
     const winHeight =
       window.innerHeight || document.documentElement.clientHeight || 0
-    // Row/spacer content starts after the container's own padding, so subtract
-    // it from scrolledPast or a padded container starts its window too early.
     if (padTopStale) readPadTop(el)
-    scrolledPast.value = Math.max(0, -rect.top - padTop)
+    const nextOffset = Math.max(0, -rect.top - padTop)
+    const moved = nextOffset - scrolledPast.value
+    if (Math.abs(moved) >= DIRECTION_EPSILON_PX) {
+      scrollDirection.value = moved > 0 ? 1 : -1
+    }
+    scrolledPast.value = nextOffset
     viewportHeight.value = Math.max(
       0,
       Math.min(rect.bottom, winHeight) - Math.max(rect.top, 0)
     )
   }
 
-  /**
-   * Takes the current offset as the baseline for the next jump, without
-   * judging it. Used wherever the offset moved for a reason other than the
-   * user: measuring that against the previous sample would report a fling that
-   * nobody performed.
-   */
   const baselineScrollJump = () => {
-    lastOffset = scrolledPast.value
-    lastScrollRange = getScrollRange(scrollRoot)
-    hasOffsetSample = true
+    gesture.baseline(scrolledPast.value, getScrollRange(scrollRoot))
   }
 
-  /**
-   * Decides from the distance one user sample covered whether this is a fling.
-   *
-   * However much the scrollable distance changed is discounted from the jump
-   * first: changing the list's height drags the offset along on its own, as the
-   * browser clamps it to the new maximum or anchors it to keep what is on
-   * screen in place. Counting that as a gesture closes a loop, because
-   * placeholders are only as tall as the height the spacers assume for them —
-   * so flagging a fling changes the height, which moves the offset again. Past
-   * the last row, where the bottom spacer is gone and a height change lands
-   * entirely on the offset, the loop sustains itself and the table shakes.
-   */
-  const trackScrollJump = () => {
-    const viewport = viewportHeight.value
-    if (hasOffsetSample && viewport > 0) {
-      const layoutMoved = Math.abs(getScrollRange(scrollRoot) - lastScrollRange)
-      const jumped = Math.abs(scrolledPast.value - lastOffset)
-      const fastAt = viewport * VIRTUAL_SCROLL_FAST_JUMP_RATIO
-      if (jumped > layoutMoved + fastAt) {
-        fastJumpStreak += 1
-        if (fastJumpStreak >= VIRTUAL_SCROLL_FAST_SAMPLES)
-          isFastScrolling.value = true
-      } else {
-        // No hysteresis: holding placeholders past the fling looks like loaded
-        // rows turning back into skeletons.
-        fastJumpStreak = 0
-        isFastScrolling.value = false
-      }
-    }
-    baselineScrollJump()
+  const stopFollow = () => {
+    if (!followRaf) return
+    cancelAnimationFrame(followRaf)
+    followRaf = 0
   }
+
+  const followScroll = () => {
+    followRaf = 0
+    if (!isEnabled() || !isScrolling.value) return
+    measure()
+    followRaf = requestAnimationFrame(followScroll)
+  }
+
+  const startFollow = () => {
+    if (followRaf || typeof requestAnimationFrame === 'undefined') return
+    followRaf = requestAnimationFrame(followScroll)
+  }
+
+  const nowMs = () =>
+    typeof performance !== 'undefined' && typeof performance.now === 'function'
+      ? performance.now()
+      : Date.now()
 
   const markScrolling = () => {
+    gesture.trackSample(nowMs())
     isScrolling.value = true
+    startFollow()
     if (settleTimer !== undefined) clearTimeout(settleTimer)
     settleTimer = setTimeout(() => {
       isScrolling.value = false
       isFastScrolling.value = false
-      fastJumpStreak = 0
-      // Re-measure so the settled window is emitted with full overscan, from
-      // a padding value that is guaranteed current.
+      gesture.resetFling()
       padTopStale = true
       measure()
       baselineScrollJump()
-    }, VIRTUAL_SCROLL_SETTLE_MS)
+    }, gesture.settleDelay())
   }
 
-  // Measured synchronously rather than in a rAF: the offset is already
-  // laid out by the time this fires, and deferring it would render every
-  // window one frame behind the scroll position.
   const onScroll = () => {
     if (!isEnabled()) return
-    // Our own corrections must not read as user scrolling; that would keep the
-    // list unsettled and postpone loading for no reason. Only the event that
-    // lands exactly where we put it is ours — if the position has moved on, the
-    // user is scrolling and this is their sample to judge.
     if (programmaticScrollTop !== null) {
       const landed = getScrollTop(scrollRoot) === programmaticScrollTop
       programmaticScrollTop = null
@@ -245,18 +391,26 @@ export function useVirtualRows(
     }
     markScrolling()
     measure()
-    trackScrollJump()
+    if (
+      gesture.trackJump(
+        scrolledPast.value,
+        getScrollViewport(scrollRoot),
+        getScrollRange(scrollRoot)
+      )
+    ) {
+      isFastScrolling.value = true
+    }
   }
+
   const onResize = () => {
     padTopStale = true
+    if (attachedEl) resolveScrollRoot(attachedEl)
     scheduleMeasure()
   }
 
   const withScrollAdjust = (fn: () => void) => {
     fn()
     programmaticScrollTop = getScrollTop(scrollRoot)
-    // Give up on the expected event after a frame so a coalesced write can
-    // never swallow a real user scroll.
     requestAnimationFrame(() => {
       programmaticScrollTop = null
     })
@@ -287,7 +441,7 @@ export function useVirtualRows(
     if (attachedEl === el) return
     detach()
     attachedEl = el
-    scrollRoot = findScrollParent(el)
+    resolveScrollRoot(el)
     window.addEventListener('scroll', onScroll, {
       passive: true,
       capture: true
@@ -309,12 +463,12 @@ export function useVirtualRows(
     resizeObserver?.disconnect()
     resizeObserver = undefined
     if (settleTimer !== undefined) clearTimeout(settleTimer)
+    stopFollow()
     attachedEl = null
     isScrolling.value = false
     isFastScrolling.value = false
     pendingCompensation = 0
-    hasOffsetSample = false
-    fastJumpStreak = 0
+    gesture.reset()
   }
 
   const syncAttachment = () => {
@@ -332,16 +486,21 @@ export function useVirtualRows(
   const windowState = computed(() => {
     if (!isEnabled()) return { start: 0, end: 0, topSpacer: 0, bottomSpacer: 0 }
     const metrics = options.metrics.value
-    // Read `.version` so height mutations (rows measured after render) mark
-    // this computed dirty even though `metrics` itself is the same object.
     metrics.version.value
+    const fling = isFastScrolling.value
+    const overscan = fling ? VIRTUAL_ROWS_FLING_OVERSCAN : baseOverscan
+    const behind = fling
+      ? Math.ceil(overscan * VIRTUAL_ROWS_FLING_TRAILING_RATIO)
+      : overscan
+    const goingDown = scrollDirection.value >= 0
     return computeVirtualWindow({
       scrolledPast: scrolledPast.value,
       viewportHeight: viewportHeight.value,
       metrics,
       totalCount: options.totalCount.value,
-      // Overscan is runway for real rows; mid-fling only the viewport matters.
-      overscan: isFastScrolling.value ? 0 : baseOverscan,
+      overscan,
+      overscanLead: goingDown ? behind : overscan,
+      overscanTrail: goingDown ? overscan : behind,
       rangeStep,
       maxRenderedRows
     })
@@ -362,7 +521,6 @@ export function useVirtualRows(
     { immediate: true, flush: 'post' }
   )
 
-  /** Scrolls so `offset` px of the container sit above the viewport top. */
   const scrollToOffset = (offset: number) => {
     const el = options.containerRef.value
     if (!el || typeof window === 'undefined' || !isEnabled()) return
@@ -385,10 +543,6 @@ export function useVirtualRows(
     baselineScrollJump()
   }
 
-  // Best-effort: jumps to the offset the current metrics predict for `index`.
-  // For never-rendered rows under variable-height mode this uses the
-  // estimate and refines once those rows render and get measured — the same
-  // limitation every variable-size virtualizer has.
   const scrollToIndex = (index: number) => {
     scrollToOffset(options.metrics.value.offsetOf(Math.max(0, index)))
   }

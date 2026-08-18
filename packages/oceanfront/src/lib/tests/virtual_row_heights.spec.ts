@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import {
-  createFixedRowMetrics,
-  createRowHeightStore
-} from '../virtual_row_heights'
+import { createFixedRowMetrics, createRowHeightStore } from '../virtual_row_heights'
 
 describe('createFixedRowMetrics', () => {
   it('computes uniform index*height math', () => {
@@ -70,9 +67,9 @@ describe('createRowHeightStore', () => {
 
   it('returns the pixel delta a measurement added, for scroll compensation', () => {
     const store = createRowHeightStore(40)
-    expect(store.setSize(3, 100)).toBe(60)
-    expect(store.setSize(3, 120)).toBe(20)
-    expect(store.setSize(3, 120)).toBe(0)
+    expect(store.setSize(3, 100)).toEqual({ delta: 60, evicted: [] })
+    expect(store.setSize(3, 120)).toEqual({ delta: 20, evicted: [] })
+    expect(store.setSize(3, 120)).toEqual({ delta: 0, evicted: [] })
   })
 
   it('extrapolates unmeasured rows beyond the measured prefix using the estimate', () => {
@@ -175,6 +172,46 @@ describe('createRowHeightStore', () => {
     store.hydrate({ estimate: 10, sizes: [] })
     expect(store.getSize(0)).toBe(100)
     expect(store.totalHeight(2)).toBe(140)
+  })
+
+  it('indexAtOffset still uses remaining measurements after LRU eviction of earlier rows', () => {
+    const estimate = 40
+    const measured = 80
+    const tracked = 8
+    const store = createRowHeightStore(estimate, tracked)
+
+    for (let i = 0; i < tracked; i++) store.setSize(i, measured)
+    // Fold the prefix into offsetCache, as if the user had scrolled through it.
+    expect(store.offsetOf(tracked - 1)).toBe((tracked - 1) * measured)
+
+    // One more measurement evicts the oldest entry (row 0, insertion order).
+    const result = store.setSize(tracked, measured)
+    expect(result.delta).toBe(measured - estimate)
+    expect(result.evicted).toEqual([[0, estimate - measured]])
+    expect(store.getSize(0)).toBeUndefined()
+    expect(store.getSize(1)).toBe(measured)
+    expect(store.getSize(tracked)).toBe(measured)
+
+    const count = tracked + 100
+    // Row 0 now uses the estimate; rows 1..tracked stay measured.
+    // Windowing calls indexAtOffset before offsetOf, so do not rebuild first.
+    const topOfLast = estimate + (tracked - 1) * measured
+    expect(store.indexAtOffset(topOfLast, count)).toBe(tracked)
+    expect(store.indexAtOffset(topOfLast - 1, count)).toBe(tracked - 1)
+    expect(store.offsetOf(tracked)).toBe(topOfLast)
+  })
+
+  it('indexAtOffset reflects an earlier remeasure without waiting for offsetOf', () => {
+    const store = createRowHeightStore(40)
+    store.setSize(0, 40)
+    store.setSize(1, 40)
+    store.setSize(2, 40)
+    expect(store.offsetOf(2)).toBe(80)
+
+    store.setSize(0, 120)
+    expect(store.indexAtOffset(120, 3)).toBe(1)
+    expect(store.indexAtOffset(159, 3)).toBe(1)
+    expect(store.indexAtOffset(160, 3)).toBe(2)
   })
 
   it('reports measured leading height instead of estimate*rows', () => {

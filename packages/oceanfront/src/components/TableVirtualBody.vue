@@ -4,9 +4,12 @@
     :style="{ height: topSpacer + 'px', gridColumn: '1 / -1' }"
     aria-hidden="true"
   ></div>
-  <template v-for="rowIdx in visibleIndices" :key="rowIdx">
+  <template
+    v-for="(rowIdx, slotIdx) in visibleIndices"
+    :key="isFastScrolling ? slotIdx : rowIdx"
+  >
     <of-table-row-skeleton
-      v-if="forceSkeleton || !rows[rowIdx]"
+      v-if="isFastScrolling || !rows[rowIdx]"
       :columns="columns"
       :rows-selector="rowsSelector"
       :draggable="!!dragInfo?.draggable"
@@ -62,15 +65,8 @@ import OfTableRow from './TableRow.vue'
 import OfTableRowSkeleton from './TableRowSkeleton.vue'
 
 /**
- * Virtual-scroll body: spacers + the rows of the current window, addressed by
- * absolute index. An index without data renders a skeleton sized to that row's
- * remembered height, so a window may be all skeletons without the body
- * changing height. During a true fling (`forceSkeleton`) every index is a
- * cheap skeleton so the viewport stays filled without rebuilding formatted
- * rows; ordinary scrolling always shows loaded data as real rows.
- *
- * Only real rows are measured — measuring placeholders would feed their
- * fallback height back into the height store.
+ * Virtual-scroll body: spacers + the current window, by absolute index.
+ * Missing rows (and every row while flinging) render as skeletons.
  */
 export default defineComponent({
   name: 'OfTableVirtualBody',
@@ -107,11 +103,8 @@ export default defineComponent({
       type: Function as PropType<(index: number) => number>,
       required: true
     },
-    /**
-     * True fling only: show skeletons for every index even when row data is
-     * present, so the viewport stays filled without mounting expensive rows.
-     */
-    forceSkeleton: Boolean
+    /** While flinging, show skeletons even when row data is present. */
+    isFastScrolling: Boolean
   },
   emits: ['update:row', 'update:field'],
   setup(props) {
@@ -123,29 +116,37 @@ export default defineComponent({
       return indices
     })
 
-    const rowEls = new Map<number, Element>()
+    const rowCells = new Map<number, Element[]>()
     const elIndices = new WeakMap<Element, number>()
+
+    const cellHeight = (el: Element, entry?: ResizeObserverEntry) =>
+      entry?.borderBoxSize?.[0]?.blockSize ??
+      el.getBoundingClientRect().height
 
     const resizeObserver =
       typeof ResizeObserver !== 'undefined'
         ? new ResizeObserver((entries) => {
+            const entryHeight = new Map<Element, number>()
+            const affected = new Set<number>()
             for (const entry of entries) {
               const rowIdx = elIndices.get(entry.target)
               if (rowIdx === undefined) continue
-              const height =
-                entry.borderBoxSize?.[0]?.blockSize ??
-                entry.target.getBoundingClientRect().height
+              affected.add(rowIdx)
+              entryHeight.set(entry.target, cellHeight(entry.target, entry))
+            }
+            for (const rowIdx of affected) {
+              const cells = rowCells.get(rowIdx) ?? []
+              let height = 0
+              for (const cell of cells) {
+                const h =
+                  entryHeight.get(cell) ?? cell.getBoundingClientRect().height
+                if (h > height) height = h
+              }
               if (height > 0) props.reportRowHeight(rowIdx, height)
             }
           })
         : undefined
 
-    /**
-     * The row's own element. A row that renders nested sub-rows has several
-     * root nodes, and `$el` is then the fragment's anchor text node rather than
-     * the row — hence `itemRef`, which the row exposes for exactly this. `$el`
-     * still covers single-root rows.
-     */
     const rowElementOf = (inst: ComponentPublicInstance): Element | null => {
       const exposed = (inst as unknown as { itemRef?: unknown }).itemRef
       if (exposed instanceof Element) return exposed
@@ -153,30 +154,39 @@ export default defineComponent({
       return rootEl instanceof Element ? rootEl : null
     }
 
-    const measureTarget = (
-      inst: ComponentPublicInstance | Element | null
-    ): Element | null => {
-      if (!inst) return null
-      const rowEl = inst instanceof Element ? inst : rowElementOf(inst)
-      if (!rowEl) return null
-      return rowEl.querySelector('[role="cell"]') ?? rowEl
+    const measureTargets = (rowEl: Element): Element[] => {
+      const cells = [...rowEl.querySelectorAll('[role="cell"]')]
+      return cells.length ? cells : [rowEl]
     }
+
+    const sameElements = (a: Element[], b: Element[]) =>
+      a.length === b.length && a.every((el, i) => el === b[i])
 
     const registerRow = (
       rowIdx: number,
       inst: ComponentPublicInstance | Element | null
     ) => {
-      const prevEl = rowEls.get(rowIdx)
-      if (prevEl) {
-        resizeObserver?.unobserve(prevEl)
-        elIndices.delete(prevEl)
-        rowEls.delete(rowIdx)
+      const rowEl = inst
+        ? inst instanceof Element
+          ? inst
+          : rowElementOf(inst)
+        : null
+      const cells = rowEl ? measureTargets(rowEl) : []
+      const prevEls = rowCells.get(rowIdx)
+      if (prevEls && sameElements(prevEls, cells)) return
+      if (prevEls) {
+        for (const el of prevEls) {
+          resizeObserver?.unobserve(el)
+          elIndices.delete(el)
+        }
+        rowCells.delete(rowIdx)
       }
-      const cell = measureTarget(inst)
-      if (!cell) return
-      rowEls.set(rowIdx, cell)
-      elIndices.set(cell, rowIdx)
-      resizeObserver?.observe(cell)
+      if (!cells.length) return
+      rowCells.set(rowIdx, cells)
+      for (const cell of cells) {
+        elIndices.set(cell, rowIdx)
+        resizeObserver?.observe(cell)
+      }
     }
 
     onBeforeUnmount(() => resizeObserver?.disconnect())

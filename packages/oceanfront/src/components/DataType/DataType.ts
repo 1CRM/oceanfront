@@ -1,6 +1,7 @@
 import { PropType, defineComponent, h, inject, isVNode } from 'vue'
 import { DataTypeValue } from '../../lib/datatype'
 import {
+  createVirtualCellCache,
   dataTableVirtualScrollKey,
   notVirtualScroll,
   wrapFreshVNode
@@ -24,11 +25,13 @@ export default defineComponent({
       dataTableVirtualScrollKey,
       notVirtualScroll
     )
-    return { virtualScrollActive }
+    return { virtualScrollActive, wrapVirtualCell: createVirtualCellCache() }
   },
   render() {
     const wrap = (input: unknown) =>
-      wrapFreshVNode(input, !!this.virtualScrollActive)
+      this.virtualScrollActive
+        ? this.wrapVirtualCell(input)
+        : wrapFreshVNode(input, false)
 
     if (this.$props.value && typeof this.$props.value === 'object') {
       const format = this.$props.value.format as any

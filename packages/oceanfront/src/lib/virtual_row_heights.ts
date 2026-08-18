@@ -3,13 +3,6 @@ import { Ref, ref } from 'vue'
 /** Cap on remembered row measurements; oldest entries are dropped first. */
 export const MAX_TRACKED_ROW_HEIGHTS = 20000
 
-/**
- * Read-only row-metrics interface used by the pure virtual-window math
- * (`virtual_range.ts`). Two implementations exist: a fixed-height one
- * (O(1) `index * height` math, used when `virtual-row-height` is set) and a
- * measured store (`createRowHeightStore`) for the default auto-measured
- * path, where rows may wrap to different heights.
- */
 export interface RowMetrics {
   /** Read inside a `computed()` to subscribe to store mutations. */
   version: Ref<number>
@@ -27,9 +20,17 @@ export interface RowHeightSnapshot {
   sizes: [number, number][]
 }
 
+/** Result of recording a row height, including any LRU drops it triggered. */
+export type RowSizeUpdate = {
+  /** Pixel delta applied to the measured row (0 if unchanged). */
+  delta: number
+  /** LRU-evicted rows as [index, list-height delta]. */
+  evicted: [number, number][]
+}
+
 export interface RowHeightStore extends RowMetrics {
-  /** Records a measured height; returns the pixel delta it added to the list. */
-  setSize(index: number, size: number): number
+  /** Records a measured height; returns that row's delta plus any LRU evictions. */
+  setSize(index: number, size: number): RowSizeUpdate
   /** Measured height of `index`, or `undefined` when it was never rendered. */
   getSize(index: number): number | undefined
   /** Height assumed for never-measured rows; what the spacer math is built on. */
@@ -41,7 +42,7 @@ export interface RowHeightStore extends RowMetrics {
 
 const staticVersion = ref(0)
 
-/** O(1) uniform-height metrics: the `virtual-row-height` fast path. */
+/** Uniform-height metrics: the `virtual-row-height` fast path. */
 export function createFixedRowMetrics(height: number): RowMetrics {
   const rowHeight = Math.max(1, height || 1)
   return {
@@ -56,21 +57,11 @@ export function createFixedRowMetrics(height: number): RowMetrics {
   }
 }
 
-/**
- * Variable-row-height store for the auto-measured virtual-scroll path.
- *
- * Heights are keyed by *absolute* row index and are never dropped when the
- * row data itself is evicted — that is what keeps a revisited region at the
- * height it had before, so a skeleton can hold the exact space its record
- * used to occupy.
- *
- * Only rows that have actually been rendered get a real measurement
- * (`sizeMap`); everything else falls back to `estimate`. Cumulative offsets
- * are built lazily, forward from the last computed index, so cost scales
- * with how far a user has actually scrolled rather than with total row count
- * (no dense array sized to the full row count, no per-scroll O(n) walk).
- */
-export function createRowHeightStore(estimatedSize: number): RowHeightStore {
+/** Measured heights keyed by absolute index; unmeasured rows use `estimate`. */
+export function createRowHeightStore(
+  estimatedSize: number,
+  maxTracked = MAX_TRACKED_ROW_HEIGHTS
+): RowHeightStore {
   let estimate = Math.max(1, estimatedSize || 1)
   const sizeMap = new Map<number, number>()
   // offsetCache[i] = top offset of row i, valid for i in [0, lastComputedIndex].
@@ -87,8 +78,12 @@ export function createRowHeightStore(estimatedSize: number): RowHeightStore {
 
   const sizeOf = (index: number) => sizeMap.get(index) ?? estimate
 
-  const invalidateFrom = (index: number) => {
-    if (index <= lastComputedIndex) lastComputedIndex = index - 1
+  /** Shift cached tops after `index` so the computed prefix stays valid. */
+  const applySizeDeltaToCache = (index: number, delta: number) => {
+    if (delta === 0 || index >= lastComputedIndex) return
+    for (let i = index + 1; i <= lastComputedIndex; i++) {
+      offsetCache[i] += delta
+    }
   }
 
   /** Extends offsetCache up to (and including) `index`, forward from lastComputedIndex. */
@@ -143,31 +138,35 @@ export function createRowHeightStore(estimatedSize: number): RowHeightStore {
     return Math.max(0, Math.min(total - 1, idx))
   }
 
-  const dropOldestEntries = () => {
-    const excess = sizeMap.size - MAX_TRACKED_ROW_HEIGHTS
-    if (excess <= 0) return
+  const dropOldestEntries = (): [number, number][] => {
+    const excess = sizeMap.size - maxTracked
+    if (excess <= 0) return []
+    const evicted: [number, number][] = []
     let dropped = 0
     // Map iterates in insertion order, so this drops least recently measured.
     for (const [idx, size] of sizeMap) {
+      const droppedDelta = size - estimate
       sizeMap.delete(idx)
-      measuredDeltaSum -= size - estimate
-      invalidateFrom(idx)
+      measuredDeltaSum -= droppedDelta
+      applySizeDeltaToCache(idx, -droppedDelta)
+      evicted.push([idx, -droppedDelta])
       if (++dropped >= excess) break
     }
+    return evicted
   }
 
-  const setSize = (index: number, size: number): number => {
+  const setSize = (index: number, size: number): RowSizeUpdate => {
     const idx = Math.max(0, Math.floor(index))
     const clean = Math.max(1, size || 1)
     const prev = sizeMap.get(idx)
-    if (prev === clean) return 0
+    if (prev === clean) return { delta: 0, evicted: [] }
     const delta = clean - (prev ?? estimate)
     sizeMap.set(idx, clean)
     measuredDeltaSum += delta
-    invalidateFrom(idx)
-    dropOldestEntries()
+    applySizeDeltaToCache(idx, delta)
+    const evicted = dropOldestEntries()
     version.value++
-    return delta
+    return { delta, evicted }
   }
 
   const reset = (nextEstimate?: number) => {

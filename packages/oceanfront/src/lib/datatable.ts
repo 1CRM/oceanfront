@@ -1,3 +1,33 @@
+export type DataTableHeaderSelectValue =
+  | 'all'
+  | 'deselect-all'
+  | 'page'
+  | 'deselect-page'
+
+/** Header checkbox: virtual lists have no page, so toggle All / DeselectAll. */
+export const virtualHeaderSelectValue = (
+  virtualScroll: boolean,
+  checked: boolean
+): DataTableHeaderSelectValue =>
+  virtualScroll
+    ? checked
+      ? 'all'
+      : 'deselect-all'
+    : checked
+      ? 'page'
+      : 'deselect-page'
+
+export const includeSelectPageOption = (virtualScroll: boolean) =>
+  !virtualScroll
+
+/** Flatten nested rows unless a virtual list is idle (no drag). */
+export const flattenListedRows = (
+  virtualScroll: boolean,
+  dragInProgress: boolean
+) => !virtualScroll || dragInProgress
+
+export const skipVirtualRowOrdering = (virtualScroll: boolean) => virtualScroll
+
 export interface DataTableHeader {
   text: string
   value: string

@@ -1,4 +1,4 @@
-import { ComputedRef, Ref, computed, watch } from 'vue'
+import { ComputedRef, Ref, computed, provide, watch } from 'vue'
 import { VirtualRowsRange, useVirtualRows } from './virtual_rows'
 import {
   RowHeightSnapshot,
@@ -6,6 +6,7 @@ import {
   createFixedRowMetrics,
   createRowHeightStore
 } from './virtual_row_heights'
+import { dataTableVirtualScrollKey } from './virtual_scroll_vnode'
 
 export interface UseDataTableVirtualScrollOptions {
   containerRef: Ref<HTMLDivElement | undefined>
@@ -14,75 +15,72 @@ export interface UseDataTableVirtualScrollOptions {
   density: ComputedRef<number>
   rowHeightOverride: ComputedRef<number | undefined>
   totalRows: ComputedRef<number | undefined>
-  /**
-   * Measurements to start from, so a revisited list keeps the heights (and
-   * therefore the scroll offset) it had before.
-   */
   rowHeights?: ComputedRef<RowHeightSnapshot | undefined>
-  /**
-   * Bumping this discards all measurements — for changes that reshuffle which
-   * record sits at which index (sort, filter, module).
-   */
   heightsKey?: ComputedRef<string | number | undefined>
   onRangeChange?: (range: VirtualRowsRange) => void
+  /** Cap on remembered row measurements. */
+  maxTrackedRowHeights?: number
+}
+
+export interface DataTableScrollState {
+  offset: number
+  start: number
+  end: number
+  rowHeights: RowHeightSnapshot
 }
 
 export interface UseDataTableVirtualScrollReturn {
-  /** Window to render; during a fling the body fills it with skeletons. */
   rangeStart: ComputedRef<number>
   rangeEnd: ComputedRef<number>
   topSpacer: ComputedRef<number>
   bottomSpacer: ComputedRef<number>
   isScrolling: ComputedRef<boolean>
-  /** True while flinging: body fills the window with cheap skeletons. */
   isFastScrolling: ComputedRef<boolean>
   fixedRowHeight: ComputedRef<boolean>
   rowHeightVar: ComputedRef<string | undefined>
-  /**
-   * Height a row occupies: its measurement when it has one, otherwise the
-   * estimate the spacer math assumes. Always a number, so a placeholder can
-   * never disagree with the height its index was budgeted.
-   */
+  tableClass: ComputedRef<Record<string, boolean>>
   rowHeightAt: (index: number) => number
-  /** Feeds a rendered row's real height back into the height store. */
   reportRowHeight: (index: number, height: number) => void
   scrollToIndex: (index: number) => void
   scrollToOffset: (offset: number) => void
   scrollOffset: ComputedRef<number>
   rowHeightsSnapshot: () => RowHeightSnapshot
+  getScrollState: () => DataTableScrollState
 }
 
-const estimateRowHeight = (density: number) => {
-  const vpadRem = [0.5, 0.4, 0.25, 0.1][density] ?? 0.25
-  return Math.round(16 * vpadRem * 2 + 24)
+/** Vertical cell padding (rem) per density; keep in sync with `--table-cell-vpad`. */
+const DENSITY_CELL_VPAD_REM = [0.5, 0.4, 0.25, 0.1] as const
+const ROW_CONTENT_HEIGHT_PX = 24
+
+export const estimateRowHeight = (density: number) => {
+  const vpadRem = DENSITY_CELL_VPAD_REM[density] ?? 0.25
+  return Math.round(16 * vpadRem * 2 + ROW_CONTENT_HEIGHT_PX)
 }
 
-/**
- * DataTable adapter: row-height tracking + virtual windowing.
- *
- * `virtual-row-height` (rowHeightOverride) is an explicit "rows are single
- * line / uniform height" contract from the consumer — it stays O(1) fixed
- * math with no measurement. Otherwise rows are auto-measured per render (via
- * `reportRowHeight`, fed by a `ResizeObserver` in `TableVirtualBody.vue`) and
- * kept in a `RowHeightStore` keyed by absolute index, so unloaded and evicted
- * rows still reserve exactly the space they had.
- */
 export function useDataTableVirtualScroll(
   options: UseDataTableVirtualScrollOptions
 ): UseDataTableVirtualScrollReturn {
+  provide(dataTableVirtualScrollKey, options.enabled)
+
   const heightStore = createRowHeightStore(
-    estimateRowHeight(options.density.value)
+    estimateRowHeight(options.density.value),
+    options.maxTrackedRowHeights
   )
   heightStore.hydrate(options.rowHeights?.value)
 
-  // Only a genuine re-indexing of the list (sort/filter/module) invalidates
-  // measurements. Chunk loading and eviction leave them alone — that is what
-  // keeps revisited regions jump-free.
   watch([options.heightsKey, options.density], () => {
     if (!options.enabled.value) return
     heightStore.reset(estimateRowHeight(options.density.value))
     heightStore.hydrate(options.rowHeights?.value)
   })
+
+  watch(
+    () => options.rowHeights?.value,
+    (snapshot) => {
+      if (!options.enabled.value) return
+      heightStore.hydrate(snapshot)
+    }
+  )
 
   const metrics = computed<RowMetrics>(() =>
     options.rowHeightOverride.value != null
@@ -105,12 +103,14 @@ export function useDataTableVirtualScroll(
   const reportRowHeight = (index: number, height: number) => {
     if (!options.enabled.value || options.rowHeightOverride.value != null)
       return
-    const delta = heightStore.setSize(index, height)
-    // A row above the window changing height moves everything below it,
-    // including what the user is looking at. Cancel that out.
-    if (delta && index < virtualRows.rangeStart.value) {
-      virtualRows.compensateScroll(delta)
+    const { delta, evicted } = heightStore.setSize(index, height)
+    const start = virtualRows.rangeStart.value
+    let shift = 0
+    if (delta && index < start) shift += delta
+    for (const [idx, evictionDelta] of evicted) {
+      if (evictionDelta && idx < start) shift += evictionDelta
     }
+    if (shift) virtualRows.compensateScroll(shift)
   }
 
   const fixedRowHeight = computed(
@@ -128,6 +128,11 @@ export function useDataTableVirtualScroll(
     rowHeightVar: computed(() =>
       fixedRowHeight.value ? options.rowHeightOverride.value + 'px' : undefined
     ),
+    tableClass: computed(() => ({
+      'of--virtual-scroll': options.enabled.value,
+      'of--scrolling': virtualRows.isScrolling.value,
+      'of--fixed-row-height': fixedRowHeight.value
+    })),
     rowHeightAt: (index) =>
       options.rowHeightOverride.value ??
       heightStore.getSize(index) ??
@@ -136,6 +141,12 @@ export function useDataTableVirtualScroll(
     scrollToIndex: virtualRows.scrollToIndex,
     scrollToOffset: virtualRows.scrollToOffset,
     scrollOffset: virtualRows.scrolledPast,
-    rowHeightsSnapshot: () => heightStore.snapshot()
+    rowHeightsSnapshot: () => heightStore.snapshot(),
+    getScrollState: () => ({
+      offset: virtualRows.scrolledPast.value,
+      start: virtualRows.rangeStart.value,
+      end: virtualRows.rangeEnd.value,
+      rowHeights: heightStore.snapshot()
+    })
   }
 }

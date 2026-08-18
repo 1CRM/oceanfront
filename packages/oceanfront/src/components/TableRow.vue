@@ -1,6 +1,4 @@
 <template>
-  <!-- Guard: sparse infinite-scroll holes can briefly reach the row while
-       toggling virtual scroll; accessing item.nested would throw. -->
   <div
     v-if="item"
     class="of-data-table-row"
@@ -101,7 +99,10 @@
                   'total-amount-fields': hasTotalAmount
                 }"
               >
-                <of-data-type :value="item[col.value][idxs]"></of-data-type>
+                <of-data-type
+                  :key="`${item.id ?? index}-${col.value}-${idxs}`"
+                  :value="item[col.value][idxs]"
+                ></of-data-type>
               </div>
             </template>
           </template>
@@ -125,7 +126,10 @@
             class="field-value"
             :class="{ 'total-amount-fields': hasTotalAmount }"
           >
-            <of-data-type :value="item[col.value]"></of-data-type>
+            <of-data-type
+              :key="`${item.id ?? index}-${col.value}`"
+              :value="item[col.value]"
+            ></of-data-type>
           </div>
         </template>
       </template>
@@ -174,13 +178,6 @@ import { OfIcon } from './Icon'
 import OfEditableField from './Editable.vue'
 import { useLanguage } from '../lib/language'
 
-/**
- * Nested sub-rows render as siblings of this row (they are cells of the same
- * grid), so the component always has several root nodes and `$el` is the
- * fragment's anchor text node, not the row. `itemRef` is therefore how anything
- * outside gets at the row element — virtual scroll measures row heights through
- * it, and without it every row is stuck at its estimated height.
- */
 export default defineComponent({
   name: 'OfTableRow',
   components: { OfEditableField, OfIcon, OfField },
@@ -340,9 +337,6 @@ export default defineComponent({
     }
 
     const itemRef = ref()
-    // A function ref rather than `ref="itemRef"`: string refs are assigned in a
-    // post-render effect, which is after the parent has already been handed
-    // this row and asked it for its element.
     const setItemRef = (el: any) => {
       itemRef.value = el
     }
