@@ -4,8 +4,7 @@
     class="of-data-table-row"
     role="row"
     :ref="setItemRef"
-    @mousemove="dragInfo?.draggable && mouseMove($event)"
-    @touchmove="dragInfo?.draggable && mouseMove($event)"
+    v-on="rowDragMoveListeners"
     :class="{
       odd: index % 2 != 0,
       nested: item.nested,
@@ -625,6 +624,11 @@ export default defineComponent({
       ctx.emit('update:field', { name: data.name, value: data.value })
       return
     }
+    const rowDragMoveListeners = computed(() =>
+      props.dragInfo?.draggable
+        ? { mousemove: mouseMove, touchmove: mouseMove }
+        : {}
+    )
     return {
       lang,
       item,
@@ -648,7 +652,8 @@ export default defineComponent({
       fieldEdited,
       rowEditable,
       editingRow,
-      hasTotalAmount
+      hasTotalAmount,
+      rowDragMoveListeners
     }
   }
 })

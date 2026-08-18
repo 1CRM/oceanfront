@@ -72,6 +72,32 @@ const mountBody = (
   return { wrapper, reportRowHeight }
 }
 
+const isPassiveOption = (options: unknown) =>
+  typeof options === 'object' &&
+  options !== null &&
+  (options as AddEventListenerOptions).passive === true
+
+const captureAddEventListener = () => {
+  const added: { target: EventTarget; type: string; passive: boolean }[] = []
+  const original = EventTarget.prototype.addEventListener
+  const spy = vi
+    .spyOn(EventTarget.prototype, 'addEventListener')
+    .mockImplementation(function (
+      this: EventTarget,
+      type,
+      listener,
+      options
+    ) {
+      added.push({
+        target: this,
+        type: String(type),
+        passive: isPassiveOption(options)
+      })
+      return original.call(this, type, listener, options)
+    })
+  return { added, spy }
+}
+
 beforeEach(() => {
   FakeResizeObserver.instances = []
   ;(globalThis as any).ResizeObserver = FakeResizeObserver
@@ -79,6 +105,7 @@ beforeEach(() => {
 
 afterEach(() => {
   delete (globalThis as any).ResizeObserver
+  vi.restoreAllMocks()
 })
 
 describe('OfTableVirtualBody row measurement', () => {
@@ -160,6 +187,60 @@ describe('OfTableVirtualBody row measurement', () => {
 
     expect(wrapper.findAll('.of-data-table-row-skeleton')).toHaveLength(0)
     expect(wrapper.findAll('.of-data-table-row')).toHaveLength(3)
+  })
+
+  it('does not add non-passive touchmove listeners when rows are not draggable', () => {
+    const { added, spy } = captureAddEventListener()
+    const { wrapper } = mountBody()
+    spy.mockRestore()
+
+    const rows = new Set(
+      wrapper.findAll('.of-data-table-row').map((row) => row.element)
+    )
+    expect(rows.size).toBe(3)
+    expect(
+      added.filter(
+        (call) =>
+          call.type === 'touchmove' &&
+          !call.passive &&
+          rows.has(call.target as Element)
+      )
+    ).toHaveLength(0)
+  })
+
+  it('adds touchmove listeners only when the table is draggable', () => {
+    const { added, spy } = captureAddEventListener()
+    const wrapper = mount(OfTableVirtualBody, {
+      attachTo: document.body,
+      props: {
+        rows: [{ id: 'a' }, { id: 'b' }, { id: 'c' }],
+        columns: [{ value: 'name', text: 'Name' }],
+        rangeStart: 0,
+        rangeEnd: 3,
+        topSpacer: 0,
+        bottomSpacer: 0,
+        dragInfo: { ...dragInfo, draggable: true },
+        dragEvents: {},
+        rowsRecord: {} as any,
+        reportRowHeight: vi.fn(),
+        rowHeightAt: () => 32
+      }
+    })
+    spy.mockRestore()
+
+    const rows = new Set(
+      wrapper.findAll('.of-data-table-row').map((row) => row.element)
+    )
+    expect(rows.size).toBe(3)
+    expect(
+      added.filter(
+        (call) =>
+          call.type === 'touchmove' &&
+          !call.passive &&
+          rows.has(call.target as Element)
+      ).length
+    ).toBe(rows.size)
+    wrapper.unmount()
   })
 
   it('reports the tallest cell in a row', () => {

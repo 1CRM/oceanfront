@@ -273,6 +273,7 @@ import { FormRecord, makeRecord } from '../lib/records'
 import {
   computed,
   defineComponent,
+  onBeforeUnmount,
   ref,
   watch,
   PropType,
@@ -538,6 +539,12 @@ export default defineComponent({
     })
     document.addEventListener('touchend', eventEnd, {
       passive: true
+    })
+    onBeforeUnmount(() => {
+      document.removeEventListener('mouseup', eventEnd)
+      document.removeEventListener('mousedown', eventStart)
+      document.removeEventListener('touchstart', eventStart)
+      document.removeEventListener('touchend', eventEnd)
     })
     const switchItems = (itemIndexes: number[], targetIndexes: number[]) => {
       if (itemIndexes.length && targetIndexes.length) {
