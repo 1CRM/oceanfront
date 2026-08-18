@@ -1,13 +1,10 @@
 <template>
-  <!-- Guard: sparse infinite-scroll holes can briefly reach the row while
-       toggling virtual scroll; accessing item.nested would throw. -->
   <div
     v-if="item"
     class="of-data-table-row"
     role="row"
-    ref="itemRef"
-    @mousemove="dragInfo?.draggable && mouseMove($event)"
-    @touchmove="dragInfo?.draggable && mouseMove($event)"
+    :ref="setItemRef"
+    v-on="rowDragMoveListeners"
     :class="{
       odd: index % 2 != 0,
       nested: item.nested,
@@ -101,7 +98,10 @@
                   'total-amount-fields': hasTotalAmount
                 }"
               >
-                <of-data-type :value="item[col.value][idxs]"></of-data-type>
+                <of-data-type
+                  :key="`${item.id ?? index}-${col.value}-${idxs}`"
+                  :value="item[col.value][idxs]"
+                ></of-data-type>
               </div>
             </template>
           </template>
@@ -125,7 +125,10 @@
             class="field-value"
             :class="{ 'total-amount-fields': hasTotalAmount }"
           >
-            <of-data-type :value="item[col.value]"></of-data-type>
+            <of-data-type
+              :key="`${item.id ?? index}-${col.value}`"
+              :value="item[col.value]"
+            ></of-data-type>
           </div>
         </template>
       </template>
@@ -333,6 +336,9 @@ export default defineComponent({
     }
 
     const itemRef = ref()
+    const setItemRef = (el: any) => {
+      itemRef.value = el
+    }
     const childDepths: { [_: string]: any } = {}
 
     const events = {
@@ -618,10 +624,16 @@ export default defineComponent({
       ctx.emit('update:field', { name: data.name, value: data.value })
       return
     }
+    const rowDragMoveListeners = computed(() =>
+      props.dragInfo?.draggable
+        ? { mousemove: mouseMove, touchmove: mouseMove }
+        : {}
+    )
     return {
       lang,
       item,
       itemRef,
+      setItemRef,
       index,
       events,
       mouseMove,
@@ -640,7 +652,8 @@ export default defineComponent({
       fieldEdited,
       rowEditable,
       editingRow,
-      hasTotalAmount
+      hasTotalAmount,
+      rowDragMoveListeners
     }
   }
 })

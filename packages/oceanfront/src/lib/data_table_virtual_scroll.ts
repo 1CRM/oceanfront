@@ -1,10 +1,12 @@
-import { ComputedRef, Ref, computed, watch } from 'vue'
+import { ComputedRef, Ref, computed, provide, watch } from 'vue'
 import { VirtualRowsRange, useVirtualRows } from './virtual_rows'
 import {
+  RowHeightSnapshot,
   RowMetrics,
   createFixedRowMetrics,
-  createRowHeightCache
+  createRowHeightStore
 } from './virtual_row_heights'
+import { dataTableVirtualScrollKey } from './virtual_scroll_vnode'
 
 export interface UseDataTableVirtualScrollOptions {
   containerRef: Ref<HTMLDivElement | undefined>
@@ -13,7 +15,18 @@ export interface UseDataTableVirtualScrollOptions {
   density: ComputedRef<number>
   rowHeightOverride: ComputedRef<number | undefined>
   totalRows: ComputedRef<number | undefined>
+  rowHeights?: ComputedRef<RowHeightSnapshot | undefined>
+  heightsKey?: ComputedRef<string | number | undefined>
   onRangeChange?: (range: VirtualRowsRange) => void
+  /** Cap on remembered row measurements. */
+  maxTrackedRowHeights?: number
+}
+
+export interface DataTableScrollState {
+  offset: number
+  start: number
+  end: number
+  rowHeights: RowHeightSnapshot
 }
 
 export interface UseDataTableVirtualScrollReturn {
@@ -22,66 +35,83 @@ export interface UseDataTableVirtualScrollReturn {
   topSpacer: ComputedRef<number>
   bottomSpacer: ComputedRef<number>
   isScrolling: ComputedRef<boolean>
+  isFastScrolling: ComputedRef<boolean>
   fixedRowHeight: ComputedRef<boolean>
   rowHeightVar: ComputedRef<string | undefined>
-  /** Feeds a rendered row's real height back into the variable-height cache. */
+  tableClass: ComputedRef<Record<string, boolean>>
+  rowHeightAt: (index: number) => number
   reportRowHeight: (index: number, height: number) => void
+  scrollToIndex: (index: number) => void
   scrollToOffset: (offset: number) => void
+  scrollOffset: ComputedRef<number>
+  rowHeightsSnapshot: () => RowHeightSnapshot
+  getScrollState: () => DataTableScrollState
 }
 
-const estimateRowHeight = (density: number) => {
-  const vpadRem = [0.5, 0.4, 0.25, 0.1][density] ?? 0.25
-  return Math.round(16 * vpadRem * 2 + 24)
+/** Vertical cell padding (rem) per density; keep in sync with `--table-cell-vpad`. */
+const DENSITY_CELL_VPAD_REM = [0.5, 0.4, 0.25, 0.1] as const
+const ROW_CONTENT_HEIGHT_PX = 24
+
+export const estimateRowHeight = (density: number) => {
+  const vpadRem = DENSITY_CELL_VPAD_REM[density] ?? 0.25
+  return Math.round(16 * vpadRem * 2 + ROW_CONTENT_HEIGHT_PX)
 }
 
-/**
- * DataTable adapter: row-height tracking + virtual windowing hooks.
- *
- * `virtual-row-height` (rowHeightOverride) is an explicit "rows are single
- * line / uniform height" contract from the consumer — it stays O(1) fixed
- * math with no measurement. Otherwise, rows are auto-measured per-render
- * (via `reportRowHeight`, fed by a `ResizeObserver` in
- * `TableVirtualBody.vue`) and tracked in a `RowHeightCache` so wrapped
- * multiline rows get correct spacers/scroll math instead of assuming every
- * row shares one fixed height.
- */
 export function useDataTableVirtualScroll(
   options: UseDataTableVirtualScrollOptions
 ): UseDataTableVirtualScrollReturn {
-  const rowHeightCache = createRowHeightCache(
-    estimateRowHeight(options.density.value)
-  )
+  provide(dataTableVirtualScrollKey, options.enabled)
 
-  // Reference-equality watch: fires on a genuine data reload/sort (new
-  // array) or a density change, not on in-place sparse-array hole fills
-  // used by chunked/infinite loading — so measured heights survive
-  // incremental loads instead of being thrown away on every chunk.
-  watch([options.rows, options.density], () => {
+  const heightStore = createRowHeightStore(
+    estimateRowHeight(options.density.value),
+    options.maxTrackedRowHeights
+  )
+  heightStore.hydrate(options.rowHeights?.value)
+
+  watch([options.heightsKey, options.density], () => {
     if (!options.enabled.value) return
-    rowHeightCache.reset(estimateRowHeight(options.density.value))
+    heightStore.reset(estimateRowHeight(options.density.value))
+    heightStore.hydrate(options.rowHeights?.value)
   })
+
+  watch(
+    () => options.rowHeights?.value,
+    (snapshot) => {
+      if (!options.enabled.value) return
+      heightStore.hydrate(snapshot)
+    }
+  )
 
   const metrics = computed<RowMetrics>(() =>
     options.rowHeightOverride.value != null
       ? createFixedRowMetrics(options.rowHeightOverride.value)
-      : rowHeightCache
+      : heightStore
   )
 
-  const reportRowHeight = (index: number, height: number) => {
-    if (!options.enabled.value || options.rowHeightOverride.value != null)
-      return
-    rowHeightCache.setSize(index, height)
-  }
+  const totalCount = computed(
+    () => options.totalRows.value ?? options.rows.value.length
+  )
 
   const virtualRows = useVirtualRows({
     enabled: options.enabled,
     containerRef: options.containerRef,
-    totalCount: computed(
-      () => options.totalRows.value ?? options.rows.value.length
-    ),
+    totalCount,
     metrics,
     onRangeChange: options.onRangeChange
   })
+
+  const reportRowHeight = (index: number, height: number) => {
+    if (!options.enabled.value || options.rowHeightOverride.value != null)
+      return
+    const { delta, evicted } = heightStore.setSize(index, height)
+    const start = virtualRows.rangeStart.value
+    let shift = 0
+    if (delta && index < start) shift += delta
+    for (const [idx, evictionDelta] of evicted) {
+      if (evictionDelta && idx < start) shift += evictionDelta
+    }
+    if (shift) virtualRows.compensateScroll(shift)
+  }
 
   const fixedRowHeight = computed(
     () => options.enabled.value && !!options.rowHeightOverride.value
@@ -93,11 +123,30 @@ export function useDataTableVirtualScroll(
     topSpacer: virtualRows.topSpacerHeight,
     bottomSpacer: virtualRows.bottomSpacerHeight,
     isScrolling: virtualRows.isScrolling,
+    isFastScrolling: virtualRows.isFastScrolling,
     fixedRowHeight,
     rowHeightVar: computed(() =>
       fixedRowHeight.value ? options.rowHeightOverride.value + 'px' : undefined
     ),
+    tableClass: computed(() => ({
+      'of--virtual-scroll': options.enabled.value,
+      'of--scrolling': virtualRows.isScrolling.value,
+      'of--fixed-row-height': fixedRowHeight.value
+    })),
+    rowHeightAt: (index) =>
+      options.rowHeightOverride.value ??
+      heightStore.getSize(index) ??
+      heightStore.estimatedSize(),
     reportRowHeight,
-    scrollToOffset: virtualRows.scrollToOffset
+    scrollToIndex: virtualRows.scrollToIndex,
+    scrollToOffset: virtualRows.scrollToOffset,
+    scrollOffset: virtualRows.scrolledPast,
+    rowHeightsSnapshot: () => heightStore.snapshot(),
+    getScrollState: () => ({
+      offset: virtualRows.scrolledPast.value,
+      start: virtualRows.rangeStart.value,
+      end: virtualRows.rangeEnd.value,
+      rowHeights: heightStore.snapshot()
+    })
   }
 }

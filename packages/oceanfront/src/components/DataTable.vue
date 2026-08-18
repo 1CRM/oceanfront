@@ -31,7 +31,11 @@
             class="header-rows-selector"
             keep-text-color
             split
-            @click="() => (!selectLocked ? onUpdateHeaderRowsSelector() : null)"
+            @click="
+              () => {
+                if (!selectLocked || virtualScroll) onUpdateHeaderRowsSelector()
+              }
+            "
             :aria-label="
               selectRowsItems.find((r: any) => r.key === 'page')?.text ||
               selectRowsItems.find((r: any) => r.key === 'all')?.text
@@ -43,7 +47,7 @@
                 'of-field',
                 'of-toggle-field',
                 'row-selector',
-                { 'of--mode-disabled': selectLocked },
+                { 'of--mode-disabled': selectLocked && !virtualScroll },
                 { 'of--checked': headerRowsSelectorChecked }
               ]"
             >
@@ -127,6 +131,7 @@
       :range-end="virtualRangeEnd"
       :top-spacer="virtualTopSpacer"
       :bottom-spacer="virtualBottomSpacer"
+      :is-fast-scrolling="virtualIsFastScrolling"
       :drag-info="rowDragInfo"
       :drag-events="dragEvents"
       :rows-selector="addRowsSelector"
@@ -137,6 +142,7 @@
       :rows-record="rowsRecord"
       :is-touchable="isTouchable"
       :report-row-height="reportRowHeight"
+      :row-height-at="rowHeightAt"
       @update:row="updateRow"
       @update:field="updateField"
     >
@@ -267,7 +273,7 @@ import { FormRecord, makeRecord } from '../lib/records'
 import {
   computed,
   defineComponent,
-  provide,
+  onBeforeUnmount,
   ref,
   watch,
   PropType,
@@ -279,9 +285,13 @@ import {
 import {
   DataTableHeader,
   firstLoadedRow,
+  flattenListedRows,
+  includeSelectPageOption,
   resolveSumTotalFormat,
   selectClassicPageRows,
-  sumTotalColumnsSignature
+  skipVirtualRowOrdering,
+  sumTotalColumnsSignature,
+  virtualHeaderSelectValue
 } from '../lib/datatable'
 import { useThemeOptions } from '../lib/theme'
 import { OfIcon } from './Icon'
@@ -293,7 +303,7 @@ import OfTableRowSkeleton from './TableRowSkeleton.vue'
 import OfTableVirtualBody from './TableVirtualBody.vue'
 import { useLanguage } from '../lib/language'
 import { useDataTableVirtualScroll } from '../lib/data_table_virtual_scroll'
-import { dataTableVirtualScrollKey } from '../lib/virtual_scroll_vnode'
+import type { RowHeightSnapshot } from '../lib/virtual_row_heights'
 
 enum RowsSelectorValues {
   Page = 'page',
@@ -376,24 +386,22 @@ export default defineComponent({
       type: Boolean,
       default: false
     },
-    /** Logical row count; may exceed `items.length` while rows are still loading. */
+    /** Logical row count (server total); keeps scroll height stable while chunks load. */
     totalRows: {
       type: Number,
       default: undefined
     },
-    /**
-     * Row height override (px). This is an explicit contract that every row
-     * is exactly this tall (single-line cells, no wrapping) — it enforces a
-     * fixed CSS grid track height (`of--fixed-row-height`) and uses O(1)
-     * `index * height` math for virtual-scroll spacers/scroll position.
-     * Wrapped/multiline content will visually overflow its row track in
-     * this mode.
-     *
-     * Omit it (the default) to get automatic per-row measurement instead:
-     * each rendered row's real height feeds a height cache, so rows that
-     * wrap to 2-3 lines get correct spacers and scroll math even though
-     * rows aren't a uniform height.
-     */
+    /** Previously measured heights, so a revisited list keeps the same offsets. */
+    rowHeights: {
+      type: Object as PropType<RowHeightSnapshot | undefined>,
+      default: undefined
+    },
+    /** Bump when indices no longer map to the same records (sort, filter, module). */
+    heightsKey: {
+      type: [String, Number] as PropType<string | number | undefined>,
+      default: undefined
+    },
+    /** Uniform row height (px). Omit to auto-measure wrapping rows. */
     virtualRowHeight: {
       type: Number,
       default: undefined
@@ -422,12 +430,6 @@ export default defineComponent({
   setup(props, ctx) {
     const lang = useLanguage()
     const themeOptions = useThemeOptions()
-    // Lets `of-data-type`/`of-link` know they're rendering inside a
-    // virtual-scroll row, so only they pay for the VNode-rebuild fix.
-    provide(
-      dataTableVirtualScrollKey,
-      computed(() => props.virtualScroll)
-    )
     const sort = ref({ column: '', order: '' })
     const items = ref(props.items || [])
     const tableElt = shallowRef<HTMLDivElement | undefined>()
@@ -538,6 +540,12 @@ export default defineComponent({
     document.addEventListener('touchend', eventEnd, {
       passive: true
     })
+    onBeforeUnmount(() => {
+      document.removeEventListener('mouseup', eventEnd)
+      document.removeEventListener('mousedown', eventStart)
+      document.removeEventListener('touchstart', eventStart)
+      document.removeEventListener('touchend', eventEnd)
+    })
     const switchItems = (itemIndexes: number[], targetIndexes: number[]) => {
       if (itemIndexes.length && targetIndexes.length) {
         if (!samePosition(itemIndexes, targetIndexes)) {
@@ -632,7 +640,6 @@ export default defineComponent({
       coords: string,
       depth: number
     ) => {
-      // `item` may be a not-yet-loaded hole in a sparse virtual-scroll rows array.
       if (!item) return
       let clone = { ...item }
       delete clone.subitems
@@ -648,9 +655,8 @@ export default defineComponent({
     }
 
     const listedRows = computed(() => {
-      // Virtual lists skip the O(n) flatten unless a drag is in progress
-      // (drag positioning still needs the flat coord list).
-      if (props.virtualScroll && !dragInProgress.value) return []
+      if (!flattenListedRows(props.virtualScroll, dragInProgress.value))
+        return []
       let arr: any = []
       rows.value.map((v: any, i: number) => {
         fillListedRows(v, arr, i + '', 0)
@@ -898,9 +904,6 @@ export default defineComponent({
     watch(
       () => {
         if (!sumTotalColumns.value.length) return null
-        // Under virtual scroll, avoid deep-walking the sparse array. Length alone
-        // misses hole fills (`items[i]=row` with length unchanged), so key off
-        // loaded count + a cheap sum-column content signature instead.
         if (props.virtualScroll) {
           return sumTotalColumnsSignature(
             props.items as any[] | undefined,
@@ -983,12 +986,7 @@ export default defineComponent({
 
     const rows = computed(() => {
       const propItems: any = items.value
-      // Virtual-scroll rows are a flat, non-reorderable window into a
-      // (potentially huge) loaded dataset - skip the ordering pass entirely
-      // rather than re-running it over every loaded row on every scroll tick.
-      if (props.virtualScroll) return propItems
-      // Sparse holes (infinite-scroll eviction) must not become TableRow
-      // props — `item.nested` would throw while toggling virtual scroll off.
+      if (skipVirtualRowOrdering(props.virtualScroll)) return propItems
       return selectClassicPageRows(
         propItems,
         iterStart.value,
@@ -1102,11 +1100,8 @@ export default defineComponent({
     const headerRowsSelectorChecked = ref(false)
     const onUpdateHeaderRowsSelector = function () {
       headerRowsSelectorChecked.value = !headerRowsSelectorChecked.value
-      const select = headerRowsSelectorChecked.value
-        ? RowsSelectorValues.Page
-        : RowsSelectorValues.DeselectPage
-
-      selectRows(select)
+      const checked = headerRowsSelectorChecked.value
+      selectRows(virtualHeaderSelectValue(props.virtualScroll, checked))
     }
     const selectRowsItems = computed(() => {
       const items = [
@@ -1121,8 +1116,7 @@ export default defineComponent({
           value: () => selectRows(RowsSelectorValues.DeselectAll)
         }
       ]
-      // Infinite/virtual scroll has no discrete page — omit "Select Page".
-      if (!props.virtualScroll) {
+      if (includeSelectPageOption(props.virtualScroll)) {
         items.unshift({
           key: 'page',
           text: lang.value.dataTableSelectPage,
@@ -1197,17 +1191,15 @@ export default defineComponent({
       density,
       rowHeightOverride: computed(() => props.virtualRowHeight),
       totalRows: computed(() => props.totalRows),
+      rowHeights: computed(() => props.rowHeights),
+      heightsKey: computed(() => props.heightsKey),
       onRangeChange: (range) => ctx.emit('range-change', range)
     })
 
     const tableClass = computed(() => [
       'of-data-table',
       'of--density-' + density.value,
-      {
-        'of--virtual-scroll': props.virtualScroll,
-        'of--scrolling': virtualScroll.isScrolling.value,
-        'of--fixed-row-height': virtualScroll.fixedRowHeight.value
-      }
+      virtualScroll.tableClass.value
     ])
 
     const colAriaSort = (col: DataTableHeader) => {
@@ -1259,8 +1251,12 @@ export default defineComponent({
       virtualRangeEnd: virtualScroll.rangeEnd,
       virtualTopSpacer: virtualScroll.topSpacer,
       virtualBottomSpacer: virtualScroll.bottomSpacer,
+      virtualIsFastScrolling: virtualScroll.isFastScrolling,
       reportRowHeight: virtualScroll.reportRowHeight,
+      rowHeightAt: virtualScroll.rowHeightAt,
+      scrollToIndex: virtualScroll.scrollToIndex,
       scrollToOffset: virtualScroll.scrollToOffset,
+      getScrollState: virtualScroll.getScrollState,
       colAriaSort,
       sortHeaderAriaLabel,
       sortAnnouncement,

@@ -3,6 +3,7 @@
     class="of-data-table-row of-data-table-row-skeleton"
     role="row"
     aria-hidden="true"
+    :style="rowStyle"
   >
     <div v-if="draggable" role="cell"></div>
     <div v-if="rowsSelector" role="cell"></div>
@@ -21,7 +22,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType } from 'vue'
+import { computed, defineComponent, PropType } from 'vue'
 import { DataTableHeader } from '../lib/datatable'
 
 // Cosmetic: avoids a uniform "striped" look across skeleton rows.
@@ -39,13 +40,22 @@ export default defineComponent({
     rowIndex: {
       type: Number,
       default: 0
+    },
+    /** Height this row measured before its data was dropped, if known. */
+    height: {
+      type: Number,
+      default: undefined
     }
   },
   setup(props) {
     const skeletonBarWidth = (colIdx: number): string =>
       widthCycle[(props.rowIndex + colIdx) % widthCycle.length]
 
-    return { skeletonBarWidth }
+    const rowStyle = computed(() =>
+      props.height ? { '--of-row-height': props.height + 'px' } : undefined
+    )
+
+    return { skeletonBarWidth, rowStyle }
   }
 })
 </script>
