@@ -1,4 +1,4 @@
-import { computed, defineComponent, h, nextTick, ref, type Ref } from 'vue'
+import { computed, h, nextTick, ref, type Ref } from 'vue'
 import { mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
@@ -64,8 +64,8 @@ const setPageHeight = (height: number) =>
 const mountRows = (total: number, rowHeight = ROW_HEIGHT) => {
   const ranges: VirtualRowsRange[] = []
   const store = createRowHeightStore(rowHeight)
-  const Harness = defineComponent({
-    setup(_props, { expose }) {
+  const Harness = {
+    setup(_props: unknown, { expose }: { expose: (api: unknown) => void }) {
       const container = ref<HTMLElement | null>(null)
       const api = useVirtualRows({
         containerRef: container,
@@ -76,7 +76,7 @@ const mountRows = (total: number, rowHeight = ROW_HEIGHT) => {
       expose(api)
       return () => h('div', { ref: container })
     }
-  })
+  }
   const wrapper = mount(Harness, { attachTo: document.body })
   return { wrapper, api: wrapper.vm as any, ranges, store }
 }
@@ -816,8 +816,8 @@ const mountTableScroll = (opts?: {
   heightsKey?: Ref<string | undefined>
   maxTrackedRowHeights?: number
 }) => {
-  const Harness = defineComponent({
-    setup(_props, { expose }) {
+  const Harness = {
+    setup(_props: unknown, { expose }: { expose: (api: unknown) => void }) {
       const container = ref<HTMLDivElement>()
       const api = useDataTableVirtualScroll({
         containerRef: container,
@@ -833,7 +833,7 @@ const mountTableScroll = (opts?: {
       expose(api)
       return () => h('div', { ref: container })
     }
-  })
+  }
   const wrapper = mount(Harness, { attachTo: document.body })
   return { wrapper, api: wrapper.vm as any }
 }

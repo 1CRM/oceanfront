@@ -29,7 +29,9 @@ class FakeResizeObserver {
     this.cb(
       this.observed.map((target) => {
         const blockSize =
-          typeof heights === 'number' ? heights : (heights.get(target) ?? ROW_HEIGHT)
+          typeof heights === 'number'
+            ? heights
+            : (heights.get(target) ?? ROW_HEIGHT)
         return {
           target,
           borderBoxSize: [{ blockSize, inlineSize: 0 }]
@@ -82,12 +84,7 @@ const captureAddEventListener = () => {
   const original = EventTarget.prototype.addEventListener
   const spy = vi
     .spyOn(EventTarget.prototype, 'addEventListener')
-    .mockImplementation(function (
-      this: EventTarget,
-      type,
-      listener,
-      options
-    ) {
+    .mockImplementation(function (this: EventTarget, type, listener, options) {
       added.push({
         target: this,
         type: String(type),

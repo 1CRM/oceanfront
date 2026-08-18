@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { createFixedRowMetrics, createRowHeightStore } from '../virtual_row_heights'
+import {
+  createFixedRowMetrics,
+  createRowHeightStore
+} from '../virtual_row_heights'
 
 describe('createFixedRowMetrics', () => {
   it('computes uniform index*height math', () => {

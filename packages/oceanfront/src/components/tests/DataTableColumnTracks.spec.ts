@@ -37,9 +37,9 @@ const mountTable = () => {
 }
 
 const columnTracks = (wrapper: ReturnType<typeof mountTable>) =>
-  (wrapper.find('[role="table"]').element as HTMLElement).style.getPropertyValue(
-    '--of-table-columns'
-  )
+  (
+    wrapper.find('[role="table"]').element as HTMLElement
+  ).style.getPropertyValue('--of-table-columns')
 
 afterEach(() => {
   while (mounted.length) mounted.pop()?.unmount()

@@ -1,6 +1,6 @@
 import { mount, flushPromises } from '@vue/test-utils'
 import { describe, expect, it, afterEach } from 'vitest'
-import { computed, defineComponent, h, isVNode, nextTick, provide, ref } from 'vue'
+import { computed, h, isVNode, nextTick, provide, ref } from 'vue'
 import OfDataType from '../../components/DataType/DataType'
 import {
   createVirtualCellCache,
@@ -20,10 +20,10 @@ describe('virtual_scroll_vnode', () => {
   })
 
   it('preserves vnode keys so remounts reuse async cell instances', () => {
-    const Comp = defineComponent({
-      name: 'Named',
+    const Comp = {
+      name: 'NamedCell',
       setup: () => () => h('a', { class: 'of-link' }, 'Ada')
-    })
+    }
     const source = h(Comp, { key: 'name-Ada', label: 'Ada' })
     expect(source.key).toBe('name-Ada')
 
@@ -95,24 +95,24 @@ describe('virtual_scroll_vnode', () => {
 
 const setupCounts = { asyncName: 0 }
 
-const AsyncName = defineComponent({
+const AsyncName = {
   name: 'AsyncName',
   props: { label: { type: String, required: true } },
-  async setup(props) {
+  async setup(props: { label: string }) {
     setupCounts.asyncName += 1
     await Promise.resolve()
     return () => [h('a', { class: 'of-link' }, props.label), undefined]
   }
-})
+}
 
-const SlowName = defineComponent({
+const SlowName = {
   name: 'SlowName',
   props: { label: { type: String, required: true } },
-  async setup(props) {
+  async setup(props: { label: string }) {
     await new Promise((resolve) => setTimeout(resolve, 30))
     return () => [h('a', { class: 'of-link' }, props.label), undefined]
   }
-})
+}
 
 const cellValue = (label: string, Name: any = AsyncName) => ({
   value: h('div', { class: 'add-fields' }, [
@@ -130,7 +130,7 @@ const provideVirtualScroll = () =>
 const mountCell = (initial = 'Ada', Name: any = AsyncName) => {
   const tick = ref(0)
   const current = ref(cellValue(initial, Name))
-  const Host = defineComponent({
+  const Host = {
     setup() {
       provideVirtualScroll()
       return () =>
@@ -138,7 +138,7 @@ const mountCell = (initial = 'Ada', Name: any = AsyncName) => {
           h(OfDataType, { value: current.value })
         ])
     }
-  })
+  }
   return { wrapper: mount(Host, { attachTo: document.body }), tick, current }
 }
 
@@ -206,7 +206,7 @@ describe('OfDataType virtual-scroll cells', () => {
 
   it('does not append a newly loaded name into an already rendered row', async () => {
     const rows = ref([cellValue('Ada')])
-    const Host = defineComponent({
+    const Host = {
       setup() {
         provideVirtualScroll()
         return () =>
@@ -217,7 +217,7 @@ describe('OfDataType virtual-scroll cells', () => {
             )
           )
       }
-    })
+    }
     const wrapper = mount(Host, { attachTo: document.body })
     await flushPromises()
     expect(

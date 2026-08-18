@@ -120,8 +120,7 @@ export default defineComponent({
     const elIndices = new WeakMap<Element, number>()
 
     const cellHeight = (el: Element, entry?: ResizeObserverEntry) =>
-      entry?.borderBoxSize?.[0]?.blockSize ??
-      el.getBoundingClientRect().height
+      entry?.borderBoxSize?.[0]?.blockSize ?? el.getBoundingClientRect().height
 
     const resizeObserver =
       typeof ResizeObserver !== 'undefined'
