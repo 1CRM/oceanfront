@@ -1,10 +1,5 @@
-import { PropType, defineComponent, h, inject, isVNode } from 'vue'
+import { PropType, defineComponent, h } from 'vue'
 import { DataTypeValue } from '../../lib/datatype'
-import {
-  dataTableVirtualScrollKey,
-  notVirtualScroll,
-  wrapFreshVNode
-} from '../../lib/virtual_scroll_vnode'
 import { OfFormat } from '../Format'
 
 import Currency from './currency'
@@ -19,17 +14,7 @@ export default defineComponent({
       default: null
     }
   },
-  setup() {
-    const virtualScrollActive = inject(
-      dataTableVirtualScrollKey,
-      notVirtualScroll
-    )
-    return { virtualScrollActive }
-  },
   render() {
-    const wrap = (input: unknown) =>
-      wrapFreshVNode(input, !!this.virtualScrollActive)
-
     if (this.$props.value && typeof this.$props.value === 'object') {
       const format = this.$props.value.format as any
       const formatType = format?.type || format
@@ -46,13 +31,11 @@ export default defineComponent({
               value: this.$props.value.value
             })
           }
-          const inner = this.$props.value.value
-          return isVNode(inner) || Array.isArray(inner) ? wrap(inner) : inner
+          return this.$props.value.value
         }
       }
     }
 
-    const value = this.$props.value
-    return isVNode(value) ? wrap(value) : value
+    return this.$props.value
   }
 })

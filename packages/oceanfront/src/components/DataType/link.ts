@@ -1,6 +1,5 @@
-import { PropType, defineComponent, h, isVNode } from 'vue'
+import { PropType, defineComponent, h } from 'vue'
 import { DataTypeValue } from '../../lib/datatype'
-import { freshVNode } from '../../lib/virtual_scroll_vnode'
 import { OfLink } from '../Link'
 
 export default defineComponent({
@@ -15,12 +14,7 @@ export default defineComponent({
         ariaLabel: this.$props.value.params.ariaLabel || null
       },
       {
-        default: () => {
-          const inner = this.$props.value.value
-          if (!(isVNode(inner) || Array.isArray(inner))) return inner
-          // Always clone: cached list-cell VNodes are single-use.
-          return freshVNode(inner)
-        }
+        default: () => this.$props.value.value
       }
     )
   }
