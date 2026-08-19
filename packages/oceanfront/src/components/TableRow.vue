@@ -1,8 +1,5 @@
 <template>
-  <!-- Guard: sparse infinite-scroll holes can briefly reach the row while
-       toggling virtual scroll; accessing item.nested would throw. -->
   <div
-    v-if="item"
     class="of-data-table-row"
     role="row"
     ref="itemRef"
@@ -131,7 +128,7 @@
       </template>
     </div>
   </div>
-  <template v-if="item?.subitems?.length">
+  <template v-if="item.subitems?.length">
     <template
       :key="setChildCoords(subidx as number).join('-')"
       v-for="(subrow, subidx) of item.subitems"
@@ -266,7 +263,7 @@ export default defineComponent({
       return 1 + depth
     }
     const selfNestedDepth = computed(() => {
-      if (!item.value?.subitems?.length) {
+      if (!item.value.subitems?.length) {
         return 1
       }
       let depth = 0
