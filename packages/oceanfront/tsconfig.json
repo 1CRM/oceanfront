@@ -6,11 +6,10 @@
     "outDir": "dist",
     "importHelpers": true,
     "isolatedModules": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "sourceMap": true,
-    "baseUrl": ".",
     "types": [
       "./src/shims",
       "resize-observer-browser",

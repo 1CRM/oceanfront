@@ -299,7 +299,7 @@ export const OfFieldBase = defineComponent({
                   h(
                     'div',
                     {
-                      class: 'of-field-content-text'
+                      class: ['of-field-content-text', 'of-field-fixed-content']
                     },
                     ctx.slots.fixedContent?.()
                   )

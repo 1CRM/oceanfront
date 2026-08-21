@@ -618,7 +618,8 @@
   min-height: 1.25em;
 }
 
-.of-field-fixed-content {
+.of-field-fixed-content,
+.of-field.of--mode-fixed .of-field-content-text {
   user-select: text;
 }
 
