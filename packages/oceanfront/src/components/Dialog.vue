@@ -1,5 +1,10 @@
 <template>
-  <of-overlay :active="active" :capture="capture" @blur="onOverlayBlur">
+  <of-overlay
+    :active="active"
+    :capture="capture"
+    :shade="shade"
+    @blur="onOverlayBlur"
+  >
     <template #default="{ active: dialogActive }">
       <div class="of-dialog-outer">
         <div
@@ -78,6 +83,7 @@ export default defineComponent({
     hideOnBlur: { type: Boolean, default: true },
     showCloseButton: { type: Boolean, default: false },
     capture: { type: Boolean, default: true },
+    shade: { type: Boolean, default: true },
     ariaLabel: { type: String, default: undefined },
     ariaLabelledby: { type: String, default: undefined },
     ariaDescribedby: { type: String, default: undefined }
