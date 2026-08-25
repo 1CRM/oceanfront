@@ -123,6 +123,19 @@
     }
   }
 
+  > .of-data-table-spacer,
+  > .of-data-table-pending {
+    grid-column: 1 / -1;
+    padding: 0;
+    border: 0;
+  }
+
+  // Restores the rule a row loses when a spacer stands where its neighbour
+  // would be. The totals row keeps its own, and follows the trailing spacer.
+  > .of-data-table-spacer + .of-data-table-row:not(.total-amount) > div {
+    border-top: 1px solid var(--table-border-color);
+  }
+
   > .of-data-table-footer > div {
     font-weight: bolder;
     padding: var(--table-cell-vpad) 0.75rem;

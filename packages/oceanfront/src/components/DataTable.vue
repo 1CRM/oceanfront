@@ -31,10 +31,11 @@
             class="header-rows-selector"
             keep-text-color
             split
-            @click="() => (!selectLocked ? onUpdateHeaderRowsSelector() : null)"
-            :aria-label="
-              selectRowsItems.find((r: any) => r.key === 'page')?.text
+            @click="
+              () =>
+                !headerSelectorLocked ? onUpdateHeaderRowsSelector() : null
             "
+            :aria-label="headerSelectorItem?.text"
             :items="selectRowsItems"
           >
             <div
@@ -42,7 +43,7 @@
                 'of-field',
                 'of-toggle-field',
                 'row-selector',
-                { 'of--mode-disabled': selectLocked },
+                { 'of--mode-disabled': headerSelectorLocked },
                 { 'of--checked': headerRowsSelectorChecked }
               ]"
             >
@@ -108,7 +109,16 @@
         </div>
       </div>
     </div>
-    <template :key="rowidx" v-for="(row, rowidx) of rows">
+    <div
+      v-if="spaceBefore"
+      class="of-data-table-spacer"
+      aria-hidden="true"
+      :style="{ height: spaceBefore + 'px' }"
+    />
+    <template
+      :key="rowKey ? (row[rowKey] ?? rowidx) : rowidx"
+      v-for="(row, rowidx) of rows"
+    >
       <of-table-row
         :row="row"
         :drag-info="{
@@ -151,6 +161,18 @@
         </template>
       </of-table-row>
     </template>
+    <div
+      v-if="spaceAfter"
+      class="of-data-table-spacer"
+      aria-hidden="true"
+      :style="{ height: spaceAfter + 'px' }"
+    />
+    <div
+      v-if="pendingSpace"
+      class="of-data-table-pending"
+      aria-hidden="true"
+      :style="{ height: pendingSpace + 'px' }"
+    />
     <of-table-row
       v-if="sumTotalColumns.length"
       :total-amount="true"
@@ -265,9 +287,15 @@ import {
   ComputedRef,
   Ref,
   shallowRef,
-  reactive
+  reactive,
+  provide
 } from 'vue'
-import { DataTableHeader } from '../lib/datatable'
+import {
+  DataTableHeader,
+  sumTotalColumnIndexes,
+  sumTotalsRow
+} from '../lib/datatable'
+import { reuseRenderTreesKey } from '../lib/datatype'
 import { useThemeOptions } from '../lib/theme'
 import { OfIcon } from './Icon'
 import { OfOverlay } from './Overlay'
@@ -295,14 +323,6 @@ interface ExtraSortField {
   order?: string
 }
 
-const showSelector = (hasSelector: boolean, rows: any[]): boolean => {
-  let issetId = false
-  if (rows && rows.hasOwnProperty(0) && rows[0].hasOwnProperty('id')) {
-    issetId = true
-  }
-  return (hasSelector && issetId) ?? false
-}
-
 let sysDataTableIndex = 0
 
 export default defineComponent({
@@ -326,6 +346,8 @@ export default defineComponent({
     itemsPerPage: [String, Number],
     page: [String, Number],
     rowsSelector: Boolean,
+    /** The rows are one continuous list, so there is no page to select. */
+    infiniteScrollActive: Boolean,
     resetSelection: Boolean,
     selectAll: Boolean,
     draggable: Boolean,
@@ -350,7 +372,26 @@ export default defineComponent({
       default: 'name'
     },
     density: [String, Number],
-    tableLabel: { type: String, default: undefined }
+    tableLabel: { type: String, default: undefined },
+    /**
+     * Space (px) for the rows omitted above/below the rendered window when the
+     * caller virtualizes `items`. The spacers are grid children, so native
+     * scroll anchoring compensates for the shift.
+     */
+    spaceBefore: { type: Number, default: 0 },
+    spaceAfter: { type: Number, default: 0 },
+    /** Space (px) for rows a fetch in flight will add past the loaded ones. */
+    pendingSpace: { type: Number, default: 0 },
+    /** Row field to key rows by, so a window shift patches the rows that stayed. */
+    rowKey: { type: String, default: undefined },
+    /**
+     * Rows to total instead of `items`. A virtualized caller passes the
+     * subtotals of the parts it holds, since `items` is only the window.
+     */
+    totalsSource: {
+      type: Array as PropType<Record<string, any>[] | null>,
+      default: null
+    }
   },
   emits: {
     'rows-selected': null,
@@ -364,6 +405,12 @@ export default defineComponent({
     'row-edited': null
   },
   setup(props, ctx) {
+    // Rows are handed over as a window that slides, so the same pre-built cell
+    // is mounted again every time it scrolls back in.
+    provide(
+      reuseRenderTreesKey,
+      computed(() => props.infiniteScrollActive)
+    )
     const lang = useLanguage()
     const themeOptions = useThemeOptions()
     const sort = ref({ column: '', order: '' })
@@ -706,77 +753,20 @@ export default defineComponent({
       }
       return cols
     })
-    const sumTotalColumns = computed(() => {
-      const indexes: any[] = []
-      props.headers?.forEach(
-        (hdr, index) => hdr.sum_total && indexes.push(index)
-      )
-      return indexes
-    })
+    const sumTotalColumns = computed(() => sumTotalColumnIndexes(props.headers))
+    const totalsItems = computed(() => props.totalsSource ?? items.value)
     const perPage = computed(
       () => parseInt(props.itemsPerPage as any, 10) || 10
     )
     const page = ref(0)
     const updateSumTotal = () => {
       if (!sumTotalColumns.value.length) return
-      let label = ''
-      const name = columns.value[0].value
-
-      const row: any = {
-        nested: null,
-        draggable: false
-      }
-      sumTotalColumns.value.forEach((col) => {
-        let values: object[] = []
-        let value = 0
-        const fieldName = columns.value[col].value
-        items.value?.forEach((v: any) => {
-          if (Array.isArray(v[fieldName])) {
-            let i = 0
-            v[fieldName].forEach((column: any, index: number) => {
-              const fieldValue = column?.rawValue ?? column?.value ?? ''
-
-              if (isNaN(+fieldValue)) {
-                i++
-                return
-              }
-
-              if (!values[index - i]) {
-                label = column?.label
-                values.push({ ...column, value: +fieldValue })
-              } else {
-                ;(values[index - i] as any).value += +fieldValue
-              }
-            })
-          } else {
-            label = v[fieldName]?.label
-            let fieldValue =
-              v[fieldName]?.rawValue ?? v[fieldName]?.value ?? v[fieldName]
-
-            if (!isNaN(+fieldValue)) value += +fieldValue
-          }
-        })
-        if (values.length) {
-          row[fieldName] = values
-        } else {
-          row[fieldName] = {
-            value: value || '',
-            format:
-              columns.value[col]?.total_format ??
-              (items.value as any[])?.[0]?.[fieldName]?.format ??
-              (items.value as any[])?.[0]?.[fieldName]?.totalFormat ??
-              {},
-            params: columns.value[col]?.currency
-              ? { symbol: columns.value[col].currency.symbol }
-              : {}
-          }
-        }
-      })
-      sumTotals.value = {
-        ...row,
-        [name]: label || lang.value.dataTableTotalAmounts,
-        editable: false
-      }
+      sumTotals.value = sumTotalsRow(
+        columns.value,
+        totalsItems.value as Record<string, any>[],
+        sumTotalColumns.value,
+        lang.value.dataTableTotalAmounts
+      )
     }
     watch(
       () => props.page,
@@ -788,31 +778,37 @@ export default defineComponent({
       (p) => (items.value = p as Record<string, any>),
       { immediate: true }
     )
+    // Deep-watching the rows is expensive (cells are whole vnode trees), so the
+    // source collapses to null while no column carries a total.
     watch(
-      () => sumTotalColumns.value,
-      (cols) => {
-        if (cols.length) {
-          updateSumTotal()
-        }
-      },
-      { immediate: true }
-    )
-    watch(
-      () => props.items,
-      () => {
-        updateSumTotal()
-      },
-      { deep: true }
+      () =>
+        sumTotalColumns.value.length
+          ? [sumTotalColumns.value, totalsItems.value]
+          : null,
+      () => updateSumTotal(),
+      { deep: true, immediate: true }
     )
     const iterStart = computed(() => {
       if (props.itemsCount != null) return 0 // external navigation
       return Math.max(0, perPage.value * (page.value - 1))
     })
+    // The selector column must not come and go with the rows: an empty window
+    // would take the header cell with it while the grid keeps its track, so
+    // every column label would shift one place left until the rows arrive.
+    // Reserved space is what says `items` is a window over a longer list.
+    const reservesRows = computed(
+      () =>
+        props.spaceBefore > 0 || props.spaceAfter > 0 || props.pendingSpace > 0
+    )
+    const addRowsSelector = computed(
+      () =>
+        props.rowsSelector &&
+        (rows.value?.[0]?.id != null || reservesRows.value)
+    )
+
     const columnsStyle = computed(() => {
       const dragWidth = props.draggable ? '50px ' : ''
-      const selectorWidth = showSelector(props.rowsSelector, rows.value)
-        ? 'min-content'
-        : ''
+      const selectorWidth = addRowsSelector.value ? 'min-content' : ''
       const widths = props.headers
         ?.map((h) => {
           if (!h.width) return 'auto'
@@ -834,9 +830,6 @@ export default defineComponent({
       return props.footerItems
     })
 
-    const addRowsSelector = computed(() =>
-      showSelector(props.rowsSelector, rows.value)
-    )
     const selectAll = computed(() => props.selectAll)
 
     const orderItems = (item: any, idx: number) => {
@@ -917,12 +910,17 @@ export default defineComponent({
       () => rowsRecord.value.value,
       (val) => {
         ctx.emit('rows-selected', val)
-        headerRowsSelectorChecked.value = true
-        for (const [id, checked] of Object.entries(val)) {
-          if (id !== RowsSelectorValues.All && !checked) {
-            headerRowsSelectorChecked.value = false
-          }
-        }
+        const rowStates = Object.entries(val)
+          .filter(([id]) => id !== RowsSelectorValues.All)
+          .map(([, checked]) => checked)
+        // Select-all locks the result set, so the header stays checked even
+        // when the window is empty or holds rows never written into the record.
+        // Without that lock, an empty window is not a fully selected page: the
+        // checkbox stands for the rows below it, and there are none to check.
+        headerRowsSelectorChecked.value =
+          selectLocked.value ||
+          RowsSelectorValues.All in val ||
+          (rowStates.length > 0 && rowStates.every(Boolean))
       },
       { deep: true }
     )
@@ -973,30 +971,53 @@ export default defineComponent({
     }
     const headerRowsSelectorChecked = ref(false)
     const onUpdateHeaderRowsSelector = function () {
-      headerRowsSelectorChecked.value = !headerRowsSelectorChecked.value
-      const select = headerRowsSelectorChecked.value
-        ? RowsSelectorValues.Page
-        : RowsSelectorValues.DeselectPage
-
-      selectRows(select)
+      const checked = !headerRowsSelectorChecked.value
+      headerRowsSelectorChecked.value = checked
+      // Without a page to act on, the checkbox stands for the whole result set.
+      if (props.infiniteScrollActive)
+        selectRows(
+          checked ? RowsSelectorValues.All : RowsSelectorValues.DeselectAll
+        )
+      else
+        selectRows(
+          checked ? RowsSelectorValues.Page : RowsSelectorValues.DeselectPage
+        )
     }
-    const selectRowsItems = computed(() => [
-      {
-        key: 'page',
-        text: lang.value.dataTableSelectPage,
-        value: () => selectRows(RowsSelectorValues.Page)
-      },
-      {
-        key: 'all',
-        text: lang.value.dataTableSelectAll,
-        value: () => selectRows(RowsSelectorValues.All)
-      },
-      {
-        key: 'clear',
-        text: lang.value.dataTableDeselectAll,
-        value: () => selectRows(RowsSelectorValues.DeselectAll)
-      }
-    ])
+    const selectRowsItems = computed(() => {
+      const items = [
+        {
+          key: 'all',
+          text: lang.value.dataTableSelectAll,
+          value: () => selectRows(RowsSelectorValues.All)
+        },
+        {
+          key: 'clear',
+          text: lang.value.dataTableDeselectAll,
+          value: () => selectRows(RowsSelectorValues.DeselectAll)
+        }
+      ]
+      if (!props.infiniteScrollActive)
+        items.unshift({
+          key: 'page',
+          text: lang.value.dataTableSelectPage,
+          value: () => selectRows(RowsSelectorValues.Page)
+        })
+      return items
+    })
+    // A select-all locks the per-row checkboxes; the header one has to stay
+    // clickable, since without a page it is the only way to undo it.
+    const headerSelectorLocked = computed(
+      () => selectLocked.value && !props.infiniteScrollActive
+    )
+    /** The action a click on the header checkbox performs, for its label. */
+    const headerSelectorItem = computed(() => {
+      const key = !props.infiniteScrollActive
+        ? 'page'
+        : headerRowsSelectorChecked.value
+          ? 'clear'
+          : 'all'
+      return selectRowsItems.value.find((item) => item.key === key)
+    })
 
     const sortAnnouncement = ref('')
 
@@ -1099,6 +1120,8 @@ export default defineComponent({
       selectRows,
       onUpdateHeaderRowsSelector,
       headerRowsSelectorChecked,
+      headerSelectorItem,
+      headerSelectorLocked,
       columnsStyle,
       onSort,
       sort,

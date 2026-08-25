@@ -75,14 +75,18 @@
             @submit.prevent="updateOffsetParams()"
           >
             <div class="of-group-row of--pad">
+              <!-- type="text" keeps the number formatter off: a native number
+                   input rejects grouped text such as "1,000" -->
               <of-text-field
                 v-bind="startAtField"
                 v-model.number="startAtValue"
+                type="text"
                 input-type="number"
               />
               <of-text-field
                 v-bind="perPageField"
                 v-model.number="perPageValue"
+                type="text"
                 input-type="number"
               />
             </div>
