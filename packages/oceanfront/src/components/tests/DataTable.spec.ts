@@ -23,7 +23,10 @@ const headerSelector = (wrapper: ReturnType<typeof mountTable>) =>
   wrapper.find('.of-data-table-header').find('.of-data-table-rows-selector')
 
 const headerChecked = (wrapper: ReturnType<typeof mountTable>) =>
-  headerSelector(wrapper).find('.row-selector').classes().includes('of--checked')
+  headerSelector(wrapper)
+    .find('.row-selector')
+    .classes()
+    .includes('of--checked')
 
 const clickHeaderSelector = async (wrapper: ReturnType<typeof mountTable>) => {
   await headerSelector(wrapper).find('.of-button-main').trigger('click')
@@ -78,24 +81,21 @@ describe('OfDataTable rows selector', () => {
         spaceBefore: 640
       }
     ]
-  ])(
-    'keeps the header checked after select-all when %s',
-    async (_, next) => {
-      const wrapper = mountTable({ infiniteScrollActive: true })
-      await clickHeaderSelector(wrapper)
-      expect(headerChecked(wrapper)).toBe(true)
-      expect(wrapper.emitted('rows-select-all')).toHaveLength(1)
+  ])('keeps the header checked after select-all when %s', async (_, next) => {
+    const wrapper = mountTable({ infiniteScrollActive: true })
+    await clickHeaderSelector(wrapper)
+    expect(headerChecked(wrapper)).toBe(true)
+    expect(wrapper.emitted('rows-select-all')).toHaveLength(1)
 
-      await wrapper.setProps(next)
-      await nextTick()
+    await wrapper.setProps(next)
+    await nextTick()
 
-      expect(headerChecked(wrapper)).toBe(true)
+    expect(headerChecked(wrapper)).toBe(true)
 
-      await clickHeaderSelector(wrapper)
-      expect(wrapper.emitted('rows-deselect-all')).toHaveLength(1)
-      expect(headerChecked(wrapper)).toBe(false)
-    }
-  )
+    await clickHeaderSelector(wrapper)
+    expect(wrapper.emitted('rows-deselect-all')).toHaveLength(1)
+    expect(headerChecked(wrapper)).toBe(false)
+  })
 })
 
 test('reserves the pending space the caller asks for, and none before', async () => {
