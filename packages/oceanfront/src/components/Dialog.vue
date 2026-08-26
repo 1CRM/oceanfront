@@ -3,6 +3,8 @@
     :active="active"
     :capture="capture"
     :shade="shade"
+    :blur-on-backdrop-click="capture"
+    :blur-on-focus-out="capture"
     @blur="onOverlayBlur"
   >
     <template #default="{ active: dialogActive }">
@@ -10,7 +12,7 @@
         <div
           ref="dialog"
           role="dialog"
-          aria-modal="true"
+          :aria-modal="capture ? 'true' : 'false'"
           :id="id"
           :aria-label="ariaLabel || undefined"
           :aria-labelledby="ariaLabelledby || undefined"
@@ -82,6 +84,7 @@ export default defineComponent({
     transition: { type: String, default: 'slide-down' },
     hideOnBlur: { type: Boolean, default: true },
     showCloseButton: { type: Boolean, default: false },
+    /** When false, the page stays usable: no trap, aria-modal, or overlay dismiss-on-blur. */
     capture: { type: Boolean, default: true },
     shade: { type: Boolean, default: true },
     ariaLabel: { type: String, default: undefined },
@@ -95,6 +98,7 @@ export default defineComponent({
     const focusableElements =
       'button, [href], input, select, textarea, [contenteditable="true"], [tabindex]:not([tabindex="-1"])'
     const handelKeyDown = (e: KeyboardEvent) => {
+      if (!props.capture) return
       const focusableContent = dialog.value.querySelectorAll(focusableElements)
       if (focusableContent.length === 0) {
         return

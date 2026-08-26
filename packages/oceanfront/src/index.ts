@@ -154,6 +154,8 @@ export { timestampIdToDate } from './lib/calendar'
 export { extendConfig, useConfig } from './lib/config'
 export type { Config, ConfigFunction } from './lib/config'
 export { addDays, addMonths, addMinutes, addYears } from './lib/datetime'
+export { sumTotalColumnIndexes, sumTotalsRow } from './lib/datatable'
+export type { DataTableHeader } from './lib/datatable'
 
 export {
   defineFieldType,

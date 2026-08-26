@@ -1,5 +1,5 @@
 import { PropType, defineComponent, h } from 'vue'
-import { DataTypeValue } from '../../lib/datatype'
+import { DataTypeValue, cloneRenderTree } from '../../lib/datatype'
 import { OfFormat } from '../Format'
 
 import Currency from './currency'
@@ -31,11 +31,11 @@ export default defineComponent({
               value: this.$props.value.value
             })
           }
-          return this.$props.value.value
+          return cloneRenderTree(this.$props.value.value)
         }
       }
     }
 
-    return this.$props.value
+    return cloneRenderTree(this.$props.value)
   }
 })

@@ -114,6 +114,11 @@
     &:last-child > div {
       border-bottom: 1px solid var(--table-border-color);
     }
+    // A spacer standing where the next row would be takes the last-child match
+    // with it, so the closing rule is asked for by hand. Totals carry their own.
+    &:has(+ .of-data-table-spacer, + .of-data-table-pending) > div {
+      border-bottom: 1px solid var(--table-border-color);
+    }
     &.selected > div {
       background-color: $base-color-highlight;
     }
@@ -121,6 +126,19 @@
       font-weight: 500;
       border-top: 3px double var(--table-border-color);
     }
+  }
+
+  > .of-data-table-spacer,
+  > .of-data-table-pending {
+    grid-column: 1 / -1;
+    padding: 0;
+    border: 0;
+  }
+
+  // Restores the rule a row loses when a spacer stands where its neighbour
+  // would be. The totals row keeps its own, and follows the trailing spacer.
+  > .of-data-table-spacer + .of-data-table-row:not(.total-amount) > div {
+    border-top: 1px solid var(--table-border-color);
   }
 
   > .of-data-table-footer > div {

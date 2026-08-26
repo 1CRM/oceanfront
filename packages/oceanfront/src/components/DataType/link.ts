@@ -1,5 +1,5 @@
 import { PropType, defineComponent, h } from 'vue'
-import { DataTypeValue } from '../../lib/datatype'
+import { DataTypeValue, cloneRenderTree } from '../../lib/datatype'
 import { OfLink } from '../Link'
 
 export default defineComponent({
@@ -14,7 +14,7 @@ export default defineComponent({
         ariaLabel: this.$props.value.params.ariaLabel || null
       },
       {
-        default: () => this.$props.value.value
+        default: () => cloneRenderTree(this.$props.value.value)
       }
     )
   }
