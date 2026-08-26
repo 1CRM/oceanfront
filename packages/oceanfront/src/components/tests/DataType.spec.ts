@@ -9,7 +9,7 @@ import {
 } from 'vue'
 import { describe, expect, it } from 'vitest'
 import OfDataType from '../DataType/DataType'
-import { reuseRenderTreesKey } from '../../lib/datatype'
+import { cloneRenderTree, reuseRenderTreesKey } from '../../lib/datatype'
 
 /**
  * An infinite list view builds a cell once and hands the same tree back on every
@@ -31,6 +31,14 @@ const cachedWidgetCell = () =>
   ({
     value: h('div', { class: 'add-fields' }, [
       h(Suspense, null, { default: h(Widget) })
+    ])
+  }) as any
+
+/** The slot may just as well be the function Vue expects, not a bare tree. */
+const cachedFunctionSlotCell = () =>
+  ({
+    value: h('div', { class: 'add-fields' }, [
+      h(Suspense, null, { default: () => h(Widget) })
     ])
   }) as any
 
@@ -84,6 +92,29 @@ describe('OfDataType', () => {
 
     expect(wrapper.html()).toBe(first)
     expect(first).toContain('Ada Lovelace')
+  })
+
+  it('renders a cached tree whose slot is a function again', async () => {
+    const wrapper = mount(Host, { props: { cell: cachedFunctionSlotCell() } })
+
+    const first = wrapper.html()
+    await remount(wrapper)
+
+    expect(wrapper.html()).toBe(first)
+    expect(first).toContain('Ada Lovelace')
+  })
+
+  it('carries the slot flags Vue set over to the copy', () => {
+    const slot = Object.assign(() => h(Widget), { _: 1, _ns: true })
+    const tree = h(Suspense, null, { default: slot }) as any
+    tree.children._ = 1
+
+    const slots = (cloneRenderTree(tree) as any).children
+
+    expect(slots.default).not.toBe(slot)
+    expect(slots.default._).toBe(1)
+    expect(slots.default._ns).toBe(true)
+    expect(slots._).toBe(1)
   })
 
   it('hands the tree straight through when nothing asks for reuse', () => {

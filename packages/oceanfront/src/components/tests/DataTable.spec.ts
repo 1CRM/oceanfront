@@ -49,7 +49,7 @@ describe('OfDataTable rows selector', () => {
     ],
     ['its first chunk is still in flight', { pendingSpace: 96 }]
   ])('keeps the header selector and its track while %s', async (_, space) => {
-    const wrapper = mountTable({ spaceAfter: 640 })
+    const wrapper = mountTable({ infiniteScrollActive: true, spaceAfter: 640 })
     const withRows = tracks(wrapper)
 
     await wrapper.setProps({ items: [], spaceAfter: 0, ...space })
@@ -62,7 +62,7 @@ describe('OfDataTable rows selector', () => {
     ).not.toContain('of--checked')
   })
 
-  test('drops the header selector when the list itself is empty', () => {
+  test('drops the header selector when a paged list is empty', () => {
     expect(headerSelector(mountTable({ items: [] })).exists()).toBe(false)
   })
 
@@ -98,14 +98,42 @@ describe('OfDataTable rows selector', () => {
   })
 })
 
-test('reserves the pending space the caller asks for, and none before', async () => {
+// A caller that virtualizes keys its store by absolute record index, and hands
+// it over as it is: an index it holds no row for used to be read as a row.
+test('skips the rows a virtualizing caller left out', () => {
+  const sparse: any[] = []
+  sparse.length = 5
+  sparse[3] = { id: '3', name: 'Row 4', city: 'Kelowna' }
+
+  const wrapper = mountTable({ items: sparse, spaceBefore: 96 })
+
+  expect(wrapper.findAllComponents({ name: 'OfTableRow' })).toHaveLength(1)
+})
+
+// The spacers are the virtualization: they stand for the rows the caller left
+// out above and below the window, and for the ones a fetch is about to append,
+// holding the scroll height each of those takes up.
+test('reserves the space the caller asks for, and none before', async () => {
   const wrapper = mountTable()
-  const pending = () => wrapper.find('.of-data-table-pending')
+  const spacers = () =>
+    wrapper
+      .findAll('.of-data-table-spacer, .of-data-table-pending')
+      .map((box) => (box.element as HTMLElement).style.height)
 
-  expect(pending().exists()).toBe(false)
+  expect(spacers()).toEqual([])
 
-  await wrapper.setProps({ pendingSpace: 96 })
+  await wrapper.setProps({
+    spaceBefore: 320,
+    spaceAfter: 640,
+    pendingSpace: 96
+  })
   await nextTick()
 
-  expect((pending().element as HTMLElement).style.height).toBe('96px')
+  expect(spacers()).toEqual(['320px', '640px', '96px'])
+
+  // Reaching the top of the list drops the leading spacer, not the others.
+  await wrapper.setProps({ spaceBefore: 0 })
+  await nextTick()
+
+  expect(spacers()).toEqual(['640px', '96px'])
 })

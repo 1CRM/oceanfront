@@ -12,10 +12,12 @@
   >
     <div
       class="of-data-table-header"
-      :role="draggable || addRowsSelector || columns.length ? 'row' : undefined"
+      :role="
+        dragEnabled || addRowsSelector || columns.length ? 'row' : undefined
+      "
     >
       <div
-        v-if="draggable"
+        v-if="dragEnabled"
         role="columnheader"
         :aria-label="lang.dataTableReorderRows"
       ></div>
@@ -119,10 +121,12 @@
       :key="rowKey ? (row[rowKey] ?? rowidx) : rowidx"
       v-for="(row, rowidx) of rows"
     >
+      <!-- `coords`/`idx` are positions in the rendered window, which is why drag
+           is off while the rows are one endless list; see `dragEnabled`. -->
       <of-table-row
         :row="row"
         :drag-info="{
-          draggable: draggable,
+          draggable: dragEnabled,
           dragInProgress: dragInProgress,
           nestedIndicator: nestedIndicator,
           currentCoords,
@@ -178,7 +182,7 @@
       :total-amount="true"
       :row="sumTotals"
       :drag-info="{
-        draggable: draggable,
+        draggable: dragEnabled,
         dragInProgress: dragInProgress,
         nestedIndicator: nestedIndicator,
         currentCoords,
@@ -217,7 +221,7 @@
         v-for="(row, rowidx) of footerRows"
         :key="rowidx"
       >
-        <div v-if="draggable" role="cell" aria-hidden="true"></div>
+        <div v-if="dragEnabled" role="cell" aria-hidden="true"></div>
         <div
           :class="{ first: rowidx == 0 }"
           v-if="addRowsSelector"
@@ -252,7 +256,7 @@
     </of-overlay>
 
     <div
-      v-if="draggable && dragInProgress"
+      v-if="dragEnabled && dragInProgress"
       class="drag-position-handler"
       :style="{ top: arrowTop + 'px' }"
     >
@@ -405,12 +409,6 @@ export default defineComponent({
     'row-edited': null
   },
   setup(props, ctx) {
-    // Rows are handed over as a window that slides, so the same pre-built cell
-    // is mounted again every time it scrolls back in.
-    provide(
-      reuseRenderTreesKey,
-      computed(() => props.infiniteScrollActive)
-    )
     const lang = useLanguage()
     const themeOptions = useThemeOptions()
     const sort = ref({ column: '', order: '' })
@@ -792,22 +790,28 @@ export default defineComponent({
       if (props.itemsCount != null) return 0 // external navigation
       return Math.max(0, perPage.value * (page.value - 1))
     })
+    // `items` is a window over a longer list, which is also the only caller that
+    // passes `rowKey` and the spacer sizes.
+    const windowedRows = computed(() => props.infiniteScrollActive)
+    // A window that slides mounts the same pre-built cell again every time a row
+    // scrolls back in, so those cells have to be copied rather than consumed.
+    provide(reuseRenderTreesKey, windowedRows)
+    // Row coordinates are positions in the window, not in the list, so a drop
+    // would reorder whichever rows happen to sit at those indexes. Paging has
+    // the same gap, but an endless list makes it the normal case, so the handles
+    // are withheld.
+    const dragEnabled = computed(() => props.draggable && !windowedRows.value)
     // The selector column must not come and go with the rows: an empty window
     // would take the header cell with it while the grid keeps its track, so
     // every column label would shift one place left until the rows arrive.
-    // Reserved space is what says `items` is a window over a longer list.
-    const reservesRows = computed(
-      () =>
-        props.spaceBefore > 0 || props.spaceAfter > 0 || props.pendingSpace > 0
-    )
     const addRowsSelector = computed(
       () =>
         props.rowsSelector &&
-        (rows.value?.[0]?.id != null || reservesRows.value)
+        (windowedRows.value || rows.value?.[0]?.id != null)
     )
 
     const columnsStyle = computed(() => {
-      const dragWidth = props.draggable ? '50px ' : ''
+      const dragWidth = dragEnabled.value ? '50px ' : ''
       const selectorWidth = addRowsSelector.value ? 'min-content' : ''
       const widths = props.headers
         ?.map((h) => {
@@ -866,12 +870,23 @@ export default defineComponent({
         idx++
       ) {
         let item: any = propItems[idx]
+        // A caller that virtualizes keys its store by absolute record index, so
+        // the array it hands over can have holes where rows were dropped.
+        if (item == null) continue
         item = orderItems(item, idx)
         result.push(item)
       }
       return result
     })
 
+    /**
+     * Checkbox state for the rows on screen. It is rebuilt from the current
+     * window, so an id drops out of it as soon as its row leaves — paging does
+     * the same, an endless list just makes it constant. The table is therefore
+     * not the owner of the selection: it reports what changed through
+     * `rows-selected`, `rows-select-all` and the page/deselect events, and the
+     * parent keeps the set of selected ids across windows.
+     */
     const rowsRecord: ComputedRef<FormRecord> = computed(() => {
       let ids: any = {}
 
@@ -1145,6 +1160,7 @@ export default defineComponent({
       sortPopupEnter,
       sortPopupLeave,
       draggingOptions,
+      dragEnabled,
       dragInProgress,
       listedRows,
       tableLeft,

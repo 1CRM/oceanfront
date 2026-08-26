@@ -114,6 +114,11 @@
     &:last-child > div {
       border-bottom: 1px solid var(--table-border-color);
     }
+    // A spacer standing where the next row would be takes the last-child match
+    // with it, so the closing rule is asked for by hand. Totals carry their own.
+    &:has(+ .of-data-table-spacer, + .of-data-table-pending) > div {
+      border-bottom: 1px solid var(--table-border-color);
+    }
     &.selected > div {
       background-color: $base-color-highlight;
     }

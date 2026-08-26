@@ -37,11 +37,17 @@ export const cloneRenderTree = <T>(value: T): T => {
   } else if (children && typeof children === 'object') {
     // Slots object, as in h(Suspense, null, { default: ... }). Slot functions
     // may hand back a captured tree, so the result needs copying as well.
-    const slots: Record<string, any> = {}
+    // Both the object and the functions on it carry flags Vue set and reads
+    // back while patching (`_`, `_ctx`, `_ns`), so they are carried over rather
+    // than dropped by starting from an empty object and a bare wrapper.
+    const slots: Record<string, any> = { ...children }
     for (const name in children) {
       const slot = (children as Record<string, any>)[name]
       if (typeof slot === 'function')
-        slots[name] = (...args: any[]) => cloneRenderTree(slot(...args))
+        slots[name] = Object.assign(
+          (...args: any[]) => cloneRenderTree(slot(...args)),
+          slot
+        )
       else slots[name] = cloneRenderTree(slot)
     }
     cloned.children = slots
