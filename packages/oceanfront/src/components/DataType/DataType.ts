@@ -1,10 +1,5 @@
-import { PropType, defineComponent, h, inject } from 'vue'
-import {
-  DataTypeValue,
-  cloneRenderTree,
-  noReuseRenderTrees,
-  reuseRenderTreesKey
-} from '../../lib/datatype'
+import { PropType, defineComponent, h } from 'vue'
+import { DataTypeValue, cloneRenderTree } from '../../lib/datatype'
 import { OfFormat } from '../Format'
 
 import Currency from './currency'
@@ -19,13 +14,7 @@ export default defineComponent({
       default: null
     }
   },
-  setup() {
-    return { reuseTrees: inject(reuseRenderTreesKey, noReuseRenderTrees) }
-  },
   render() {
-    const keep = <T>(value: T): T =>
-      this.reuseTrees ? cloneRenderTree(value) : value
-
     if (this.$props.value && typeof this.$props.value === 'object') {
       const format = this.$props.value.format as any
       const formatType = format?.type || format
@@ -42,11 +31,11 @@ export default defineComponent({
               value: this.$props.value.value
             })
           }
-          return keep(this.$props.value.value)
+          return cloneRenderTree(this.$props.value.value)
         }
       }
     }
 
-    return keep(this.$props.value)
+    return cloneRenderTree(this.$props.value)
   }
 })

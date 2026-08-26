@@ -291,15 +291,13 @@ import {
   ComputedRef,
   Ref,
   shallowRef,
-  reactive,
-  provide
+  reactive
 } from 'vue'
 import {
   DataTableHeader,
   sumTotalColumnIndexes,
   sumTotalsRow
 } from '../lib/datatable'
-import { reuseRenderTreesKey } from '../lib/datatype'
 import { useThemeOptions } from '../lib/theme'
 import { OfIcon } from './Icon'
 import { OfOverlay } from './Overlay'
@@ -386,7 +384,11 @@ export default defineComponent({
     spaceAfter: { type: Number, default: 0 },
     /** Space (px) for rows a fetch in flight will add past the loaded ones. */
     pendingSpace: { type: Number, default: 0 },
-    /** Row field to key rows by, so a window shift patches the rows that stayed. */
+    /**
+     * Row field to key rows by, so a window shift patches the rows that stayed.
+     * When omitted, `id` is used if present, so switching paging ↔ endless
+     * scrolling does not remount the rows that were already on screen.
+     */
     rowKey: { type: String, default: undefined },
     /**
      * Rows to total instead of `items`. A virtualized caller passes the
@@ -793,9 +795,6 @@ export default defineComponent({
     // `items` is a window over a longer list, which is also the only caller that
     // passes `rowKey` and the spacer sizes.
     const windowedRows = computed(() => props.infiniteScrollActive)
-    // A window that slides mounts the same pre-built cell again every time a row
-    // scrolls back in, so those cells have to be copied rather than consumed.
-    provide(reuseRenderTreesKey, windowedRows)
     // Row coordinates are positions in the window, not in the list, so a drop
     // would reorder whichever rows happen to sit at those indexes. Paging has
     // the same gap, but an endless list makes it the normal case, so the handles

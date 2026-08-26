@@ -1,4 +1,4 @@
-import { InjectionKey, Ref, VNode, cloneVNode, isVNode, shallowRef } from 'vue'
+import { VNode, h, isVNode } from 'vue'
 
 export interface DataTypeValue {
   value: string | number
@@ -7,41 +7,17 @@ export interface DataTypeValue {
   params?: any
 }
 
-/**
- * Set by a table whose rows are rendered from pre-built cells more than once,
- * so those cells are copied rather than consumed. Off everywhere else: copying
- * costs a walk of the tree on every render.
- */
-export const reuseRenderTreesKey: InjectionKey<Readonly<Ref<boolean>>> =
-  Symbol('ofReuseRenderTrees')
-
-export const noReuseRenderTrees: Readonly<Ref<boolean>> = shallowRef(false)
-
-/**
- * Returns a private copy of a render tree that is kept in data.
- *
- * Mounting records the DOM node on a VNode and rewrites the children arrays it
- * is handed, so the same tree cannot be rendered twice. Callers that pre-build
- * their cells and render them repeatedly — a virtualized list view, as its rows
- * scroll out of the window and back in — need the nested children copied too,
- * not just the root.
- */
-export const cloneRenderTree = <T>(value: T): T => {
-  if (Array.isArray(value))
-    return value.map((entry) => cloneRenderTree(entry)) as unknown as T
-  if (!isVNode(value)) return value
-  const cloned = cloneVNode(value as VNode)
-  const children = cloned.children
-  if (Array.isArray(children)) {
-    cloned.children = children.map((child) => cloneRenderTree(child))
-  } else if (children && typeof children === 'object') {
+const cloneChildren = (children: VNode['children']): VNode['children'] => {
+  if (Array.isArray(children))
+    return children.map((child) => cloneRenderTree(child)) as VNode[]
+  if (children && typeof children === 'object') {
     // Slots object, as in h(Suspense, null, { default: ... }). Slot functions
     // may hand back a captured tree, so the result needs copying as well.
     // Both the object and the functions on it carry flags Vue set and reads
     // back while patching (`_`, `_ctx`, `_ns`), so they are carried over rather
     // than dropped by starting from an empty object and a bare wrapper.
     const slots: Record<string, any> = { ...children }
-    for (const name in children) {
+    for (const name in children as object) {
       const slot = (children as Record<string, any>)[name]
       if (typeof slot === 'function')
         slots[name] = Object.assign(
@@ -50,7 +26,39 @@ export const cloneRenderTree = <T>(value: T): T => {
         )
       else slots[name] = cloneRenderTree(slot)
     }
-    cloned.children = slots
+    return slots as VNode['children']
   }
-  return cloned as unknown as T
+  return children
+}
+
+/**
+ * Returns a private copy of a render tree that is kept in data.
+ *
+ * Mounting records the DOM node on a VNode and rewrites the children arrays it
+ * is handed, so the same tree cannot be rendered twice. A tree that lives in
+ * data outlives the row that renders it — the row is remounted when a list is
+ * rekeyed, when a window scrolls it out and back, or when a table switches
+ * between paging and endless scrolling — so it is copied on every render.
+ * `cloneVNode` is not enough: it copies the instance, the DOM, and a
+ * suspense-resolved subtree (`ssContent`) from a tree that has already been
+ * mounted, which is how list-view cells that are async setup formatters go
+ * blank. `h()` builds a vnode that was never mounted. Values that are not
+ * trees are returned as they are and cost one check.
+ */
+export const cloneRenderTree = <T>(value: T): T => {
+  if (Array.isArray(value))
+    return value.map((entry) => cloneRenderTree(entry)) as unknown as T
+  if (!isVNode(value)) return value
+  const vnode = value as VNode
+  const props: Record<string, unknown> | null = vnode.props
+    ? { ...vnode.props }
+    : vnode.key != null
+      ? {}
+      : null
+  if (props && vnode.key != null) props.key = vnode.key
+  return h(
+    vnode.type as any,
+    props,
+    cloneChildren(vnode.children) as any
+  ) as unknown as T
 }
