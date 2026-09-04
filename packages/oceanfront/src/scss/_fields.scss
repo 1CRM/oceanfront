@@ -740,7 +740,9 @@
             transform: translateX(var(--field-size-prepend)) scale(1.3333)
               translateY(var(--field-v-pad));
             transform-origin: left top;
-            transition: transform 150ms;
+            transition:
+              transform 150ms,
+              top 150ms;
             backface-visibility: hidden; // avoid some jumping?
             // will-change: transform; // FIXME currently blurry in chrome
           }
@@ -770,7 +772,8 @@
               overflow: hidden;
               text-overflow: ellipsis;
               white-space: nowrap;
-              transform: translateY(-0.675em);
+              top: 0;
+              transform: translateY(-50%);
             }
             .of-tooltip {
               bottom: 4px;
