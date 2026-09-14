@@ -325,20 +325,44 @@
   .of-field-main-label,
   &.of--label-frame .of-field-frame-label {
     display: flex;
+    align-items: center;
     min-width: 0;
   }
 
-  &.of--label-frame.of--variant-outlined .of-field-frame-label .of-tooltip {
-    font-size: 0.59em;
-    z-index: 2;
-    padding-left: 2.3em;
-    position: relative;
-    bottom: -8px;
-    transition:
-      bottom 150ms,
-      padding-left 150ms;
-    .of-tooltip-text {
-      font-size: 1.2em;
+  &.of--label-frame.of--variant-outlined .of-field-frame-label {
+    align-items: flex-start;
+
+    .of-field-label {
+      align-self: flex-start;
+    }
+
+    .of-tooltip {
+      display: inline-flex;
+      align-items: center;
+      font-size: 0.59em;
+      z-index: 2;
+      padding-left: 2.3em;
+      position: relative;
+      bottom: -8px;
+      transition:
+        bottom 150ms,
+        padding-left 150ms,
+        transform 150ms;
+
+      .of-tooltip-main {
+        display: inline-flex;
+        align-items: center;
+        line-height: 1;
+      }
+
+      .of-icon,
+      .of-icon.of-icon--svg {
+        vertical-align: middle;
+      }
+
+      .of-tooltip-text {
+        font-size: 1.2em;
+      }
     }
   }
 
@@ -384,6 +408,47 @@
   &.of--label-top:not(.of--label-empty) > .of-field-main-label {
     margin-bottom: 0.25em;
     padding-left: var(--field-h-pad);
+    flex-wrap: nowrap;
+    align-items: center;
+    column-gap: 0.5em;
+
+    > .of-field-label {
+      flex: 0 1 auto;
+      min-width: 0;
+      max-width: calc(100% - 2.75em);
+    }
+
+    > .of-tooltip {
+      flex: none;
+    }
+  }
+
+  .of-field-label .of-tooltip {
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
+    flex: none;
+    margin-inline-start: 0.5em;
+    font-size: 1em;
+    line-height: 1;
+
+    .of-tooltip-main {
+      display: inline-flex;
+      align-items: center;
+      line-height: 1;
+    }
+
+    .of-icon,
+    .of-icon.of-icon--svg {
+      vertical-align: middle;
+    }
+  }
+
+  .of-field-label:has(.of-tooltip) {
+    overflow: visible;
+    white-space: normal;
+    max-width: 100%;
+    line-height: 1;
   }
 
   &.of--label-frame:not(.of-toggle-field),
@@ -776,8 +841,9 @@
               transform: translateY(-50%);
             }
             .of-tooltip {
-              bottom: 4px;
+              bottom: 0;
               padding-left: 1em;
+              transform: translateY(-50%);
             }
           }
         }
@@ -1010,6 +1076,12 @@
 .of-field:not(.of--label-frame) .of-field-main-label .of-field-label,
 .of-field.of--label-frame .of-field-frame-label .of-field-label {
   overflow: hidden;
+}
+
+.of-field:not(.of--label-frame)
+  .of-field-main-label
+  .of-field-label:has(.of-tooltip) {
+  overflow: visible;
 }
 
 // container around inline toggle field (checkbox or switch)

@@ -5,7 +5,8 @@ export const OfTooltip = defineComponent({
   name: 'OfTooltip',
   props: {
     text: String,
-    position: { type: String as PropType<'left' | 'right'>, default: 'right' }
+    position: { type: String as PropType<'left' | 'right'>, default: 'right' },
+    scale: { type: [Number, String], default: 1.71 }
   },
   setup(props, ctx) {
     const tooltipStyle: Ref<any> = ref({})
@@ -92,7 +93,7 @@ export const OfTooltip = defineComponent({
               ? h('div', {}, ctx.slots.default())
               : h(OfIcon, {
                   name: 'help circle',
-                  scale: 1.71,
+                  scale: props.scale,
                   ariaLabel: props.text || undefined
                 }),
             (props.text ?? '') !== ''
