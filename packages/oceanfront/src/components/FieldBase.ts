@@ -230,7 +230,9 @@ export const OfFieldBase = defineComponent({
         }
 
         const keepTooltipWithLabel =
-          labelPosition.value === 'top' || labelPosition.value === 'right'
+          labelPosition.value === 'top' ||
+          labelPosition.value === 'right' ||
+          labelPosition.value === 'left'
         const tooltip =
           (props.tooltip ?? '') !== ''
             ? h(OfTooltip, {

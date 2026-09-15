@@ -395,7 +395,7 @@
       flex: 0 1 auto;
       min-width: 0;
     }
-    .of-tooltip {
+    > .of-field-main-label > .of-tooltip {
       padding: 0 1em;
     }
   }
@@ -415,11 +415,6 @@
     > .of-field-label {
       flex: 0 1 auto;
       min-width: 0;
-      max-width: calc(100% - 2.75em);
-    }
-
-    > .of-tooltip {
-      flex: none;
     }
   }
 
@@ -442,13 +437,6 @@
     .of-icon.of-icon--svg {
       vertical-align: middle;
     }
-  }
-
-  .of-field-label:has(.of-tooltip) {
-    overflow: visible;
-    white-space: normal;
-    max-width: 100%;
-    line-height: 1;
   }
 
   &.of--label-frame:not(.of-toggle-field),
@@ -1078,6 +1066,9 @@
   overflow: hidden;
 }
 
+// In-label help icon: overflow must be visible so the balloon isn't clipped.
+// That disables ellipsis; keep the default nowrap so row height stays stable
+// and the icon stays on the same line as the last word.
 .of-field:not(.of--label-frame)
   .of-field-main-label
   .of-field-label:has(.of-tooltip) {
