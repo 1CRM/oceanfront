@@ -35,7 +35,10 @@ describe('OfFieldBase in-label tooltip', () => {
       expect(label.text()).toContain('Status')
       expect(label.find('.of-tooltip').exists()).toBe(true)
       expect(
-        wrapper.get('.of-field-main-label').find(':scope > .of-tooltip').exists()
+        wrapper
+          .get('.of-field-main-label')
+          .find(':scope > .of-tooltip')
+          .exists()
       ).toBe(false)
       expect(wrapper.getComponent(OfTooltip).props('scale')).toBe('1em')
     }
