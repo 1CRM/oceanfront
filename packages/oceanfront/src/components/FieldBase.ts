@@ -229,7 +229,17 @@ export const OfFieldBase = defineComponent({
           labelText = ' '
         }
 
-        const tooltip = h(OfTooltip, { text: props.tooltip })
+        const keepTooltipWithLabel =
+          labelPosition.value === 'top' ||
+          labelPosition.value === 'right' ||
+          labelPosition.value === 'left'
+        const tooltip =
+          (props.tooltip ?? '') !== ''
+            ? h(OfTooltip, {
+                text: props.tooltip,
+                scale: keepTooltipWithLabel ? '1em' : 1.71
+              })
+            : undefined
 
         const label = ctx.slots.label
           ? ctx.slots.label()
@@ -242,7 +252,11 @@ export const OfFieldBase = defineComponent({
                   class: 'of-field-label'
                   /*, for: render.inputId: triggering duplicate click events */
                 },
-                [labelText, asterisk]
+                [
+                  labelText,
+                  asterisk,
+                  keepTooltipWithLabel ? tooltip : undefined
+                ]
               )
             : undefined
         const cls = [
@@ -331,12 +345,12 @@ export const OfFieldBase = defineComponent({
           )
         }
 
-        const tooltipNode = computed(() =>
-          (props.tooltip ?? '' !== '') ? tooltip : undefined
+        const tooltipNode = computed(() => tooltip)
+        const emptyFieldLabelNode = h(
+          'label',
+          { class: 'of-field-label' },
+          keepTooltipWithLabel ? tooltip : undefined
         )
-        const emptyFieldLabelNode = h('label', {
-          class: 'of-field-label'
-        })
         const labelNode = computed(() =>
           label || required.value
             ? !['frame', 'input'].includes(labelPosition.value ?? '')
@@ -358,7 +372,10 @@ export const OfFieldBase = defineComponent({
           showMainLabel.value
             ? h('div', { class: 'of-field-main-label' }, [
                 labelNode.value,
-                labelPosition.value !== 'frame' ? tooltipNode.value : undefined
+                labelPosition.value !== 'frame' &&
+                (!keepTooltipWithLabel || ctx.slots.label)
+                  ? tooltipNode.value
+                  : undefined
               ])
             : props.type === 'toggle' || props.type === 'radio'
               ? undefined
