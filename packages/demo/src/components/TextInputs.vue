@@ -12,7 +12,7 @@
           v-model="textValue"
           v-bind="{
             ...props,
-            ...customProps
+            ...(customProps.multiline ? { type: 'textarea' } : {})
           }"
         />
       </template>
