@@ -1,6 +1,7 @@
 import { mount } from '@vue/test-utils'
 import { nextTick } from 'vue'
 import DataTable from '../DataTable.vue'
+import { Oceanfront } from '../../index'
 
 const headers = [
   { value: 'name', text: 'Name' },
@@ -16,7 +17,7 @@ const mountTable = (props: Record<string, any> = {}) =>
   mount(DataTable, {
     props: { headers, items, rowsSelector: true, ...props },
     // The cells of a data row need the field registry; the header does not.
-    global: { stubs: { OfTableRow: true } }
+    global: { plugins: [Oceanfront], stubs: { OfTableRow: true } }
   })
 
 const headerSelector = (wrapper: ReturnType<typeof mountTable>) =>

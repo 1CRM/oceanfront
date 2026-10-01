@@ -454,12 +454,10 @@ export default defineComponent({
         let samePosition = true
         for (let i = 0; i < itemDepth; i++) {
           if (i === itemDepth - 1) {
-            if (
-              !(
-                itemIndexes[i] === targetIndexes[i] ||
-                targetIndexes[i] - itemIndexes[i] === 1
-              )
-            ) {
+            if (!(
+              itemIndexes[i] === targetIndexes[i] ||
+              targetIndexes[i] - itemIndexes[i] === 1
+            )) {
               samePosition = false
             }
           } else {

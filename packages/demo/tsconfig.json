@@ -4,24 +4,21 @@
     "module": "esnext",
     "strict": true,
     "importHelpers": true,
-    "isolatedModules": true, // required for vite
-    "moduleResolution": "node",
+    "isolatedModules": true,
+    "moduleResolution": "bundler",
     "esModuleInterop": true,
-    // "allowSyntheticDefaultImports": true,
     "sourceMap": true,
-    "baseUrl": ".",
-    "types": [
-    ],
+    "types": [],
     "lib": [
       "esnext",
       "dom",
-      "dom.iterable",
-    ],
+      "dom.iterable"
+    ]
   },
   "include": [
     "src/**/*.ts",
     "tests/**/*.ts",
-    "src/**/*.vue",
+    "src/**/*.vue"
   ],
   "exclude": [
     "node_modules"

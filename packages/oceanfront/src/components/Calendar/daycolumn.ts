@@ -140,8 +140,8 @@ export default defineComponent({
         .filter((e) => e !== undefined) as InternalEvent[]
     })
 
-    const layoutFuncValue = computed(
-      (): layoutFunc => (props.layout === 'stack' ? StackLayout : ColumnLayout)
+    const layoutFuncValue = computed((): layoutFunc =>
+      props.layout === 'stack' ? StackLayout : ColumnLayout
     )
 
     const hasAllDay = computed(

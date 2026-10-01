@@ -25,6 +25,18 @@ yarn-error.log*
 # turbo logs and outputs
 .turbo
 
+# Agent/editor local files
+AGENTS.md
+
+# Yarn Berry
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+.pnp.*
+
 # Code coverage
 coverage
 

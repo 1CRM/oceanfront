@@ -470,8 +470,7 @@ export function calculateGroupBounds(
   }
 
   const entities = group.containedIds.map(id => findEntity(graph, id)).filter(Boolean) as (
-    | WorkflowNode
-    | WorkflowGroup
+    WorkflowNode | WorkflowGroup
   )[]
 
   if (entities.length === 0) {
