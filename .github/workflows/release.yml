@@ -52,7 +52,7 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: "./packages/oceanfront/oceanfront-v0.1.0.tgz"
+          file: "./packages/oceanfront/package.tgz"
           asset_name: oceanfront.tgz
           tag: ${{ env.RELEASE_TAG }}
           overwrite: true
@@ -61,7 +61,7 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: "./packages/of-colorscheme-editor/of-colorscheme-editor-v0.1.0.tgz"
+          file: "./packages/of-colorscheme-editor/package.tgz"
           asset_name: of-colorscheme-editor.tgz
           tag: ${{ env.RELEASE_TAG }}
           overwrite: true
@@ -70,7 +70,7 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: "./packages/oceanfront-html-editor/oceanfront-html-editor-v0.1.0.tgz"
+          file: "./packages/oceanfront-html-editor/package.tgz"
           asset_name: oceanfront-html-editor.tgz
           tag: ${{ env.RELEASE_TAG }}
           overwrite: true
@@ -79,7 +79,7 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: "./packages/oceanfront-workflow-canvas/oceanfront-workflow-canvas-v0.1.0.tgz"
+          file: "./packages/oceanfront-workflow-canvas/package.tgz"
           asset_name: oceanfront-workflow-canvas.tgz
           tag: ${{ env.RELEASE_TAG }}
           overwrite: true
