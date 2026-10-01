@@ -82,6 +82,9 @@ export default [
         afterAll: 'readonly',
         vi: 'readonly'
       }
+    },
+    rules: {
+      'vue/one-component-per-file': 'off'
     }
   }
 ]

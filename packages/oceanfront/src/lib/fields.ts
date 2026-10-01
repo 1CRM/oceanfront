@@ -59,23 +59,12 @@ export interface FieldRender {
 }
 
 export type FieldMode =
-  | 'editable'
-  | 'disabled'
-  | 'readonly'
-  | 'locked'
-  | 'static'
-  | 'fixed'
+  'editable' | 'disabled' | 'readonly' | 'locked' | 'static' | 'fixed'
 
 export type FieldFormatProp = string | Record<string, any>
 
 export type FieldLabelPositionProp =
-  | 'default'
-  | 'none'
-  | 'frame'
-  | 'input'
-  | 'top'
-  | 'left'
-  | 'right'
+  'default' | 'none' | 'frame' | 'input' | 'top' | 'left' | 'right'
 
 export interface FieldContext {
   container?: string
@@ -349,8 +338,7 @@ export function makeFieldContext<C>(
     let p = props.labelPosition
     if (!p || p === 'default') {
       p = themeOptions.defaultLabelPosition as
-        | FieldLabelPositionProp
-        | undefined
+        FieldLabelPositionProp | undefined
     }
     if (!p || p === 'default') {
       p = props.variant === 'filled' ? 'frame' : 'top'

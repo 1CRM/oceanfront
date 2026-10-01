@@ -1,5 +1,3 @@
-/* eslint-disable vue/prefer-import-from-vue */
-
 import {
   Ref,
   ToRef,
@@ -415,7 +413,7 @@ export const watchPosition = (
 }
 
 type throttleFunc<T> = {
-  cancel: () => void;
+  cancel: () => void
   (input: T): void
 }
 

@@ -87,8 +87,7 @@ export function resolveConfig(): Config {
   let instance = getCurrentInstance()
   while (instance) {
     const config = getInstanceProvides(instance)[injectKey as symbol] as
-      | Config
-      | undefined
+      Config | undefined
     if (config) return config
     instance = instance.parent
   }

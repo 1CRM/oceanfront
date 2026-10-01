@@ -1,8 +1,18 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "declarationDir": "./dist-types",
+    "noEmit": false,
     "types": ["./src/shims", "resize-observer-browser"]
   },
-  "include": ["src/**/*.ts", "src/**/*.vue"],
-  "exclude": ["node_modules", "**/*.spec.ts", "**/*.test.ts"]
+  "include": ["src/**/*.ts", "src/**/*.vue", "icons/**/*.ts"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "dist-types",
+    "**/*.spec.ts",
+    "**/*.test.ts"
+  ]
 }

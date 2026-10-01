@@ -18,16 +18,19 @@ jobs:
 
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
-          node-version: "22.x"
+          node-version: "22.22"
           registry-url: "https://npm.pkg.github.com"
 
+      - name: Enable Corepack
+        run: corepack enable
+
       - name: Install dependencies
-        run: yarn install
+        run: yarn install --immutable
 
       - name: Run ESLint
         run: yarn run lint
@@ -82,7 +85,7 @@ jobs:
           overwrite: true
 
       - name: Checkout app-js repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: 1CRM/app-js
           ref: main

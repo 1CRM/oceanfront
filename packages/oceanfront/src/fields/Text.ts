@@ -273,8 +273,7 @@ export const OfTextField = defineComponent({
     const hooks = {
       onblur(evt: FocusEvent) {
         const target = evt.target as
-          | (HTMLInputElement | HTMLTextAreaElement)
-          | null
+          (HTMLInputElement | HTMLTextAreaElement) | null
         if (target) {
           const fmt = formatter.value
           let val = target.value
@@ -310,8 +309,7 @@ export const OfTextField = defineComponent({
       },
       onChange(evt: Event) {
         const target = evt.target as
-          | (HTMLInputElement | HTMLTextAreaElement)
-          | null
+          (HTMLInputElement | HTMLTextAreaElement) | null
         if (!target) return
         let val = target.value
         const fmt = formatter.value
@@ -375,8 +373,7 @@ export const OfTextField = defineComponent({
       onKeyup(_evt: KeyboardEvent) {
         if (_evt.key === 'Enter' && fieldCtx.onKeyup) {
           const target = _evt.target as
-            | (HTMLInputElement | HTMLTextAreaElement)
-            | null
+            (HTMLInputElement | HTMLTextAreaElement) | null
           if (!target) return
           const val = target.value
           fieldCtx.onKeyup(val)
@@ -393,8 +390,7 @@ export const OfTextField = defineComponent({
         }
         if (evt.key === 'Enter') {
           const target = evt.target as
-            | (HTMLInputElement | HTMLTextAreaElement)
-            | null
+            (HTMLInputElement | HTMLTextAreaElement) | null
           if (target) {
             const fmt = formatter.value
             let val = target.value

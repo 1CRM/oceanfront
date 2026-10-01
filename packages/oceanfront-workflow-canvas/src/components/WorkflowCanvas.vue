@@ -855,8 +855,7 @@ export default defineComponent({
       }
 
       const entities = group.containedIds.map(id => findEntity(id)).filter(Boolean) as (
-        | WorkflowNode
-        | WorkflowGroup
+        WorkflowNode | WorkflowGroup
       )[]
 
       if (entities.length === 0) return { w: 100, h: 100 }

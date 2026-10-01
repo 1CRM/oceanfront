@@ -53,9 +53,7 @@ type TextFormatterFn = {
 }
 
 type TextFormatterDef =
-  | TextFormatter
-  | TextFormatterConstructor
-  | TextFormatterFn
+  TextFormatter | TextFormatterConstructor | TextFormatterFn
 export type TextFormatterProp = TextFormatterDef | string
 
 export interface FormatState {

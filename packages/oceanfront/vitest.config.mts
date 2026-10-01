@@ -14,6 +14,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
-    setupFiles: [resolve(__dirname, 'vitest.setup.js')]
+    pool: 'vmThreads',
+    setupFiles: [resolve(import.meta.dirname, 'vitest.setup.ts')]
   }
 })

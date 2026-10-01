@@ -1,19 +1,20 @@
 import { mount } from '@vue/test-utils'
 import { h, nextTick } from 'vue'
 import { vi } from 'vitest'
+import { OfButton } from '../Button'
 import { OfIcon } from '../Icon'
 import OfTabs from '../Tabs.vue'
+
+const tabGlobals = {
+  components: { OfButton, OfIcon }
+}
 
 test('displays message', () => {
   const wrapper = mount(OfTabs, {
     props: {
       items: ['One', 'Two']
     },
-    global: {
-      components: {
-        OfIcon
-      }
-    }
+    global: tabGlobals
   })
 
   expect(wrapper.text()).toContain('Two')
@@ -30,11 +31,7 @@ test('renders item postfix', () => {
         }
       ]
     },
-    global: {
-      components: {
-        OfIcon
-      }
-    }
+    global: tabGlobals
   })
 
   expect(wrapper.find('.of-tab-postfix').exists()).toBe(true)
@@ -57,11 +54,7 @@ test('Tab on last tab moves focus into postfix without clearing focusedTabKey', 
         }
       ]
     },
-    global: {
-      components: {
-        OfIcon
-      }
-    }
+    global: tabGlobals
   })
 
   const tabs = wrapper.findAll('[role="tab"]')
@@ -100,11 +93,7 @@ test('Tab from last-tab postfix clears focusedTabKey so focus can leave', async 
         }
       ]
     },
-    global: {
-      components: {
-        OfIcon
-      }
-    }
+    global: tabGlobals
   })
 
   const tabs = wrapper.findAll('[role="tab"]')
@@ -145,11 +134,7 @@ test('Shift+Tab from tab header focuses previous tab postfix when present', asyn
         { text: 'Two' }
       ]
     },
-    global: {
-      components: {
-        OfIcon
-      }
-    }
+    global: tabGlobals
   })
 
   const tabs = wrapper.findAll('[role="tab"]')
@@ -189,11 +174,7 @@ test('Shift+Tab reveals previous tab before focusing its postfix', async () => {
         { text: 'Two' }
       ]
     },
-    global: {
-      components: {
-        OfIcon
-      }
-    }
+    global: tabGlobals
   })
 
   const tabs = wrapper.findAll('[role="tab"]')
