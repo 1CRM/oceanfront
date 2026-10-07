@@ -137,6 +137,7 @@ import {
   ref,
   Ref,
   onMounted,
+  onBeforeUnmount,
   nextTick,
   ShallowRef
 } from 'vue'
@@ -476,6 +477,7 @@ export default defineComponent({
     const menuDisabled: ComputedRef<boolean> = computed(() => sourceMode.value)
     const contentUpdated = ref(false)
     const dataUpdated = ref(false)
+    let updateDataTimer: ReturnType<typeof setTimeout> | undefined
 
     watch(
       () => props.modelValue,
@@ -485,7 +487,7 @@ export default defineComponent({
           contentUpdated.value = false
 
           dataUpdated.value = true
-          source.value = editor.value.getHTML()
+          if (isEditorReady()) source.value = editor.value.getHTML()
         }
       }
     )
@@ -501,7 +503,7 @@ export default defineComponent({
           contentUpdated.value = false
 
           dataUpdated.value = true
-          source.value = editor.value.getHTML()
+          if (isEditorReady()) source.value = editor.value.getHTML()
         }
       }
     )
@@ -520,13 +522,15 @@ export default defineComponent({
     watch(
       () => isEditable.value,
       (value: boolean) => {
-        editor.value.setEditable(value)
+        if (!isEditorReady()) return
+        editor.value.setEditable(value, false)
       }
     )
 
     watch(
       () => font.value,
       (value: string) => {
+        if (!isEditorReady()) return
         if (value === 'default') {
           editor.value.chain().focus().unsetFontFamily().run()
         } else {
@@ -538,6 +542,7 @@ export default defineComponent({
     watch(
       () => fontSizeValue.value,
       (value: string) => {
+        if (!isEditorReady()) return
         if (value === 'default') {
           editor.value.chain().focus().unsetFontSize().run()
         } else {
@@ -549,6 +554,7 @@ export default defineComponent({
     watch(
       () => colorValue.value,
       (value: string) => {
+        if (!isEditorReady()) return
         editor.value.chain().setColor(value).run()
       }
     )
@@ -590,9 +596,11 @@ export default defineComponent({
         ? coreExtensions.concat(props.extensions)
         : coreExtensions,
       onUpdate: () => {
+        if (!isEditorReady()) return
         dataUpdated.value = true
         source.value = editor.value.getHTML()
-        setTimeout(() => updateData())
+        clearTimeout(updateDataTimer)
+        updateDataTimer = setTimeout(() => updateData())
       },
       onFocus: () => {
         focused.value = true
@@ -602,7 +610,11 @@ export default defineComponent({
       }
     }) as ShallowRef<Editor>
 
+    const isEditorReady = (): boolean =>
+      !!editor.value && !editor.value.isDestroyed && !!editor.value.schema
+
     const updateContent = (value: string, emitUpdate = false): void => {
+      if (!isEditorReady()) return
       contentUpdated.value = true
       const isSame = editor.value.getHTML() === value
       if (isSame) return
@@ -610,6 +622,7 @@ export default defineComponent({
     }
 
     const updateData = (): void => {
+      if (!isEditorReady()) return
       if (props.name && record.value) {
         if (htmlFieldName.value) {
           record.value.value[htmlFieldName.value] = editor.value.getHTML()
@@ -626,6 +639,10 @@ export default defineComponent({
         text: editor.value.getText()
       })
     }
+
+    onBeforeUnmount(() => {
+      clearTimeout(updateDataTimer)
+    })
 
     const getVariant = (name: any, params = {}): string => {
       if (name === 'source') {
@@ -1069,7 +1086,7 @@ export default defineComponent({
         footerIsEmpty.value = false
       }
       dataUpdated.value = true
-      source.value = editor.value?.getHTML()
+      if (isEditorReady()) source.value = editor.value.getHTML()
     })
 
     const positionEditorTooltip = (e: MouseEvent | FocusEvent) => {
