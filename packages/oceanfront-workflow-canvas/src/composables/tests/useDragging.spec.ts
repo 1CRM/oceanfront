@@ -1,1244 +1,169 @@
 import { describe, it, expect, vi } from 'vitest'
-import { ref } from 'vue'
-import { useDragging, type UseDraggingOptions } from '../useDragging'
-import type { WorkflowGraph, WorkflowNode, WorkflowGroup } from '../../types/workflow'
-import { isPointInRect } from '../../utils/graph-helpers'
+import { computed, ref } from 'vue'
+import type { WorkflowEntity, WorkflowGraph } from '../../types/workflow'
+import { useDragging } from '../useDragging'
+import { computeLayout, type DragShift } from '../useLayout'
 
-function makeGraph(overrides: Partial<WorkflowGraph> = {}): WorkflowGraph {
-  return { nodes: [], edges: [], groups: [], ...overrides }
-}
+const createGraph = (): WorkflowGraph => ({
+  nodes: [
+    { id: 'a', kind: 'condition' },
+    { id: 'b', kind: 'condition' },
+    { id: 'c', kind: 'condition' },
+    { id: 'x', kind: 'action' }
+  ],
+  groups: [
+    { id: 'g', kind: 'condition', children: ['a', 'b', 'c'], readonly: true },
+    { id: 'ag', kind: 'action', children: ['x'], readonly: true },
+    { id: 'empty', kind: 'condition', children: [] }
+  ]
+})
 
-function createMouseEvent(
-  type: string,
-  options: { button?: number; clientX?: number; clientY?: number } = {}
-): MouseEvent {
-  const target = document.createElement('div')
-  const event = new MouseEvent(type, {
-    button: options.button ?? 0,
-    clientX: options.clientX ?? 0,
-    clientY: options.clientY ?? 0,
-    bubbles: true,
-    cancelable: true
-  })
-  Object.defineProperty(event, 'target', { value: target, writable: false })
-  return event
-}
-
-function createDragging(graph: WorkflowGraph, overrides: Partial<UseDraggingOptions> = {}) {
-  const graphRef = ref(graph)
-  const onGraphUpdate = vi.fn((g: WorkflowGraph) => {
-    graphRef.value = g
-  })
-  const onNodeDragStart = vi.fn()
-  const onNodeDragEnd = vi.fn()
-  const onGroupDragStart = vi.fn()
-  const onGroupDragEnd = vi.fn()
-  const onEntityMovedToGroup = vi.fn()
-  const onNodeParentGroupChange = vi.fn()
-  const onNodeSwap = vi.fn()
-  const onEdgeAdd = vi.fn()
-
-  const canvasEl = document.createElement('div')
-  Object.defineProperty(canvasEl, 'getBoundingClientRect', {
-    value: () => ({
-      left: 0,
-      top: 0,
-      right: 1000,
-      bottom: 1000,
-      width: 1000,
-      height: 1000,
-      x: 0,
-      y: 0,
-      toJSON: () => ({})
-    })
-  })
-  canvasEl.scrollLeft = 0
-  canvasEl.scrollTop = 0
-
-  const options: UseDraggingOptions = {
-    graph: graphRef,
-    maxGroupDepth: ref(null),
-    readonly: ref(false),
-    edgesLocked: ref(false),
-    canvasRef: ref(canvasEl as HTMLElement),
-    nodeTypes: ref({}),
-    findDropTargetGroup: () => undefined,
-    wouldExceedMaxDepth: () => false,
-    onGraphUpdate,
-    onNodeDragStart,
-    onNodeDragEnd,
-    onGroupDragStart,
-    onGroupDragEnd,
-    onEntityMovedToGroup,
-    onNodeParentGroupChange,
-    onNodeSwap,
-    onEdgeAdd,
-    getEntitySpacing: () => 20,
+const setup = ({
+  enabled = true,
+  maxGroupDepth
+}: { enabled?: boolean; maxGroupDepth?: number } = {}) => {
+  const graph = ref(createGraph())
+  const rects = computed(() => computeLayout(graph.value, {}, { spacing: 50, padding: 20 }))
+  const shift = ref<DragShift | null>(null)
+  const canvas = document.createElement('div')
+  canvas.getBoundingClientRect = () => ({ left: 0, top: 0 }) as DOMRect
+  const onCommit = vi.fn((g: WorkflowGraph) => (graph.value = g))
+  const dragging = useDragging({
+    graph,
+    enabled: ref(enabled),
+    canvasRef: ref(canvas),
+    rects,
+    shift,
     getGroupPadding: () => 20,
-    buildEntityDimensionsMap: () => new Map(),
-    ...overrides
+    getMaxGroupDepth: () => maxGroupDepth,
+    onCommit
+  })
+  const entity = (id: string): WorkflowEntity =>
+    graph.value.nodes.find(n => n.id === id) ?? graph.value.groups.find(g => g.id === id)!
+  const drag = (id: string, from: [number, number], to: [number, number], end = true) => {
+    const down = new MouseEvent('mousedown', { button: 0, clientX: from[0], clientY: from[1] })
+    Object.defineProperty(down, 'target', { value: document.createElement('div') })
+    dragging.handleMouseDown(down, entity(id))
+    dragging.handleMouseMove(new MouseEvent('mousemove', { clientX: to[0], clientY: to[1] }))
+    if (end) dragging.handleMouseUp()
   }
-
-  const dragging = useDragging(options)
-  return {
-    dragging,
-    graphRef,
-    onGraphUpdate,
-    onNodeDragStart,
-    onNodeDragEnd,
-    onGroupDragStart,
-    onGroupDragEnd,
-    onEntityMovedToGroup,
-    onNodeParentGroupChange,
-    onNodeSwap,
-    onEdgeAdd
-  }
+  const children = (id: string) => graph.value.groups.find(g => g.id === id)!.children
+  return { graph, shift, dragging, onCommit, drag, children }
 }
 
 describe('useDragging', () => {
-  describe('initial state', () => {
-    it('starts with no dragging', () => {
-      const { dragging } = createDragging(makeGraph())
-      expect(dragging.draggingNodeId.value).toBeNull()
-      expect(dragging.draggingGroupId.value).toBeNull()
-      expect(dragging.invalidDropTarget.value).toBe(false)
-    })
+  it('reorders a node to the end of its group', () => {
+    const { drag, children } = setup()
+    drag('a', [100, 100], [100, 435])
+    expect(children('g')).toEqual(['b', 'c', 'a'])
   })
 
-  describe('handleNodeMouseDown', () => {
-    it('ignores right clicks', () => {
-      const graph = makeGraph({
-        nodes: [{ id: 'n1', kind: 'action', position: { x: 100, y: 100 } }]
-      })
-      const { dragging, onNodeDragStart } = createDragging(graph)
-
-      const event = createMouseEvent('mousedown', { button: 2, clientX: 110, clientY: 110 })
-      dragging.handleNodeMouseDown(event, graph.nodes[0])
-
-      expect(dragging.draggingNodeId.value).toBeNull()
-      expect(onNodeDragStart).not.toHaveBeenCalled()
-    })
-
-    it('ignores when readonly', () => {
-      const graph = makeGraph({
-        nodes: [{ id: 'n1', kind: 'action', position: { x: 100, y: 100 } }]
-      })
-      const { dragging, onNodeDragStart } = createDragging(graph, {
-        readonly: ref(true)
-      })
-
-      const event = createMouseEvent('mousedown', { button: 0, clientX: 110, clientY: 110 })
-      dragging.handleNodeMouseDown(event, graph.nodes[0])
-
-      expect(dragging.draggingNodeId.value).toBeNull()
-      expect(onNodeDragStart).not.toHaveBeenCalled()
-    })
-
-    it('starts dragging on left click', () => {
-      const graph = makeGraph({
-        nodes: [{ id: 'n1', kind: 'action', position: { x: 100, y: 100 } }]
-      })
-      const { dragging, onNodeDragStart } = createDragging(graph)
-
-      const event = createMouseEvent('mousedown', { button: 0, clientX: 110, clientY: 120 })
-      dragging.handleNodeMouseDown(event, graph.nodes[0])
-
-      expect(dragging.draggingNodeId.value).toBe('n1')
-      expect(onNodeDragStart).toHaveBeenCalledWith('n1')
-    })
+  it('swaps with a same-kind node under the cursor', () => {
+    const { drag, children } = setup()
+    drag('a', [100, 100], [100, 240])
+    expect(children('g')).toEqual(['b', 'a', 'c'])
   })
 
-  describe('handleGroupMouseDown', () => {
-    it('ignores right clicks', () => {
-      const group: WorkflowGroup = {
-        id: 'g1',
-        kind: 'group',
-        position: { x: 50, y: 50 },
-        size: { w: 300, h: 200 },
-        containedIds: []
-      }
-      const graph = makeGraph({ groups: [group] })
-      const { dragging, onGroupDragStart } = createDragging(graph)
-
-      const event = createMouseEvent('mousedown', { button: 2, clientX: 60, clientY: 60 })
-      dragging.handleGroupMouseDown(event, group)
-
-      expect(dragging.draggingGroupId.value).toBeNull()
-      expect(onGroupDragStart).not.toHaveBeenCalled()
-    })
-
-    it('starts dragging on left click', () => {
-      const group: WorkflowGroup = {
-        id: 'g1',
-        kind: 'group',
-        position: { x: 50, y: 50 },
-        size: { w: 300, h: 200 },
-        containedIds: []
-      }
-      const graph = makeGraph({ groups: [group] })
-      const { dragging, onGroupDragStart } = createDragging(graph)
-
-      const event = createMouseEvent('mousedown', { button: 0, clientX: 60, clientY: 60 })
-      dragging.handleGroupMouseDown(event, group)
-
-      expect(dragging.draggingGroupId.value).toBe('g1')
-      expect(onGroupDragStart).toHaveBeenCalledWith('g1')
-    })
-
-    it('ignores when readonly', () => {
-      const group: WorkflowGroup = {
-        id: 'g1',
-        kind: 'group',
-        position: { x: 50, y: 50 },
-        size: { w: 300, h: 200 },
-        containedIds: []
-      }
-      const graph = makeGraph({ groups: [group] })
-      const { dragging, onGroupDragStart } = createDragging(graph, { readonly: ref(true) })
-
-      const event = createMouseEvent('mousedown', { button: 0, clientX: 60, clientY: 60 })
-      dragging.handleGroupMouseDown(event, group)
-
-      expect(dragging.draggingGroupId.value).toBeNull()
-      expect(onGroupDragStart).not.toHaveBeenCalled()
-    })
+  it('moves a node into an empty same-kind group', () => {
+    const { drag, children } = setup()
+    drag('a', [100, 100], [1015, 100])
+    expect(children('empty')).toEqual(['a'])
+    expect(children('g')).toEqual(['b', 'c'])
   })
 
-  describe('handleNodeDragMove', () => {
-    it('returns false when no node is being dragged', () => {
-      const { dragging } = createDragging(makeGraph())
-      const result = dragging.handleNodeDragMove({ x: 100, y: 100 }, new Map(), () => [])
-      expect(result).toBe(false)
-    })
-
-    it('updates position and returns true when dragging', () => {
-      const graph = makeGraph({
-        nodes: [{ id: 'n1', kind: 'action', position: { x: 100, y: 100 } }]
-      })
-      const { dragging, onGraphUpdate } = createDragging(graph)
-
-      // Start drag
-      const event = createMouseEvent('mousedown', { button: 0, clientX: 110, clientY: 110 })
-      dragging.handleNodeMouseDown(event, graph.nodes[0])
-
-      const result = dragging.handleNodeDragMove({ x: 200, y: 200 }, new Map(), () => [])
-
-      expect(result).toBe(true)
-      expect(onGraphUpdate).toHaveBeenCalled()
-    })
-
-    it('sets invalidDropTarget when lockParent violated', () => {
-      const parentGroup: WorkflowGroup = {
-        id: 'g1',
-        kind: 'group',
-        position: { x: 50, y: 50 },
-        size: { w: 300, h: 300 },
-        containedIds: ['n1']
-      }
-      const node: WorkflowNode = {
-        id: 'n1',
-        kind: 'action',
-        position: { x: 100, y: 100 },
-        lockParent: true
-      }
-      const graph = makeGraph({
-        nodes: [node],
-        groups: [parentGroup]
-      })
-
-      const { dragging } = createDragging(graph)
-
-      // Start drag
-      const event = createMouseEvent('mousedown', { button: 0, clientX: 110, clientY: 110 })
-      dragging.handleNodeMouseDown(event, node)
-
-      // Move outside parent (no target group found)
-      dragging.handleNodeDragMove({ x: 500, y: 500 }, new Map(), () => [])
-
-      expect(dragging.invalidDropTarget.value).toBe(true)
-    })
-
-    it('sets invalidDropTarget when requireGroup node dragged outside all groups', () => {
-      const parentGroup: WorkflowGroup = {
-        id: 'g1',
-        kind: 'group',
-        position: { x: 50, y: 50 },
-        size: { w: 300, h: 300 },
-        containedIds: ['n1']
-      }
-      const node: WorkflowNode = {
-        id: 'n1',
-        kind: 'action',
-        position: { x: 100, y: 100 },
-        requireGroup: true
-      }
-      const graph = makeGraph({
-        nodes: [node],
-        groups: [parentGroup]
-      })
-
-      const { dragging } = createDragging(graph)
-
-      const event = createMouseEvent('mousedown', { button: 0, clientX: 110, clientY: 110 })
-      dragging.handleNodeMouseDown(event, node)
-
-      // Move outside all groups (no target group found)
-      dragging.handleNodeDragMove({ x: 500, y: 500 }, new Map(), () => [])
-
-      expect(dragging.invalidDropTarget.value).toBe(true)
-    })
-
-    it('allows requireGroup node to move to a different group', () => {
-      const groupA: WorkflowGroup = {
-        id: 'g1',
-        kind: 'group',
-        position: { x: 0, y: 0 },
-        size: { w: 300, h: 300 },
-        containedIds: ['n1']
-      }
-      const groupB: WorkflowGroup = {
-        id: 'g2',
-        kind: 'group',
-        position: { x: 350, y: 0 },
-        size: { w: 300, h: 300 },
-        containedIds: []
-      }
-      const node: WorkflowNode = {
-        id: 'n1',
-        kind: 'action',
-        position: { x: 50, y: 50 },
-        requireGroup: true
-      }
-      const graph = makeGraph({
-        nodes: [node],
-        groups: [groupA, groupB]
-      })
-
-      const { dragging } = createDragging(graph)
-
-      const event = createMouseEvent('mousedown', { button: 0, clientX: 60, clientY: 60 })
-      dragging.handleNodeMouseDown(event, node)
-
-      // Move to groupB (target group found)
-      dragging.handleNodeDragMove({ x: 450, y: 100 }, new Map(), () => [groupB])
-
-      expect(dragging.invalidDropTarget.value).toBe(false)
-    })
-  })
-
-  describe('handleGroupDragMove', () => {
-    it('returns false when no group is being dragged', () => {
-      const { dragging } = createDragging(makeGraph())
-      const result = dragging.handleGroupDragMove({ x: 100, y: 100 }, () => [], isPointInRect)
-      expect(result).toBe(false)
-    })
-
-    it('updates position when dragging', () => {
-      const group: WorkflowGroup = {
-        id: 'g1',
-        kind: 'group',
-        position: { x: 50, y: 50 },
-        size: { w: 300, h: 200 },
-        containedIds: []
-      }
-      const graph = makeGraph({ groups: [group] })
-      const { dragging, onGraphUpdate } = createDragging(graph)
-
-      const event = createMouseEvent('mousedown', { button: 0, clientX: 60, clientY: 60 })
-      dragging.handleGroupMouseDown(event, group)
-
-      const result = dragging.handleGroupDragMove({ x: 200, y: 200 }, () => [], isPointInRect)
-
-      expect(result).toBe(true)
-      expect(onGraphUpdate).toHaveBeenCalled()
-    })
-  })
-
-  describe('handleMouseUp - node drag end', () => {
-    it('clears dragging state after mouse up', async () => {
-      const graph = makeGraph({
-        nodes: [{ id: 'n1', kind: 'action', position: { x: 100, y: 100 } }]
-      })
-      const { dragging, onNodeDragEnd } = createDragging(graph)
-
-      const event = createMouseEvent('mousedown', { button: 0, clientX: 110, clientY: 110 })
-      dragging.handleNodeMouseDown(event, graph.nodes[0])
-      expect(dragging.draggingNodeId.value).toBe('n1')
-
-      dragging.handleMouseUp(isPointInRect)
-
-      expect(dragging.draggingNodeId.value).toBeNull()
-      expect(onNodeDragEnd).toHaveBeenCalled()
-    })
-
-    it('emits entity-moved-to-group when node dropped in group', () => {
-      const group: WorkflowGroup = {
-        id: 'g1',
-        kind: 'group',
-        position: { x: 50, y: 50 },
-        size: { w: 500, h: 500 },
-        containedIds: []
-      }
-      const node: WorkflowNode = { id: 'n1', kind: 'action', position: { x: 150, y: 150 } }
-      const graph = makeGraph({ nodes: [node], groups: [group] })
-
-      const { dragging, onEntityMovedToGroup } = createDragging(graph)
-
-      const event = createMouseEvent('mousedown', { button: 0, clientX: 160, clientY: 160 })
-      dragging.handleNodeMouseDown(event, node)
-      dragging.handleMouseUp(isPointInRect)
-
-      expect(onEntityMovedToGroup).toHaveBeenCalledWith('n1', 'g1')
-    })
-
-    it('restores position for lockParent node dragged outside parent', () => {
-      const parentGroup: WorkflowGroup = {
-        id: 'g1',
-        kind: 'group',
-        position: { x: 50, y: 50 },
-        size: { w: 300, h: 300 },
-        containedIds: ['n1']
-      }
-      const node: WorkflowNode = {
-        id: 'n1',
-        kind: 'action',
-        position: { x: 100, y: 100 },
-        lockParent: true
-      }
-      const graph = makeGraph({ nodes: [node], groups: [parentGroup] })
-
-      const { dragging, graphRef } = createDragging(graph)
-
-      const event = createMouseEvent('mousedown', { button: 0, clientX: 110, clientY: 110 })
-      dragging.handleNodeMouseDown(event, node)
-
-      // Simulate moving node outside group
-      dragging.handleNodeDragMove({ x: 600, y: 600 }, new Map(), () => [])
-
-      dragging.handleMouseUp(isPointInRect)
-
-      // Node should be back at original position
-      const updatedNode = graphRef.value.nodes.find(n => n.id === 'n1')
-      expect(updatedNode?.position).toEqual({ x: 100, y: 100 })
-    })
-
-    it('restores position for requireGroup node dragged outside all groups', () => {
-      const parentGroup: WorkflowGroup = {
-        id: 'g1',
-        kind: 'group',
-        position: { x: 50, y: 50 },
-        size: { w: 300, h: 300 },
-        containedIds: ['n1']
-      }
-      const node: WorkflowNode = {
-        id: 'n1',
-        kind: 'action',
-        position: { x: 100, y: 100 },
-        requireGroup: true
-      }
-      const graph = makeGraph({ nodes: [node], groups: [parentGroup] })
-
-      const { dragging, graphRef } = createDragging(graph)
-
-      const event = createMouseEvent('mousedown', { button: 0, clientX: 110, clientY: 110 })
-      dragging.handleNodeMouseDown(event, node)
-
-      dragging.handleNodeDragMove({ x: 600, y: 600 }, new Map(), () => [])
-      dragging.handleMouseUp(isPointInRect)
-
-      const updatedNode = graphRef.value.nodes.find(n => n.id === 'n1')
-      expect(updatedNode?.position).toEqual({ x: 100, y: 100 })
-    })
-
-    it('allows requireGroup node to be dropped in a different group', () => {
-      const groupA: WorkflowGroup = {
-        id: 'g1',
-        kind: 'group',
-        position: { x: 0, y: 0 },
-        size: { w: 300, h: 300 },
-        containedIds: ['n1']
-      }
-      const groupB: WorkflowGroup = {
-        id: 'g2',
-        kind: 'group',
-        position: { x: 350, y: 0 },
-        size: { w: 300, h: 300 },
-        containedIds: []
-      }
-      const node: WorkflowNode = {
-        id: 'n1',
-        kind: 'action',
-        position: { x: 50, y: 50 },
-        requireGroup: true
-      }
-      const graph = makeGraph({
-        nodes: [node],
-        groups: [groupA, groupB]
-      })
-
-      const { dragging, onEntityMovedToGroup } = createDragging(graph)
-
-      const event = createMouseEvent('mousedown', { button: 0, clientX: 60, clientY: 60 })
-      dragging.handleNodeMouseDown(event, node)
-
-      // Move node so its center falls inside groupB
-      dragging.handleNodeDragMove({ x: 360, y: 50 }, new Map(), () => [])
-      dragging.handleMouseUp(isPointInRect)
-
-      expect(onEntityMovedToGroup).toHaveBeenCalledWith('n1', 'g2')
-    })
-
-    it('calls onNodeParentGroupChange when node parent group changes', () => {
-      const groupA: WorkflowGroup = {
-        id: 'g1',
-        kind: 'group',
-        position: { x: 0, y: 0 },
-        size: { w: 300, h: 300 },
-        containedIds: ['n1']
-      }
-      const groupB: WorkflowGroup = {
-        id: 'g2',
-        kind: 'group',
-        position: { x: 350, y: 0 },
-        size: { w: 300, h: 300 },
-        containedIds: []
-      }
-      const node: WorkflowNode = { id: 'n1', kind: 'action', position: { x: 50, y: 50 } }
-      const graph = makeGraph({ nodes: [node], groups: [groupA, groupB] })
-
-      const { dragging, onNodeParentGroupChange } = createDragging(graph)
-
-      const event = createMouseEvent('mousedown', { button: 0, clientX: 60, clientY: 60 })
-      dragging.handleNodeMouseDown(event, node)
-
-      // Move node so its center falls inside groupB
-      dragging.handleNodeDragMove({ x: 360, y: 50 }, new Map(), () => [])
-      dragging.handleMouseUp(isPointInRect)
-
-      expect(onNodeParentGroupChange).toHaveBeenCalledTimes(1)
-      const [updatedNode, parentGroup] = onNodeParentGroupChange.mock.calls[0]
-      expect(updatedNode.id).toBe('n1')
-      expect(parentGroup?.id).toBe('g2')
-    })
-
-    it('connects moved node to last node in target group', () => {
-      const group: WorkflowGroup = {
-        id: 'g1',
-        kind: 'group',
-        position: { x: 50, y: 50 },
-        size: { w: 600, h: 600 },
-        containedIds: ['n2']
-      }
-      const movedNode: WorkflowNode = { id: 'n1', kind: 'action', position: { x: 0, y: 0 } }
-      const existingNode: WorkflowNode = { id: 'n2', kind: 'action', position: { x: 120, y: 120 } }
-      const graph = makeGraph({ nodes: [movedNode, existingNode], groups: [group], edges: [] })
-
-      const { dragging, graphRef, onEdgeAdd } = createDragging(graph)
-
-      const event = createMouseEvent('mousedown', { button: 0, clientX: 10, clientY: 10 })
-      dragging.handleNodeMouseDown(event, movedNode)
-      dragging.handleNodeDragMove({ x: 220, y: 220 }, new Map(), () => [group])
-      dragging.handleMouseUp(isPointInRect)
-
-      expect(graphRef.value.edges).toHaveLength(1)
-      expect(graphRef.value.edges[0].from.entityId).toBe('n2')
-      expect(graphRef.value.edges[0].to.entityId).toBe('n1')
-
-      expect(onEdgeAdd).toHaveBeenCalledTimes(1)
-      const [addedGraph, addedEdge] = onEdgeAdd.mock.calls[0]
-      expect(addedEdge.from.entityId).toBe('n2')
-      expect(addedEdge.to.entityId).toBe('n1')
-      expect(addedGraph.edges).toContainEqual(addedEdge)
-    })
-
-    it('aligns node within group when dropped into it', () => {
-      const group: WorkflowGroup = {
-        id: 'g1',
-        kind: 'group',
-        position: { x: 50, y: 50 },
-        size: { w: 600, h: 600 },
-        containedIds: ['n2']
-      }
-      const movedNode: WorkflowNode = { id: 'n1', kind: 'action', position: { x: 0, y: 0 } }
-      const existingNode: WorkflowNode = { id: 'n2', kind: 'action', position: { x: 120, y: 120 } }
-      const graph = makeGraph({ nodes: [movedNode, existingNode], groups: [group], edges: [] })
-
-      const { dragging, graphRef } = createDragging(graph)
-
-      const event = createMouseEvent('mousedown', { button: 0, clientX: 10, clientY: 10 })
-      dragging.handleNodeMouseDown(event, movedNode)
-      dragging.handleNodeDragMove({ x: 300, y: 300 }, new Map(), () => [group])
-      dragging.handleMouseUp(isPointInRect)
-
-      const alignedNode = graphRef.value.nodes.find(n => n.id === 'n1')!
-      // n2 stays at y=120, n1 inserted after: 120+100+20=240
-      expect(alignedNode.position.x).toBe(120)
-      expect(alignedNode.position.y).toBe(240)
-    })
-
-    it('keeps node at drop position when dropped into empty group', () => {
-      const group: WorkflowGroup = {
-        id: 'g1',
-        kind: 'group',
-        position: { x: 100, y: 100 },
-        size: { w: 400, h: 300 },
-        containedIds: []
-      }
-      const movedNode: WorkflowNode = { id: 'n1', kind: 'action', position: { x: 0, y: 0 } }
-      const graph = makeGraph({ nodes: [movedNode], groups: [group], edges: [] })
-
-      const { dragging, graphRef } = createDragging(graph)
-
-      const event = createMouseEvent('mousedown', { button: 0, clientX: 10, clientY: 10 })
-      dragging.handleNodeMouseDown(event, movedNode)
-      dragging.handleNodeDragMove({ x: 200, y: 200 }, new Map(), () => [group])
-      dragging.handleMouseUp(isPointInRect)
-
-      const alignedNode = graphRef.value.nodes.find(n => n.id === 'n1')!
-      // No siblings to align with — node stays at drop position
-      expect(alignedNode.position.x).toBe(200)
-      expect(alignedNode.position.y).toBe(200)
-    })
-
-    it('adjusts group size after node alignment', () => {
-      const group: WorkflowGroup = {
-        id: 'g1',
-        kind: 'group',
-        position: { x: 50, y: 50 },
-        size: { w: 600, h: 600 },
-        containedIds: ['n2']
-      }
-      const movedNode: WorkflowNode = { id: 'n1', kind: 'action', position: { x: 0, y: 0 } }
-      const existingNode: WorkflowNode = { id: 'n2', kind: 'action', position: { x: 70, y: 70 } }
-      const graph = makeGraph({ nodes: [movedNode, existingNode], groups: [group], edges: [] })
-
-      const { dragging, graphRef } = createDragging(graph)
-
-      const event = createMouseEvent('mousedown', { button: 0, clientX: 10, clientY: 10 })
-      dragging.handleNodeMouseDown(event, movedNode)
-      dragging.handleNodeDragMove({ x: 200, y: 200 }, new Map(), () => [group])
-      dragging.handleMouseUp(isPointInRect)
-
-      const updatedGroup = graphRef.value.groups.find(g => g.id === 'g1')!
-      // n2 stays at y=70, n1 at 70+100+20=190
-      // Group bounds: top=70-20=50, bottom=190+100+20=310, h=260
-      expect(updatedGroup.size.h).toBe(260)
-    })
-
-    it('bridges predecessor to successor when node is moved to a different group', () => {
-      const group: WorkflowGroup = {
-        id: 'g1',
-        kind: 'group',
-        position: { x: 400, y: 0 },
-        size: { w: 600, h: 600 },
-        containedIds: []
-      }
-      const nodeA: WorkflowNode = { id: 'a', kind: 'action', position: { x: 0, y: 0 } }
-      const nodeX: WorkflowNode = { id: 'x', kind: 'action', position: { x: 0, y: 150 } }
-      const nodeB: WorkflowNode = { id: 'b', kind: 'action', position: { x: 0, y: 300 } }
-      const graph = makeGraph({
-        nodes: [nodeA, nodeX, nodeB],
-        groups: [group],
-        edges: [
-          { id: 'e1', from: { entityId: 'a' }, to: { entityId: 'x' } },
-          { id: 'e2', from: { entityId: 'x' }, to: { entityId: 'b' } }
-        ]
-      })
-
-      const { dragging, graphRef, onEdgeAdd } = createDragging(graph)
-
-      const event = createMouseEvent('mousedown', { button: 0, clientX: 10, clientY: 160 })
-      dragging.handleNodeMouseDown(event, nodeX)
-      dragging.handleNodeDragMove({ x: 500, y: 200 }, new Map(), () => [group])
-      dragging.handleMouseUp(isPointInRect)
-
-      const bridgeEdge = graphRef.value.edges.find(
-        (e: any) => e.from.entityId === 'a' && e.to.entityId === 'b'
-      )
-      expect(bridgeEdge).toBeDefined()
-
-      expect(onEdgeAdd).toHaveBeenCalled()
-      const bridgeCall = onEdgeAdd.mock.calls.find(
-        ([_g, e]: any) => e.from.entityId === 'a' && e.to.entityId === 'b'
-      )
-      expect(bridgeCall).toBeDefined()
-    })
-
-    it('bridges predecessor to successor when node is moved out of group to canvas root', () => {
-      const group: WorkflowGroup = {
-        id: 'g1',
-        kind: 'group',
-        position: { x: 0, y: 0 },
-        size: { w: 400, h: 600 },
-        containedIds: ['a', 'x', 'b']
-      }
-      const nodeA: WorkflowNode = { id: 'a', kind: 'action', position: { x: 50, y: 50 } }
-      const nodeX: WorkflowNode = { id: 'x', kind: 'action', position: { x: 50, y: 200 } }
-      const nodeB: WorkflowNode = { id: 'b', kind: 'action', position: { x: 50, y: 350 } }
-      const graph = makeGraph({
-        nodes: [nodeA, nodeX, nodeB],
-        groups: [group],
-        edges: [
-          { id: 'e1', from: { entityId: 'a' }, to: { entityId: 'x' } },
-          { id: 'e2', from: { entityId: 'x' }, to: { entityId: 'b' } }
-        ]
-      })
-
-      const { dragging, graphRef, onEdgeAdd } = createDragging(graph)
-
-      const event = createMouseEvent('mousedown', { button: 0, clientX: 60, clientY: 210 })
-      dragging.handleNodeMouseDown(event, nodeX)
-      dragging.handleNodeDragMove({ x: 800, y: 200 }, new Map(), () => [])
-      dragging.handleMouseUp(isPointInRect)
-
-      const bridgeEdge = graphRef.value.edges.find(
-        (e: any) => e.from.entityId === 'a' && e.to.entityId === 'b'
-      )
-      expect(bridgeEdge).toBeDefined()
-
-      const bridgeCall = onEdgeAdd.mock.calls.find(
-        ([_g, e]: any) => e.from.entityId === 'a' && e.to.entityId === 'b'
-      )
-      expect(bridgeCall).toBeDefined()
-    })
-  })
-
-  describe('handleMouseUp - group drag end', () => {
-    it('clears dragging state after group mouse up', () => {
-      const group: WorkflowGroup = {
-        id: 'g1',
-        kind: 'group',
-        position: { x: 50, y: 50 },
-        size: { w: 300, h: 200 },
-        containedIds: []
-      }
-      const graph = makeGraph({ groups: [group] })
-      const { dragging, onGroupDragEnd } = createDragging(graph)
-
-      const event = createMouseEvent('mousedown', { button: 0, clientX: 60, clientY: 60 })
-      dragging.handleGroupMouseDown(event, group)
-      expect(dragging.draggingGroupId.value).toBe('g1')
-
-      dragging.handleMouseUp(isPointInRect)
-
-      expect(dragging.draggingGroupId.value).toBeNull()
-      expect(onGroupDragEnd).toHaveBeenCalled()
-    })
-
-    it('restores position for lockParent group dragged outside parent', () => {
-      const parent: WorkflowGroup = {
-        id: 'g-parent',
-        kind: 'group',
-        position: { x: 0, y: 0 },
-        size: { w: 600, h: 600 },
-        containedIds: ['g-child']
-      }
-      const child: WorkflowGroup = {
-        id: 'g-child',
-        kind: 'group',
-        position: { x: 50, y: 50 },
-        size: { w: 200, h: 200 },
-        containedIds: [],
-        lockParent: true
-      }
-      const graph = makeGraph({ groups: [parent, child] })
-
-      const { dragging, graphRef } = createDragging(graph)
-
-      const event = createMouseEvent('mousedown', { button: 0, clientX: 60, clientY: 60 })
-      dragging.handleGroupMouseDown(event, child)
-
-      // Move outside parent
-      dragging.handleGroupDragMove({ x: 800, y: 800 }, () => [], isPointInRect)
-
-      dragging.handleMouseUp(isPointInRect)
-
-      const updatedChild = graphRef.value.groups.find(g => g.id === 'g-child')
-      expect(updatedChild?.position).toEqual({ x: 50, y: 50 })
-    })
-
-    it('restores position for requireGroup group dragged outside parent', () => {
-      const parent: WorkflowGroup = {
-        id: 'g-parent',
-        kind: 'group',
-        position: { x: 0, y: 0 },
-        size: { w: 600, h: 600 },
-        containedIds: ['g-child']
-      }
-      const child: WorkflowGroup = {
-        id: 'g-child',
-        kind: 'group',
-        position: { x: 50, y: 50 },
-        size: { w: 200, h: 200 },
-        containedIds: [],
-        requireGroup: true
-      }
-      const graph = makeGraph({ groups: [parent, child] })
-
-      const { dragging, graphRef } = createDragging(graph)
-
-      const event = createMouseEvent('mousedown', { button: 0, clientX: 60, clientY: 60 })
-      dragging.handleGroupMouseDown(event, child)
-
-      // Move outside parent
-      dragging.handleGroupDragMove({ x: 800, y: 800 }, () => [], isPointInRect)
-
-      dragging.handleMouseUp(isPointInRect)
-
-      const updatedChild = graphRef.value.groups.find(g => g.id === 'g-child')
-      expect(updatedChild?.position).toEqual({ x: 50, y: 50 })
-    })
-
-    it('bridges predecessor to successor when group is moved out of parent', () => {
-      const parent: WorkflowGroup = {
-        id: 'g-parent',
-        kind: 'group',
-        position: { x: 0, y: 0 },
-        size: { w: 600, h: 600 },
-        containedIds: ['g-child']
-      }
-      const child: WorkflowGroup = {
-        id: 'g-child',
-        kind: 'group',
-        position: { x: 50, y: 200 },
-        size: { w: 200, h: 200 },
-        containedIds: []
-      }
-      const nodeA: WorkflowNode = { id: 'a', kind: 'action', position: { x: 0, y: 0 } }
-      const nodeB: WorkflowNode = { id: 'b', kind: 'action', position: { x: 0, y: 500 } }
-      const graph = makeGraph({
-        nodes: [nodeA, nodeB],
-        groups: [parent, child],
-        edges: [
-          { id: 'e1', from: { entityId: 'a' }, to: { entityId: 'g-child' } },
-          { id: 'e2', from: { entityId: 'g-child' }, to: { entityId: 'b' } }
-        ]
-      })
-
-      const { dragging, graphRef, onEdgeAdd } = createDragging(graph)
-
-      const event = createMouseEvent('mousedown', { button: 0, clientX: 100, clientY: 250 })
-      dragging.handleGroupMouseDown(event, child)
-      dragging.handleGroupDragMove({ x: 800, y: 800 }, () => [], isPointInRect)
-      dragging.handleMouseUp(isPointInRect)
-
-      const bridgeEdge = graphRef.value.edges.find(
-        (e: any) => e.from.entityId === 'a' && e.to.entityId === 'b'
-      )
-      expect(bridgeEdge).toBeDefined()
-
-      const bridgeCall = onEdgeAdd.mock.calls.find(
-        ([_g, e]: any) => e.from.entityId === 'a' && e.to.entityId === 'b'
-      )
-      expect(bridgeCall).toBeDefined()
-    })
-  })
-
-  describe('node hover state', () => {
-    it('tracks hoveredNodeGroupId on node mouse enter/leave', () => {
-      const group: WorkflowGroup = {
-        id: 'g1',
-        kind: 'group',
-        position: { x: 50, y: 50 },
-        size: { w: 300, h: 300 },
-        containedIds: ['n1']
-      }
-      const node: WorkflowNode = { id: 'n1', kind: 'action', position: { x: 100, y: 100 } }
-      const graph = makeGraph({ nodes: [node], groups: [group] })
-
-      const { dragging } = createDragging(graph)
-
-      dragging.handleNodeMouseEnter(node)
-      expect(dragging.hoveredNodeGroupId.value).toBe('g1')
-
-      dragging.handleNodeMouseLeave()
-      expect(dragging.hoveredNodeGroupId.value).toBeNull()
-    })
-  })
-
-  describe('insert indicator suppression at original position', () => {
-    function makeNodeElements(
-      nodes: WorkflowNode[],
-      dimensions: { width: number; height: number } = { width: 250, height: 100 }
-    ): Map<string, HTMLElement> {
-      const map = new Map<string, HTMLElement>()
-      for (const node of nodes) {
-        const el = document.createElement('div')
-        Object.defineProperty(el, 'getBoundingClientRect', {
-          value: () => ({
-            x: node.position.x,
-            y: node.position.y,
-            width: dimensions.width,
-            height: dimensions.height,
-            left: node.position.x,
-            top: node.position.y,
-            right: node.position.x + dimensions.width,
-            bottom: node.position.y + dimensions.height,
-            toJSON: () => ({})
-          })
-        })
-        map.set(node.id, el)
-      }
-      return map
+  it('moves a group into an empty group of the same kind', () => {
+    const { graph, drag, children } = setup()
+    graph.value = {
+      ...graph.value,
+      groups: [
+        ...graph.value.groups.map(g =>
+          g.id === 'g' ? { ...g, children: ['a', 'b', 'c', 'inner'] } : g
+        ),
+        { id: 'inner', kind: 'condition', children: [] }
+      ]
     }
-
-    it('does not show indicator when node stays at its original slot', () => {
-      const group: WorkflowGroup = {
-        id: 'g1',
-        kind: 'group',
-        position: { x: 0, y: 0 },
-        size: { w: 300, h: 600 },
-        containedIds: ['n1', 'n2', 'n3']
-      }
-      const nodeA: WorkflowNode = { id: 'n1', kind: 'action', position: { x: 25, y: 20 } }
-      const nodeB: WorkflowNode = { id: 'n2', kind: 'action', position: { x: 25, y: 140 } }
-      const nodeC: WorkflowNode = { id: 'n3', kind: 'action', position: { x: 25, y: 260 } }
-      const graph = makeGraph({
-        nodes: [nodeA, nodeB, nodeC],
-        groups: [group]
-      })
-
-      const { dragging } = createDragging(graph)
-
-      const event = createMouseEvent('mousedown', { button: 0, clientX: 150, clientY: 190 })
-      dragging.handleNodeMouseDown(event, nodeB)
-
-      const nodeElements = makeNodeElements([nodeA, nodeB, nodeC])
-      // Move n2 only slightly — its center still closest to its original slot (between n1 and n3)
-      dragging.handleNodeDragMove({ x: 25, y: 150 }, nodeElements, () => [group])
-
-      expect(dragging.insertIndicator.value).toBeNull()
-    })
-
-    it('shows indicator when node is moved to a different slot', () => {
-      const group: WorkflowGroup = {
-        id: 'g1',
-        kind: 'group',
-        position: { x: 0, y: 0 },
-        size: { w: 300, h: 600 },
-        containedIds: ['n1', 'n2', 'n3']
-      }
-      const nodeA: WorkflowNode = { id: 'n1', kind: 'action', position: { x: 25, y: 20 } }
-      const nodeB: WorkflowNode = { id: 'n2', kind: 'action', position: { x: 25, y: 140 } }
-      const nodeC: WorkflowNode = { id: 'n3', kind: 'action', position: { x: 25, y: 260 } }
-      const graph = makeGraph({
-        nodes: [nodeA, nodeB, nodeC],
-        groups: [group]
-      })
-
-      const { dragging } = createDragging(graph)
-
-      const event = createMouseEvent('mousedown', { button: 0, clientX: 150, clientY: 190 })
-      dragging.handleNodeMouseDown(event, nodeB)
-
-      const nodeElements = makeNodeElements([nodeA, nodeB, nodeC])
-      // Move n2 well below n3 — should snap to "after n3" slot
-      dragging.handleNodeDragMove({ x: 25, y: 400 }, nodeElements, () => [group])
-
-      expect(dragging.insertIndicator.value).not.toBeNull()
-      expect(dragging.insertIndicator.value!.afterEntityId).toBe('n3')
-    })
-
-    it('does not show indicator when first node stays at first slot', () => {
-      const group: WorkflowGroup = {
-        id: 'g1',
-        kind: 'group',
-        position: { x: 0, y: 0 },
-        size: { w: 300, h: 400 },
-        containedIds: ['n1', 'n2']
-      }
-      const nodeA: WorkflowNode = { id: 'n1', kind: 'action', position: { x: 25, y: 20 } }
-      const nodeB: WorkflowNode = { id: 'n2', kind: 'action', position: { x: 25, y: 140 } }
-      const graph = makeGraph({
-        nodes: [nodeA, nodeB],
-        groups: [group]
-      })
-
-      const { dragging } = createDragging(graph)
-
-      const event = createMouseEvent('mousedown', { button: 0, clientX: 150, clientY: 70 })
-      dragging.handleNodeMouseDown(event, nodeA)
-
-      const nodeElements = makeNodeElements([nodeA, nodeB])
-      // Move n1 slightly — still closest to "before n2" (afterEntityId: null)
-      dragging.handleNodeDragMove({ x: 25, y: 30 }, nodeElements, () => [group])
-
-      expect(dragging.insertIndicator.value).toBeNull()
-    })
-
-    it('shows indicator when node is dragged to a different group', () => {
-      const groupA: WorkflowGroup = {
-        id: 'g1',
-        kind: 'group',
-        position: { x: 0, y: 0 },
-        size: { w: 300, h: 400 },
-        containedIds: ['n1', 'n2']
-      }
-      const groupB: WorkflowGroup = {
-        id: 'g2',
-        kind: 'group',
-        position: { x: 400, y: 0 },
-        size: { w: 300, h: 400 },
-        containedIds: ['n3']
-      }
-      const nodeA: WorkflowNode = { id: 'n1', kind: 'action', position: { x: 25, y: 20 } }
-      const nodeB: WorkflowNode = { id: 'n2', kind: 'action', position: { x: 25, y: 140 } }
-      const nodeC: WorkflowNode = { id: 'n3', kind: 'trigger', position: { x: 425, y: 20 } }
-      const graph = makeGraph({
-        nodes: [nodeA, nodeB, nodeC],
-        groups: [groupA, groupB]
-      })
-
-      const { dragging } = createDragging(graph)
-
-      const event = createMouseEvent('mousedown', { button: 0, clientX: 150, clientY: 70 })
-      dragging.handleNodeMouseDown(event, nodeA)
-
-      const nodeElements = makeNodeElements([nodeA, nodeB, nodeC])
-      // Move n1 into groupB below n3 — different group, so indicator should always show
-      dragging.handleNodeDragMove({ x: 425, y: 200 }, nodeElements, () => [groupB])
-
-      expect(dragging.insertIndicator.value).not.toBeNull()
-      expect(dragging.insertIndicator.value!.groupId).toBe('g2')
-    })
-
-    it('preserves containedIds when node is dropped back at its original slot', () => {
-      const group: WorkflowGroup = {
-        id: 'g1',
-        kind: 'group',
-        position: { x: 0, y: 0 },
-        size: { w: 300, h: 600 },
-        containedIds: ['n1', 'n2', 'n3']
-      }
-      const nodeA: WorkflowNode = { id: 'n1', kind: 'action', position: { x: 25, y: 20 } }
-      const nodeB: WorkflowNode = { id: 'n2', kind: 'action', position: { x: 25, y: 140 } }
-      const nodeC: WorkflowNode = { id: 'n3', kind: 'action', position: { x: 25, y: 260 } }
-      const graph = makeGraph({
-        nodes: [nodeA, nodeB, nodeC],
-        groups: [group]
-      })
-
-      const { dragging, graphRef } = createDragging(graph)
-
-      const event = createMouseEvent('mousedown', { button: 0, clientX: 150, clientY: 190 })
-      dragging.handleNodeMouseDown(event, nodeB)
-
-      const nodeElements = makeNodeElements([nodeA, nodeB, nodeC])
-      // Move n2 slightly — indicator suppressed (same slot)
-      dragging.handleNodeDragMove({ x: 25, y: 150 }, nodeElements, () => [group])
-      expect(dragging.insertIndicator.value).toBeNull()
-
-      dragging.handleMouseUp(isPointInRect)
-
-      // containedIds must remain unchanged
-      const updatedGroup = graphRef.value.groups.find(g => g.id === 'g1')!
-      expect(updatedGroup.containedIds).toEqual(['n1', 'n2', 'n3'])
-    })
-
-    it('suppresses indicator on second drag after a reorder', () => {
-      const group: WorkflowGroup = {
-        id: 'g1',
-        kind: 'group',
-        position: { x: 0, y: 0 },
-        size: { w: 300, h: 600 },
-        containedIds: ['n1', 'n2', 'n3']
-      }
-      const nodeA: WorkflowNode = { id: 'n1', kind: 'action', position: { x: 25, y: 20 } }
-      const nodeB: WorkflowNode = { id: 'n2', kind: 'action', position: { x: 25, y: 140 } }
-      const nodeC: WorkflowNode = { id: 'n3', kind: 'action', position: { x: 25, y: 260 } }
-      const graph = makeGraph({
-        nodes: [nodeA, nodeB, nodeC],
-        groups: [group]
-      })
-
-      const { dragging, graphRef } = createDragging(graph)
-
-      // --- First drag: move n2 to after n3 ---
-      const event1 = createMouseEvent('mousedown', { button: 0, clientX: 150, clientY: 190 })
-      dragging.handleNodeMouseDown(event1, nodeB)
-
-      let nodeElements = makeNodeElements(graphRef.value.nodes as WorkflowNode[])
-      dragging.handleNodeDragMove({ x: 25, y: 400 }, nodeElements, () => [group])
-
-      expect(dragging.insertIndicator.value).not.toBeNull()
-      expect(dragging.insertIndicator.value!.afterEntityId).toBe('n3')
-
-      dragging.handleMouseUp(isPointInRect)
-
-      // After reorder, containedIds should be ['n1', 'n3', 'n2']
-      const updatedGroup = graphRef.value.groups.find(g => g.id === 'g1')!
-      expect(updatedGroup.containedIds).toEqual(['n1', 'n3', 'n2'])
-
-      // --- Second drag: pick up n2 again, move slightly (same slot) ---
-      const updatedNodeB = graphRef.value.nodes.find(n => n.id === 'n2')!
-      const event2 = createMouseEvent('mousedown', {
-        button: 0,
-        clientX: Math.round(updatedNodeB.position.x + 125),
-        clientY: Math.round(updatedNodeB.position.y + 50)
-      })
-      dragging.handleNodeMouseDown(event2, updatedNodeB)
-
-      nodeElements = makeNodeElements(graphRef.value.nodes as WorkflowNode[])
-      // Move slightly — should stay in same slot (after n3)
-      dragging.handleNodeDragMove(
-        { x: updatedNodeB.position.x, y: updatedNodeB.position.y + 10 },
-        nodeElements,
-        () => [updatedGroup]
-      )
-
-      expect(dragging.insertIndicator.value).toBeNull()
-
-      // Drop — containedIds must remain ['n1', 'n3', 'n2']
-      dragging.handleMouseUp(isPointInRect)
-      const finalGroup = graphRef.value.groups.find(g => g.id === 'g1')!
-      expect(finalGroup.containedIds).toEqual(['n1', 'n3', 'n2'])
-    })
+    drag('inner', [100, 520], [1020, 80])
+    expect(children('empty')).toEqual(['inner'])
+    expect(children('g')).toEqual(['a', 'b', 'c'])
   })
 
-  describe('node swap', () => {
-    function makeNodeElements(
-      nodes: WorkflowNode[],
-      dimensions: { width: number; height: number } = { width: 250, height: 100 }
-    ): Map<string, HTMLElement> {
-      const map = new Map<string, HTMLElement>()
-      for (const node of nodes) {
-        const el = document.createElement('div')
-        Object.defineProperty(el, 'getBoundingClientRect', {
-          value: () => ({
-            x: node.position.x,
-            y: node.position.y,
-            width: dimensions.width,
-            height: dimensions.height,
-            left: node.position.x,
-            top: node.position.y,
-            right: node.position.x + dimensions.width,
-            bottom: node.position.y + dimensions.height,
-            toJSON: () => ({})
-          })
-        })
-        map.set(node.id, el)
-      }
-      return map
+  it('does not commit a drop outside every group', () => {
+    const { drag, onCommit, children } = setup()
+    drag('a', [100, 100], [100, 800])
+    expect(onCommit).not.toHaveBeenCalled()
+    expect(children('g')).toEqual(['a', 'b', 'c'])
+  })
+
+  it('rejects groups of another kind', () => {
+    const { drag, dragging, onCommit } = setup()
+    drag('a', [100, 100], [580, 155], false)
+    expect(dragging.overGroupId.value).toBe('ag')
+    expect(dragging.isInvalid.value).toBe(true)
+    dragging.handleMouseUp()
+    expect(onCommit).not.toHaveBeenCalled()
+  })
+
+  it('shifts the dragged entity and resets on mouseup', () => {
+    const { drag, shift, dragging } = setup()
+    drag('a', [100, 100], [130, 110], false)
+    expect(shift.value?.delta).toEqual({ x: 30, y: 10 })
+    expect(dragging.draggingId.value).toBe('a')
+    dragging.handleMouseUp()
+    expect(shift.value).toBeNull()
+    expect(dragging.draggingId.value).toBeNull()
+    expect(dragging.wasDragged()).toBe(true)
+  })
+
+  it('cancels a drag without committing', () => {
+    const { drag, shift, dragging, onCommit } = setup()
+    drag('a', [100, 100], [100, 435], false)
+    expect(dragging.cancel()).toBe(true)
+    dragging.handleMouseUp()
+    expect(onCommit).not.toHaveBeenCalled()
+    expect(shift.value).toBeNull()
+    expect(dragging.draggingId.value).toBeNull()
+    expect(dragging.wasDragged()).toBe(true)
+    expect(dragging.cancel()).toBe(false)
+  })
+
+  it('ignores moves below the threshold', () => {
+    const { drag, shift, onCommit, dragging } = setup()
+    drag('a', [100, 100], [102, 101])
+    expect(shift.value).toBeNull()
+    expect(onCommit).not.toHaveBeenCalled()
+    expect(dragging.wasDragged()).toBe(false)
+  })
+
+  it('does not drag readonly groups, groups from a child node, or when disabled', () => {
+    const readonly = setup()
+    readonly.drag('g', [60, 60], [300, 300], false)
+    expect(readonly.dragging.draggingId.value).toBeNull()
+
+    const group = readonly.graph.value.groups.find(g => g.id === 'empty')!
+    const down = new MouseEvent('mousedown', { button: 0, clientX: 1000, clientY: 100 })
+    const target = document.createElement('div')
+    target.className = 'workflow-canvas-node'
+    Object.defineProperty(down, 'target', { value: target })
+    readonly.dragging.handleMouseDown(down, group)
+    expect(readonly.dragging.draggingId.value).toBeNull()
+
+    const disabled = setup({ enabled: false })
+    disabled.drag('a', [100, 100], [100, 435])
+    expect(disabled.onCommit).not.toHaveBeenCalled()
+  })
+
+  it('respects maxGroupDepth when moving groups', () => {
+    const { graph, drag, onCommit, children } = setup({ maxGroupDepth: 1 })
+    graph.value = {
+      ...graph.value,
+      groups: [
+        ...graph.value.groups.map(g => (g.id === 'empty' ? { ...g, children: ['inner'] } : g)),
+        { id: 'inner', kind: 'condition', children: ['deep'] },
+        { id: 'deep', kind: 'condition', children: [] }
+      ]
     }
-
-    it('sets swapTargetNodeId when dragged node center is over same-kind node', () => {
-      const nodeA: WorkflowNode = { id: 'n1', kind: 'action', position: { x: 0, y: 0 } }
-      const nodeB: WorkflowNode = { id: 'n2', kind: 'action', position: { x: 0, y: 200 } }
-      const graph = makeGraph({ nodes: [nodeA, nodeB] })
-
-      const { dragging } = createDragging(graph)
-      const event = createMouseEvent('mousedown', { button: 0, clientX: 10, clientY: 10 })
-      dragging.handleNodeMouseDown(event, nodeA)
-
-      const nodeElements = makeNodeElements([nodeA, nodeB])
-      // Move n1's center into n2's bounding box
-      dragging.handleNodeDragMove({ x: 50, y: 220 }, nodeElements, () => [])
-
-      expect(dragging.swapTargetNodeId.value).toBe('n2')
-    })
-
-    it('sets invalidSwapTargetNodeId for different kinds', () => {
-      const nodeA: WorkflowNode = { id: 'n1', kind: 'action', position: { x: 0, y: 0 } }
-      const nodeB: WorkflowNode = { id: 'n2', kind: 'trigger', position: { x: 0, y: 200 } }
-      const graph = makeGraph({ nodes: [nodeA, nodeB] })
-
-      const { dragging } = createDragging(graph)
-      const event = createMouseEvent('mousedown', { button: 0, clientX: 10, clientY: 10 })
-      dragging.handleNodeMouseDown(event, nodeA)
-
-      const nodeElements = makeNodeElements([nodeA, nodeB])
-      dragging.handleNodeDragMove({ x: 50, y: 220 }, nodeElements, () => [])
-
-      expect(dragging.swapTargetNodeId.value).toBeNull()
-      expect(dragging.invalidSwapTargetNodeId.value).toBe('n2')
-    })
-
-    it('sets invalidSwapTargetNodeId when kind is empty string', () => {
-      const nodeA: WorkflowNode = { id: 'n1', kind: '', position: { x: 0, y: 0 } }
-      const nodeB: WorkflowNode = { id: 'n2', kind: '', position: { x: 0, y: 200 } }
-      const graph = makeGraph({ nodes: [nodeA, nodeB] })
-
-      const { dragging } = createDragging(graph)
-      const event = createMouseEvent('mousedown', { button: 0, clientX: 10, clientY: 10 })
-      dragging.handleNodeMouseDown(event, nodeA)
-
-      const nodeElements = makeNodeElements([nodeA, nodeB])
-      dragging.handleNodeDragMove({ x: 50, y: 220 }, nodeElements, () => [])
-
-      expect(dragging.swapTargetNodeId.value).toBeNull()
-      expect(dragging.invalidSwapTargetNodeId.value).toBe('n2')
-    })
-
-    it('clears invalidSwapTargetNodeId when not over any node', () => {
-      const nodeA: WorkflowNode = { id: 'n1', kind: 'action', position: { x: 0, y: 0 } }
-      const nodeB: WorkflowNode = { id: 'n2', kind: 'trigger', position: { x: 0, y: 200 } }
-      const graph = makeGraph({ nodes: [nodeA, nodeB] })
-
-      const { dragging } = createDragging(graph)
-      const event = createMouseEvent('mousedown', { button: 0, clientX: 10, clientY: 10 })
-      dragging.handleNodeMouseDown(event, nodeA)
-
-      const nodeElements = makeNodeElements([nodeA, nodeB])
-
-      // Move over nodeB (different kind)
-      dragging.handleNodeDragMove({ x: 50, y: 220 }, nodeElements, () => [])
-      expect(dragging.invalidSwapTargetNodeId.value).toBe('n2')
-
-      // Move away from nodeB
-      dragging.handleNodeDragMove({ x: 50, y: 500 }, nodeElements, () => [])
-      expect(dragging.invalidSwapTargetNodeId.value).toBeNull()
-      expect(dragging.swapTargetNodeId.value).toBeNull()
-    })
-
-    it('performs full swap on mouse up: positions, edges, and groups', () => {
-      const nodeA: WorkflowNode = { id: 'n1', kind: 'action', position: { x: 0, y: 0 } }
-      const nodeB: WorkflowNode = { id: 'n2', kind: 'action', position: { x: 0, y: 200 } }
-      const graph = makeGraph({
-        nodes: [nodeA, nodeB],
-        edges: [{ id: 'e1', from: { entityId: 'n1' }, to: { entityId: 'n2' } }]
-      })
-
-      const { dragging, graphRef, onNodeSwap } = createDragging(graph)
-      const event = createMouseEvent('mousedown', { button: 0, clientX: 10, clientY: 10 })
-      dragging.handleNodeMouseDown(event, nodeA)
-
-      const nodeElements = makeNodeElements([nodeA, nodeB])
-      dragging.handleNodeDragMove({ x: 50, y: 220 }, nodeElements, () => [])
-      expect(dragging.swapTargetNodeId.value).toBe('n2')
-
-      dragging.handleMouseUp(isPointInRect)
-
-      expect(onNodeSwap).toHaveBeenCalledWith('n1', 'n2')
-      expect(dragging.draggingNodeId.value).toBeNull()
-      expect(dragging.swapTargetNodeId.value).toBeNull()
-
-      // Dragged node is restored to original pos before swap, so they exchange original positions
-      const updatedA = graphRef.value.nodes.find(n => n.id === 'n1')
-      const updatedB = graphRef.value.nodes.find(n => n.id === 'n2')
-      expect(updatedA?.position).toEqual({ x: 0, y: 200 })
-      expect(updatedB?.position).toEqual({ x: 0, y: 0 })
-
-      // Edge connections are swapped
-      const edge = graphRef.value.edges.find(e => e.id === 'e1')
-      expect(edge?.from.entityId).toBe('n2')
-      expect(edge?.to.entityId).toBe('n1')
-    })
-
-    it('does not swap on mouse up when kinds differ', () => {
-      const nodeA: WorkflowNode = { id: 'n1', kind: 'action', position: { x: 0, y: 0 } }
-      const nodeB: WorkflowNode = { id: 'n2', kind: 'trigger', position: { x: 0, y: 200 } }
-      const graph = makeGraph({ nodes: [nodeA, nodeB] })
-
-      const { dragging, onNodeSwap } = createDragging(graph)
-      const event = createMouseEvent('mousedown', { button: 0, clientX: 10, clientY: 10 })
-      dragging.handleNodeMouseDown(event, nodeA)
-
-      const nodeElements = makeNodeElements([nodeA, nodeB])
-      dragging.handleNodeDragMove({ x: 50, y: 220 }, nodeElements, () => [])
-
-      dragging.handleMouseUp(isPointInRect)
-
-      expect(onNodeSwap).not.toHaveBeenCalled()
-    })
+    drag('inner', [1000, 80], [100, 375])
+    expect(onCommit).not.toHaveBeenCalled()
+    expect(children('empty')).toEqual(['inner'])
   })
 })
