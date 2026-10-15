@@ -21,6 +21,7 @@
         variant="text"
         scale="sm"
         :title="LABELS.configure"
+        :aria-label="LABELS.configure"
         @click.stop="emit('menu-click')"
         @mousedown.stop
       >

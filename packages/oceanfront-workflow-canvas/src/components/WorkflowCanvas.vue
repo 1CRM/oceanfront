@@ -113,7 +113,7 @@
                   <button
                     class="workflow-canvas-group__empty-plus-button"
                     type="button"
-                    :aria-label="group.label || group.id"
+                    :aria-label="canAddGroupInto(group) ? LABELS.addToGroup : LABELS.addNodeToGroup"
                     @mousedown.stop
                     @click.stop="!canAddGroupInto(group) && insertInto(group.id, 'node')"
                   >

@@ -7,5 +7,6 @@ export const LABELS = {
   addGroupAfter: 'Add group after this node',
   addNodeToGroup: 'Add node',
   addGroupToGroup: 'Add group',
+  addToGroup: 'Add to group',
   addStep: 'Add step'
 } as const

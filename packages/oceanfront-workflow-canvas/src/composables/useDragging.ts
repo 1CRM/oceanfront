@@ -77,7 +77,10 @@ export function useDragging(options: UseDraggingOptions) {
   const findTargetGroup = (id: string, center: Position) => {
     const excluded = new Set([id, ...getDescendants(graph.value, id)])
     return graph.value.groups
-      .filter(g => !excluded.has(g.id) && contains(rects.value.get(g.id)!, center))
+      .filter(g => {
+        const rect = rects.value.get(g.id)
+        return !excluded.has(g.id) && !!rect && contains(rect, center)
+      })
       .reduce<string | null>(
         (deepest, g) =>
           !deepest || getGroupDepth(graph.value, g.id) > getGroupDepth(graph.value, deepest)
@@ -88,9 +91,11 @@ export function useDragging(options: UseDraggingOptions) {
   }
 
   const computeDropTarget = (id: string, groupId: string, center: Position): DropTarget | null => {
-    const group = findGroup(graph.value, groupId)!
-    const groupRect = rects.value.get(groupId)!
-    const siblings = group.children.filter(c => c !== id).map(c => rects.value.get(c)!)
+    const group = findGroup(graph.value, groupId)
+    const groupRect = rects.value.get(groupId)
+    if (!group || !groupRect) return null
+    const siblings = group.children.filter(c => c !== id).map(c => rects.value.get(c))
+    if (!siblings.every((s): s is Rect => !!s)) return null
     const parent = getParentGroup(graph.value, id)
     const originalIndex = parent?.children.indexOf(id) ?? -1
 
@@ -132,19 +137,22 @@ export function useDragging(options: UseDraggingOptions) {
   const handleMouseMove = (event: MouseEvent) => {
     const id = draggingId.value
     const pos = id && start ? getMousePosition(event) : null
-    if (!id || !start || !pos) return
+    const base = id ? rects.value.get(id) : undefined
+    if (!id || !start || !pos || !base) return
 
     const delta = { x: pos.x - start.x, y: pos.y - start.y }
     if (!hasMoved && Math.hypot(delta.x, delta.y) < DRAG_THRESHOLD) return
     hasMoved = true
     shift.value = { ids: new Set([id, ...getDescendants(graph.value, id)]), delta }
 
-    const base = rects.value.get(id)!
     const center = { x: base.x + base.w / 2 + delta.x, y: base.y + base.h / 2 + delta.y }
     const node = findNode(graph.value, id)
 
     const overNode = node
-      ? graph.value.nodes.find(n => n.id !== id && contains(rects.value.get(n.id)!, center))
+      ? graph.value.nodes.find(n => {
+          const rect = rects.value.get(n.id)
+          return n.id !== id && !!rect && contains(rect, center)
+        })
       : undefined
     swapTargetId.value = overNode && overNode.kind === node!.kind ? overNode.id : null
 
