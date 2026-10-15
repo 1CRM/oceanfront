@@ -3,10 +3,25 @@
     <h1>Workflow Canvas</h1>
 
     <div class="demo-actions">
-      <select v-model="mode" aria-label="Canvas Mode" class="demo-mode">
-        <option value="edit">Edit</option>
-        <option value="view">View</option>
-      </select>
+      <label class="demo-control">
+        <strong>Canvas Mode</strong>
+        <select v-model="mode" aria-label="Canvas Mode" class="demo-mode">
+          <option value="edit">Edit</option>
+          <option value="view">View</option>
+        </select>
+      </label>
+      <label class="demo-control">
+        <strong>Max Group Depth</strong>
+        <input
+          type="number"
+          min="0"
+          step="1"
+          placeholder="No limit"
+          aria-label="Max Group Depth"
+          :value="maxGroupDepth ?? ''"
+          @input="setMaxGroupDepth"
+        />
+      </label>
       <of-button variant="outlined" @click="reset">Reset Canvas</of-button>
     </div>
 
@@ -62,7 +77,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import {
   WorkflowCanvas,
   type WorkflowCanvasMode,
@@ -73,13 +88,20 @@ import 'oceanfront-workflow-canvas/css'
 
 type EntityData = { title?: string; description?: string; operator?: string }
 
-const kinds: WorkflowKinds = {
+const maxGroupDepth = ref<number | null>(3)
+
+const kinds = computed<WorkflowKinds>(() => ({
   condition: {
     addNodeText: '+ Condition',
     addGroupText: '+ Group',
-    maxGroupDepth: 3
+    maxGroupDepth: maxGroupDepth.value ?? undefined
   },
   action: { addNodeText: '+ Action' }
+}))
+
+const setMaxGroupDepth = (event: Event) => {
+  const value = (event.target as HTMLInputElement).value
+  maxGroupDepth.value = value === '' ? null : Math.max(0, Math.trunc(Number(value)))
 }
 
 const operators = [
@@ -174,6 +196,20 @@ const reset = () => {
 }
 
 .demo-mode {
+  padding: 6px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.demo-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.demo-control input {
+  width: 90px;
   padding: 6px 8px;
   border: 1px solid #ddd;
   border-radius: 4px;
