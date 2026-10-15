@@ -90,6 +90,7 @@
                   class="workflow-canvas-group__hover-menu-button"
                   type="button"
                   :title="LABELS.addNodeAfter"
+                  :aria-label="ariaLabel(kinds[group.kind].addNodeText, LABELS.addNodeAfter)"
                   @click.stop="insertAfter(group.id, 'node')"
                 >
                   {{ kinds[group.kind].addNodeText }}
@@ -99,6 +100,7 @@
                   class="workflow-canvas-group__hover-menu-button"
                   type="button"
                   :title="LABELS.addGroupAfter"
+                  :aria-label="ariaLabel(kinds[group.kind].addGroupText, LABELS.addGroupAfter)"
                   @click.stop="insertAfter(group.id, 'group')"
                 >
                   {{ kinds[group.kind].addGroupText }}
@@ -124,6 +126,7 @@
                       class="workflow-canvas-group__hover-menu-button"
                       type="button"
                       :title="LABELS.addNodeToGroup"
+                      :aria-label="ariaLabel(kinds[group.kind].addNodeText, LABELS.addNodeToGroup)"
                       @click.stop="insertInto(group.id, 'node')"
                     >
                       {{ kinds[group.kind].addNodeText }}
@@ -132,6 +135,9 @@
                       class="workflow-canvas-group__hover-menu-button"
                       type="button"
                       :title="LABELS.addGroupToGroup"
+                      :aria-label="
+                        ariaLabel(kinds[group.kind].addGroupText, LABELS.addGroupToGroup)
+                      "
                       @click.stop="insertInto(group.id, 'group')"
                     >
                       {{ kinds[group.kind].addGroupText }}
@@ -185,6 +191,7 @@
                   class="workflow-canvas-node__hover-menu-button"
                   type="button"
                   :title="LABELS.addNodeAfter"
+                  :aria-label="ariaLabel(kinds[node.kind].addNodeText, LABELS.addNodeAfter)"
                   @click.stop="insertAfter(node.id, 'node')"
                 >
                   {{ kinds[node.kind].addNodeText }}
@@ -194,6 +201,7 @@
                   class="workflow-canvas-node__hover-menu-button"
                   type="button"
                   :title="LABELS.addGroupAfter"
+                  :aria-label="ariaLabel(kinds[node.kind].addGroupText, LABELS.addGroupAfter)"
                   @click.stop="insertAfter(node.id, 'group')"
                 >
                   {{ kinds[node.kind].addGroupText }}
@@ -368,6 +376,9 @@ export default defineComponent({
       return !!parent && canAddGroupInto(parent)
     }
 
+    const ariaLabel = (text: string | undefined, label: string) =>
+      text ? `${text} – ${label}` : label
+
     const insertAt = (group: WorkflowGroup, index: number, type: EntityType) => {
       const result = insertEntity(graph.value, type, group.kind, group.id, index)
       commit(result.graph)
@@ -491,6 +502,7 @@ export default defineComponent({
       showAddAfter,
       canAddGroupInto,
       canAddGroupAfter,
+      ariaLabel,
       insertAfter,
       insertInto,
       select,

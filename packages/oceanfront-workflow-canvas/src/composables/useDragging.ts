@@ -154,22 +154,18 @@ export function useDragging(options: UseDraggingOptions) {
           return n.id !== id && !!rect && contains(rect, center)
         })
       : undefined
-    swapTargetId.value = overNode && overNode.kind === node!.kind ? overNode.id : null
+    swapTargetId.value = overNode && overNode.kind === node?.kind ? overNode.id : null
 
     const targetId = findTargetGroup(id, center)
     const parentId = getParentGroup(graph.value, id)?.id
+    const group = node ? undefined : findGroup(graph.value, id)
     const valid =
       !!targetId &&
       !overNode &&
       canPlaceInGroup(graph.value, id, targetId) &&
       (!!node ||
         targetId === parentId ||
-        fitsMaxGroupDepth(
-          graph.value,
-          targetId,
-          getMaxGroupDepth(findGroup(graph.value, id)!.kind),
-          id
-        ))
+        (!!group && fitsMaxGroupDepth(graph.value, targetId, getMaxGroupDepth(group.kind), id)))
 
     overGroupId.value = targetId
     isInvalid.value = !!targetId && !overNode && !valid
