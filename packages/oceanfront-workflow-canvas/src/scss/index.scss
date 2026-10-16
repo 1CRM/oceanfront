@@ -31,16 +31,17 @@
   }
 }
 
-.-of-theme-dark {
-  --wf-surface: var(--of-color-background-dark, #383b33);
-  --wf-surface-2: var(--of-color-surface-dark, #44473d);
+.-of-theme-dark .workflow-canvas-wrapper {
+  --wf-surface: var(--of-color-background);
+  --wf-surface-2: var(--of-color-surface);
   --wf-surface-hover: rgba(255, 255, 255, 0.1);
-  --wf-border: var(--of-color-outline-dark, #8e9384);
-  --wf-border-secondary: var(--of-color-outline-dark, #666);
-  --wf-primary: var(--of-color-primary-dark, #77d7ea);
-  --wf-error: var(--of-color-error-dark, #ef4444);
-  --wf-text-primary: var(--of-color-on-surface-dark, #e1e4dd);
-  --wf-text-secondary: var(--of-color-on-surface-variant-dark, #c4c9bd);
+  --wf-border: var(--of-color-outline);
+  --wf-border-secondary: var(--of-color-outline);
+  --wf-border-tertiary: var(--of-color-section-border);
+  --wf-primary: var(--of-primary-tint);
+  --wf-error: var(--of-color-error);
+  --wf-text-primary: var(--of-color-on-surface);
+  --wf-text-secondary: var(--of-color-on-surface-variant);
   --wf-grid-line: rgba(255, 255, 255, 0.08);
   --wf-group-bg: rgba(0, 0, 0, 0.2);
   --wf-group-bg-nested: rgba(0, 0, 0, 0.3);
