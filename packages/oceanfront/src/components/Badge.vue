@@ -24,6 +24,7 @@ type Status =
   | 'closed'
   | 'dead'
   | 'invert'
+  | 'neutral'
   | 'primary'
   | 'secondar'
   | 'tertiary'

@@ -245,7 +245,7 @@ export const OfSelectField = defineComponent({
               ? h(OfIcon, {
                   class: 'remove-item',
                   name: 'cancel',
-                  size: '14px',
+                  scale: '14px',
                   tabindex: 0,
                   ariaLabel: lang.value.remove,
                   onClick: (e: Event) => {

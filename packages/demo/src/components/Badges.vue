@@ -110,7 +110,9 @@ const statusList = [
   'danger',
   'closed',
   'dead',
+  'neutral',
   'invert',
+  'primary',
 ]
 
 import { defineComponent, reactive } from 'vue'

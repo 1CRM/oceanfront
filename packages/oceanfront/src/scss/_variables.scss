@@ -59,17 +59,23 @@ $base-color-sheet-bg: var(--of-color-surface);
 $base-color-text: var(--of-color-on-surface);
 $base-color-highlight: var(--of-inverse-tint) !default;
 $vertical-align-badge: middle;
-$border-radius-badge: 0.5em;
+$border-radius-badge: var(
+  --border-radius-badge,
+  var(--border-radius-input, 5px)
+);
 $border-radius-button: var(--border-radius-button, 5px);
 $border-width-badge: 1px !default;
-$bg-badge: var(--bg-badge, --of-color-background);
+$bg-badge: var(
+  --bg-badge,
+  color-mix(in srgb, var(--of-color-on-surface) 7%, transparent)
+);
 $color-bg-event: var(--color-bg-event);
 $color-event: var(--color-event);
 $color-border-event: var(--color-border-event);
 $font-family-input: var(--font-family-input, inherit);
-$font-size-badge: var(--font-size-badge, 0.8rem);
-$font-size-badge-sm: var(--font-size-badge-sm, 0.55rem);
-$font-size-badge-lg: var(--font-size-badge-lg, 1.05rem);
+$font-size-badge: var(--font-size-badge, 0.75rem);
+$font-size-badge-sm: var(--font-size-badge-sm, 0.6875rem);
+$font-size-badge-lg: var(--font-size-badge-lg, 0.875rem);
 
 $font-size-button: var(--font-size-button, 1rem);
 $font-size-button-sm: var(--font-size-button-sm, 0.6rem);
@@ -83,10 +89,10 @@ $font-size-input-sm: var(--font-size-input-sm, 0.8125rem); // 13/16
 $font-size-input-lg: var(--font-size-input-lg, 1.125rem); // 18/16
 $font-size-bullet: var(--font-size-bullet, 1em);
 $font-size-tab: var(--font-size-tab, #{$font-size-input});
-$font-weight-badge: var(--font-weight-badge, bold);
+$font-weight-badge: var(--font-weight-badge, 500);
 $font-weight-input: var(--font-weight-input, normal);
 $letter-spacing-input: var(--letter-spacing-input, 0);
-$line-height-badge: var(--line-height-badge, 1);
+$line-height-badge: var(--line-height-badge, 1.25);
 $line-height-input: var(--line-height-input, 1.25); // 20/16
 $line-height-form-label: var(--line-height-form-label, 1.7);
 $line-height-menu-option: var(--line-height-menu-option, 1.35);
