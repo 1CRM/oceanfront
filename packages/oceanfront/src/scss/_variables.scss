@@ -59,15 +59,12 @@ $base-color-sheet-bg: var(--of-color-surface);
 $base-color-text: var(--of-color-on-surface);
 $base-color-highlight: var(--of-inverse-tint) !default;
 $vertical-align-badge: middle;
-$border-radius-badge: var(
-  --border-radius-badge,
-  var(--border-radius-input, 5px)
-);
+$border-radius-badge: var(--border-radius-badge, 999px);
 $border-radius-button: var(--border-radius-button, 5px);
 $border-width-badge: 1px !default;
 $bg-badge: var(
   --bg-badge,
-  color-mix(in srgb, var(--of-color-on-surface) 7%, transparent)
+  color-mix(in srgb, var(--of-color-on-surface) 11%, transparent)
 );
 $color-bg-event: var(--color-bg-event);
 $color-event: var(--color-event);

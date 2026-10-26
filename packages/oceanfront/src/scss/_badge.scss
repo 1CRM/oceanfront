@@ -12,15 +12,14 @@ $badge-states: (
   error: (#fef3f2, #b42318, rgba(240, 68, 56, 0.16), #fda29b),
   danger: (#fee4e2, #912018, rgba(240, 68, 56, 0.3), #fecdca),
   alert: (#fef0c7, #93370d, rgba(247, 144, 9, 0.28), #fedf89),
-  warning: (#fefbe8, #a15c07, rgba(234, 170, 8, 0.16), #fde272),
+  warning: (#fef7c3, #a15c07, rgba(234, 170, 8, 0.22), #fde272),
   closed: (#eaecf0, #344054, rgba(152, 162, 179, 0.22), #eaecf0),
-  dead: (#f9fafb, #667085, rgba(152, 162, 179, 0.1), #98a2b3),
-  ignore: (#f9fafb, #667085, rgba(152, 162, 179, 0.1), #98a2b3),
+  dead: (#f2f4f7, #667085, rgba(152, 162, 179, 0.18), #98a2b3),
+  ignore: (#f2f4f7, #667085, rgba(152, 162, 179, 0.18), #98a2b3),
   invert: (#344054, #ffffff, #eaecf0, #1d2939),
 );
 
 :root {
-  --of-badge-ring: 12%;
   @each $name, $c in $badge-states {
     --of-badge-#{$name}-bg: #{list.nth($c, 1)};
     --of-badge-#{$name}-color: #{list.nth($c, 2)};
@@ -28,7 +27,6 @@ $badge-states: (
 }
 
 .-of-theme-dark {
-  --of-badge-ring: 22%;
   @each $name, $c in $badge-states {
     --of-badge-#{$name}-bg: #{list.nth($c, 3)};
     --of-badge-#{$name}-color: #{list.nth($c, 4)};
@@ -43,13 +41,7 @@ $badge-states: (
   box-sizing: border-box;
   border-width: $border-width-badge;
   border-style: solid;
-  border-color: var(
-    --of-badge-border-color,
-    var(
-      --border-color-badge,
-      color-mix(in srgb, currentColor var(--of-badge-ring), transparent)
-    )
-  );
+  border-color: var(--of-badge-border-color, transparent);
   color: var(
     --of-badge-color,
     var(--color-badge, var(--of-color-on-surface-variant))
@@ -98,31 +90,14 @@ $badge-states: (
   }
 }
 
-$badge-state-selectors: ('.state-neutral', '.state-active', '.state-primary');
-@each $name, $c in $badge-states {
-  $badge-state-selectors: list.append(
-    $badge-state-selectors,
-    '.state-#{$name}',
-    comma
-  );
-}
-
-.of-badge:is(#{$badge-state-selectors}) {
-  --border-color-badge: color-mix(
-    in srgb,
-    currentColor var(--of-badge-ring),
-    transparent
-  );
-}
-
 .of-badge.state-neutral,
 .of-badge.state-active {
-  --bg-badge: color-mix(in srgb, var(--of-color-on-surface) 7%, transparent);
+  --bg-badge: color-mix(in srgb, var(--of-color-on-surface) 11%, transparent);
   --color-badge: var(--of-color-on-surface-variant);
 }
 
 .of-badge.state-primary {
-  --bg-badge: color-mix(in srgb, var(--of-primary-tint) 12%, transparent);
+  --bg-badge: color-mix(in srgb, var(--of-primary-tint) 16%, transparent);
   --color-badge: color-mix(in srgb, var(--of-primary-tint) 80%, #000);
 }
 
