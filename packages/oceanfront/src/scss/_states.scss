@@ -169,10 +169,6 @@
 }
 
 .-of-theme-dark {
-  .of-badge.of--icon {
-    --bg-badge: color-mix(in srgb, var(--bg-badge) 92%, var(--of-color-surface));
-  }
-
   .state-success {
     @include state-mixin(
       var(--of-color-on-primary-container),
