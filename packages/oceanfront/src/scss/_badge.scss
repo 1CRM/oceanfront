@@ -2,20 +2,20 @@
 @use 'variables' as *;
 
 $badge-states: (
-  success: (#ecfdf3, #067647, rgba(23, 178, 106, 0.16), #75e0a7),
+  success: (#ecfdf3, #067647, rgba(23, 178, 106, 0.16), #abefc6),
   final: (#d1fadf, #05603a, rgba(23, 178, 106, 0.3), #abefc6),
   info: (#ecfdff, #0e7090, rgba(6, 174, 212, 0.16), #67e3f9),
-  draft: (#fef6ee, #b93815, rgba(239, 104, 32, 0.16), #f7b27a),
-  pending: (#eff8ff, #175cd3, rgba(46, 144, 250, 0.16), #84caff),
-  deferred: (#f4f3ff, #5925dc, rgba(122, 90, 248, 0.18), #bdb4fe),
-  special: (#fdf2fa, #c11574, rgba(238, 70, 188, 0.16), #faa7e0),
-  error: (#fef3f2, #b42318, rgba(240, 68, 56, 0.16), #fda29b),
+  draft: (#fef6ee, #b93815, rgba(239, 104, 32, 0.16), #f9dbaf),
+  pending: (#eff8ff, #175cd3, rgba(46, 144, 250, 0.16), #b2ddff),
+  deferred: (#f4f3ff, #5925dc, rgba(122, 90, 248, 0.18), #d9d6fe),
+  special: (#fdf2fa, #c11574, rgba(238, 70, 188, 0.16), #fcceee),
+  error: (#fef3f2, #b42318, rgba(240, 68, 56, 0.16), #fecdca),
   danger: (#fee4e2, #912018, rgba(240, 68, 56, 0.3), #fecdca),
   alert: (#fef0c7, #93370d, rgba(247, 144, 9, 0.28), #fedf89),
   warning: (#fef7c3, #a15c07, rgba(234, 170, 8, 0.22), #fde272),
   closed: (#eaecf0, #344054, rgba(152, 162, 179, 0.22), #eaecf0),
-  dead: (#f2f4f7, #667085, rgba(152, 162, 179, 0.18), #98a2b3),
-  ignore: (#f2f4f7, #667085, rgba(152, 162, 179, 0.18), #98a2b3),
+  dead: (#f2f4f7, #475467, rgba(152, 162, 179, 0.18), #e4e7ec),
+  ignore: (#f2f4f7, #475467, rgba(152, 162, 179, 0.18), #e4e7ec),
   invert: (#344054, #ffffff, #eaecf0, #1d2939),
 );
 
@@ -27,6 +27,7 @@ $badge-states: (
 }
 
 .-of-theme-dark {
+  --of-badge-neutral-color: var(--of-color-on-surface);
   @each $name, $c in $badge-states {
     --of-badge-#{$name}-bg: #{list.nth($c, 3)};
     --of-badge-#{$name}-color: #{list.nth($c, 4)};
@@ -44,7 +45,10 @@ $badge-states: (
   border-color: var(--of-badge-border-color, transparent);
   color: var(
     --of-badge-color,
-    var(--color-badge, var(--of-color-on-surface-variant))
+    var(
+      --color-badge,
+      var(--of-badge-neutral-color, var(--of-color-on-surface-variant))
+    )
   );
   border-radius: $border-radius-badge;
   margin: 0.125em 0.25em;
@@ -93,7 +97,10 @@ $badge-states: (
 .of-badge.state-neutral,
 .of-badge.state-active {
   --bg-badge: color-mix(in srgb, var(--of-color-on-surface) 11%, transparent);
-  --color-badge: var(--of-color-on-surface-variant);
+  --color-badge: var(
+    --of-badge-neutral-color,
+    var(--of-color-on-surface-variant)
+  );
 }
 
 .of-badge.state-primary {
@@ -103,7 +110,7 @@ $badge-states: (
 
 .-of-theme-dark .of-badge.state-primary {
   --bg-badge: color-mix(in srgb, var(--of-primary-tint) 22%, transparent);
-  --color-badge: color-mix(in srgb, var(--of-primary-tint) 45%, #fff);
+  --color-badge: color-mix(in srgb, var(--of-primary-tint) 30%, #fff);
 }
 
 @each $name, $c in $badge-states {
