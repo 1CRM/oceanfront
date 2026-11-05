@@ -23,7 +23,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "22.22"
+          node-version: "22.23"
           registry-url: "https://npm.pkg.github.com"
 
       - name: Enable Corepack
