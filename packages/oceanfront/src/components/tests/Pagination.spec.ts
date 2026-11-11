@@ -80,3 +80,22 @@ test('round-trips a per page value above 999', async () => {
   ])
   wrapper.unmount()
 })
+
+test('keeps a typed per page value when start at commits', async () => {
+  const wrapper = mountPagination({ perPage: 20, startRecord: 1 })
+  await openOffsetPopup(wrapper)
+
+  const startAt = document.querySelector<HTMLInputElement>(
+    'input[aria-label="Start At"]'
+  )
+  if (!startAt) throw new Error('start at input not rendered')
+
+  await typeInto(perPageInput(), '10')
+  startAt.value = '11'
+  startAt.dispatchEvent(new Event('input', { bubbles: true }))
+  startAt.dispatchEvent(new Event('change', { bubbles: true }))
+  await nextTick()
+
+  expect(perPageInput().value).toBe('10')
+  wrapper.unmount()
+})
