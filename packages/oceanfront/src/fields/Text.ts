@@ -367,6 +367,11 @@ export const OfTextField = defineComponent({
             lazyInputValue = iVal
             pendingValue.value = upd.value
           }
+        } else if (props.inputType === 'number') {
+          // Commit stays on change. Without this, a sibling field update
+          // re-renders the input from the previous model and drops the digits.
+          inputValue.value = inputElt.value
+          lazyInputValue = inputElt.value
         }
         if (fieldCtx.onInput) fieldCtx.onInput(evt.data, inputElt.value)
       },
