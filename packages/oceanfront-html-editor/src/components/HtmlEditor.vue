@@ -592,6 +592,11 @@ export default defineComponent({
     const editor = useEditor({
       content: fieldValue.value,
       editable: isEditable.value,
+      editorProps: {
+        attributes: {
+          'aria-label': props.label || props.name || 'Editor'
+        }
+      },
       extensions: props.extensions
         ? coreExtensions.concat(props.extensions)
         : coreExtensions,
