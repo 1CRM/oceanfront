@@ -14,6 +14,29 @@ export const OfTooltip = defineComponent({
     const textPosition = ref()
     const opened = ref(false)
 
+    const getVisibleRight = (el: HTMLElement) => {
+      let right = document.documentElement.clientWidth
+      for (let p = el.parentElement; p; p = p.parentElement) {
+        if (/auto|scroll/.test(getComputedStyle(p).overflowX)) {
+          right = Math.min(
+            right,
+            p.getBoundingClientRect().left + p.clientLeft + p.clientWidth
+          )
+        }
+      }
+      return right
+    }
+
+    const open = (e: MouseEvent | FocusEvent) => {
+      tooltipStyle.value = {
+        left: 'auto',
+        right: '0',
+        'max-width': getVisibleRight(e.currentTarget as HTMLElement) - 26 + 'px'
+      }
+      opened.value = true
+      nextTick(() => show(e))
+    }
+
     const show = (e: MouseEvent | FocusEvent) => {
       const tooltipIconEl =
         (e.currentTarget as HTMLElement) ?? (e.target as HTMLElement)
@@ -23,14 +46,17 @@ export const OfTooltip = defineComponent({
 
       const textOffset = 6
       const edgeMargin = 5
-      const maxRight = document.body.clientWidth - textOffset - edgeMargin
+      const maxRight = getVisibleRight(tooltipIconEl) - textOffset - edgeMargin
       const rightTooltipOffset = Math.round(
         tooltipIconElRect.width + textOffset
       )
 
       textPosition.value =
         props.position === 'right'
-          ? tooltipTextElRect.right + rightTooltipOffset > maxRight &&
+          ? tooltipIconElRect.left +
+              tooltipTextElRect.width +
+              rightTooltipOffset >
+              maxRight &&
             tooltipIconElRect.left - textOffset >
               maxRight - (tooltipIconElRect.left + textOffset)
             ? 'left'
@@ -71,19 +97,11 @@ export const OfTooltip = defineComponent({
           {
             class: ['of-tooltip-main'],
             tabindex: ctx.slots.default ? undefined : 0,
-            onMouseenter: (e: MouseEvent) => {
-              tooltipStyle.value = {}
-              opened.value = true
-              nextTick(() => show(e))
-            },
+            onMouseenter: open,
             onMouseleave: () => {
               opened.value = false
             },
-            onFocus: (e: FocusEvent) => {
-              tooltipStyle.value = {}
-              opened.value = true
-              nextTick(() => show(e))
-            },
+            onFocus: open,
             onBlur: () => {
               opened.value = false
             }
