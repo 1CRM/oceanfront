@@ -14,6 +14,28 @@ export const OfTooltip = defineComponent({
     const textPosition = ref()
     const opened = ref(false)
 
+    const getVisibleBounds = (el: HTMLElement) => {
+      let left = 0
+      let right = document.documentElement.clientWidth
+      for (let p = el.parentElement; p; p = p.parentElement) {
+        if (
+          p.clientWidth > 0 &&
+          /auto|scroll|hidden|clip/.test(getComputedStyle(p).overflowX)
+        ) {
+          const innerLeft = p.getBoundingClientRect().left + p.clientLeft
+          left = Math.max(left, innerLeft)
+          right = Math.min(right, innerLeft + p.clientWidth)
+        }
+      }
+      return { left, right }
+    }
+
+    const open = (e: MouseEvent | FocusEvent) => {
+      tooltipStyle.value = { left: 'auto', right: '0' }
+      opened.value = true
+      nextTick(() => show(e))
+    }
+
     const show = (e: MouseEvent | FocusEvent) => {
       const tooltipIconEl =
         (e.currentTarget as HTMLElement) ?? (e.target as HTMLElement)
@@ -23,31 +45,36 @@ export const OfTooltip = defineComponent({
 
       const textOffset = 6
       const edgeMargin = 5
-      const maxRight = document.body.clientWidth - textOffset - edgeMargin
+      const bounds = getVisibleBounds(tooltipIconEl)
+      const maxRight = bounds.right - textOffset - edgeMargin
+      const spaceLeft = tooltipIconElRect.left - bounds.left
       const rightTooltipOffset = Math.round(
         tooltipIconElRect.width + textOffset
       )
 
       textPosition.value =
         props.position === 'right'
-          ? tooltipTextElRect.right + rightTooltipOffset > maxRight &&
-            tooltipIconElRect.left - textOffset >
+          ? tooltipIconElRect.left +
+              tooltipTextElRect.width +
+              rightTooltipOffset >
+              maxRight &&
+            spaceLeft - textOffset >
               maxRight - (tooltipIconElRect.left + textOffset)
             ? 'left'
             : 'right'
-          : tooltipTextElRect.width + textOffset > tooltipIconElRect.left &&
-              maxRight - tooltipIconElRect.right > tooltipIconElRect.left
+          : tooltipTextElRect.width + textOffset > spaceLeft &&
+              maxRight - tooltipIconElRect.right > spaceLeft
             ? 'right'
             : 'left'
 
       const maxWidth =
         (textPosition.value === 'left'
-          ? tooltipIconElRect.left - textOffset
+          ? spaceLeft - textOffset
           : maxRight - tooltipIconElRect.right) - edgeMargin
 
       tooltipStyle.value = {
         '--tt-text-offset': textOffset + tooltipIconElRect.width + 'px',
-        'max-width': Math.round(maxWidth - 16) + 'px',
+        'max-width': Math.max(Math.round(maxWidth - 16), 50) + 'px',
         bottom: ''
       }
 
@@ -71,19 +98,11 @@ export const OfTooltip = defineComponent({
           {
             class: ['of-tooltip-main'],
             tabindex: ctx.slots.default ? undefined : 0,
-            onMouseenter: (e: MouseEvent) => {
-              tooltipStyle.value = {}
-              opened.value = true
-              nextTick(() => show(e))
-            },
+            onMouseenter: open,
             onMouseleave: () => {
               opened.value = false
             },
-            onFocus: (e: FocusEvent) => {
-              tooltipStyle.value = {}
-              opened.value = true
-              nextTick(() => show(e))
-            },
+            onFocus: open,
             onBlur: () => {
               opened.value = false
             }
