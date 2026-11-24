@@ -103,6 +103,7 @@ export const OfTextField = defineComponent({
     })
 
     let lazyInputValue = ''
+    let uncommittedInput = false
     const blank = ref()
     const inputValue = ref('')
     const pendingValue = ref()
@@ -110,6 +111,7 @@ export const OfTextField = defineComponent({
     const invalid = ref(false)
     const updateValue = (val: any, fmt?: TextFormatter) => {
       let updInvalid = false
+      uncommittedInput = false
       if (fmt) {
         const fval = fmt.format(val)
         if (fval.error) {
@@ -134,7 +136,12 @@ export const OfTextField = defineComponent({
     }
     watch(
       () => [fieldCtx.value, formatter.value],
-      ([val, fmt], _) => updateValue(val, fmt),
+      ([val, fmt], old) => {
+        // A formatter re-resolved while the user is typing must not replace
+        // the uncommitted text with the unchanged model value.
+        if (old && uncommittedInput && val === old[0]) return
+        updateValue(val, fmt)
+      },
       {
         immediate: true
       }
@@ -281,6 +288,8 @@ export const OfTextField = defineComponent({
             val = fmt.unformat(val)
           }
           ctx.emit('blur', val)
+          if ((val === '' ? null : val) === stateValue.value)
+            uncommittedInput = false
         }
         focused.value = false
         suppressKeyboardFocusRing.value = false
@@ -356,6 +365,7 @@ export const OfTextField = defineComponent({
         const fmt = formatter.value
         if (fmt?.handleInput) {
           const upd = fmt.handleInput(evt)
+          uncommittedInput = true
           if (upd && upd.updated) {
             dispatchChange = true
             const iVal = upd.textValue ?? ''
@@ -366,12 +376,16 @@ export const OfTextField = defineComponent({
             inputValue.value = iVal
             lazyInputValue = iVal
             pendingValue.value = upd.value
+          } else {
+            inputValue.value = inputElt.value
+            lazyInputValue = inputElt.value
           }
-        } else if (props.inputType === 'number') {
+        } else {
           // Commit stays on change. Without this, a sibling field update
-          // re-renders the input from the previous model and drops the digits.
+          // re-renders the input from the previous model and drops the text.
           inputValue.value = inputElt.value
           lazyInputValue = inputElt.value
+          uncommittedInput = true
         }
         if (fieldCtx.onInput) fieldCtx.onInput(evt.data, inputElt.value)
       },
