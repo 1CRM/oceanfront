@@ -476,14 +476,10 @@
 
     --button-border-radius: 0;
 
+    /* Keep 1px border so the active segment matches siblings' box size;
+       app themes add fill/tint for selected pagination (and similar). */
     &.of--variant-outlined.of--active {
       --button-border-color: #{use-color(btn-outl-brd, active)};
-      --button-border-width: 2px;
-    }
-
-    &.of--variant-outlined.of--active {
-      --button-border-color: #{use-color(btn-outl-brd, active)};
-      --button-border-width: 2px;
     }
 
     &.of--variant-filled.of--active {
