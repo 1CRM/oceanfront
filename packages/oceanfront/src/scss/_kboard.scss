@@ -279,7 +279,7 @@
         position: relative;
         transition: transform 0.1s ease;
         will-change: transform;
-        max-height: 160px;
+        max-height: var(--of-kanban-card-max-height, 160px);
 
         &.of--has-dependency-stripe {
           box-shadow: inset 6px 0 0 var(--of-kanban-dep-color, transparent);
@@ -396,8 +396,13 @@
             align-items: flex-start;
             gap: 4px;
             display: flex;
-            max-height: 100px;
+            max-height: var(--of-kanban-card-title-max-height, 100px);
             overflow: hidden;
+
+            .title-text,
+            [data-kanban-title-click] {
+              cursor: pointer;
+            }
 
             .title-text {
               flex: 1 1 0;
@@ -407,7 +412,6 @@
               font-weight: 500;
               line-height: 19.2px;
               word-wrap: break-word;
-              cursor: pointer;
               display: -webkit-box;
               -webkit-line-clamp: 4;
               line-clamp: 4;

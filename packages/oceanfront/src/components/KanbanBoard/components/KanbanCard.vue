@@ -79,9 +79,9 @@
           </div>
         </slot>
       </div>
-      <div class="title-container">
+      <div class="title-container" @click.capture="handleTitleClick">
         <slot name="title" :card="card">
-          <div class="title-text" @click="$emit('card-title-click', card)">
+          <div class="title-text">
             {{ card.title }}
           </div>
         </slot>
@@ -200,6 +200,18 @@ export default defineComponent({
 
     const handleCardClick = () => {
       emit('card-click', props.card)
+    }
+
+    /**
+     * Emits card-title-click for clicks on the default title text or on custom title content
+     * marked with `data-kanban-title-click`, except on links and buttons inside it.
+     */
+    const handleTitleClick = (event: MouseEvent) => {
+      const target = (event.target as HTMLElement).closest(
+        'a, button, .title-text, [data-kanban-title-click]'
+      )
+      if (target && !target.matches('a, button'))
+        emit('card-title-click', props.card)
     }
 
     const handleMenuItemClick = (item: string | number) => {
@@ -454,6 +466,7 @@ export default defineComponent({
       handleFocus,
       handleBlur,
       handleCardClick,
+      handleTitleClick,
       handleTouchStart,
       handleTouchMove,
       handleTouchEnd,
